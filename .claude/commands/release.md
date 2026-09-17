@@ -85,8 +85,7 @@ so a fail here predicts a CI fail without leaving a dead tag on the remote:
 
 Do not substitute a hand-written task list: `qualityGate` is defined once in build-logic, and a list
 spelled out here drifts from it silently until a release preflight fails for a reason that has
-nothing to do with the release. On macOS `qualityGate` also compiles the iOS target; that is
-intended.
+nothing to do with the release.
 
 If anything fails, STOP. Show the failure, tell the user to fix and rerun. Do not tag.
 

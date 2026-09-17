@@ -5,7 +5,7 @@ license: Apache-2.0
 allowed-tools: Read, Grep, Glob, Bash, Write
 metadata:
   author: "emm"
-  version: "1.3"
+  version: "1.4"
 ---
 
 ## Activation Contract
@@ -14,16 +14,14 @@ ACTIVATE: existing target, no fresh diff — feature flow, module, `.github/`, d
 
 NOT here:
 - fresh writer change → the `pr-reviewer` agent (`docs/WORKFLOW.md` step 4)
-- frozen target, blind dual judgment → `judgment-day`
 - pending diff/PR/branch/path → `code-review`, `security-review`, `simplify`
-- editing skill text → `skill-improver`
 - NEVER `cavecrew-reviewer`/`cavecrew-investigator`: Haiku default, compressed output, breaks the Output Contract
 
 ## Hard Rules
 
 - Evidence per finding: `file:line`; for an ABSENCE, the exact `rg`/`fd` pattern and scope. None → drop it.
 - Lead with what is broken; no praise, no hedging.
-- Severity `CRITICAL`/`WARNING`/`NIT` only.
+- Severity `blocking`/`minor` only, the same vocabulary as `pr-reviewer`.
 - Never edit or commit ANYTHING — code, docs, config, skills. The auditor writes no file in this repo; its output IS the report.
 - Never run Gradle — no `qualityGate`, no compile task. A finding only a Gradle task can prove is UNPROVEN, plus the exact command for the main thread.
 - Aggression never licenses inflated severity; unevidenced is worse than silent.
@@ -31,7 +29,7 @@ NOT here:
 - Wrong premise → say so with evidence.
 - Delegate to a general-purpose agent with `model` EXPLICITLY opus; never frontmatter-only (`docs/adr/007-*.md`).
 - Main thread fixes the boundary; the auditor never asks — it states its assumption in one line.
-- Spanish report; code, identifiers, paths as-is.
+- English report; code, identifiers, paths as-is. The verdict words stay `MANTENER`/`REFACTORIZAR`/`REHACER`.
 
 ## Decision Gates
 
@@ -52,11 +50,11 @@ A local fix belongs in the finding's `fix` field; `## Plan` is only for REFACTOR
 
 ## Output Contract
 
-- `## Veredicto` — verdict plus one sentence.
-- `## Hallazgos` — by blast radius; severity, evidence, defect, consequence, fix.
-- `## Premisa` — only if the premise was wrong, with evidence.
+- `## Verdict` — verdict plus one sentence.
+- `## Findings` — by blast radius; severity, evidence, defect, consequence, fix.
+- `## Premise` — only if the premise was wrong, with evidence.
 - `## Plan` — only on REFACTORIZAR/REHACER; ordered steps, one writer unit each.
-- `## Cobertura` — required if the budget was hit OR the target is the whole project: read vs unread.
+- `## Coverage` — required if the budget was hit OR the target is the whole project: read vs unread.
 - Persist only if the user asks or findings exceed five; else chat. Persistence is `mem_save` plus an Artifact, never a `.md` in this repo — an audit is chronicle, and the chronicle lives in git and engram. A finding that needs work becomes a GitHub issue the MAIN THREAD opens; the auditor only proposes it.
 - Nothing else: no reading summary, no pleasantries.
 
