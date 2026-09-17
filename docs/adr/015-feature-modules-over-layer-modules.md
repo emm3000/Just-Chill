@@ -43,6 +43,25 @@ across both repos with the boundaries enforced by the gate.
   green after each: plugins, core modules, cross-feature untangling, one
   feature at a time, then the removal of `:presentation` and `:ui-android`.
 
+## Waves
+
+Waves 1 to 4 are serial because each rewrites imports or build files across
+the whole repo; parallelism lives in waves 5, 7 and 8.
+
+1. `build-logic/convention/` and the plugins applied to the five modules.
+2. `:domain` becomes `:core:domain`.
+3. `:data` splits into `:core:database` and `:core:backup`; the migration
+   suite runs on `medium_phone` before and after.
+4. `:core:ui` takes the MVI base, theme, atoms, formatters.
+5. Untangling, in parallel: shared sheets and components, recurring pendings,
+   loan balances, `hh/shared` off `profile`.
+6. Scaffold: the nine empty `:feature:*` modules, their includes and
+   `:androidApp` dependencies, and one wiring file per feature in
+   `:androidApp` (Koin module, entries, navigation lambdas).
+7. and 8. Feature extraction, four or five per wave; each ticket touches its
+   own module, deletes its own packages and edits its own wiring file only.
+9. Delete `:presentation` and `:ui-android`; update the module docs and rules.
+
 ## Invariants
 
 The device keeps real data, so these names never change: the database file

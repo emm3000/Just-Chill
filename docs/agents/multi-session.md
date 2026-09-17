@@ -37,6 +37,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 - One slice = one small PR: a migration + domain change, or one screen, or one integration. A ticket naming more than 2 screens, or a migration plus a screen, gets split into sub-issues with `gh` first.
 - If a session passes ~60% context without a PR, it commits, opens a partial PR, clears, and continues.
 - Waves are ordered by dependency; parallelism is safe only within a wave (shared `:domain` or atom changes first, then independent slices). No wave carries two tickets touching the same module; a schema change (`.sq` / `.sqm`) is always a wave of one. A wave starts only after the previous one is merged.
+- Until `:presentation` and `:ui-android` are deleted (ADR 015), a feature-extraction ticket does not count as touching those modules when it only deletes packages it alone owns, nor `:androidApp` when it only edits the wiring file the scaffold ticket created for that feature. Drop this exception with those modules.
 - Before dispatching tickets filed by an audit, re-verify each against current `trunk`; the finding may already be fixed.
 
 ## Dispatch prompt checklist
