@@ -1,28 +1,44 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+# Gradle / Kotlin build output
+.gradle/
 /build
-/.idea
+.kotlin/
+*.hprof
+*.log
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+/local.properties
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+
+# IDE / OS
+*.iml
+/.idea
+.DS_Store
+
+# Secrets and signing. androidApp/google-services.json stays tracked on purpose:
+# CI builds Crashlytics from it and the key is a restricted Android key.
 /key
 /keystore.properties
-.kotlin
+supabase.properties
 
 # Claude Code
 .claude/settings.local.json
 .claude/RESUME.md
 .claude/worktrees/
+CLAUDE.local.md
 .atl/
+
+# docs/ is an allowlist: a new doc needs a line here, on purpose (CLAUDE.md, Docs contract)
 docs/*
 !docs/adr/
 !docs/adr/**
@@ -42,13 +58,3 @@ docs/*
 !docs/CODE_QUALITY.md
 !docs/PERSISTENCE.md
 !docs/RELEASE_CHECKLIST.md
-# Supabase
-supabase.properties
-supabase/.temp/
-
-# Xcode / iOS (iosApp is an Xcode project, not a Gradle module)
-iosApp/build/
-**/xcuserdata/
-*.xcuserstate
-iosApp/iosApp.xcodeproj/project.xcworkspace/xcuserdata/
-DerivedData/
