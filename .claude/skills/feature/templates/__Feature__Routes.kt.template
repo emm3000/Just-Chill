@@ -1,0 +1,12 @@
+package com.emm.justchill.feature.__feature__
+
+import com.emm.justchill.core.ui.navigation.AppRoute
+import kotlinx.serialization.Serializable
+import kotlin.reflect.KClass
+
+@Serializable
+data object __Feature__Route : AppRoute
+
+val __feature__Routes: List<KClass<out AppRoute>> = listOf(
+    __Feature__Route::class,
+)

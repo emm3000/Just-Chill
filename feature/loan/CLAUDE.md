@@ -8,7 +8,7 @@ The informal-loan ledger: the person list, a person's loans, a loan's detail wit
 
 ## Koin and the graph
 
-`loanModule` is declared here and binds the four ViewModels, nothing else. `:androidApp`'s `wiring/LoanWiring.kt` includes it and adds the five loan use cases, and is the only file outside this module that binds anything of the ledger's; the repositories stay in `:presentation`'s `hh/di/DataModule.kt`, since only the app sees `:core:database`. Every ViewModel here is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
+`loanModule` is declared here and binds the four ViewModels, nothing else. `:androidApp`'s `wiring/LoanWiring.kt` includes it and adds the five loan use cases, and is the only file outside this module that binds anything of the ledger's; the repositories stay in `:androidApp`'s `core/di/DataModule.kt`, since only the app sees `:core:database`. Every ViewModel here is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
 
 ## Dates
 

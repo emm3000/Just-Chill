@@ -2,7 +2,7 @@
 
 The month Report (ADR 015, wave 7): `ReportViewModel` with its `UiState` / `Intent` / `Effect`, the `CategoryShare` and `TrendsUiData` presentation models with their mappers, the share text formatter, `ReportScreen` and its `components/`, `ReportRoute` and `reportEntries`. `reportModule` in `di/` binds the ViewModel and nothing else; the five report use cases are bound in `:androidApp`'s `wiring/ReportWiring.kt`.
 
-`justchill.android.feature`, namespace `com.emm.justchill.feature.report`, `minSdk = 28`, one `src/main` and one `src/test`. It depends on `:core:domain` and `:core:ui` only — `checkModuleBoundaries` holds that edge, so no other feature, no `:presentation` and no `:ui-android`.
+`justchill.android.feature`, namespace `com.emm.justchill.feature.report`, `minSdk = 28`, one `src/main` and one `src/test`. It depends on `:core:domain` and `:core:ui` only — `checkModuleBoundaries` holds that edge, so no other feature and no `:androidApp`.
 
 ## Screens
 

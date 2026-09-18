@@ -11,10 +11,8 @@ No third-party users, but **the author runs the release daily on a device holdin
 ## Modules
 
 ```
-androidApp     -> feature:*, ui-android, presentation, core:backup, core:database, core:ui, core:domain
+androidApp     -> feature:*, core:backup, core:database, core:ui, core:domain
 feature:*      -> core:ui, core:domain, core:testing
-ui-android     -> presentation, core:database, core:ui, core:domain
-presentation   -> core:backup, core:database, core:ui, core:domain
 core:backup    -> core:domain
 core:database  -> core:domain
 core:ui        -> core:domain
@@ -26,10 +24,8 @@ core:testing   -> core:domain
 - `:core:backup` — the snapshot file and the account it needs: DTOs, decoder, Supabase Storage, the backup cycle and auth. Never depends on `:core:database`.
 - `:core:ui` — the UI vocabulary more than one feature uses: the MVI base (`MviViewModel` and its contracts), the navigation vocabulary (`AppRoute`, `AppNavigator`, `NavHostBindings`) in `navigation/`, `toUserMessage` in `error/`, `AmountInputSheet` and the account/category/date pickers in `sheets/`, `FormSection` in `atoms/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, the `Emm*` components and the bundled fonts), and the capture vocabulary — the icon and colour catalog in `category/`, the transaction row and its `Catalog` in `transaction/`. Never depends on `:core:database` or `:core:backup`.
 - `:core:testing` — the JVM test-fixture module: `MainDispatcherRule` and `FakeTodayFlow`, on `:core:domain` only, wired into feature modules and `:androidApp` as `testImplementation`.
-- `:feature:{account, category, loan, report, onboarding, recurring, auth, transaction}` populated (ADR 015 waves 6-8): ViewModels, screens, routes, entries, a Koin module, tests. `:feature:profile` waits on #126, then #128 deletes `:presentation` and `:ui-android`.
-- `:presentation` — the not-yet-extracted profile ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, the feature copy. Compose-free, and it re-exports `:core:ui` as `api`.
-- `:ui-android` — Compose screens and nav entries for profile, with `rememberPlatformHostActions`. Same Kotlin packages as `:presentation` on purpose.
-- `:androidApp` — `MainActivity`, `EmmApp`, the app shell (`shell/`: the nav host, the bottom bar, the launcher shortcut routes), the Koin graph (`core/AppGraph.kt`) with one `wiring/<Feature>Wiring.kt` per feature that binds something (onboarding injects nothing, so it has none), the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
+- `:feature:{account, auth, category, loan, onboarding, profile, recurring, report, transaction}` — nine, one screen family each (ADR 015): Compose-free ViewModels, screens, `@Serializable` routes with a `<feature>Routes` registry, nav entries, a `<feature>Module` binding its ViewModels, tests.
+- `:androidApp` — `MainActivity`, `EmmApp`, the app shell (`shell/`: the nav host, the bottom bar, the launcher shortcut routes, `rememberPlatformHostActions`), the Koin graph (`core/AppGraph.kt`) over the cross-cutting modules in `core/di/` plus one `wiring/<Feature>Wiring.kt` per feature that binds something (onboarding injects nothing, so it has none), the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 
 Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `android.release`, `jvm.library`, `sqldelight`, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:core:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:core:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
 
@@ -44,7 +40,7 @@ These bind on every change, including a new file created before any Kotlin has b
 - **No comments.** No KDoc, no `//`, no banners, no commented-out code. The code explains itself or it gets renamed. Three narrow exceptions in `.claude/rules/kotlin-style.md`.
 - **Explicit types** on every property and local `val` / `var`, and the supertype when the abstraction is what matters. Omit only when the right-hand side is a constructor call that already names the type.
 - **Only the repo's atoms** (`:core:ui`'s `core/ui/atoms/`) in feature screens. Never a raw Material3 control. See `.claude/rules/ui-components.md`.
-- **MVI per feature**: one `UiState` (all `val`), one `onIntent(intent)` entry point on `MviViewModel<S, I, E>`, effects consumed once and never stored in state. ViewModels live in `:presentation` and never import Compose.
+- **MVI per feature**: one `UiState` (all `val`), one `onIntent(intent)` entry point on `MviViewModel<S, I, E>`, effects consumed once and never stored in state. A ViewModel lives in its feature module and never imports Compose; `checkComposeFreeViewModels` is on the gate.
 - **`:core:domain` stays pure Kotlin.** If it needs to reach outward, invert with an interface in `:core:domain`. Failure modes extend sealed `DomainException`, never a new exception type.
 - **Dates take an injected `Clock` and `TimeZone`, no defaults.**
 - **Rebuild, never adapt.** When existing code, config or structure does not fit the target architecture, replace it with a clean implementation. No shims, wrappers or compatibility patches over legacy.
@@ -84,12 +80,12 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 
 ## Test stack
 
-JUnit4, MockK, `kotlinx-coroutines-test`, plain `kotlin.test` where it suffices. Test names are backtick sentences naming the rule (`` `refuses while live dependents exist`() ``). Fixture locals are named by role. `MainDispatcherRule` (`:core:testing`) goes in every ViewModel test that touches `viewModelScope`; a ViewModel that injects `TodayFlow` takes `:core:testing`'s `FakeTodayFlow`.
+JUnit4, MockK, `kotlinx-coroutines-test`, plain `kotlin.test` where it suffices. Test names are backtick sentences naming the rule (`` `refuses while live dependents exist`() ``). Fixture locals are named by role. `MainDispatcherRule` (`:core:testing`) goes in every ViewModel test that touches `viewModelScope`; a ViewModel that injects `TodayFlow` takes `:core:testing`'s `FakeTodayFlow`. A test that waits observes the transition, never samples the state: subscribe before triggering and assert the recorded sequence. A getter whose deletion leaves the suite green is not covered.
 
 ## Custom slash commands
 
 - `/checks` — `./gradlew qualityGate assembleDevDebug`, failures grouped by module.
-- `/feature <Name>` — full MVI scaffold across `:presentation` and `:ui-android`.
+- `/feature <Name>` — full MVI scaffold for a new `:feature:<name>` module.
 - `/agents-review` — review the pending diff against these rules.
 - `/release` — tag trunk and upload a draft to the Play alpha track.
 - `/wave <issues>` — boot one peer session per ticket and dispatch.

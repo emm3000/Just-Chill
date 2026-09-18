@@ -54,8 +54,6 @@ DRY is about **one source of truth for a piece of knowledge**, not about code th
 
 In a layered architecture the two get confused constantly. A domain model, a SQLDelight row and a `UiState` will often carry the same field names. Collapsing them "because DRY" couples the layers and destroys the architecture: a schema change then reaches the UI directly. Those shapes change for different reasons, so they are not duplication. Mapper files exist precisely to keep them apart.
 
-`:presentation` and `:ui-android` share package names on purpose: "deduplicating" across that boundary collapses it.
-
 Real DRY violations are duplicated **rules**: the same due-date calculation in two places, the same validation in three. Those get extracted. *Duplication is far cheaper than the wrong abstraction.*
 
 ## 8. Supporting principles

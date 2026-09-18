@@ -1,6 +1,6 @@
 # :feature:category — CLAUDE.md
 
-The Categories screen family, ViewModels and Compose together: the list with its edit and delete dialogs, the create screen with the icon and colour pickers and the preview chip, and the two routes the host pushes. Extracted from `:presentation` and `:ui-android` by ADR 015's wave 7 (#119); `hh` is gone and the package is `com.emm.justchill.feature.category`.
+The Categories screen family, ViewModels and Compose together: the list with its edit and delete dialogs, the create screen with the icon and colour pickers and the preview chip, and the two routes the host pushes. Extracted by ADR 015's wave 7 (#119); the package is `com.emm.justchill.feature.category`.
 
 `justchill.android.feature` is the whole build file, plus `androidx.lifecycle.runtime.compose` and `androidx.material.icons.extended`, which the plugin does not bring and the screens need. Depends on `:core:domain` and `:core:ui` only. `compose_stability.conf` declares `com.emm.justchill.**` stable so the `:core:domain` values the screens take are not treated as unstable.
 
@@ -14,7 +14,7 @@ The Categories screen family, ViewModels and Compose together: the list with its
 
 - `AddCategoryViewModel` takes `initialType` and `initialName` as Koin parameters, so it is a `viewModel { parameters -> }` block, never `viewModelOf`. The entry passes them with `parametersOf(key.initialType, key.initialName)`.
 - Saving with `propagateToTransaction` calls `AppNavigator.popToCapture()`, which pops to whatever implements `:core:ui`'s `CaptureRoute`. The feature never names a transaction route, and the created category reaches the capture screen through the host's `pendingCategory` channel, not through the back stack.
-- `String.Empty` stayed in `:presentation`; an extracted feature writes `""`.
+- Write `""`, never a `String.Empty` extension; that one is gone.
 - `CategoriesScreen` still uses `AlertDialog` and `TextButton` directly for its edit and delete dialogs, inherited from before the move. Replacing them with atoms is a UI change and belongs to its own ticket, not to an extraction.
 
 ## Testing

@@ -16,18 +16,14 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
 | `:core:ui` | The MVI base, the navigation vocabulary (`AppRoute`, `BottomBarRoute`, `CaptureRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
 | `:core:testing` | `MainDispatcherRule` and `FakeTodayFlow`, the JVM test fixtures on `:core:domain` alone; wired into feature modules and `:androidApp` as `testImplementation`. |
-| `:presentation` | Compose-free ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, the feature copy, `UiStrings`. |
-| `:feature:*` | One screen family: its ViewModels and its Compose screens. Empty until ADR 015's waves 7 and 8. |
-| `:ui-android` | Compose screens and each feature's nav entries, plus the routes and host bindings they share. |
-| `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, bottom bar, shortcut routes), the Koin graph and the per-feature wiring files, the platform Koin module, flavors, shortcuts, the session keystore. |
+| `:feature:*` | One screen family: its Compose-free ViewModels, its Compose screens and nav entries, its `@Serializable` routes and its Koin module. |
+| `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, bottom bar, shortcut routes, the SAF host actions), the Koin graph with the cross-cutting modules in `core/di/` and one wiring file per feature, the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, flavors, shortcuts, the session keystore. |
 
 Allowed dependencies, and nothing else:
 
 ```
-androidApp   -> feature:*, ui-android, presentation, core:backup, core:database, core:ui, core:domain
+androidApp   -> feature:*, core:backup, core:database, core:ui, core:domain
 feature:*    -> core:ui, core:domain, core:testing
-ui-android   -> presentation, core:database, core:ui, core:domain
-presentation -> core:backup, core:database, core:ui, core:domain
 core:backup  -> core:domain
 core:database -> core:domain
 core:ui      -> core:domain
@@ -37,9 +33,9 @@ core:testing -> core:domain
 `checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` may depend on a feature.
 
 - `:core:domain` is pure Kotlin (`kotlin("jvm")`): `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve there; the rest is convention, reviewed.
-- Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `hh/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
-- `:presentation` depends on `:core:database` and `:core:backup` for one reason: the Koin modules in `hh/di/` bind interface to implementation in one place. `SnapshotStore` is bound there too, which is what keeps `:core:backup` off `:core:database`. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
-- `:ui-android` and `:androidApp` production code import no `:core:domain` repository; the leak stops at `:presentation`.
+- Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `:androidApp`'s `core/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
+- `:androidApp` depends on `:core:database` and `:core:backup` for one reason: the modules in `core/di/` bind interface to implementation in one place. `SnapshotStore` is bound there too, which is what keeps `:core:backup` off `:core:database`. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
+- Binding them is `:androidApp`'s `core/di/` and `wiring/`; nothing else names one. The leak check is `rg -l 'Default[A-Z][A-Za-z]*(Repository|DataSource)' feature/*/src/main androidApp/src/main --glob '!**/core/di/**' --glob '!**/wiring/**'`, and it returns nothing.
 - SQLDelight on device is the source of truth for reads and writes. Supabase holds snapshot backups (ADR 009); nothing reads rows from it. A snapshot crosses the two modules as a `LocalSnapshot` of domain models, never as a SQLDelight row or a DTO.
 
 ## Dependency inversion is the seam
@@ -47,7 +43,7 @@ core:testing -> core:domain
 The domain declares the contract; the infrastructure obeys it. The domain never imports an implementation.
 
 - Repository interfaces (`{Entity}Repository`) live in `:core:domain`. Implementations (`Default{Entity}Repository` over a `{Entity}LocalDataSource`) live in `:core:database`.
-- A platform capability `:presentation` needs (`GoogleSignInLauncher`, `DispatchersProvider`) is an interface in `:presentation`, implemented in `:androidApp` and bound in `androidPlatformModule`.
+- A platform capability a feature needs (`GoogleSignInLauncher`, `DispatchersProvider`) is an interface in that feature or in `:core:domain`, implemented in `:androidApp` and bound in `androidPlatformModule`.
 
 ## A use case only where there is domain logic
 
@@ -63,7 +59,7 @@ Every catch-all owes a `CancellationException` arm first. `runCatching` and `cat
 
 ## Each layer owns its own model
 
-A SQLDelight row, a domain model and a `UiState` are three different things even when their fields match. Mappers convert between them (`{entity}Mappers.kt` in `:core:database`, `toUi` mappers in `:presentation`).
+A SQLDelight row, a domain model and a `UiState` are three different things even when their fields match. Mappers convert between them (`{entity}Mappers.kt` in `:core:database`, `toUi` mappers beside the ViewModel that needs them).
 
 - A SQLDelight row never reaches a `UiState`.
 - A domain model never carries presentation concerns (formatted strings, resource ids, colors).
@@ -75,39 +71,40 @@ This is not duplication to be removed. See `principles.md`, DRY.
 
 Naming lives in `naming.md`. This is the flow. The base class is `mvi/MviViewModel.kt` in `:core:ui`.
 
-- **One state object per feature.** `<Feature>UiState : UiState` is a `data class` (or a `sealed interface` of data classes) with every field `val` and immutable collections. `:ui-android` and `:core:ui` declare these classes stable in `compose_stability.conf`; a `var` or a `MutableMap` turns that declaration into a lie no compiler catches.
+- **One state object per feature.** `<Feature>UiState : UiState` is a `data class` (or a `sealed interface` of data classes) with every field `val` and immutable collections. A module whose screens read state declared elsewhere declares it stable in its `compose_stability.conf`; a `var` or a `MutableMap` turns that declaration into a lie no compiler catches.
 - **One public entry point.** `MviViewModel<S, I, E>` exposes `state: StateFlow<S>`, `effect: Flow<E>` and `onIntent(intent: I)`. A screen reaches its ViewModel through those three and nothing else.
 - **State is a `StateFlow`, effects are one-shot.** Effects (navigation, snackbars) go through the buffered channel and are consumed once. An effect is never stored in `UiState`, because state replays on recomposition and would fire it twice.
 - **State stores what the user chose, never what was resolved.** A selection is an id; the resolved object is a getter over the catalog held in the same state. A stored resolved object is a cache with no invalidation, and it is how a movement gets filed under a deleted category. A save writes the resolved selection, never the raw id.
 - **Effects ride a `Channel`, never a `SharedFlow`.** Collectors are `LaunchedEffect(vm)` inside an entry and die when it is buried; the channel buffers until the next one, a replay-0 `SharedFlow` drops. An effect is a navigation or a transient message; anything the UI keeps rendering (a sheet, a dialog, a focus) is state.
 - **A visibility flag lives in `UiState`, never in `remember` / `rememberSaveable`** (ADR 012). One sheet field per screen: an enum when sheets are mutually exclusive, a `Boolean` when there is one.
-- **A ViewModel never switches dispatcher.** No `withContext` or `Dispatchers.` in `hh/`; `:core:database` owns its threading.
+- **A ViewModel never switches dispatcher.** No `withContext` or `Dispatchers.` in a ViewModel; `:core:database` owns its threading.
 - **`launchSafeIn` retries a collector three times (200/400/800 ms), then dies for the ViewModel's life.** It heals lock contention, not a persistent failure; tab ViewModels outlive `switchTab`, so a dead collector stays dead. `stateIn` / `shareIn` upstreams bypass the funnel: today all are fed by `todayFlow()` alone, and a data-backed one has no error door.
 - **A `when` helper split out of `onIntent` takes a nested sealed sub-interface, never the wide intent type with an `else`** (`onPaymentFormIntent`, `onScreenChromeIntent`): the `else` swallows a new intent forgotten in the helper.
 - **The screen is callback-driven.** `<Feature>Screen` collects `state`, hands `vm::onIntent` down to a private stateless content composable, and consumes effects in a `LaunchedEffect(vm)`. It never touches a repository or a use case.
 - **The entry wires navigation.** `<Feature>Entries.kt` registers `entry<Route>` in `AppNavHost`'s `entryProvider`, obtains an `AppNavigator` with `rememberAppNavigator(bindings.backStack, bindings.startTab)`, and passes host state as lambdas.
-- **ViewModels never hold literal UI copy.** A ViewModel emits an enum or another typed value (`AuthEffect.Notify(AuthMessage.ConfirmationLinkResent)`), never a Spanish string; the screen resolves it to text. Shared copy lives in `:presentation`'s `hh/shared/UiStrings.kt`.
+- **ViewModels never hold literal UI copy.** A ViewModel emits an enum or another typed value (`AuthEffect.Notify(AuthMessage.ConfirmationLinkResent)`), never a Spanish string; the screen resolves it to text.
 - **Intents describe what the user did**, not what the ViewModel should do. Local UI state with no business meaning (an expanded section) may stay as `remember` inside the composable.
-- `:presentation` and `:ui-android` share package names on purpose. A same-package symbol that crosses the module boundary is imported explicitly.
 
-## `:presentation` is compose-free by review, not by compiler
+## A ViewModel is compose-free
 
-`androidx.lifecycle` is the only androidx artifact the module holds. A Compose import compiles and the gate stays green, so the check is a grep that returns nothing:
+`checkComposeFreeViewModels` is on the gate: it fails any `*ViewModel.kt` or `*UiState.kt` in the module carrying an `import androidx.compose` line. Every module runs it, `:androidApp` included.
+
+What the task cannot see, and review does, over the same files:
 
 ```
-rg -e 'androidx\.compose' -e 'BuildConfig' -e '\bR\.' -e 'stringResource|painterResource|Font\(R\.' -e '@Preview|tooling\.preview' -e 'LocalConfiguration' -e 'koin\.androidx' presentation/src/main
+rg -e 'BuildConfig' -e '\bR\.' -e 'stringResource|painterResource' -e '@Preview|tooling\.preview' -e 'LocalConfiguration' -e 'koin\.androidx' -g '*ViewModel.kt' -g '*UiState.kt' feature/*/src/main
 ```
 
 MockK never leaks into `src/main` either.
 
 ## Koin
 
-- A binding is registered exactly once: a feature module in `:presentation`'s `hh/di/`, or, once its feature is extracted, in `:androidApp`'s `wiring/<Feature>Wiring.kt`. Both are listed in `appModules()` (`:androidApp`'s `core/AppGraph.kt`), which is also where a platform binding's `androidPlatformModule` joins. `startKoin` is called only in `:androidApp`.
+- A binding is registered exactly once. A feature exposes `<feature>Module` with its ViewModels only; `:androidApp`'s `wiring/<Feature>Wiring.kt` binds that feature's use cases and `includes` it. What no single feature owns is a module in `:androidApp`'s `core/di/`. All of them are listed in `appModules()` (`core/AppGraph.kt`), which is also where a platform binding's `androidPlatformModule` joins. `startKoin` is called only in `:androidApp`.
 - Every new ViewModel goes into `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`. A binding whose only consumer is a `koinInject` / `koin.get` outside the graph owes its own test.
 
 ## Routes and the back stack
 
-`AppRoute` and `BottomBarRoute` are plain interfaces in `:core:ui`'s `core/ui/navigation/AppRoute.kt`, alongside `CaptureRoute : AppRoute`, the marker `AddTransactionRoute` and `EditTransactionRoute` implement. The concrete routes stay in `ui-android/.../hh/shared/HhRoutes.kt`, which exports `val hhRoutes: List<KClass<out AppRoute>>`; each later extraction ticket exports its own `val <feature>Routes` and removes its entries from `hhRoutes`.
+`AppRoute` and `BottomBarRoute` are plain interfaces in `:core:ui`'s `core/ui/navigation/AppRoute.kt`, alongside `CaptureRoute : AppRoute`, the marker `AddTransactionRoute` and `EditTransactionRoute` implement. A feature declares its own concrete routes and exports them as `val <feature>Routes: List<KClass<out AppRoute>>`; `RouteSerializationTest` concatenates the nine registries.
 
 - **Every route the host can push is `@Serializable`, fields included.** `rememberNavBackStack` stores each entry by class name and re-resolves it through `Class.forName(name).kotlin.serializer()`, so an unserializable route crashes on process-death restore and nowhere else. Routes are no longer a sealed hierarchy a reflection scan can enumerate: `RouteSerializationTest` (`:androidApp`) concatenates the route registries and asserts its hand-written samples cover exactly that union, then round-trips each sample. A route missing from its registry is never round-tripped.
 - **One door is no door.** A destination reachable through exactly one entry point is unreachable the moment that entry is gated. Gate the content of an entry point, never its existence. Before deleting a row that pushes a route, `rg` the route and confirm a second door exists.

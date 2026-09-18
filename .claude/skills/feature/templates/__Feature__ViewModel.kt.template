@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.__feature__
+package com.emm.justchill.feature.__feature__
 
 import com.emm.justchill.core.ui.mvi.MviViewModel
 

@@ -21,7 +21,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 - **Owner** approves the first wave of a session and verifies model and effort with `/model` in each pane. Once a wave is fully merged the orchestrator starts the next one on its own. Peer sessions are booted only through the `/wave` skill, never by running `scripts/justchill-wave` by hand. Refer to a session with an `@` prefix in chat (`@loans`): it disambiguates the session from a feature or ticket of the same name.
 - **Orchestrator** coordinates: dispatches via `SendMessage`, reviews, merges. It stays thin.
   - Delegate investigation and any artifact-producing work (tickets, specs, surveys, docs) to a subagent with an explicit model.
-  - Do inline only routing state (`git status`, `git worktree list`, `gh issue/pr list`, `ListAgents`) and at most 1-2 files to decide. `:presentation` or a module boundary touched, run the leak grep in `.claude/rules/architecture.md`.
+  - Do inline only routing state (`git status`, `git worktree list`, `gh issue/pr list`, `ListAgents`) and at most 1-2 files to decide. A module boundary touched, run the leak grep in `.claude/rules/architecture.md`.
   - Report minimal: act on review/agent findings, tell the owner 1-2 lines and only decisions that are genuinely theirs. Merging a clean PR is normal practice, not a question.
 
 ## Model and effort
@@ -37,7 +37,6 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 - One slice = one small PR: a migration + domain change, or one screen, or one integration. A ticket naming more than 2 screens, or a migration plus a screen, gets split into sub-issues with `gh` first.
 - If a session passes ~60% context without a PR, it commits, opens a partial PR, clears, and continues.
 - Waves are ordered by dependency; parallelism is safe only within a wave (shared `:core:domain` or atom changes first, then independent slices). No wave carries two tickets touching the same module; a schema change (`.sq` / `.sqm`) is always a wave of one. A wave starts only after the previous one is merged.
-- Until `:presentation` and `:ui-android` are deleted (ADR 015), a feature-extraction ticket does not count as touching those modules when it only deletes packages it alone owns, nor `:androidApp` when it only edits the wiring file the scaffold ticket created for that feature. Likewise, an untangling ticket does not count as touching `:core:ui` when it only adds files no other ticket in the wave edits. Drop this exception with those modules.
 - Before dispatching tickets filed by an audit, re-verify each against current `trunk`; the finding may already be fixed.
 
 ## Dispatch prompt checklist

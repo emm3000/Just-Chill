@@ -43,7 +43,7 @@ okio = "3.17.0"
 # multiplatform-settings: the key-value abstraction behind AppPreferences. Latest stable 1.x.
 multiplatformSettings = "1.3.0"
 
-# nav. :ui-android is Android-only (ADR 005) and renders on Google's navigation3 — runtime AND UI.
+# nav. The app is Android-only (ADR 005) and :androidApp's shell/ renders on Google's navigation3 — runtime AND UI.
 # Slice F had put the UI on the JetBrains Compose Multiplatform port so one commonMain host could
 # drive Android and iOS; iOS left for SwiftUI, so the port lost its reason to exist and Android went
 # back to the artifacts Google publishes.
@@ -84,9 +84,6 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
 koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-core = { module = "io.insert-koin:koin-core" }
-# viewModelOf/viewModel DSL without compose — :presentation's DI modules use it; koin-compose-viewmodel
-# (ui-android) sits on top of it.
-koin-core-viewmodel = { module = "io.insert-koin:koin-core-viewmodel" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
@@ -111,13 +108,14 @@ sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", versi
 # okio — :core:database only, for `ByteString.sha256()` on the backup payload. See the version note.
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
-# multiplatform-settings — the Settings interface behind :presentation's AppPreferences; :androidApp
-# builds the SharedPreferencesSettings that backs it. KMP-branded, but NOT a leftover ADR 011 missed:
+# multiplatform-settings — the Settings interface behind :androidApp's AppPreferences and
+# DefaultBackupMetadataStore; AndroidPlatformModule builds the SharedPreferencesSettings that backs
+# them. KMP-branded, but NOT a leftover ADR 011 missed:
 # this coordinate resolves to multiplatform-settings-android, and swapping it for raw
 # SharedPreferences would rewrite where real preference data already lives. It stays.
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 # Official in-memory Settings double (MapSettings) from the same release train. Test-only: it backs
-# the fake platform module of :presentation's Koin graph test, so no SharedPreferences/Context is needed.
+# :androidApp's TestPlatformModule in AppGraphKoinTest, so no SharedPreferences/Context is needed.
 multiplatform-settings-test = { module = "com.russhwolf:multiplatform-settings-test", version.ref = "multiplatformSettings" }
 # Already on the RUNTIME classpath transitively (supabase-kt's Auth plugin builds its default
 # SettingsSessionManager through the no-arg Settings() factory). Declared explicitly for host tests
@@ -144,7 +142,7 @@ android-library = { id = "com.android.library" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 google-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "googleCrashlyticsVersion" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
-# Generates KSerializer for @Serializable nav routes and sync DTOs. Applied by :androidApp, :core:database, :ui-android.
+# Generates KSerializer for @Serializable nav routes and the snapshot DTOs. Applied by :androidApp and :core:backup.
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
 # Plain (non-Android) Kotlin JVM library plugin. Applied by :core:domain alone — ADR 011 Decision 3.
 # No version here: build-logic's own `kotlin-dsl` plugin applies org.jetbrains.kotlin.jvm

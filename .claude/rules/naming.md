@@ -33,7 +33,7 @@ A name that needs a comment to be understood is the wrong name. Rename it instea
 - **Classes / objects / interfaces**: `PascalCase` — `AuthViewModel`, `UiState`
 - **Functions / properties**: `camelCase` — `loadLoan()`, `isLoading`
 - **Constants** (`const val`, companion, top-level): `SCREAMING_SNAKE_CASE` — `RESEND_COOLDOWN_MS`
-- **Packages**: `lowercase.nounderscores`
+- **Packages**: `lowercase.nounderscores`, under `com.emm.justchill.<core|feature>.<name>`
 - **Backing properties**: `_` prefix + same name — `_state` / `state`
 - **Lambdas**: use `it` only if the context is obvious in 2 lines or fewer; otherwise name the parameter
 - Prefer `val` over `var`; prefer extension functions over utility classes
@@ -54,7 +54,7 @@ A name that needs a comment to be understood is the wrong name. Rename it instea
 | Intent | `<Feature>Intent` — sealed interface, past tense or noun-verb | `EmailChanged`, `Submit`, `GoogleSignInClicked` |
 | Effect | `<Feature>Effect` — sealed interface, describes the effect | `NavigateBack`, `ShowError` |
 | Presentation model | `<Thing>Ui` with a `toUi` mapper | `TransactionUi`, `PersonBalanceUi` |
-| Koin module | `<feature>Module` in `hh/di/<Feature>Module.kt` | `authModule` |
+| Koin module | `<feature>Module` in the feature root; its `:androidApp` half is `<feature>Wiring` in `wiring/<Feature>Wiring.kt` | `authModule`, `authWiring` |
 | Screen / entries / route | `<Feature>Screen`, `<Feature>Entries.kt`, `<Feature>Route` | `AuthScreen`, `authEntries`, `AuthRoute` |
 | Atom | role name, file matches, under `core/ui/atoms/` | `IconBtn`, `Pill`, `StickyCTA` |
 | Exposed Flow/StateFlow | name without the `Flow` suffix | `val accounts: Flow<List<Account>>`, not `accountsFlow` |
