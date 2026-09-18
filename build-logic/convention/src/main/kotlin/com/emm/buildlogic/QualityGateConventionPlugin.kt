@@ -88,8 +88,10 @@ class QualityGateConventionPlugin : Plugin<Project> {
                     "this module's production sources, so a key whose row model another module " +
                     "declares is skipped, `Type::property` included. So is a key built from " +
                     "anything but `it.<property>` or `Type::property`, and one whose owner is " +
-                    "unresolvable while the property name is declared more than once here. The " +
-                    "report file counts the key sites found, evaluated and rejected."
+                    "unresolvable while the property name is declared more than once here, a " +
+                    "single declaration elsewhere in the module being taken as the owner when " +
+                    "there is exactly one. The report file counts the key sites found, evaluated " +
+                    "and rejected, over every `key =` argument and not LazyList ones alone."
             sources.from(lazyKeySources())
             report.set(layout.buildDirectory.file("reports/$LAZY_KEY_TASK.txt"))
         }
