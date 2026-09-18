@@ -28,11 +28,11 @@ data class PendingRecurringUi(
 )
 
 fun PendingRecurring.toPendingRecurringUi(currentMonth: YearMonth): PendingRecurringUi {
-    val isVariable = movement.amount == null
-    val formatted = if (isVariable) {
+    val isVariable: Boolean = movement.amount == null
+    val formatted: String = if (isVariable) {
         "Variable"
     } else {
-        val raw = (movement.amount as Money).format()
+        val raw: String = (movement.amount as Money).format()
         when (movement.type) {
             TransactionType.Income -> formatIncome(raw)
             TransactionType.Spend -> formatExpense(raw)
