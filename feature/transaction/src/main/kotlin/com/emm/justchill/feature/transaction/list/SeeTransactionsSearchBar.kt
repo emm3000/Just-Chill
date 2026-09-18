@@ -3,9 +3,11 @@ package com.emm.justchill.feature.transaction.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -77,10 +79,11 @@ private fun SearchInput(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
+            .height(48.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(colors.surface1)
             .border(1.dp, colors.border, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 11.dp),
+            .padding(horizontal = 12.dp),
     ) {
         Icon(
             imageVector = Icons.Outlined.Search,
@@ -118,14 +121,19 @@ private fun SearchInput(
         )
         if (query.isNotEmpty()) {
             Spacer(Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Limpiar búsqueda",
-                tint = colors.textTertiary,
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(14.dp)
+                    .size(48.dp)
                     .clickable { onQueryChange("") },
-            )
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = "Limpiar búsqueda",
+                    tint = colors.textTertiary,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
         }
     }
 }

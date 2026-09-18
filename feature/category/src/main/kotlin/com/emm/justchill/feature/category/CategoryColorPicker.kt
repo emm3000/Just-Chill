@@ -44,7 +44,7 @@ private fun ColorDot(color: CategoryColor, selected: Boolean, onClick: () -> Uni
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(44.dp)
+            .size(48.dp)
             .clip(CircleShape)
             .background(color.primary)
             .clickable(

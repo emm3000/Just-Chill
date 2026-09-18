@@ -220,7 +220,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                                 val isFuture = date > today
                                 Box(
                                     modifier = Modifier
-                                        .size(40.dp)
+                                        .size(48.dp)
                                         .clip(CircleShape)
                                         .background(if (isSelected) colors.accent else Color.Transparent)
                                         .clickable(enabled = !isFuture) { selectedDate = date },

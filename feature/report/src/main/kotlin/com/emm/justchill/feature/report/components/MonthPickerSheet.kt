@@ -77,7 +77,7 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(colors.surface1)
                     .border(1.dp, colors.border, CircleShape)

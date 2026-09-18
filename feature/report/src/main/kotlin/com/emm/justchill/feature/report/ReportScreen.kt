@@ -267,7 +267,7 @@ private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: (
 
     Box(
         modifier = Modifier
-            .size(44.dp)
+            .size(48.dp)
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)

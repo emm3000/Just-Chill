@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -75,7 +76,7 @@ private fun PlainMonthSelector(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(36.dp)
+                .size(48.dp)
                 .clip(radii.rFull)
                 .clickable(onClick = onPrevious),
         ) {
@@ -98,7 +99,7 @@ private fun PlainMonthSelector(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(36.dp)
+                .size(48.dp)
                 .clip(radii.rFull)
                 .clickable(onClick = onNext),
         ) {
@@ -127,7 +128,7 @@ private fun PickerMonthSelector(
 
     Row(
         modifier = modifier
-            .height(44.dp)
+            .height(48.dp)
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)
@@ -142,6 +143,7 @@ private fun PickerMonthSelector(
         )
         Row(
             modifier = Modifier
+                .fillMaxHeight()
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -178,7 +180,7 @@ private fun ChevronButton(icon: ImageVector, contentDescription: String, onClick
 
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(48.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
