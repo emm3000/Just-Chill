@@ -146,7 +146,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                     seeTransactionsEntries(bindings)
                     accountEntries(
                         bindings = bindings,
-                        onOpenLoans = { nav -> nav.push(LoansRoute) },
+                        onOpenLoans = { nav -> nav.pushToTop(LoansRoute) },
                     )
                     loanEntries(bindings)
                     categoryEntries(
