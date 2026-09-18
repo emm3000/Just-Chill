@@ -2,9 +2,7 @@ package com.emm.justchill.feature.profile
 
 import android.content.ClipData
 import android.os.Build
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,13 +13,16 @@ import androidx.compose.ui.platform.toClipEntry
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.feature.profile.privacy.PrivacyPolicyRoute
 import com.emm.justchill.feature.profile.privacy.PrivacyPolicyScreen
 import kotlinx.coroutines.CoroutineScope
@@ -167,25 +168,19 @@ private suspend fun copyCommitHash(clipboard: Clipboard, commitHash: String, bin
 
 @Composable
 private fun ImportConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val dialogColors = LocalEmmColors.current
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("¿Reemplazar tu data?") },
-        text = { Text("Esto va a borrar todo lo que tengas hoy y poner lo del archivo.") },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-            ) {
-                Text(
-                    text = "Reemplazar todo",
-                    color = dialogColors.danger,
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
+    EmmDialog(
+        title = "¿Reemplazar tu data?",
+        confirmLabel = "Reemplazar todo",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
+        confirmTone = IconBtnTone.Danger,
+        content = {
+            Text(
+                text = "Esto va a borrar todo lo que tengas hoy y poner lo del archivo.",
+                style = LocalEmmType.current.bodyM,
+                color = LocalEmmColors.current.textSecondary,
+            )
         },
     )
 }
