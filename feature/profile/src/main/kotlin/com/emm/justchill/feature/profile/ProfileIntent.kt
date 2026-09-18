@@ -7,7 +7,10 @@ sealed interface ProfileIntent : UiIntent {
     data class ExportFinished(val saved: Boolean) : ProfileIntent
     data class ImportJson(val json: String) : ProfileIntent
     data object SignOut : ProfileIntent
-    data object DeleteAccount : ProfileIntent
+    data object DeleteAccountClicked : ProfileIntent
+    data object DeleteAccountConfirmed : ProfileIntent
+    data object ImportClicked : ProfileIntent
+    data object DialogDismissed : ProfileIntent
 
     data object BackUpNow : ProfileIntent
 

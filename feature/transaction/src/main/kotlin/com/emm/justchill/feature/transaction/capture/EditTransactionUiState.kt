@@ -26,6 +26,7 @@ data class EditTransactionUiState(
     val categoryId: CategoryId? = null,
     val frequentCategoryIds: List<String> = emptyList(),
     val openSheet: TransactionSheet? = null,
+    val showDeleteDialog: Boolean = false,
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(date, today)
 

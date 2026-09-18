@@ -64,7 +64,9 @@ class EditTransactionViewModel(
             is EditTransactionIntent.OnAccountSelected -> updateState { copy(accountId = intent.value.accountId) }
             is EditTransactionIntent.OnCategorySelected -> updateState { copy(categoryId = intent.value.categoryId) }
             EditTransactionIntent.OnSave -> saveChanges()
-            EditTransactionIntent.OnDelete -> performDelete()
+            EditTransactionIntent.OnDeleteClick -> updateState { copy(showDeleteDialog = true) }
+            EditTransactionIntent.OnDeleteDismiss -> updateState { copy(showDeleteDialog = false) }
+            EditTransactionIntent.OnDeleteConfirm -> performDelete()
             is EditTransactionIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
             EditTransactionIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
         }
@@ -111,6 +113,7 @@ class EditTransactionViewModel(
     private fun performDelete() = launchSafe(
         onError = { EditTransactionEffect.ShowError(it.toUserMessage()) },
     ) {
+        updateState { copy(showDeleteDialog = false) }
         deleteTransaction(TransactionId(transactionId))
         sendEffect(EditTransactionEffect.TransactionDeleted)
     }

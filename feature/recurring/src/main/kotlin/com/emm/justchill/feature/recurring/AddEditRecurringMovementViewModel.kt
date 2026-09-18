@@ -77,6 +77,10 @@ class AddEditRecurringMovementViewModel(
                 updateState { copy(categoryId = intent.category?.categoryId) }
             }
 
+            is AddEditRecurringMovementIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
+
+            AddEditRecurringMovementIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
+
             AddEditRecurringMovementIntent.Save -> save()
         }
     }

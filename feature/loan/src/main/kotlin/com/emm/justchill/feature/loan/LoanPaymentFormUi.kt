@@ -26,6 +26,7 @@ data class LoanPaymentFormUi(
     // remainingCents formatted, done where the Money values live so no caller has to do money
     // arithmetic on a display string. Null until the loan has loaded.
     val maxAmountLabel: String? = null,
+    val openSheet: PaymentSheet? = null,
 ) {
     val dateLabel: String get() = relativeDayLabel(date ?: today, today)
 

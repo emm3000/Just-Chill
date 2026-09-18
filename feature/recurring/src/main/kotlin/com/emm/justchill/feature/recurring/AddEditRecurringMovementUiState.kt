@@ -24,6 +24,7 @@ data class AddEditRecurringMovementUiState(
     val accountId: AccountId? = null,
     // Null is "Sin categoría", which the save writes as such.
     val categoryId: CategoryId? = null,
+    val openSheet: RecurringSheet? = null,
 ) : UiState {
     val accounts: List<Account> get() = catalog.accounts
 

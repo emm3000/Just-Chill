@@ -16,10 +16,6 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -37,19 +33,16 @@ internal fun BackupSection(
     state: ProfileUiState,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
+    onImportConfirm: () -> Unit,
+    onDialogDismiss: () -> Unit,
     onSignInClick: () -> Unit,
     snapshotActions: SnapshotBackupActions,
 ) {
-    var showImportDialog by remember { mutableStateOf(false) }
-
-    if (showImportDialog) {
+    if (state.dialog == ProfileDialog.Import) {
         ImportBackupDialog(
             isSignedIn = state.session is SessionUiState.SignedIn,
-            onConfirm = {
-                showImportDialog = false
-                onImportClick()
-            },
-            onDismiss = { showImportDialog = false },
+            onConfirm = onImportConfirm,
+            onDismiss = onDialogDismiss,
         )
     }
 
@@ -73,7 +66,7 @@ internal fun BackupSection(
                 meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo lo que hay",
                 metaIsPrimary = false,
                 enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing,
-                onClick = { showImportDialog = true }.takeIf { state.op == ProfileOp.None },
+                onClick = onImportClick.takeIf { state.op == ProfileOp.None },
                 trailing = {
                     ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
                 },

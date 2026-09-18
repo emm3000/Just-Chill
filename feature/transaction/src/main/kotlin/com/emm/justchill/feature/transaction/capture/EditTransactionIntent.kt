@@ -22,7 +22,11 @@ sealed interface EditTransactionIntent : UiIntent {
 
     data object OnSave : EditTransactionIntent
 
-    data object OnDelete : EditTransactionIntent
+    data object OnDeleteClick : EditTransactionIntent
+
+    data object OnDeleteConfirm : EditTransactionIntent
+
+    data object OnDeleteDismiss : EditTransactionIntent
 
     data class OnSheetRequested(val sheet: TransactionSheet) : EditTransactionIntent
 
