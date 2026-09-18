@@ -19,9 +19,9 @@ import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.hh.shared.formatNeutral
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.shared.positiveMoneyFormatted
+import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
+import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 
 private const val CENTS_PER_SOL = 100.0
 

@@ -2,9 +2,9 @@ package com.emm.justchill.hh.transaction
 
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
-import com.emm.justchill.hh.shared.formatExpense
-import com.emm.justchill.hh.shared.formatIncome
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.core.ui.format.formatExpense
+import com.emm.justchill.core.ui.format.formatIncome
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 import kotlinx.datetime.LocalDateTime
 
 private const val UNKNOWN_CATEGORY = "Sin categoría"

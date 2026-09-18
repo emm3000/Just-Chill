@@ -5,7 +5,7 @@ import com.emm.justchill.core.domain.auth.SignInUseCase
 import com.emm.justchill.core.domain.auth.SignInWithGoogleUseCase
 import com.emm.justchill.core.domain.auth.SignUpResult
 import com.emm.justchill.core.domain.auth.SignUpUseCase
-import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.ui.mvi.MviViewModel
 import kotlinx.coroutines.delay
 
 class AuthViewModel(

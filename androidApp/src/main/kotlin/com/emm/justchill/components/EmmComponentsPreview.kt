@@ -34,7 +34,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.hh.shared.formatNeutral
+import com.emm.justchill.core.ui.format.formatNeutral
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1600)
 @Composable

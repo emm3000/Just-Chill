@@ -1,6 +1,8 @@
 package com.emm.justchill.hh.shared
 
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 import com.emm.justchill.hh.profile.LastExportUi
 
 fun categoriesMetaText(total: Int, incomeCount: Int): String = "$total en total · $incomeCount de ingreso"

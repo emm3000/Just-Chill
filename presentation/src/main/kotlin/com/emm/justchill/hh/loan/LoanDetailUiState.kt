@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.core.ui.mvi.UiState
 
 data class LoanDetailUiState(
     val summary: LoanSummaryUi? = null,

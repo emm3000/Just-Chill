@@ -29,7 +29,7 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
-import com.emm.justchill.hh.transaction.centsToSoles
+import com.emm.justchill.core.ui.format.centsToSoles
 
 private val MIN_TOUCH_TARGET = 48.dp
 

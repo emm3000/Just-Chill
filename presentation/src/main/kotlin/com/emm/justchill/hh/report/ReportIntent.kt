@@ -2,7 +2,7 @@ package com.emm.justchill.hh.report
 
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.mvi.UiIntent
+import com.emm.justchill.core.ui.mvi.UiIntent
 
 sealed interface ReportIntent : UiIntent {
     data object PreviousMonth : ReportIntent

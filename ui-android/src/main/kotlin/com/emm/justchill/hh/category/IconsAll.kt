@@ -72,7 +72,7 @@ import androidx.compose.material.icons.rounded.Train
 import androidx.compose.material.icons.rounded.VolunteerActivism
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.Wifi
-import com.emm.justchill.hh.shared.stripSpanishAccents
+import com.emm.justchill.core.ui.format.stripSpanishAccents
 
 fun String.normalizeForSearch(): String = stripSpanishAccents().lowercase().trim()
 

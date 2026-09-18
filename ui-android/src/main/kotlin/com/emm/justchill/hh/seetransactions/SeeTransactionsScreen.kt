@@ -52,12 +52,12 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.format.formatExpense
+import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.hh.recurring.ConfirmRecurringSheet
 import com.emm.justchill.hh.recurring.PendingRecurringHeader
 import com.emm.justchill.hh.recurring.PendingRecurringRow
 import com.emm.justchill.hh.recurring.PendingRecurringUi
-import com.emm.justchill.hh.shared.formatExpense
-import com.emm.justchill.hh.shared.formatIncome
 import com.emm.justchill.hh.transaction.CategoryUi
 import com.emm.justchill.hh.transaction.TransactionUi
 import com.emm.justchill.hh.transaction.components.TransactionRow

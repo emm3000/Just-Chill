@@ -41,8 +41,8 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.hh.shared.SpanishDateFormat
-import com.emm.justchill.hh.shared.titlecaseFirstChar
+import com.emm.justchill.core.ui.format.SpanishDateFormat
+import com.emm.justchill.core.ui.format.titlecaseFirstChar
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate

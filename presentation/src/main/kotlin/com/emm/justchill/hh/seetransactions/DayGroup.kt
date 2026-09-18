@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.seetransactions
 
-import com.emm.justchill.hh.shared.SpanishDateFormat
-import com.emm.justchill.hh.shared.titlecaseFirstChar
+import com.emm.justchill.core.ui.format.SpanishDateFormat
+import com.emm.justchill.core.ui.format.titlecaseFirstChar
 import com.emm.justchill.hh.transaction.TransactionUi
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate

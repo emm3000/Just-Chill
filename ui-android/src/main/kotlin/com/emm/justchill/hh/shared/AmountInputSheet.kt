@@ -41,9 +41,9 @@ import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaHeight
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.hh.transaction.MAX_AMOUNT_DIGITS
-import com.emm.justchill.hh.transaction.centsToSoles
-import com.emm.justchill.hh.transaction.formatCentsForDisplay
+import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
+import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.format.formatCentsForDisplay
 
 /**
  * The numpad edits a draft seeded from [amountDigits]; [onAmountConfirm] fires once, when the

@@ -18,8 +18,8 @@ import com.emm.justchill.core.domain.transaction.TransactionTotals
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
 import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.ui.mvi.MviViewModel
 import com.emm.justchill.hh.recurring.toPendingRecurringUi
 import com.emm.justchill.hh.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow

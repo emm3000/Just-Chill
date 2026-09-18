@@ -3,7 +3,7 @@ package com.emm.justchill.hh.profile
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.domain.shared.backup.BackupVerification
 import com.emm.justchill.core.domain.shared.error.DomainException
-import com.emm.justchill.core.mvi.UiEffect
+import com.emm.justchill.core.ui.mvi.UiEffect
 
 sealed interface ProfileEffect : UiEffect {
     data class ShowError(val error: DomainException) : ProfileEffect

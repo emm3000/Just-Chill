@@ -32,7 +32,7 @@ import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
-import com.emm.justchill.hh.shared.monthLabel
+import com.emm.justchill.core.ui.format.monthLabel
 
 private val SummaryDividerHeight: Dp = 36.dp
 

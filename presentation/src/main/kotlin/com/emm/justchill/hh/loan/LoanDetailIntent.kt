@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.loan
 
 import com.emm.justchill.core.domain.loan.PaymentMethod
-import com.emm.justchill.core.mvi.UiIntent
+import com.emm.justchill.core.ui.mvi.UiIntent
 import kotlinx.datetime.LocalDate
 
 sealed interface LoanDetailIntent : UiIntent {

@@ -48,10 +48,10 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
-import com.emm.justchill.hh.shared.formatExpense
-import com.emm.justchill.hh.shared.formatIncome
-import com.emm.justchill.hh.shared.formatNeutral
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.core.ui.format.formatExpense
+import com.emm.justchill.core.ui.format.formatIncome
+import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 
 @Composable
 fun RecurringMovementsScreen(

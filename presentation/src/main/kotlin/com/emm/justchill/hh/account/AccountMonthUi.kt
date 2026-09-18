@@ -5,9 +5,9 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.hh.shared.formatNeutral
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.shared.positiveMoneyFormatted
+import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
+import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 
 // An account has no opening balance, so net is a monthly net and never a balance — the screen owes
 // the user the "este mes" caption that says so.

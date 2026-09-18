@@ -1,4 +1,4 @@
-package com.emm.justchill.core.mvi
+package com.emm.justchill.core.ui.mvi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

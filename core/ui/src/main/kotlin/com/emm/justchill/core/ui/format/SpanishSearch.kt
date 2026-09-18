@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.core.ui.format
 
 private val ACCENT_MAP: Map<Char, Char> = mapOf(
     'á' to 'a', 'é' to 'e', 'í' to 'i', 'ó' to 'o', 'ú' to 'u', 'ü' to 'u', 'ñ' to 'n',

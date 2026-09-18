@@ -17,6 +17,7 @@ qualityGate {
 
 dependencies {
     api(projects.core.domain)
+    api(projects.core.ui)
     implementation(projects.core.backup)
     implementation(projects.core.database)
     implementation(libs.androidx.lifecycle.viewmodel)

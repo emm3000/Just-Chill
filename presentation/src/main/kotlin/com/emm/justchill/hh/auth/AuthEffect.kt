@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.auth
 
 import com.emm.justchill.core.domain.shared.error.DomainException
-import com.emm.justchill.core.mvi.UiEffect
+import com.emm.justchill.core.ui.mvi.UiEffect
 
 sealed interface AuthEffect : UiEffect {
     data object NavigateBack : AuthEffect

@@ -44,6 +44,8 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
+import com.emm.justchill.core.ui.format.monthLabel
+import com.emm.justchill.core.ui.format.monthYearLabel
 import com.emm.justchill.hh.report.TRENDS_WINDOW_MONTHS
 import com.emm.justchill.hh.report.components.CategoryBarsCard
 import com.emm.justchill.hh.report.components.ComparisonPill
@@ -53,8 +55,6 @@ import com.emm.justchill.hh.report.components.TodayPill
 import com.emm.justchill.hh.report.components.ToggleIncomeExpense
 import com.emm.justchill.hh.report.components.TotalAmountHero
 import com.emm.justchill.hh.report.components.TrendsContent
-import com.emm.justchill.hh.shared.monthLabel
-import com.emm.justchill.hh.shared.monthYearLabel
 import kotlinx.datetime.Month
 import org.koin.compose.viewmodel.koinViewModel
 

@@ -1,8 +1,8 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.core.ui.format.relativeDayLabel
+import com.emm.justchill.core.ui.mvi.UiState
 import com.emm.justchill.hh.shared.Empty
-import com.emm.justchill.hh.shared.relativeDayLabel
 import kotlinx.datetime.LocalDate
 
 data class AddEditLoanUiState(

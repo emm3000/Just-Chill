@@ -2,7 +2,7 @@ package com.emm.justchill.hh.profile
 
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
-import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.core.ui.mvi.UiState
 
 sealed interface SessionUiState {
     data object Initializing : SessionUiState

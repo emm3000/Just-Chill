@@ -2,9 +2,9 @@ package com.emm.justchill.hh.recurring
 
 import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.hh.shared.formatExpense
-import com.emm.justchill.hh.shared.formatIncome
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.core.ui.format.formatExpense
+import com.emm.justchill.core.ui.format.formatIncome
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 
 data class RecurringMovementUi(
     val id: String,

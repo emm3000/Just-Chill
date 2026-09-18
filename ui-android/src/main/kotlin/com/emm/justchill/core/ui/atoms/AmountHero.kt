@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.PlexMonoFontFamily
-import com.emm.justchill.hh.shared.NumberFormatEs
+import com.emm.justchill.core.ui.format.NumberFormatEs
 import kotlin.math.abs
 import kotlin.math.roundToLong
 

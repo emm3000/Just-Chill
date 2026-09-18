@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.core.ui.format
 
 import com.emm.justchill.core.domain.shared.YearMonth
 import kotlinx.datetime.Month

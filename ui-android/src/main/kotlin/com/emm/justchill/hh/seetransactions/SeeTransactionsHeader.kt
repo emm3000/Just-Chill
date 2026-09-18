@@ -37,7 +37,7 @@ import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.theme.LocalEmmType
-import com.emm.justchill.hh.shared.monthLabel
+import com.emm.justchill.core.ui.format.monthLabel
 
 /**
  * The browsed month IS the screen title. A filtered list crosses months, so [month] arrives `null`

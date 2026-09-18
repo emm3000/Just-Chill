@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.auth
 
-import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.core.ui.mvi.UiState
 
 enum class AuthMode { SignIn, SignUp }
 

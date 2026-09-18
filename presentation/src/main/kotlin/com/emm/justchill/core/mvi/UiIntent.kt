@@ -1,3 +1,0 @@
-package com.emm.justchill.core.mvi
-
-interface UiIntent

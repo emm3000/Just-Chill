@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.core.ui.format
 
 import com.emm.justchill.core.domain.shared.Money
 import kotlin.test.Test
