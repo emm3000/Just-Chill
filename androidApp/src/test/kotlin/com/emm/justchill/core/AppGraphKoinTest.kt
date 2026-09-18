@@ -5,13 +5,13 @@ import androidx.lifecycle.ViewModel
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.backup.BackupController
+import com.emm.justchill.core.testing.MainDispatcherRule
 import com.emm.justchill.feature.category.AddCategoryViewModel
 import com.emm.justchill.feature.loan.AddEditLoanViewModel
 import com.emm.justchill.feature.loan.LoanDetailViewModel
 import com.emm.justchill.feature.loan.PersonLoansViewModel
 import com.emm.justchill.feature.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.feature.transaction.capture.EditTransactionViewModel
-import com.emm.justchill.core.testing.MainDispatcherRule
 import com.russhwolf.settings.SettingsInitializer
 import io.mockk.mockk
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -47,7 +47,7 @@ class AppGraphKoinTest {
     // Standard (not Unconfined): init-block coroutines stay queued and never run, so this test
     // measures WIRING only and cannot flake on database contents or network reachability.
     @get:Rule
-    val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
+    val mainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
 
     @Before
     fun setUp() {

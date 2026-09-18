@@ -50,7 +50,7 @@ class TransactionDateEndToEndTest {
     private val testDispatcher = StandardTestDispatcher()
 
     @get:Rule
-    val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule(testDispatcher)
+    val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
     private lateinit var driver: JdbcSqliteDriver
     private lateinit var db: JustChillDatabase
