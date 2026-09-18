@@ -22,6 +22,7 @@ class ConventionPluginTest {
 
         assertEquals("37", report["compileSdk"])
         assertEquals("28", report["minSdk"])
+        assertEquals("36", report["testTargetSdk"])
         assertEquals("17", report["sourceCompatibility"])
         assertEquals("17", report["jvmTarget"])
         assertEquals("com.emm.justchill.probe", report["namespace"])
@@ -68,6 +69,7 @@ class ConventionPluginTest {
 
         assertEquals("true", report["compose"])
         assertEquals("28", report["minSdk"])
+        assertEquals("36", report["testTargetSdk"])
         assertEquals("17", report["jvmTarget"])
         assertEquals(COMPOSE_OPT_INS, report["optIn"])
         assertEquals("testDebugUnitTest", report["gatedTests"])

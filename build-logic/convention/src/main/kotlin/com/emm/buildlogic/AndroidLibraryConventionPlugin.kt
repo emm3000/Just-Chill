@@ -19,6 +19,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         val extension: LibraryExtension = extensions.getByType<LibraryExtension>()
         extension.namespace = BuildConventions.namespaceOf(path)
         configureKotlinAndroid(extension)
+        extension.testOptions.targetSdk = BuildConventions.TARGET_SDK
         configureAndroidUnitTestDependencies()
         gateOn("testDebugUnitTest")
     }
