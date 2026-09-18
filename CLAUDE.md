@@ -50,7 +50,7 @@ These bind on every change, including a new file created before any Kotlin has b
 - **Every route the nav host can push is `@Serializable`.** The crash is on process-death restore only, invisible to the compiler; `RouteSerializationTest` is the net.
 - **A `CREATE TABLE` change ships its three artifacts**: the `.sq` edit, the `N.sqm`, the `databases/(N+1).db`, plus an instrumented test per starting version. See `.claude/rules/sqldelight.md`.
 - **English for every identifier; Spanish only in user-facing values**, addressing the reader as tú, never vos.
-- **Never add `Co-Authored-By`** from Claude, Anthropic or any AI assistant to a commit message; a hook blocks it. Conventional commits, linear history, never push without being asked.
+- **Never add `Co-Authored-By`** from Claude, Anthropic or any AI assistant to a commit message; a hook blocks it. Conventional commits, linear history. Never push `trunk` without being asked, with one exception: the orchestrator pushes the docs-only commits that close a wave (the dispatch log) on its own, as Gema does.
 
 ## Detailed rules
 
