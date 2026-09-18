@@ -26,19 +26,52 @@ abstract class CheckLazyListKeysTask : DefaultTask() {
     fun check() {
         val files: List<File> = sources.files.filter { it.isFile }
         val declarations: Declarations = declarations(files)
-        val offenders: List<String> = files
-            .flatMap { file -> offenders(file, declarations) }
-            .sorted()
-
-        if (offenders.isNotEmpty()) {
-            throw GradleException(
-                offenders.joinToString(separator = "\n", prefix = "$FAILURE_HEADER\n"),
-            )
-        }
+        val census: Census = census(files, declarations)
 
         val reportFile: File = report.get().asFile
         reportFile.parentFile.mkdirs()
-        reportFile.writeText(files.size.toString())
+        reportFile.writeText(census.summary())
+
+        if (census.offenders.isNotEmpty()) {
+            throw GradleException(
+                census.offenders.joinToString(separator = "\n", prefix = "$FAILURE_HEADER\n"),
+            )
+        }
+    }
+
+    private fun census(files: List<File>, declarations: Declarations): Census {
+        val offenders: MutableList<String> = mutableListOf()
+        var sites: Int = 0
+        var evaluated: Int = 0
+        files.forEach { file ->
+            file.useLines { lines ->
+                lines.forEachIndexed { index, line ->
+                    if (!KEY_SITE.containsMatchIn(line)) return@forEachIndexed
+                    sites++
+                    val key: Key = key(line) ?: return@forEachIndexed
+                    if (key.property == UNDERLYING_VALUE) {
+                        evaluated++
+                        return@forEachIndexed
+                    }
+                    val resolution: Resolution = declarations.resolve(key) ?: return@forEachIndexed
+                    evaluated++
+                    if (resolution.type in PRIMITIVES) return@forEachIndexed
+                    offenders.add(
+                        "${file.invariantSeparatorsPath}:${index + 1}: " +
+                            "${resolution.owner}.${key.property} is ${resolution.type}",
+                    )
+                }
+            }
+        }
+        return Census(sites = sites, evaluated = evaluated, offenders = offenders.sorted())
+    }
+
+    private class Census(
+        private val sites: Int,
+        private val evaluated: Int,
+        val offenders: List<String>,
+    ) {
+        fun summary(): String = "sites=$sites evaluated=$evaluated offenders=${offenders.size}"
     }
 
     private fun declarations(files: List<File>): Declarations {
@@ -66,28 +99,19 @@ abstract class CheckLazyListKeysTask : DefaultTask() {
         return Declarations(byOwner, byName, elements)
     }
 
-    private fun offenders(file: File, declarations: Declarations): List<String> =
-        file.useLines { lines ->
-            lines.mapIndexedNotNull { index, line ->
-                val key: Key = key(line) ?: return@mapIndexedNotNull null
-                val resolution: Resolution = declarations.resolve(key) ?: return@mapIndexedNotNull null
-                if (resolution.type in PRIMITIVES) return@mapIndexedNotNull null
-                "${file.invariantSeparatorsPath}:${index + 1}: " +
-                    "${resolution.owner}.${key.property} is ${resolution.type}"
-            }.toList()
-        }
-
     private fun key(line: String): Key? {
         val reference: MatchResult? = REFERENCE_KEY.find(line)
         if (reference != null) {
-            val property: String = reference.groupValues[2]
-            if (property == UNDERLYING_VALUE) return null
-            return Key(property = property, owner = reference.groupValues[1].substringAfterLast('.'))
+            return Key(
+                property = reference.groupValues[2],
+                owner = reference.groupValues[1].substringAfterLast('.'),
+            )
         }
         val lambda: MatchResult = LAMBDA_KEY.find(line) ?: return null
-        val property: String = lambda.groupValues[1].substringAfterLast('.')
-        if (property == UNDERLYING_VALUE) return null
-        return Key(property = property, collection = ITEMS.find(line)?.groupValues?.get(1))
+        return Key(
+            property = lambda.groupValues[1].substringAfterLast('.'),
+            collection = ITEMS.find(line)?.groupValues?.get(1),
+        )
     }
 
     private data class Key(
@@ -123,6 +147,7 @@ abstract class CheckLazyListKeysTask : DefaultTask() {
         const val OWNER_SEPARATOR: String = "#"
         const val UNDERLYING_VALUE: String = "value"
 
+        val KEY_SITE: Regex = Regex("""\bkey\s*=\s*[{A-Za-z_]""")
         val DECLARATION: Regex = Regex("""\b(?:class|object|interface)\s+([A-Z]\w*)""")
         val PROPERTY: Regex = Regex("""\bva[lr]\s+([A-Za-z_]\w*)\s*:\s*(([A-Za-z_][\w.]*)[^,)=\n]*)""")
         val ELEMENT: Regex = Regex("""^(?:[A-Za-z_][\w.]*)?List<([A-Za-z_][\w.]*)>""")

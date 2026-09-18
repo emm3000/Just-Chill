@@ -357,6 +357,36 @@ class GateCheckTest {
         assertTrue(output.contains("LoanRowUi.loanId is LoanId"), output)
     }
 
+    @Test
+    fun `an owner-scoped String id passes the lazy key check while a same-named value class exists`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/main/kotlin/LoanRowUi.kt" to PRIMITIVE_ID_MODEL,
+                "feature/loan/src/main/kotlin/LoanCache.kt" to TYPED_ID_CACHE,
+                "feature/loan/src/main/kotlin/PersonLoansUiState.kt" to ROW_COLLECTION_STATE,
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to STATE_COLLECTION_KEY,
+            ),
+        )
+
+        assertSucceeded(result, ":feature:loan:$LAZY_KEY_TASK")
+    }
+
+    @Test
+    fun `a value class declared by a test fixture alone passes the lazy key check`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/test/kotlin/LoanFixtures.kt" to TYPED_ID_FIXTURE,
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to FIXTURE_NAMED_KEY,
+            ),
+        )
+
+        assertSucceeded(result, ":feature:loan:$LAZY_KEY_TASK")
+    }
+
     private fun assertSucceeded(result: BuildResult, taskPath: String) {
         assertEquals(TaskOutcome.SUCCESS, result.task(taskPath)?.outcome, taskPath)
     }
@@ -401,6 +431,13 @@ class GateCheckTest {
             "package sample\n\ndata class PersonLoansUiState(\n    val loans: List<LoanRowUi>,\n)\n"
         const val STATE_COLLECTION_KEY: String =
             "package sample\n\nfun rows() = items(state.loans, key = { it.loanId }) { }\n"
+
+        const val TYPED_ID_CACHE: String =
+            "package sample\n\ndata class LoanCache(\n    val loanId: LoanId,\n)\n"
+        const val TYPED_ID_FIXTURE: String =
+            "package sample\n\ndata class LoanFixture(\n    val fixtureId: LoanId,\n)\n"
+        const val FIXTURE_NAMED_KEY: String =
+            "package sample\n\nfun rows() = items(loans, key = { it.fixtureId }) { }\n"
 
         const val FOREIGN_ID_KEY: String =
             "package sample\n\nfun rows() = items(loans, key = { it.pendingId }) { }\n"

@@ -84,9 +84,12 @@ class QualityGateConventionPlugin : Plugin<Project> {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
                 "Fails when a LazyList key of this module passes an id whose type this module " +
-                    "declares as a value class instead of its underlying primitive. A property " +
-                    "another module declares is invisible to it, and so is a key built from " +
-                    "anything but `it.<property>` or a `Type::property` reference."
+                    "declares as a value class instead of its underlying primitive. It sees only " +
+                    "this module's production sources, so a key whose row model another module " +
+                    "declares is skipped, `Type::property` included. So is a key built from " +
+                    "anything but `it.<property>` or `Type::property`, and one whose owner is " +
+                    "unresolvable while the property name is declared more than once here. The " +
+                    "report file counts the key sites found, evaluated and rejected."
             sources.from(lazyKeySources())
             report.set(layout.buildDirectory.file("reports/$LAZY_KEY_TASK.txt"))
         }
@@ -106,8 +109,13 @@ class QualityGateConventionPlugin : Plugin<Project> {
     private fun Project.composeFreeSources(): FileCollection =
         fileTree(SOURCE_DIRECTORY) { include(VIEW_MODEL_SOURCES, UI_STATE_SOURCES) }
 
+    // A test fixture declaring its own value-class id would be read as a production declaration
+    // and could redden a safe key through the name-only fallback, so the test source sets stay out.
     private fun Project.lazyKeySources(): FileCollection =
-        fileTree(SOURCE_DIRECTORY) { include(KOTLIN_SOURCES) }
+        fileTree(SOURCE_DIRECTORY) {
+            include(KOTLIN_SOURCES)
+            exclude(TEST_SOURCE_SETS)
+        }
 
     companion object {
         const val GATE_TASK: String = "qualityGate"
@@ -129,6 +137,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val VIEW_MODEL_SOURCES: String = "**/*ViewModel.kt"
         private const val UI_STATE_SOURCES: String = "**/*UiState.kt"
         private const val KOTLIN_SOURCES: String = "**/*.kt"
+        private val TEST_SOURCE_SETS: List<String> = listOf("test*/**", "androidTest*/**")
         private const val SQLDELIGHT_DIRECTORY: String = "src/main/sqldelight"
         private const val SNAPSHOT_DIRECTORY: String = "src/main/sqldelight/databases"
         private const val MIGRATION_SOURCES: String = "**/*.sqm"
