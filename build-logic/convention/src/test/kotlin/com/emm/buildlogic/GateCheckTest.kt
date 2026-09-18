@@ -130,6 +130,78 @@ class GateCheckTest {
         assertTrue(output.contains("src/test/kotlin/LoanUiState.kt"), output)
     }
 
+    @Test
+    fun `a migration whose snapshot was never written fails the snapshot check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module()),
+            sources = mapOf(
+                "$MIGRATION_DIRECTORY/0.sqm" to MIGRATION_SOURCE,
+                "$MIGRATION_DIRECTORY/1.sqm" to MIGRATION_SOURCE,
+                "$SNAPSHOT_DIRECTORY/1.db" to SNAPSHOT_SOURCE,
+            ),
+        )
+
+        assertTrue(output.contains("1.sqm has no snapshot 2.db"), output)
+    }
+
+    @Test
+    fun `a migration that ships its snapshot passes the snapshot check`() {
+        val result: BuildResult = fixture.check(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module()),
+            sources = mapOf(
+                "$MIGRATION_DIRECTORY/0.sqm" to MIGRATION_SOURCE,
+                "$SNAPSHOT_DIRECTORY/1.db" to SNAPSHOT_SOURCE,
+            ),
+        )
+
+        assertSucceeded(result, ":core:database:$SNAPSHOT_TASK")
+    }
+
+    @Test
+    fun `the current baseline shape passes the snapshot check`() {
+        val migrations: Map<String, String> = (0..5).associate { version ->
+            "$MIGRATION_DIRECTORY/$version.sqm" to MIGRATION_SOURCE
+        }
+        val snapshots: Map<String, String> = (3..6).associate { version ->
+            "$SNAPSHOT_DIRECTORY/$version.db" to SNAPSHOT_SOURCE
+        }
+
+        val result: BuildResult = fixture.check(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module()),
+            sources = migrations + snapshots,
+        )
+
+        assertSucceeded(result, ":core:database:$SNAPSHOT_TASK")
+    }
+
+    @Test
+    fun `a snapshot with no migration behind it fails the snapshot check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module()),
+            sources = mapOf(
+                "$MIGRATION_DIRECTORY/0.sqm" to MIGRATION_SOURCE,
+                "$SNAPSHOT_DIRECTORY/1.db" to SNAPSHOT_SOURCE,
+                "$SNAPSHOT_DIRECTORY/3.db" to SNAPSHOT_SOURCE,
+            ),
+        )
+
+        assertTrue(output.contains("3.db has no migration 2.sqm"), output)
+    }
+
+    @Test
+    fun `a module without sqldelight passes the snapshot check`() {
+        val result: BuildResult = fixture.check(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module()),
+        )
+
+        assertSucceeded(result, ":core:database:$SNAPSHOT_TASK")
+    }
+
     private fun assertSucceeded(result: BuildResult, taskPath: String) {
         assertEquals(TaskOutcome.SUCCESS, result.task(taskPath)?.outcome, taskPath)
     }
@@ -150,7 +222,12 @@ class GateCheckTest {
     private companion object {
         const val BOUNDARY_TASK: String = QualityGateConventionPlugin.BOUNDARY_TASK
         const val COMPOSE_TASK: String = QualityGateConventionPlugin.COMPOSE_TASK
+        const val SNAPSHOT_TASK: String = QualityGateConventionPlugin.SNAPSHOT_TASK
 
         const val COMPOSE_SOURCE: String = "package sample\n\nimport androidx.compose.runtime.Immutable\n"
+        const val MIGRATION_DIRECTORY: String = "core/database/src/main/sqldelight/com/sample"
+        const val SNAPSHOT_DIRECTORY: String = "core/database/src/main/sqldelight/databases"
+        const val MIGRATION_SOURCE: String = "ALTER TABLE sample ADD COLUMN note TEXT;\n"
+        const val SNAPSHOT_SOURCE: String = "SQLite format 3\n"
     }
 }
