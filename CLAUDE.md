@@ -75,7 +75,7 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 - `./gradlew qualityGate` — the gate CI runs, defined in `QualityGateConventionPlugin.kt`; its `qualityGate` task `description` is the task list. `ConventionPluginTest`'s gate constants pin the per-module closure only.
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
 - `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:core:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
-- `./gradlew :core:database:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.
+- `./gradlew :core:database:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator. Peers shoot on the `gema-*` pool instead; `docs/agents/multi-session.md` holds the split.
 - Test tasks go `UP-TO-DATE` or `FROM-CACHE` across sessions: `--rerun-tasks` re-runs every task in the invocation, `--no-build-cache` stops a stale cache hit.
 
 ## Test stack
