@@ -18,8 +18,6 @@ import com.emm.justchill.wiring.transactionWiring
 import org.koin.core.Koin
 import org.koin.core.module.Module
 
-// EmmApp calls startKoin with this list plus its own experiencesModule. The core/di modules hold
-// what no single feature owns; each *Wiring module binds one feature's use cases.
 fun appModules(platformModule: Module): List<Module> = listOf(
     backupModule,
     sharedModule,
@@ -38,7 +36,5 @@ fun appModules(platformModule: Module): List<Module> = listOf(
 )
 
 fun bootstrapAppGraph(koin: Koin) {
-    // SNAPSHOT_BACKUP_ENABLED off: skipping start() leaves BackupOrchestrator bound and lazily
-    // resolvable, only its export/upload/prune loops are off. See BackupKillSwitch.kt.
     if (SNAPSHOT_BACKUP_ENABLED) koin.get<BackupOrchestrator>().start()
 }

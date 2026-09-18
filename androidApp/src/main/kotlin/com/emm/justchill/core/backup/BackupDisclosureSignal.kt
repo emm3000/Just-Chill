@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.flowOf
 
 class BackupDisclosureSignal(observeSession: ObserveSessionUseCase, backupController: BackupController) {
 
-    // SNAPSHOT_BACKUP_ENABLED off: the orchestrator never starts, so canUploadToDestination stays
-    // false for every account and an ungated signal would announce a gate that cannot run.
     val isPending: Flow<Boolean> = if (SNAPSHOT_BACKUP_ENABLED) {
         combine(observeSession(), backupController.health, ::disclosureIsPending).distinctUntilChanged()
     } else {
