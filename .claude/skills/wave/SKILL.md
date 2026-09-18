@@ -37,6 +37,7 @@ Reviews and other roles keep the playbook rules: a `pr-reviewer` on every PR, re
 Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a row shows two or more first-review FIX FIRST verdicts for reasons the checklist did not cover, raise it one step and note why here.
 
 - A module-wide sweep that needs judgment per line (which comment survives, which rationale is a duplicate) takes row 3, opus:medium. Wave #129-#133 ran it on sonnet:medium: all 5 PRs came back FIX FIRST, 3 for judgment (partial sweeps, kept history, repeated rationale).
+- A dispatch that names a reference file to model the work on inherits that file's debt, so name its known gaps in the same breath. Wave #208-#220 pointed three tickets at `DeleteCategoryDialog`, whose `val type` carries no explicit type: #223 and #224 both came back FIX FIRST on exactly that line. Raising the row would have been the wrong lesson, because the model was not the cause.
 
 ## Execution Steps
 
