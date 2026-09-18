@@ -11,15 +11,14 @@ import com.emm.justchill.feature.loan.LoanDetailViewModel
 import com.emm.justchill.feature.loan.PersonLoansViewModel
 import com.emm.justchill.feature.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.feature.transaction.capture.EditTransactionViewModel
+import com.emm.justchill.core.testing.MainDispatcherRule
 import com.russhwolf.settings.SettingsInitializer
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.koin.core.Koin
 import org.koin.core.annotation.KoinInternalApi
@@ -45,23 +44,23 @@ class AppGraphKoinTest {
 
     private lateinit var koin: Koin
 
+    // Standard (not Unconfined): init-block coroutines stay queued and never run, so this test
+    // measures WIRING only and cannot flake on database contents or network reachability.
+    @get:Rule
+    val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
+
     @Before
     fun setUp() {
         // supabaseModule's install(Auth) needs a Context from an androidx.startup Initializer that
         // only runs inside a real app; SettingsInitializer.create is the documented hook to supply
         // one from tests. A relaxed mock is enough — nothing here reads or writes preferences.
         SettingsInitializer().create(mockk<Context>(relaxed = true))
-
-        // Standard (not Unconfined): init-block coroutines stay queued and never run, so this test
-        // measures WIRING only and cannot flake on database contents or network reachability.
-        Dispatchers.setMain(StandardTestDispatcher())
         koin = koinApplication { modules(appModules(testPlatformModule)) }.koin
     }
 
     @After
     fun tearDown() {
         koin.close()
-        Dispatchers.resetMain()
     }
 
     @Test
