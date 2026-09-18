@@ -42,6 +42,17 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `a flavored application names its own release compile because compileReleaseKotlin never matches`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.application"),
+            androidConfiguration = FLAVORED_APPLICATION_CONFIGURATION,
+            arguments = REPORT_GATE_TASKS,
+        )
+
+        assertEquals(FLAVORED_GATE_TASKS, report["gateTasks"])
+    }
+
+    @Test
     fun `a module that sets its own namespace keeps it over the derived one`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.library"),
@@ -227,6 +238,31 @@ class ConventionPluginTest {
         const val CHECK_PLUGINS: String = "justchill.quality.gate"
 
         val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
+
+        val FLAVORED_APPLICATION_CONFIGURATION: String = """
+            android {
+                namespace = "com.emm.justchill.probe"
+
+                defaultConfig {
+                    applicationId = "com.emm.justchill.probe"
+                }
+
+                flavorDimensions += "environment"
+
+                productFlavors {
+                    create("dev") { dimension = "environment" }
+                    create("prod") { dimension = "environment" }
+                }
+            }
+
+            tasks.named("qualityGate") {
+                dependsOn("compileProdReleaseKotlin")
+            }
+        """.trimIndent()
+
+        const val FLAVORED_GATE_TASKS: String =
+            "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
+                "compileProdReleaseKotlin"
 
         const val GATE_TASKS: String =
             "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +

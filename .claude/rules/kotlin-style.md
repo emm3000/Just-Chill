@@ -62,7 +62,7 @@ No linter runs in this repo, and none is coming back (ADR 016). These limits are
 - At most 4 levels of nesting. Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
 - At most 2 real returns per function; a labeled return out of a lambda is not one. More than two means the function should be split.
 - At most 8 functions per file — the limit the repo leans on for Compose decomposition.
-- Cyclomatic complexity around 14 per function, and 60 lines is a long function in production and in a test alike.
+- Cyclomatic complexity around 14 per function, and 60 lines is a long function in production and in a test alike. `@Composable` and `@Preview` functions are exempt from the length number — see Compose sizing below, where decomposition is the measure instead.
 
 `./gradlew qualityGate` must be green before every commit, but it compiles and tests; it never judges style. Passing it is necessary, never sufficient: a reviewer may require a change no number here forbids.
 
