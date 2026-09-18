@@ -76,7 +76,7 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
 - `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:core:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
 - `./gradlew :core:database:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator, the only AVD.
-- Test tasks go `UP-TO-DATE` across sessions: `--rerun` forces a real run, per task.
+- Test tasks go `UP-TO-DATE` or `FROM-CACHE` across sessions: `--rerun-tasks` re-runs every task in the invocation, `--no-build-cache` stops a stale cache hit.
 
 ## Test stack
 
