@@ -179,6 +179,10 @@ internal class ConventionPluginFixture(
                         println("REPORT compose=" + android.buildFeatures.compose)
                         println("REPORT namespace=" + android.namespace)
                     }
+                    val library = project.extensions.findByType(com.android.build.api.dsl.LibraryExtension::class.java)
+                    if (library != null) {
+                        println("REPORT testTargetSdk=" + library.testOptions.targetSdk)
+                    }
                     val application = project.extensions.findByType(com.android.build.api.dsl.ApplicationExtension::class.java)
                     if (application != null) {
                         println("REPORT targetSdk=" + application.defaultConfig.targetSdk)
