@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.hh.category.AddCategoryViewModel
+import com.emm.justchill.feature.category.AddCategoryViewModel
 import com.emm.justchill.hh.loan.AddEditLoanViewModel
 import com.emm.justchill.hh.loan.LoanDetailViewModel
 import com.emm.justchill.hh.loan.PersonLoansViewModel

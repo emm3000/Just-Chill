@@ -5,7 +5,6 @@ import com.emm.justchill.core.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.commonCoreModule
 import com.emm.justchill.hh.di.authModule
 import com.emm.justchill.hh.di.backupModule
-import com.emm.justchill.hh.di.categoryModule
 import com.emm.justchill.hh.di.dataModule
 import com.emm.justchill.hh.di.loanModule
 import com.emm.justchill.hh.di.profileModule
@@ -33,7 +32,6 @@ import org.koin.core.module.Module
 fun appModules(platformModule: Module): List<Module> = listOf(
     transactionModule,
     seetransactionsModule,
-    categoryModule,
     loanModule,
     recurringModule,
     reportModule,

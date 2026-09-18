@@ -36,6 +36,9 @@ import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.feature.category.CategoriesListRoute
+import com.emm.justchill.feature.category.CategoryRoute
+import com.emm.justchill.feature.category.categoryEntries
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.BottomBarRoute
 import com.emm.justchill.core.ui.navigation.NavHostBindings
@@ -47,7 +50,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountEntries
 import com.emm.justchill.hh.auth.authEntries
-import com.emm.justchill.hh.category.categoryEntries
 import com.emm.justchill.hh.loan.loanEntries
 import com.emm.justchill.hh.onboarding.onboardingEntries
 import com.emm.justchill.hh.profile.profileEntries
@@ -155,6 +157,9 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         pendingCategory = { pendingCategory },
                         onPendingCategoryConsumed = { pendingCategory = null },
                         onAddNewAccount = { nav -> nav.push(AddAccountRoute) },
+                        onAddNewCategory = { nav, categoryType ->
+                            nav.push(CategoryRoute(initialType = categoryType, propagateToTransaction = true))
+                        },
                     )
                     reportEntries(bindings)
                     recurringEntries(bindings)
@@ -164,6 +169,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         commitHash = commitHash,
                         pendingImportJson = { pendingImportJson },
                         onImportHandled = { pendingImportJson = null },
+                        onCategoriesClick = { nav -> nav.push(CategoriesListRoute) },
                     )
                 },
             )

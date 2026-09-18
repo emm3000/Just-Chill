@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.mvi.UiIntent
