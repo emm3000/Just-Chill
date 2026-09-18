@@ -1,6 +1,5 @@
 ---
 paths:
-  - "ui-android/src/main/kotlin/**"
   - "core/ui/src/main/kotlin/**"
   - "androidApp/src/main/kotlin/**"
   - "feature/*/src/main/kotlin/**"
@@ -8,7 +7,7 @@ paths:
 
 # Shared UI rules
 
-The design system lives in `:core:ui`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/ui/theme/` (`com.emm.justchill.core.ui.theme`). `core/ui/components/` holds legacy `Emm*` widgets that are **not** the design system. The navigation vocabulary is `:core:ui`'s `core/ui/navigation/` (`AppRoute` and its markers, `AppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface), `AmountInputSheet` sits in `core/ui/sheets/` and `FormSection` is an atom. The app shell is `:androidApp`'s `shell/` (the nav host and the bottom bar); `:ui-android`'s `hh/shared/` holds the concrete routes and the fields more than one feature uses, and neither is a feature package.
+The design system lives in `:core:ui`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/ui/theme/` (`com.emm.justchill.core.ui.theme`). `core/ui/components/` holds legacy `Emm*` widgets that are **not** the design system. The navigation vocabulary is `:core:ui`'s `core/ui/navigation/` (`AppRoute` and its markers, `AppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface), `AmountInputSheet` sits in `core/ui/sheets/` and `FormSection` is an atom. The app shell is `:androidApp`'s `shell/` (the nav host, the bottom bar, the shortcut routes and the SAF host actions), and it is not a feature package.
 
 ## The iron rule
 
@@ -21,7 +20,7 @@ A custom component written inside a screen never replaces an atom that exists fo
 ## Before creating a component
 
 1. **Check `core/ui/atoms/` first.** If it exists, use it. No exceptions.
-2. **Decide the scope.** Used by a single screen, it belongs to the feature package in `:ui-android` (`hh/<feature>/`, as a sibling file or under `components/`). Used app-wide, it belongs in `:core:ui`'s `core/ui/atoms/`.
+2. **Decide the scope.** Used by a single screen, it belongs to its own `:feature:<name>` package, as a sibling file or under `components/`. Used app-wide, it belongs in `:core:ui`'s `core/ui/atoms/`.
 3. **If it must be created**, template on `IconBtn.kt` (the 48dp target around a smaller glyph) or `FilledCta.kt`, name it by its role with a matching file name, and include a `@Preview` wrapped in `EmmTheme`.
 
 ## Theme tokens are the style guide
@@ -35,7 +34,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 1. **Numbers are the hero.** The amount is what the user came for. The `amount*` roles are the largest type in the app and the only ones in the mono family. A screen's summary has **one** hero amount; the others step down to `textSecondary` on one line.
 2. **Negative space is a component.** Whitespace has a name (`EmmSpacing`), a size and a reason. Crowding is a design failure.
 3. **Hierarchy through type and tone, never through hue.** Emphasis is a step down the text ladder (`textPrimary` → `textSecondary` → `textTertiary`) or a change of size and weight. Hue is reserved for meaning: one accent, four status tokens, six category tints.
-4. **Positive is tinted; negative stays monochrome.** An income amount takes `success`; an expense stays `textPrimary`, never red. `danger` means destructive or broken, not "money leaving". A signed net or balance aggregate (a month net, a total owed) follows the same rule: positive takes `+` and `success`, zero or negative stays monochrome. A magnitude under its own label ("Por cobrar", "Entran") is not a net and keeps the unsigned income/expense semantics. A new net or balance routes its sign and tint through `Money.positiveMoneyFormatted()` (`:presentation`) and `AmountTone.color()` (`:core:ui`'s `core/ui/atoms/AmountTone.kt`); an inline `if` there reopens the monochrome-positive bug.
+4. **Positive is tinted; negative stays monochrome.** An income amount takes `success`; an expense stays `textPrimary`, never red. `danger` means destructive or broken, not "money leaving". A signed net or balance aggregate (a month net, a total owed) follows the same rule: positive takes `+` and `success`, zero or negative stays monochrome. A magnitude under its own label ("Por cobrar", "Entran") is not a net and keeps the unsigned income/expense semantics. A new net or balance routes its sign and tint through `Money.positiveMoneyFormatted()` (`:core:ui`) and `AmountTone.color()` (`:core:ui`'s `core/ui/atoms/AmountTone.kt`); an inline `if` there reopens the monochrome-positive bug.
 5. **Hairline over shadow.** Surfaces separate with space, a 1dp `border` `Hairline`, or a surface step. There is not one elevation shadow in the design system; keep it that way.
 
 ### Colour
@@ -44,7 +43,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 - **Text** (`textPrimary`, `textSecondary`, `textTertiary`, `textDisabled`, `textOnAccent`): `textOnAccent` is the only colour that goes on top of `accent`.
 - **Accent** (`accent`, `accentMuted`, `accentFocus`): one hue, and it is the brand. `accent` marks the single primary action of a screen; `accentFocus` marks focus; `accentMuted` is a fill behind something, never a text colour.
 - **Status** (`success`, `warning`, `danger`, `info`, `posMuted`, `negMuted`): system state, never transaction type. The `*Muted` washes are the ground behind an icon or inside a `Pill`; the readable mark on top is the full-strength token.
-- **Category** (`cat*` tints, `catGraphite` the fallback): tint an icon or a dot, never a whole surface. The domain stores a colour *name*; `hh/report/ReportFormat.kt` maps it to a token, so the palette can be retuned without a migration.
+- **Category** (`cat*` tints, `catGraphite` the fallback): tint an icon or a dot, never a whole surface. The domain stores a colour *name*; `:feature:report`'s `ReportFormat.kt` maps it to a token, so the palette can be retuned without a migration.
 
 ### Typography
 
@@ -59,7 +58,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 - Touch targets are 48×48dp, non-negotiable. A child of a fixed-height row is not 48dp by inheritance: `Alignment.CenterVertically` measures at intrinsic height, so a clickable inside a 48dp band carries `fillMaxHeight()` itself. A 48dp header target keeps its glyph on the rows' column by giving the padding back at the edge, never by shrinking the target.
 - `EmmRadii` `r0`…`rXXL`, `rLTop` for sheet tops, `rFull` for circles. Default to the smallest radius that reads right.
 - No shadows. A modal that must read as "above" gets `surface1`, a hairline and rounded top corners.
-- `Icons.Outlined.*`; filled only when the icon represents a state. 24dp standard, 20dp inline with body text, 32dp rare. Never a brand logo or a bank's registered colours: an account is its type's icon plus a category tint. The tint map is `:core:ui`'s `core/ui/account/AccountPalette.kt`; the icon and label maps stay with the feature, in `hh/account/AccountPalette.kt`.
+- `Icons.Outlined.*`; filled only when the icon represents a state. 24dp standard, 20dp inline with body text, 32dp rare. Never a brand logo or a bank's registered colours: an account is its type's icon plus a category tint. The tint map is `:core:ui`'s `core/ui/account/AccountPalette.kt`; the icon and label maps stay with the feature, in `:feature:account`'s `AccountPalette.kt`.
 
 ### Component invariants
 

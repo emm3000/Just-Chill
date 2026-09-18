@@ -1,15 +1,14 @@
-package com.emm.justchill.hh.__feature__
+package com.emm.justchill.feature.__feature__
 
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import com.emm.justchill.hh.shared.AppNavigator
-import com.emm.justchill.hh.shared.NavHostBindings
-import com.emm.justchill.hh.shared.__Feature__Route
-import com.emm.justchill.hh.shared.rememberAppNavigator
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 
 fun EntryProviderScope<NavKey>.__feature__Entries(bindings: NavHostBindings) {
     entry<__Feature__Route> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         __Feature__Screen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,

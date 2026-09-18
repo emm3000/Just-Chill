@@ -1,6 +1,5 @@
-package com.emm.justchill.hh.di
+package com.emm.justchill.feature.__feature__
 
-import com.emm.justchill.hh.__feature__.__Feature__ViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 

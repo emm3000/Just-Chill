@@ -103,7 +103,7 @@ WHERE t.deletedAt IS NULL
 ORDER BY t.occurredAt DESC;
 
 -- Same lexicographic-bound shape as completeTransactionsByDateRange, but no joins: this is what
--- accountsMonthSlice (:presentation) folds now instead of `all()`'s whole live table (E14-06). An
+-- accountsMonthSlice (:feature:account) folds now instead of `all()`'s whole live table (E14-06). An
 -- unknown type value never reaches that fold at all -- TransactionMappers.asExternalModelOrNull()
 -- already drops a row it cannot parse, the same skip-row policy liveTotals enforces with a CASE WHEN
 -- because ITS caller never goes through that mapper.

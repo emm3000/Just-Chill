@@ -1,6 +1,6 @@
 ---
-status: accepted
-date: 2026-09-17
+status: done
+date: 2026-09-18
 ---
 # Feature modules over layer modules
 
@@ -76,6 +76,7 @@ migration suite runs on `medium_phone` before and after `:data` moves.
 - `:core:testing` added (JVM, `MainDispatcherRule` + `FakeTodayFlow`, depends on `:core:domain` only); a feature depends on `:core:domain` and `:core:ui`, plus `:core:testing` on the test edge only.
 - `RouteSerializationTest` concatenates one route registry per feature instead of walking `sealedSubclasses`.
 - Waves 6 and 7 merged: `:feature:{account, category, loan, report}` populated.
+- Wave 9 done: `:presentation` and `:ui-android` deleted. `:androidApp` took the backup cycle, the lifecycle edges, `AppPreferences` and the four cross-cutting Koin modules as `core/di/`, and `rememberPlatformHostActions` as `shell/`; every other file in them was dead and went. `ModuleRole` lost `LAYER` and gained `ROOT`, so an unrecognised module path now fails `checkModuleBoundaries` instead of falling through.
 
 ## Considered options
 

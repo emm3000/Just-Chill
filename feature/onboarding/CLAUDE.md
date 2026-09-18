@@ -8,8 +8,8 @@ The manifesto: the first screen a fresh install opens on, and the same screen Pr
 
 - No Koin module: nothing here is injected, so the feature has no `onboardingModule` and no wiring file in `:androidApp`. Add both the day a ViewModel arrives.
 - `OnboardingRoutes.kt` holds `ManifestoRoute` (`@Serializable`, carrying `isRevisit`) and `onboardingRoutes`, the registry `:androidApp`'s `RouteSerializationTest` unions.
-- `onboardingEntries(bindings, onFirstLaunchSeen)` takes the first-launch write as a callback: `AppPreferences` lives in `:presentation`, which a feature module never depends on, so `:androidApp` supplies `{ appPrefs.firstLaunchSeen = true }` at the `entryProvider` call site.
-- The revisit from Profile is the mirror case: `profileEntries` takes `onAboutClick: (AppNavigator) -> Unit` and `:androidApp` pushes `ManifestoRoute(isRevisit = true)`, since `:ui-android` cannot import this module either.
+- `onboardingEntries(bindings, onFirstLaunchSeen)` takes the first-launch write as a callback: `AppPreferences` lives in `:androidApp`'s `core/preferences/`, which a feature module never depends on, so `:androidApp` supplies `{ appPrefs.firstLaunchSeen = true }` at the `entryProvider` call site.
+- The revisit from Profile is the mirror case: `profileEntries` takes `onAboutClick: (AppNavigator) -> Unit` and `:androidApp` pushes `ManifestoRoute(isRevisit = true)`, since one feature never imports another.
 
 ## Feature gotchas
 

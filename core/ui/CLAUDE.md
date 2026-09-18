@@ -7,7 +7,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the na
 ## Design system
 
 - Which atom and which token, and why: `.claude/rules/ui-components.md`. That file is the style guide; the values live in `theme/EmmColors.kt`, `EmmType.kt`, `EmmSpacing.kt` and `EmmRadii.kt`.
-- The Inter and IBM Plex Mono faces are this module's own resources under `src/main/res/font/`, reached through `com.emm.justchill.core.ui.R`. `EmmType` is the only file that touches `R`; `:ui-android`'s `com.emm.justchill.shared.R` no longer carries a font.
+- The Inter and IBM Plex Mono faces are this module's own resources under `src/main/res/font/`, reached through `com.emm.justchill.core.ui.R`. `EmmType` is the only file that touches `R`.
 - `compose_stability.conf` declares `com.emm.justchill.**` stable, so an atom taking a `:core:domain` `Money` still skips recomposition.
 - `components/` holds the legacy `EmmButton`, `EmmCard`, `EmmListItem`, `EmmTextInput` widgets. They are not the design system and no new screen reaches for them.
 
@@ -23,7 +23,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the na
 
 - `category/` holds the two catalogs the domain's semantic ids resolve against — `AppIconCatalog` (`IconsAll.kt`) and `allColors` (`ColorsAll.kt`) — plus `CategoryUi`, `SelectableCategory` and the `resolvedIcon` / `resolvedColor` getters in `CategoryResolve.kt` that turn an `iconId` / `colorId` into an `ImageVector` and a `CategoryColor`. A stored `ImageVector` or `Color` is the bug this package exists to prevent.
 - `transaction/` holds `TransactionUi` with its `toUi` mapper, the `Catalog` a capture form cuts its lists out of, and `TransactionRow`. `Catalog.Loading` is not an empty `Loaded`; only `loaded` tells the two apart.
-- `sheets/` holds `AccountPickerSheet`, `CategoryPickerSheet` and `DatePickerSheet`, shared by the transaction, recurring and loan forms. A sheet used by one feature stays in that feature's package in `:ui-android` — `NoteSheet` is the example.
+- `sheets/` holds `AccountPickerSheet`, `CategoryPickerSheet` and `DatePickerSheet`, shared by the transaction, recurring and loan forms. A sheet used by one feature stays in that feature's own module — `NoteSheet` is the example.
 - `SelectorChip`, `FrequentComboChip` and the `ChipDot` they draw are atoms like any other, under `atoms/`.
 
 ## MVI base

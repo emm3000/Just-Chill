@@ -22,7 +22,7 @@ English, neutral register, sized for one PR, at most 30 lines, self-sufficient f
 
 1. Title `<Area>: <slice>` matching the existing tickets.
 2. At most 3 lines of context, then pointers to the PRD row, the ADR and the implementation files.
-3. `Done when`: a checklist of falsifiable conditions. Prefer a command with its expected output (`rg -l 'androidx\.compose' presentation/src/main` returns nothing). Always the last item: `./gradlew qualityGate assembleDevDebug` green. Name the module `CLAUDE.md` gotchas the slice crosses. State that the criteria win over the file list.
+3. `Done when`: a checklist of falsifiable conditions. Prefer a command with its expected output (`rg -l 'androidx\.compose' -g '*ViewModel.kt' feature/*/src/main` returns nothing). Always the last item: `./gradlew qualityGate assembleDevDebug` green. Name the module `CLAUDE.md` gotchas the slice crosses. State that the criteria win over the file list.
 4. For UI: the states `.claude/rules/ui-components.md` defines and a visual check step: install on the `medium_phone` emulator (never a second AVD), screenshot every changed screen and state, publish them on `assets/<issue>-visual-check` with the PR head short SHA in every file name, and link them in the PR body with `raw.githubusercontent.com` URLs.
 5. Known gaps between the PRD and the code, factual, no redesign.
 6. Label `ready-for-agent`; `needs-info` instead when the PRD row is too thin to write a falsifiable criterion, with the missing fact named.

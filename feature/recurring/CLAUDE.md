@@ -4,15 +4,15 @@ Recurring movement templates: the list with its monthly totals and its paused se
 
 `id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended`. Depends on `:core:ui` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge.
 
-`./gradlew :feature:recurring:testDebugUnitTest`. The two MockK ViewModel suites moved here from `:androidApp` with the ViewModels and `RecurringMovementUiTest` from `:presentation`; `MainDispatcherRule` comes from `:core:testing`.
+`./gradlew :feature:recurring:testDebugUnitTest`. The two MockK ViewModel suites and `RecurringMovementUiTest` live here with the ViewModels; `MainDispatcherRule` comes from `:core:testing`.
 
 ## Koin and the graph
 
-`recurringModule` is declared here and binds the two ViewModels, nothing else. `AddEditRecurringMovementViewModel` takes its `id` as a Koin parameter, so it is a `viewModel { parameters -> ... }` block, not a `viewModelOf`. `:androidApp`'s `wiring/RecurringWiring.kt` includes it and adds the eight recurring use cases; the repositories stay in `:presentation`'s `hh/di/DataModule.kt`, since only the app sees `:core:database`. Both ViewModels are listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
+`recurringModule` is declared here and binds the two ViewModels, nothing else. `AddEditRecurringMovementViewModel` takes its `id` as a Koin parameter, so it is a `viewModel { parameters -> ... }` block, not a `viewModelOf`. `:androidApp`'s `wiring/RecurringWiring.kt` includes it and adds the eight recurring use cases; the repositories stay in `:androidApp`'s `core/di/DataModule.kt`, since only the app sees `:core:database`. Both ViewModels are listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
 
 ## Pendings belong to `:core:ui`, not here
 
-`PendingRecurringUi`, the pending list header and row and `ConfirmRecurringSheet` live in `:core:ui`'s `pending/`, because the Transaction list is what shows a pending (ADR 015, wave 5). Confirm, Skip and their use cases are driven from `SeeTransactionsViewModel` in `:presentation`, which never reaches this module. Moving any of it back here would make the Transaction list depend on the Recurring feature.
+`PendingRecurringUi`, the pending list header and row and `ConfirmRecurringSheet` live in `:core:ui`'s `pending/`, because the Transaction list is what shows a pending (ADR 015, wave 5). Confirm, Skip and their use cases are driven from `:feature:transaction`'s `SeeTransactionsViewModel`, which never reaches this module. Moving any of it back here would make the Transaction list depend on the Recurring feature.
 
 ## The form
 

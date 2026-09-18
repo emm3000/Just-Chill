@@ -1,8 +1,8 @@
 # :core:backup — CLAUDE.md
 
-Android library (`com.android.library`, ADR 011) holding the opt-in snapshot backup (ADR 009) and the Supabase account it rides on: the export DTOs and their frozen older generations, the payload decoder, the object store over Supabase Storage, the uploader, verifier, pruner and eraser, and `auth/`. It depends on `:core:domain` and nothing else — never on `:core:database`, which `checkModuleBoundaries` enforces. Rows reach it through `SnapshotStore`, the port `:core:domain` declares, `:core:database` implements and `hh/di/DataModule.kt` binds.
+Android library (`com.android.library`, ADR 011) holding the opt-in snapshot backup (ADR 009) and the Supabase account it rides on: the export DTOs and their frozen older generations, the payload decoder, the object store over Supabase Storage, the uploader, verifier, pruner and eraser, and `auth/`. It depends on `:core:domain` and nothing else — never on `:core:database`, which `checkModuleBoundaries` enforces. Rows reach it through `SnapshotStore`, the port `:core:domain` declares, `:core:database` implements and `:androidApp`'s `core/di/DataModule.kt` binds.
 
-Root package `com.emm.justchill.core.backup`, `minSdk = 28`. The Supabase auth/postgrest/storage SDKs and the Ktor engine are `api`-exposed; the consumer is `:presentation` (`hh/di/SupabaseModule.kt`), which builds the `SupabaseClient` this module takes by constructor.
+Root package `com.emm.justchill.core.backup`, `minSdk = 28`. The Supabase auth/postgrest/storage SDKs and the Ktor engine are `api`-exposed; the consumer is `:androidApp` (`core/di/SupabaseModule.kt`), which builds the `SupabaseClient` this module takes by constructor.
 
 `shared/` holds this module's own copies of the date-text, enum-parsing and dispatcher helpers `:core:database` also carries. The duplication is the point: the file format is frozen for every snapshot already on a disk, and the database's storage format has to stay free to move.
 
