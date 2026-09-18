@@ -15,11 +15,13 @@ class PersonBalanceUiTest {
         remaining = Money(remaining),
     )
 
-    @Test fun toUi_zero_remaining_is_settled() {
+    @Test
+    fun `a zero remaining is settled`() {
         assertTrue(listOf(balance(remaining = 0L)).toUi().single().isSettled)
     }
 
-    @Test fun toUi_nonzero_remaining_is_not_settled() {
+    @Test
+    fun `a nonzero remaining is not settled`() {
         assertFalse(listOf(balance(remaining = 100L)).toUi().single().isSettled)
     }
 
