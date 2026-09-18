@@ -30,6 +30,7 @@ import com.emm.justchill.core.ui.components.EmmButton
 import com.emm.justchill.core.ui.components.EmmButtonVariant
 import com.emm.justchill.core.ui.components.EmmTextInput
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -118,7 +119,7 @@ private fun EditAccountDialog(
 @Composable
 private fun DeleteAccountDialog(accountName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val type: EmmType = LocalEmmType.current
 
     EmmDialog(
         title = "¿Borrar «$accountName»?",
