@@ -17,17 +17,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
+@Suppress("LongParameterList")
 @Composable
 fun EmmDialog(
     title: String,
@@ -35,15 +41,16 @@ fun EmmDialog(
     onConfirm: () -> Unit,
     dismissLabel: String,
     onDismiss: () -> Unit,
-    onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    onDismissRequest: () -> Unit = onDismiss,
     confirmTone: IconBtnTone = IconBtnTone.Accent,
+    destructiveAction: (@Composable () -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     Dialog(onDismissRequest = onDismissRequest) {
         Column(
@@ -63,6 +70,12 @@ fun EmmDialog(
                 }
             }
 
+            if (destructiveAction != null) {
+                Box(modifier = Modifier.padding(top = spacing.s3)) {
+                    destructiveAction()
+                }
+            }
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(spacing.s2, Alignment.End),
                 modifier = Modifier
@@ -77,16 +90,18 @@ fun EmmDialog(
 }
 
 @Composable
-private fun DialogAction(
+fun DialogAction(
     label: String,
     onClick: () -> Unit,
     tone: IconBtnTone,
+    modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
-    val textColor = when (tone) {
+    val textColor: Color = when (tone) {
         IconBtnTone.Neutral -> colors.textSecondary
         IconBtnTone.Accent -> colors.accent
         IconBtnTone.Danger -> colors.danger
@@ -94,11 +109,11 @@ private fun DialogAction(
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
             .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .clip(radii.rS)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = spacing.s2),
     ) {
         Text(text = label, style = type.labelL, color = textColor)
     }

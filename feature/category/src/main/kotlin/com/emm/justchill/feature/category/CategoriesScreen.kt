@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.ui.atoms.DialogAction
 import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -275,8 +276,7 @@ private fun EditCategoryDialog(
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
 
     EmmDialog(
         title = "Editar categoría",
@@ -284,23 +284,20 @@ private fun EditCategoryDialog(
         onConfirm = onConfirm,
         dismissLabel = "Cancelar",
         onDismiss = onDismiss,
-        onDismissRequest = onDismiss,
-    ) {
-        EmmTextInput(
-            value = name,
-            onValueChange = onNameChange,
-            label = "NOMBRE",
-            placeholder = "ejm. Supermercado",
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = "Borrar categoría",
-            style = type.labelL,
-            color = colors.danger,
-            modifier = Modifier.clickable(onClick = onDelete),
-        )
-    }
+        destructiveAction = {
+            DialogAction(label = "Borrar categoría", onClick = onDelete, tone = IconBtnTone.Danger)
+        },
+        content = {
+            EmmTextInput(
+                value = name,
+                onValueChange = onNameChange,
+                label = "NOMBRE",
+                placeholder = "ejm. Supermercado",
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(spacing.s3))
+        },
+    )
 }
 
 @Composable
@@ -319,7 +316,6 @@ private fun DeleteCategoryDialog(
         onConfirm = onConfirm,
         dismissLabel = "Cancelar",
         onDismiss = onDismiss,
-        onDismissRequest = onDismiss,
         confirmTone = IconBtnTone.Danger,
     ) {
         Text(text = buildDeleteCategoryMessage(affectedCount), style = type.bodyM, color = colors.textSecondary)
