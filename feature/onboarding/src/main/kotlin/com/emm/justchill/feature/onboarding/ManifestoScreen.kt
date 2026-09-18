@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.onboarding
+package com.emm.justchill.feature.onboarding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

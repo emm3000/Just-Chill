@@ -1,14 +1,12 @@
-package com.emm.justchill.hh.onboarding
+package com.emm.justchill.feature.onboarding
 
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
-import com.emm.justchill.hh.shared.ManifestoRoute
 
-fun EntryProviderScope<NavKey>.onboardingEntries(bindings: NavHostBindings, appPreferences: AppPreferences) {
+fun EntryProviderScope<NavKey>.onboardingEntries(bindings: NavHostBindings, onFirstLaunchSeen: () -> Unit) {
     entry<ManifestoRoute> { key ->
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         ManifestoScreen(
@@ -17,7 +15,7 @@ fun EntryProviderScope<NavKey>.onboardingEntries(bindings: NavHostBindings, appP
                 if (key.isRevisit) {
                     nav.pop()
                 } else {
-                    appPreferences.firstLaunchSeen = true
+                    onFirstLaunchSeen()
                     nav.replaceAll(bindings.startTab)
                 }
             },

@@ -16,7 +16,6 @@ import com.emm.justchill.wiring.accountWiring
 import com.emm.justchill.wiring.authWiring
 import com.emm.justchill.wiring.categoryWiring
 import com.emm.justchill.wiring.loanWiring
-import com.emm.justchill.wiring.onboardingWiring
 import com.emm.justchill.wiring.profileWiring
 import com.emm.justchill.wiring.recurringWiring
 import com.emm.justchill.wiring.reportWiring
@@ -46,7 +45,6 @@ fun appModules(platformModule: Module): List<Module> = listOf(
     loanWiring,
     profileWiring,
     authWiring,
-    onboardingWiring,
     platformModule,
 )
 

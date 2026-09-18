@@ -24,7 +24,6 @@ import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.hh.profile.toText
 import com.emm.justchill.hh.shared.AuthRoute
-import com.emm.justchill.hh.shared.ManifestoRoute
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
@@ -39,6 +38,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
     pendingImportJson: () -> String?,
     onImportHandled: () -> Unit,
     onCategoriesClick: (AppNavigator) -> Unit,
+    onAboutClick: (AppNavigator) -> Unit,
 ) {
     entry<ProfileRoute> {
         ProfileEntry(
@@ -48,6 +48,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
             pendingImportJson = pendingImportJson,
             clearPendingImport = onImportHandled,
             onCategoriesClick = onCategoriesClick,
+            onAboutClick = onAboutClick,
         )
     }
 
@@ -67,6 +68,7 @@ private fun ProfileEntry(
     pendingImportJson: () -> String?,
     clearPendingImport: () -> Unit,
     onCategoriesClick: (AppNavigator) -> Unit,
+    onAboutClick: (AppNavigator) -> Unit,
 ) {
     val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
     val vm: ProfileViewModel = koinViewModel()
@@ -129,7 +131,7 @@ private fun ProfileEntry(
         commitHash = commitHash,
         onCategoriesClick = { onCategoriesClick(nav) },
         onRecurringClick = { nav.push(RecurringMovementsRoute) },
-        onAboutClick = { nav.push(ManifestoRoute(isRevisit = true)) },
+        onAboutClick = { onAboutClick(nav) },
         onExportClick = {
             if (bindings.platform.supportsBackup) vm.onIntent(ProfileIntent.ExportRequested)
         },

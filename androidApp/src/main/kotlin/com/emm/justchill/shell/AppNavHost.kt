@@ -51,14 +51,14 @@ import com.emm.justchill.feature.category.CategoryRoute
 import com.emm.justchill.feature.category.categoryEntries
 import com.emm.justchill.feature.loan.LoansRoute
 import com.emm.justchill.feature.loan.loanEntries
+import com.emm.justchill.feature.onboarding.ManifestoRoute
+import com.emm.justchill.feature.onboarding.onboardingEntries
 import com.emm.justchill.feature.report.reportEntries
 import com.emm.justchill.hh.auth.authEntries
-import com.emm.justchill.hh.onboarding.onboardingEntries
 import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.ManifestoRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.rememberPlatformHostActions
 import com.emm.justchill.hh.transaction.transactionEntries
@@ -140,7 +140,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 entryProvider = entryProvider {
-                    onboardingEntries(bindings, appPrefs)
+                    onboardingEntries(bindings, onFirstLaunchSeen = { appPrefs.firstLaunchSeen = true })
                     authEntries(bindings)
                     seeTransactionsEntries(bindings)
                     accountEntries(
@@ -173,6 +173,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         pendingImportJson = { pendingImportJson },
                         onImportHandled = { pendingImportJson = null },
                         onCategoriesClick = { nav -> nav.push(CategoriesListRoute) },
+                        onAboutClick = { nav -> nav.push(ManifestoRoute(isRevisit = true)) },
                     )
                 },
             )
