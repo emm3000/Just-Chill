@@ -3,12 +3,12 @@ package com.emm.justchill.hh.transaction
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.CategoryRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -17,6 +17,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     pendingCategory: () -> SelectableCategory?,
     onPendingCategoryConsumed: () -> Unit,
     onAddNewAccount: (AppNavigator) -> Unit,
+    onAddNewCategory: (AppNavigator, CategoryType) -> Unit,
 ) {
     entry<AddTransactionRoute> { key ->
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
@@ -43,14 +44,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
             vm = vm,
             popBackStack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
-            onAddNewCategory = { categoryType ->
-                nav.push(
-                    CategoryRoute(
-                        initialType = categoryType,
-                        propagateToTransaction = true,
-                    ),
-                )
-            },
+            onAddNewCategory = { categoryType -> onAddNewCategory(nav, categoryType) },
             onAddNewAccount = { onAddNewAccount(nav) },
         )
     }

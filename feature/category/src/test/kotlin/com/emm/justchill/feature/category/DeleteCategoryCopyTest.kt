@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

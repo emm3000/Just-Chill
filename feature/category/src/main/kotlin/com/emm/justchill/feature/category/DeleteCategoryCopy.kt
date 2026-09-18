@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 fun buildDeleteCategoryMessage(affectedCount: Int): String = when (affectedCount) {
     0 -> "Ningún movimiento la usa, así que no cambia nada de tu historial."

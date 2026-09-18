@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
@@ -12,8 +12,6 @@ import com.emm.justchill.core.ui.category.toSelectable
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
-import com.emm.justchill.hh.shared.CategoriesListRoute
-import com.emm.justchill.hh.shared.CategoryRoute
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

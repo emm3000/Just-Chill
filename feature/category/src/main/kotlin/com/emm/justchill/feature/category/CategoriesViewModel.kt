@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryUpsert

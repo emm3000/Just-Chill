@@ -1,11 +1,10 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.mvi.UiState
-import com.emm.justchill.hh.shared.Empty
 
 data class AddCategoryUiState(
-    val name: String = String.Empty,
+    val name: String = "",
     val iconId: String = "food",
     val categoryType: CategoryType = CategoryType.Spend,
     val colorId: String = "blue",

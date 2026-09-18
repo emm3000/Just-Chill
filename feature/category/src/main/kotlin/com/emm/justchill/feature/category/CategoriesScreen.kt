@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

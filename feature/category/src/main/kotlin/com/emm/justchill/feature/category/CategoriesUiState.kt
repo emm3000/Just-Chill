@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.shared.CategoryId

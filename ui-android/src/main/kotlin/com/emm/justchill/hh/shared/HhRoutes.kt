@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.shared
 
-import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.navigation.AppRoute
 import com.emm.justchill.core.ui.navigation.BottomBarRoute
@@ -34,16 +33,6 @@ data class AddTransactionRoute(
 data class EditTransactionRoute(val transactionId: String) : CaptureRoute
 
 @Serializable
-data object CategoriesListRoute : AppRoute
-
-@Serializable
-data class CategoryRoute(
-    val initialType: CategoryType = CategoryType.Spend,
-    val initialName: String = "",
-    val propagateToTransaction: Boolean = false,
-) : AppRoute
-
-@Serializable
 data object RecurringMovementsRoute : AppRoute
 
 @Serializable
@@ -72,8 +61,6 @@ val hhRoutes: List<KClass<out AppRoute>> = listOf(
     AuthRoute::class,
     AddTransactionRoute::class,
     EditTransactionRoute::class,
-    CategoriesListRoute::class,
-    CategoryRoute::class,
     RecurringMovementsRoute::class,
     AddEditRecurringMovementRoute::class,
     ReportRoute::class,

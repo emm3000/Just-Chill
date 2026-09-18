@@ -10,12 +10,13 @@ import com.emm.justchill.core.ui.navigation.AppRoute
 import com.emm.justchill.feature.account.AccountsRoute
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountRoutes
+import com.emm.justchill.feature.category.CategoriesListRoute
+import com.emm.justchill.feature.category.CategoryRoute
+import com.emm.justchill.feature.category.categoryRoutes
 import com.emm.justchill.hh.shared.AddEditLoanRoute
 import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.AuthRoute
-import com.emm.justchill.hh.shared.CategoriesListRoute
-import com.emm.justchill.hh.shared.CategoryRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.LoanDetailRoute
 import com.emm.justchill.hh.shared.LoansRoute
@@ -69,7 +70,8 @@ class RouteSerializationTest {
         }
     }
 
-    private val registries: List<List<KClass<out AppRoute>>> = listOf(hhRoutes, accountRoutes)
+    private val registries: List<List<KClass<out AppRoute>>> =
+        listOf(hhRoutes, accountRoutes, categoryRoutes)
 
     /**
      * Data classes get NON-DEFAULT field values on purpose: a field whose serializer is broken then
