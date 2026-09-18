@@ -80,16 +80,16 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       # No assembleDevDebug while the ADR 015 migration runs: the gate already compiles that
-      # variant through `testDevDebugUnitTest`, and packaging it gated nothing.
-      # `:androidApp:compileProdReleaseKotlin` keeps the release source set compiling, since the
-      # gate's `compileReleaseKotlin` covers the library modules only. assembleProdRelease (R8,
-      # resource shrinking, release lint) still runs when the PR touches an R8 keep-rule file or
-      # the release convention plugin, or when `changes` could not tell.
+      # variant through `testDevDebugUnitTest`, and packaging it gated nothing. It compiles the
+      # prodRelease variant too, through `:androidApp:detektProdRelease`, whose analysis classpath
+      # is that compile task's output. assembleProdRelease (R8, resource shrinking, release lint)
+      # still runs when the PR touches an R8 keep-rule file or the release convention plugin, or
+      # when `changes` could not tell.
       - name: Quality gate + builds
         env:
           RELEASE: ${{ needs.changes.result != 'success' || needs.changes.outputs.release != 'false' }}
         run: |
-          tasks=(qualityGate :androidApp:compileProdReleaseKotlin)
+          tasks=(qualityGate)
           if [ "$RELEASE" = "true" ]; then tasks+=(assembleProdRelease); fi
           ./gradlew "${tasks[@]}"
 

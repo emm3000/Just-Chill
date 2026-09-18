@@ -45,14 +45,11 @@ jobs:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
-      # `compileReleaseKotlin` is on the gate for the library modules only, so `:androidApp` names
-      # its own release compile here.
-      #
       # lintDevDebug rides in the same call rather than on the gate: it is the slowest thing the PR
       # gate used to run, and a failure here fails this job exactly as a gate task would. It stays
       # on the push-triggered step, not behind the dispatch, so every trunk commit is still linted.
       - name: Quality gate
-        run: ./gradlew qualityGate lintDevDebug :androidApp:compileProdReleaseKotlin
+        run: ./gradlew qualityGate lintDevDebug
 
       - name: Upload lint report
         if: always()
