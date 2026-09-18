@@ -27,7 +27,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
                     ":build-logic:convention:test on the root, " +
                     "checkModuleBoundaries, checkComposeFreeViewModels and checkSqlDelightSnapshots, " +
                     "the unit tests the library plugins name, plus the tests and lint :androidApp adds. " +
-                    "Invoked by the pre-push hook and by CI."
+                    "Invoked by CI."
 
             dependsOn(boundaries, composeFree, snapshots)
             dependsOn(target.tasks.matching { gates(it, extension.detektTasks.get()) })
