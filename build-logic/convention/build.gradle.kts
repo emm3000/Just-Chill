@@ -16,6 +16,7 @@ dependencies {
     implementation(marker(libs.plugins.android.application))
     implementation(marker(libs.plugins.google.crashlytics))
     implementation(marker(libs.plugins.kotlin.compose))
+    implementation(marker(libs.plugins.kotlin.serialization))
     implementation(marker(libs.plugins.sqldelight))
     implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:${libs.versions.kotlinVersion.get()}")
 

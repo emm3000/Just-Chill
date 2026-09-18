@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.transaction
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountRepository
 import com.emm.justchill.core.domain.category.Category
@@ -17,7 +16,8 @@ import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionUpdate
 import com.emm.justchill.core.domain.transaction.UpdateTransactionUseCase
-import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.testing.FakeTodayFlow
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

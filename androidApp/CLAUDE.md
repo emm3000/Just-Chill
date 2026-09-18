@@ -6,7 +6,7 @@ Android entry point and app shell: `MainActivity`, `EmmApp`, the Navigation 3 ho
 
 ## The shell
 
-- `shell/AppNavHost.kt` owns the back stack, the root `Scaffold` with its `SnackbarHostState`, the SAF launchers and the result channels (`pendingCategory`, `pendingImportJson`); it calls each feature's `*Entries` function from `:ui-android`. The routes, `AppNavigator` and `NavHostBindings` stay in `:ui-android` while the entries do, and follow their features in waves 7 and 8.
+- `shell/AppNavHost.kt` owns the back stack, the root `Scaffold` with its `SnackbarHostState`, the SAF launchers and the result channels (`pendingCategory`, `pendingImportJson`); it calls each feature's `*Entries` function from `:ui-android`. The concrete routes stay in `:ui-android`'s `hh/shared/HhRoutes.kt` and follow their features in waves 7 and 8; `AppNavigator` and `NavHostBindings` are `:core:ui`'s.
 - `shell/AppBottomBar.kt` holds four tabs plus the centre add button, no more. Its 10sp labels already sit under the 4.5:1 AA floor; a fifth tab shrinks them further. A new destination swaps a tab out, never appends one.
 - `shell/ShortcutRoutes.kt` is the launcher intent contract: `MainActivity` flattens an `Intent` into `ShortcutIntent`, `ShortcutPublisher` writes the same action and extra keys, and `ShortcutXmlActionsTest` pins them against both `shortcuts.xml` copies.
 - `wiring/<Feature>Wiring.kt` is one file per feature, listed in `appModules()`. Each is an empty Koin module until its extraction ticket fills it, and an extraction ticket edits its own file only.
@@ -42,6 +42,6 @@ Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev
 
 ## Testing
 
-`./gradlew :androidApp:testDevDebugUnitTest`; no instrumented source set. The MockK ViewModel tests live here, not in `:presentation`, although the ViewModels are in `presentation/src/main`: same package, MockK's JVM engine. Keep that placement unless you move the whole suite. `AppGraphKoinTest`, `RouteSerializationTest` and `ShortcutRoutesTest` live here because the shell does. `MainDispatcherRule` goes in every ViewModel test that touches `viewModelScope`.
+`./gradlew :androidApp:testDevDebugUnitTest`; no instrumented source set. The MockK ViewModel tests live here, not in `:presentation`, although the ViewModels are in `presentation/src/main`: same package, MockK's JVM engine. Keep that placement unless you move the whole suite. `AppGraphKoinTest`, `RouteSerializationTest` and `ShortcutRoutesTest` live here because the shell does; `RouteSerializationTest` concatenates each module's route registry and round-trips the union. `MainDispatcherRule` (`:core:testing`) goes in every ViewModel test that touches `viewModelScope`.
 
 The snapshot tests that run a JSON file into real SQLite live here too (`src/test/.../core/backup/`), for the same reason: only the app sees `:core:backup`, which writes the file, and `:core:database`, which owns the rows. `src/test/resources/backup/snapshot-v4-trunk.json` is what the exporter produced before the split, and `GoldenSnapshotRestoreTest` fails the day a format change stops reading it.

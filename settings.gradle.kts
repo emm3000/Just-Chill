@@ -45,6 +45,7 @@ rootProject.name = "JustChill"
 //   :core:database  where do I live?  SQLDelight                       Android
 //   :core:backup    who keeps a copy? Supabase, Ktor, the Snapshot     Android
 //   :core:ui        how do I show it? MVI, formatters, design system   Android
+//   :core:testing   how do I test?    MainDispatcherRule, FakeTodayFlow JVM only
 //   :feature:*      what do I let you do? one screen family each      Android
 //   :presentation   what do I think?  ViewModels, MVI, Koin            Android
 //   :ui-android     how do I look?    Compose screens                  Android only
@@ -52,7 +53,8 @@ rootProject.name = "JustChill"
 //
 // Dependency order, top of the graph down:
 //   androidApp -> feature:*, ui-android -> presentation -> core:database, core:backup, core:ui
-//   -> core:domain, and a feature reaches core:ui and core:domain only.
+//   -> core:domain, and a feature reaches core:ui and core:domain only, plus core:testing as a
+//   test fixture.
 //
 // The nine features are empty scaffolds until each extraction ticket fills its own.
 include(":androidApp")
@@ -61,6 +63,7 @@ include(":presentation")
 include(":core:backup")
 include(":core:database")
 include(":core:domain")
+include(":core:testing")
 include(":core:ui")
 include(":feature:transaction")
 include(":feature:account")

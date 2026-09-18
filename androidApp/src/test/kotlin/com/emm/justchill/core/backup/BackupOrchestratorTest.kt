@@ -1,6 +1,5 @@
 package com.emm.justchill.core.backup
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
@@ -15,6 +14,7 @@ import com.emm.justchill.core.domain.shared.backup.BackupUploader
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder

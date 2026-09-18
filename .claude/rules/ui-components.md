@@ -7,7 +7,7 @@ paths:
 
 # Shared UI rules
 
-The design system lives in `:core:ui`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/ui/theme/` (`com.emm.justchill.core.ui.theme`). `core/ui/components/` holds legacy `Emm*` widgets that are **not** the design system. The app shell is `:androidApp`'s `shell/` (the nav host and the bottom bar); `:ui-android`'s `hh/shared/` holds what the features share (the routes, the host bindings, the sheets), and neither is a feature package.
+The design system lives in `:core:ui`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/ui/theme/` (`com.emm.justchill.core.ui.theme`). `core/ui/components/` holds legacy `Emm*` widgets that are **not** the design system. The navigation vocabulary is `:core:ui`'s `core/ui/navigation/` (`AppRoute` and its markers, `AppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface), `AmountInputSheet` sits in `core/ui/sheets/` and `FormSection` is an atom. The app shell is `:androidApp`'s `shell/` (the nav host and the bottom bar); `:ui-android`'s `hh/shared/` holds the concrete routes and the fields more than one feature uses, and neither is a feature package.
 
 ## The iron rule
 
@@ -58,7 +58,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 - Touch targets are 48×48dp, non-negotiable. A child of a fixed-height row is not 48dp by inheritance: `Alignment.CenterVertically` measures at intrinsic height, so a clickable inside a 48dp band carries `fillMaxHeight()` itself. A 48dp header target keeps its glyph on the rows' column by giving the padding back at the edge, never by shrinking the target.
 - `EmmRadii` `r0`…`rXXL`, `rLTop` for sheet tops, `rFull` for circles. Default to the smallest radius that reads right.
 - No shadows. A modal that must read as "above" gets `surface1`, a hairline and rounded top corners.
-- `Icons.Outlined.*`; filled only when the icon represents a state. 24dp standard, 20dp inline with body text, 32dp rare. Never a brand logo or a bank's registered colours: an account is its type's icon plus a category tint, both maps in `hh/account/AccountPalette.kt`.
+- `Icons.Outlined.*`; filled only when the icon represents a state. 24dp standard, 20dp inline with body text, 32dp rare. Never a brand logo or a bank's registered colours: an account is its type's icon plus a category tint. The tint map is `:core:ui`'s `core/ui/account/AccountPalette.kt`; the icon and label maps stay with the feature, in `hh/account/AccountPalette.kt`.
 
 ### Component invariants
 

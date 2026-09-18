@@ -1,18 +1,12 @@
 package com.emm.justchill.hh.shared
 
-import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.navigation.AppRoute
+import com.emm.justchill.core.ui.navigation.BottomBarRoute
+import com.emm.justchill.core.ui.navigation.CaptureRoute
 import kotlinx.serialization.Serializable
-
-/**
- * Every subtype must be `@Serializable`, fields included: the back stack re-resolves each entry by
- * class name on process-death restore, so a missing annotation crashes there and nowhere else.
- * Declaring a route outside this hierarchy opts it out of `RouteSerializationTest`, the only guard.
- */
-sealed interface AppRoute : NavKey
-
-sealed interface BottomBarRoute : AppRoute
+import kotlin.reflect.KClass
 
 @Serializable
 data class ManifestoRoute(val isRevisit: Boolean = false) : AppRoute
@@ -37,10 +31,10 @@ data class AddTransactionRoute(
     val preselectedAccountId: String? = null,
     val preselectedCategoryId: String? = null,
     val preselectedType: TransactionType? = null,
-) : AppRoute
+) : CaptureRoute
 
 @Serializable
-data class EditTransactionRoute(val transactionId: String) : AppRoute
+data class EditTransactionRoute(val transactionId: String) : CaptureRoute
 
 @Serializable
 data object AddAccountRoute : AppRoute
@@ -75,3 +69,24 @@ data class LoanDetailRoute(val loanId: String) : AppRoute
 
 @Serializable
 data class AddEditLoanRoute(val loanId: String? = null) : AppRoute
+
+val hhRoutes: List<KClass<out AppRoute>> = listOf(
+    ManifestoRoute::class,
+    PrivacyPolicyRoute::class,
+    SeeTransactionRoute::class,
+    AccountsRoute::class,
+    ProfileRoute::class,
+    AuthRoute::class,
+    AddTransactionRoute::class,
+    EditTransactionRoute::class,
+    AddAccountRoute::class,
+    CategoriesListRoute::class,
+    CategoryRoute::class,
+    RecurringMovementsRoute::class,
+    AddEditRecurringMovementRoute::class,
+    ReportRoute::class,
+    LoansRoute::class,
+    PersonLoansRoute::class,
+    LoanDetailRoute::class,
+    AddEditLoanRoute::class,
+)

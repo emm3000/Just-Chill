@@ -14,7 +14,8 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
 | `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
-| `:core:ui` | The MVI base, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
+| `:core:ui` | The MVI base, the navigation vocabulary (`AppRoute`, `BottomBarRoute`, `CaptureRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
+| `:core:testing` | `MainDispatcherRule` and `FakeTodayFlow`, the JVM test fixtures on `:core:domain` alone; wired into feature modules and `:androidApp` as `testImplementation`. |
 | `:presentation` | Compose-free ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, the feature copy, `UiStrings`. |
 | `:feature:*` | One screen family: its ViewModels and its Compose screens. Empty until ADR 015's waves 7 and 8. |
 | `:ui-android` | Compose screens and each feature's nav entries, plus the routes and host bindings they share. |
@@ -24,12 +25,13 @@ Allowed dependencies, and nothing else:
 
 ```
 androidApp   -> feature:*, ui-android, presentation, core:backup, core:database, core:ui, core:domain
-feature:*    -> core:ui, core:domain
+feature:*    -> core:ui, core:domain, core:testing
 ui-android   -> presentation, core:database, core:ui, core:domain
 presentation -> core:backup, core:database, core:ui, core:domain
 core:backup  -> core:domain
 core:database -> core:domain
 core:ui      -> core:domain
+core:testing -> core:domain
 ```
 
 `checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` may depend on a feature.
@@ -55,7 +57,7 @@ Loan writes always go through `CreateLoanUseCase` / `UpdateLoanUseCase`: `LoanRe
 
 ## Errors
 
-Sealed `DomainException` (`core/domain/.../shared/error/`) is the one failure type. `:core:database`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:presentation`'s `core/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
+Sealed `DomainException` (`core/domain/.../shared/error/`) is the one failure type. `:core:database`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:core:ui`'s `core/ui/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
 
 Every catch-all owes a `CancellationException` arm first. `runCatching` and `catch (e: Exception)` both swallow it, the body runs on, and a cancelled loader overwrites the winner. Rethrow cancellation, then catch `Exception` (`MviViewModel.launchSafe` is the pattern); a `Flow.catch` lambda owes the arm explicitly.
 
@@ -83,7 +85,7 @@ Naming lives in `naming.md`. This is the flow. The base class is `mvi/MviViewMod
 - **`launchSafeIn` retries a collector three times (200/400/800 ms), then dies for the ViewModel's life.** It heals lock contention, not a persistent failure; tab ViewModels outlive `switchTab`, so a dead collector stays dead. `stateIn` / `shareIn` upstreams bypass the funnel: today all are fed by `todayFlow()` alone, and a data-backed one has no error door.
 - **A `when` helper split out of `onIntent` takes a nested sealed sub-interface, never the wide intent type with an `else`** (`onPaymentFormIntent`, `onScreenChromeIntent`): the `else` swallows a new intent forgotten in the helper.
 - **The screen is callback-driven.** `<Feature>Screen` collects `state`, hands `vm::onIntent` down to a private stateless content composable, and consumes effects in a `LaunchedEffect(vm)`. It never touches a repository or a use case.
-- **The entry wires navigation.** `<Feature>Entries.kt` registers `entry<Route>` in `AppNavHost`'s `entryProvider`, obtains an `AppNavigator` with `rememberAppNavigator`, and passes host state as lambdas.
+- **The entry wires navigation.** `<Feature>Entries.kt` registers `entry<Route>` in `AppNavHost`'s `entryProvider`, obtains an `AppNavigator` with `rememberAppNavigator(bindings.backStack, bindings.startTab)`, and passes host state as lambdas.
 - **ViewModels never hold literal UI copy.** A ViewModel emits an enum or another typed value (`AuthEffect.Notify(AuthMessage.ConfirmationLinkResent)`), never a Spanish string; the screen resolves it to text. Shared copy lives in `:presentation`'s `hh/shared/UiStrings.kt`.
 - **Intents describe what the user did**, not what the ViewModel should do. Local UI state with no business meaning (an expanded section) may stay as `remember` inside the composable.
 - `:presentation` and `:ui-android` share package names on purpose. A same-package symbol that crosses the module boundary is imported explicitly.
@@ -105,9 +107,9 @@ MockK never leaks into `src/main` either.
 
 ## Routes and the back stack
 
-Routes live in `ui-android/.../hh/shared/HhRoutes.kt` as subtypes of sealed `AppRoute`.
+`AppRoute` and `BottomBarRoute` are plain interfaces in `:core:ui`'s `core/ui/navigation/AppRoute.kt`, alongside `CaptureRoute : AppRoute`, the marker `AddTransactionRoute` and `EditTransactionRoute` implement. The concrete routes stay in `ui-android/.../hh/shared/HhRoutes.kt`, which exports `val hhRoutes: List<KClass<out AppRoute>>`; each later extraction ticket exports its own `val <feature>Routes` and removes its entries from `hhRoutes`.
 
-- **Every route the host can push is `@Serializable`, fields included.** `rememberNavBackStack` stores each entry by class name and re-resolves it through `Class.forName(name).kotlin.serializer()`, so an unserializable route crashes on process-death restore and nowhere else. `RouteSerializationTest` reflects over `AppRoute` and round-trips every subtype; a route declared outside the hierarchy opts out of that guard.
+- **Every route the host can push is `@Serializable`, fields included.** `rememberNavBackStack` stores each entry by class name and re-resolves it through `Class.forName(name).kotlin.serializer()`, so an unserializable route crashes on process-death restore and nowhere else. Routes are no longer a sealed hierarchy a reflection scan can enumerate: `RouteSerializationTest` (`:androidApp`) concatenates the route registries and asserts its hand-written samples cover exactly that union, then round-trips each sample. A route missing from its registry is never round-tripped.
 - **One door is no door.** A destination reachable through exactly one entry point is unreachable the moment that entry is gated. Gate the content of an entry point, never its existence. Before deleting a row that pushes a route, `rg` the route and confirm a second door exists.
 - **Moving to a route that may already be on the stack uses `AppNavigator.pushToTop`, never `push`.** `push` guards with `backStack.contains(route)`, a duplicate guard that silently does nothing once the target is buried. `pushToTop` pops what sits above and reveals or replaces the route.
 - **`NavEntry.content` closures are cached until the back stack changes.** Host state an entry reads arrives as a `() -> T` accessor, never by value; the result channels in `AppNavHost.kt` (`pendingCategory`, `pendingImportJson`) are the pattern.

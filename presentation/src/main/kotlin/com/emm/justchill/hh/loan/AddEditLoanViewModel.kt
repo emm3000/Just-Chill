@@ -6,8 +6,8 @@ import com.emm.justchill.core.domain.loan.LoanRepository
 import com.emm.justchill.core.domain.loan.LoanUpdate
 import com.emm.justchill.core.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.core.domain.shared.LoanId
-import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.domain.time.TodayFlow
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.isSavableAmount
 import com.emm.justchill.core.ui.format.moneyCentsString

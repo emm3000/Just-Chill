@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.account
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountRepository
 import com.emm.justchill.core.domain.account.AccountType
@@ -15,7 +14,8 @@ import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.testing.FakeTodayFlow
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

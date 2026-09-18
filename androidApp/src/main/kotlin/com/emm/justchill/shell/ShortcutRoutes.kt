@@ -2,8 +2,8 @@ package com.emm.justchill.shell
 
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.navigation.AppRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.AppRoute
 import com.emm.justchill.hh.shared.LoansRoute
 
 const val ACTION_OPEN_LOANS: String = "com.emm.justchill.action.OPEN_LOANS"

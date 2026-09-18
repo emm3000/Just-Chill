@@ -6,12 +6,12 @@ import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import androidx.navigation3.runtime.serialization.NavKeySerializer
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.navigation.AppRoute
 import com.emm.justchill.hh.shared.AccountsRoute
 import com.emm.justchill.hh.shared.AddAccountRoute
 import com.emm.justchill.hh.shared.AddEditLoanRoute
 import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.AppRoute
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.CategoriesListRoute
 import com.emm.justchill.hh.shared.CategoryRoute
@@ -25,6 +25,7 @@ import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import com.emm.justchill.hh.shared.ReportRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
+import com.emm.justchill.hh.shared.hhRoutes
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import org.junit.Test
@@ -35,16 +36,16 @@ import kotlin.test.assertTrue
 class RouteSerializationTest {
 
     @Test
-    fun `every concrete route has a sample`() {
-        val reflected: Set<KClass<out AppRoute>> = concreteRoutesUnder(AppRoute::class)
-        val missing: Set<KClass<out AppRoute>> = reflected - samples.keys
-        val extra: Set<KClass<out AppRoute>> = samples.keys - reflected
+    fun `every registered route has a sample`() {
+        val registered: Set<KClass<out AppRoute>> = registries.flatten().toSet()
+        val missing: Set<KClass<out AppRoute>> = registered - samples.keys
+        val extra: Set<KClass<out AppRoute>> = samples.keys - registered
 
         assertTrue(
             missing.isEmpty() && extra.isEmpty(),
-            "samples must hold exactly one instance per concrete AppRoute.\n" +
-                "  missing (declared as an AppRoute but not sampled here): ${missing.render()}\n" +
-                "  extra (sampled here but no longer a concrete AppRoute): ${extra.render()}",
+            "samples must hold exactly one instance per registered AppRoute.\n" +
+                "  missing (in a route registry but not sampled here): ${missing.render()}\n" +
+                "  extra (sampled here but in no route registry): ${extra.render()}",
         )
     }
 
@@ -66,6 +67,8 @@ class RouteSerializationTest {
             )
         }
     }
+
+    private val registries: List<List<KClass<out AppRoute>>> = listOf(hhRoutes)
 
     /**
      * Data classes get NON-DEFAULT field values on purpose: a field whose serializer is broken then
@@ -99,18 +102,6 @@ class RouteSerializationTest {
         LoanDetailRoute(loanId = "loan-1"),
         AddEditLoanRoute(loanId = "loan-1"),
     ).associateBy { it::class }
-
-    private fun concreteRoutesUnder(root: KClass<out AppRoute>): Set<KClass<out AppRoute>> {
-        val concrete: MutableSet<KClass<out AppRoute>> = mutableSetOf()
-        for (subclass in root.sealedSubclasses) {
-            if (subclass.isSealed || subclass.isAbstract) {
-                concrete += concreteRoutesUnder(subclass)
-            } else {
-                concrete += subclass
-            }
-        }
-        return concrete
-    }
 
     private fun KClass<*>.render(): String = simpleName ?: qualifiedName ?: toString()
 

@@ -1,4 +1,4 @@
-package com.emm.justchill.core.error
+package com.emm.justchill.core.ui.error
 
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode

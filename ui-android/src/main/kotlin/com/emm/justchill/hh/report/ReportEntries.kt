@@ -9,16 +9,16 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.AppNavigator
-import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.ReportRoute
-import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
 fun EntryProviderScope<NavKey>.reportEntries(bindings: NavHostBindings) {
     entry<ReportRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         ReportEntry(
             onAddTransaction = { nav.push(AddTransactionRoute()) },
             onShareText = bindings.platform.onShareText,

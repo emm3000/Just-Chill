@@ -1,6 +1,6 @@
 plugins {
     id("justchill.android.library")
-    alias(libs.plugins.kotlin.serialization)
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 dependencies {

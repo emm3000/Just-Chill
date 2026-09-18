@@ -10,9 +10,9 @@ import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
 import com.emm.justchill.core.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.RecurringMovementId
-import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.toSelectable
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.mvi.MviViewModel

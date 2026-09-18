@@ -1,12 +1,12 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.loan.Loan
 import com.emm.justchill.core.domain.loan.LoanBalance
 import com.emm.justchill.core.domain.loan.LoanRepository
 import com.emm.justchill.core.domain.shared.LoanId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flow

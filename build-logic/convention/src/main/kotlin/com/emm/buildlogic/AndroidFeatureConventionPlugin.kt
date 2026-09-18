@@ -12,6 +12,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
 
     override fun apply(target: Project) = with(target) {
         apply<AndroidComposeConventionPlugin>()
+        pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
 
         dependencies {
             add("implementation", project(":core:domain"))
@@ -21,6 +22,9 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
             add("implementation", libs.library("koin-compose-viewmodel"))
             add("implementation", libs.library("androidx-lifecycle-viewmodel"))
             add("implementation", libs.library("androidx-lifecycle-viewmodel-compose"))
+            add("implementation", libs.library("androidx-navigation3-runtime"))
+            add("implementation", libs.library("kotlinx-serialization-json"))
+            add("testImplementation", project(":core:testing"))
         }
     }
 }

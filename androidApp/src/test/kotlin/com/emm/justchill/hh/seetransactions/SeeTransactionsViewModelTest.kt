@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.seetransactions
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryType
@@ -18,7 +17,8 @@ import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionTotals
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
-import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.testing.FakeTodayFlow
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

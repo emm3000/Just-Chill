@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.report
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.report.CategoryAmount
 import com.emm.justchill.core.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.justchill.core.domain.report.GetMonthlyComparisonUseCase
@@ -15,7 +14,8 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.testing.FakeTodayFlow
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

@@ -21,7 +21,7 @@ import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.backup.toBackupFailureReason
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
-import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.ui.mvi.MviViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.combine

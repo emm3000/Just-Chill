@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.profile
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.backup.LocalExportHistory
 import com.emm.justchill.core.domain.auth.AuthUser
@@ -26,7 +25,8 @@ import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
-import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.testing.FakeTodayFlow
+import com.emm.justchill.core.testing.MainDispatcherRule
 import com.emm.justchill.hh.profile.toText
 import io.mockk.coEvery
 import io.mockk.every

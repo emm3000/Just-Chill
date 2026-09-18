@@ -7,17 +7,17 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.hh.shared.AccountsRoute
 import com.emm.justchill.hh.shared.AddAccountRoute
-import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.LoansRoute
-import com.emm.justchill.hh.shared.NavHostBindings
-import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
 fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings) {
     entry<AccountsRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         val vm: AccountsViewModel = koinViewModel()
         val accountsState by vm.state.collectAsStateWithLifecycle()
 
@@ -39,7 +39,7 @@ fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings) {
     }
 
     entry<AddAccountRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         AddAccountScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,

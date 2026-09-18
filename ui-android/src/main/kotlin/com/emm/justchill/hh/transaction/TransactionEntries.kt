@@ -4,13 +4,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.hh.shared.AddAccountRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.CategoryRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
-import com.emm.justchill.hh.shared.NavHostBindings
-import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
 fun EntryProviderScope<NavKey>.transactionEntries(
@@ -19,7 +19,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     onPendingCategoryConsumed: () -> Unit,
 ) {
     entry<AddTransactionRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         val vm: AddTransactionViewModel = koinViewModel()
 
         LaunchedEffect(key) {
@@ -58,7 +58,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     }
 
     entry<EditTransactionRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         EditTransaction(
             transactionId = key.transactionId,
             onBack = { nav.pop() },

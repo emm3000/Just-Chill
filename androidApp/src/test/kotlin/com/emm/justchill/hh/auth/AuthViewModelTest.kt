@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.auth
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.ResendConfirmationEmailUseCase
 import com.emm.justchill.core.domain.auth.SignInUseCase
@@ -8,6 +7,7 @@ import com.emm.justchill.core.domain.auth.SignInWithGoogleUseCase
 import com.emm.justchill.core.domain.auth.SignUpResult
 import com.emm.justchill.core.domain.auth.SignUpUseCase
 import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

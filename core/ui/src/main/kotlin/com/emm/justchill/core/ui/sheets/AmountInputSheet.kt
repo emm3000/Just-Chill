@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.core.ui.sheets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
