@@ -7,10 +7,10 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.emm.justchill.MainActivity
 import com.emm.justchill.R
-import com.emm.justchill.hh.shared.ACTION_ADD_TRANSACTION
-import com.emm.justchill.hh.shared.EXTRA_ACCOUNT_ID
-import com.emm.justchill.hh.shared.EXTRA_CATEGORY_ID
-import com.emm.justchill.hh.shared.EXTRA_TYPE
+import com.emm.justchill.shell.ACTION_ADD_TRANSACTION
+import com.emm.justchill.shell.EXTRA_ACCOUNT_ID
+import com.emm.justchill.shell.EXTRA_CATEGORY_ID
+import com.emm.justchill.shell.EXTRA_TYPE
 import com.emm.justchill.hh.transaction.GetSpendShortcutCombos
 import com.emm.justchill.hh.transaction.ShortcutCombo
 

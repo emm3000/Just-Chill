@@ -11,11 +11,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.emm.justchill.hh.shared.AppNavHost
-import com.emm.justchill.hh.shared.EXTRA_ACCOUNT_ID
-import com.emm.justchill.hh.shared.EXTRA_CATEGORY_ID
-import com.emm.justchill.hh.shared.EXTRA_TYPE
-import com.emm.justchill.hh.shared.ShortcutIntent
+import com.emm.justchill.shell.AppNavHost
+import com.emm.justchill.shell.EXTRA_ACCOUNT_ID
+import com.emm.justchill.shell.EXTRA_CATEGORY_ID
+import com.emm.justchill.shell.EXTRA_TYPE
+import com.emm.justchill.shell.ShortcutIntent
 
 class MainActivity : ComponentActivity() {
 

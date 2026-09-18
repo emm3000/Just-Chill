@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.shell
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -36,6 +36,7 @@ import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.hh.account.accountEntries
@@ -47,7 +48,17 @@ import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.report.reportEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
+import com.emm.justchill.hh.shared.AddTransactionRoute
+import com.emm.justchill.hh.shared.AppNavigator
+import com.emm.justchill.hh.shared.BottomBarRoute
+import com.emm.justchill.hh.shared.ManifestoRoute
+import com.emm.justchill.hh.shared.NavHostBindings
+import com.emm.justchill.hh.shared.PlatformHostActions
+import com.emm.justchill.hh.shared.rememberAppNavigator
+import com.emm.justchill.hh.shared.rememberPlatformHostActions
+import com.emm.justchill.hh.shared.startTab
 import com.emm.justchill.hh.transaction.transactionEntries
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.core.qualifier.named
@@ -55,7 +66,7 @@ import org.koin.core.qualifier.named
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = ShortcutIntent(), shortcutRequestId: Int = 0) {
     EmmTheme {
-        val colors = LocalEmmColors.current
+        val colors: EmmColors = LocalEmmColors.current
         val appPrefs: AppPreferences = koinInject()
         val appVersion: String = koinInject(named("appVersion"))
         val commitHash: String = koinInject<CommitHash>().value
@@ -72,12 +83,12 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
         }
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         var pendingImportJson by remember { mutableStateOf<String?>(null) }
-        val snackbarHostState = remember { SnackbarHostState() }
-        val rootScope = rememberCoroutineScope()
+        val snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+        val rootScope: CoroutineScope = rememberCoroutineScope()
         val showRootMessage: (String) -> Unit = { message ->
             rootScope.launch { snackbarHostState.showEmmSnackbar(message) }
         }
-        val platform = rememberPlatformHostActions(
+        val platform: PlatformHostActions = rememberPlatformHostActions(
             snackbarHostState = snackbarHostState,
             scope = rootScope,
             onImport = { json -> pendingImportJson = json },
@@ -85,7 +96,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
 
         val currentRoute: NavKey? = backStack.lastOrNull()
         val showBottomBar: Boolean = currentRoute is BottomBarRoute
-        val bindings = NavHostBindings(
+        val bindings: NavHostBindings = NavHostBindings(
             backStack = backStack,
             snackbarHostState = snackbarHostState,
             showMessage = showRootMessage,
@@ -101,7 +112,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                     enter = slideInVertically(tween(300)) { it } + fadeIn(tween(300)),
                     exit = slideOutVertically(tween(250)) { it } + fadeOut(tween(200)),
                 ) {
-                    HhBottomBar(
+                    AppBottomBar(
                         current = currentRoute as? BottomBarRoute,
                         onTabClick = { tab -> hostNav.switchTab(tab) },
                         onAddClick = { hostNav.push(AddTransactionRoute()) },

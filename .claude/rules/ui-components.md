@@ -2,11 +2,12 @@
 paths:
   - "ui-android/src/main/kotlin/**"
   - "core/ui/src/main/kotlin/**"
+  - "androidApp/src/main/kotlin/**"
 ---
 
 # Shared UI rules
 
-The design system lives in `:core:ui`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/ui/theme/` (`com.emm.justchill.core.ui.theme`). `core/ui/components/` holds legacy `Emm*` widgets that are **not** the design system. In `:ui-android`, `hh/shared/` is the cross-feature package (nav host, bottom bar, sheets), not a feature package.
+The design system lives in `:core:ui`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/ui/theme/` (`com.emm.justchill.core.ui.theme`). `core/ui/components/` holds legacy `Emm*` widgets that are **not** the design system. The app shell is `:androidApp`'s `shell/` (the nav host and the bottom bar); `:ui-android`'s `hh/shared/` holds what the features share (the routes, the host bindings, the sheets), and neither is a feature package.
 
 ## The iron rule
 

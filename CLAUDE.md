@@ -11,7 +11,8 @@ No third-party users, but **the author runs the release daily on a device holdin
 ## Modules
 
 ```
-androidApp     -> ui-android, presentation, core:backup, core:database, core:ui, core:domain
+androidApp     -> feature:*, ui-android, presentation, core:backup, core:database, core:ui, core:domain
+feature:*      -> core:ui, core:domain
 ui-android     -> presentation, core:database, core:ui, core:domain
 presentation   -> core:backup, core:database, core:ui, core:domain
 core:backup    -> core:domain
@@ -23,9 +24,10 @@ core:ui        -> core:domain
 - `:core:database` — the domain interfaces implemented: SQLDelight (`JustChillDatabase`, the schema and migrations), mappers, and `SnapshotStore` over the six tables.
 - `:core:backup` — the snapshot file and the account it needs: DTOs, decoder, Supabase Storage, the backup cycle and auth. Never depends on `:core:database`.
 - `:core:ui` — the UI vocabulary more than one feature uses: the MVI base (`MviViewModel` and its contracts), the Spanish money, date and search formatters, the design system (theme tokens, atoms, the `Emm*` components and the bundled fonts), and the capture vocabulary — the icon and colour catalog in `category/`, the transaction row and its `Catalog` in `transaction/`, the account, category and date pickers in `sheets/`. Never depends on `:core:database` or `:core:backup`.
+- `:feature:{transaction, account, category, recurring, report, loan, profile, auth, onboarding}` — one screen family each, ViewModels and Compose together. Empty scaffolds until their extraction tickets fill them (ADR 015, waves 7 and 8).
 - `:presentation` — every ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, the feature copy. Compose-free, and it re-exports `:core:ui` as `api`.
-- `:ui-android` — Compose screens and navigation. Same Kotlin packages as `:presentation` on purpose.
-- `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
+- `:ui-android` — Compose screens and each feature's nav entries, with the routes, the `AppNavigator` and `NavHostBindings` they share. Same Kotlin packages as `:presentation` on purpose.
+- `:androidApp` — `MainActivity`, `EmmApp`, the app shell (`shell/`: the nav host, the bottom bar, the launcher shortcut routes), the Koin graph (`core/AppGraph.kt`) with one `wiring/<Feature>Wiring.kt` per feature, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 
 Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `android.release`, `jvm.library`, `sqldelight`, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:core:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:core:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
 
