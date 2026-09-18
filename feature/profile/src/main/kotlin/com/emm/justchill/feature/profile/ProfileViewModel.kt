@@ -51,11 +51,12 @@ class ProfileViewModel(
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(
     ProfileUiState(lastExport = localExportHistory.toLastExportUi(todayFlow.today())),
 ) {
+    private val onDomainError: (DomainException) -> ProfileEffect = ProfileEffect::ShowError
 
     init {
         todayFlow()
             .onEach { today -> updateState { copy(lastExport = localExportHistory.toLastExportUi(today)) } }
-            .launchSafeIn(onError = ProfileEffect::ShowError)
+            .launchSafeIn(onError = onDomainError)
 
         categoryRepository.all()
             .onEach { categories ->
@@ -66,7 +67,7 @@ class ProfileViewModel(
                     )
                 }
             }
-            .launchSafeIn(onError = ProfileEffect::ShowError)
+            .launchSafeIn(onError = onDomainError)
 
         getRecurringMonthlySummary()
             .onEach { summary ->
@@ -74,7 +75,7 @@ class ProfileViewModel(
                     copy(recurringCount = summary.activeCount, recurringMonthlyOutflow = summary.monthlyOutflow)
                 }
             }
-            .launchSafeIn(onError = ProfileEffect::ShowError)
+            .launchSafeIn(onError = onDomainError)
 
         observeSession()
             .onEach { status ->
@@ -85,15 +86,15 @@ class ProfileViewModel(
                 }
                 updateState { copy(session = sessionUiState) }
             }
-            .launchSafeIn(onError = ProfileEffect::ShowError)
+            .launchSafeIn(onError = onDomainError)
 
         backupController.isBackingUp
             .onEach(::onBackupProgress)
-            .launchSafeIn(onError = ProfileEffect::ShowError)
+            .launchSafeIn(onError = onDomainError)
 
         backupController.events
             .onEach { event -> sendEffect(ProfileEffect.Notify(event.toProfileMessage())) }
-            .launchSafeIn(onError = ProfileEffect::ShowError)
+            .launchSafeIn(onError = onDomainError)
 
         combine(
             state.map { it.session }.distinctUntilChanged(),
@@ -105,7 +106,7 @@ class ProfileViewModel(
                 val row: BackupRowUi = resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness, logger)
                 updateState { copy(backupRow = row) }
             }
-            .launchSafeIn(onError = ProfileEffect::ShowError)
+            .launchSafeIn(onError = onDomainError)
     }
 
     override fun onIntent(intent: ProfileIntent) {
@@ -186,7 +187,7 @@ class ProfileViewModel(
 
     private fun performSignOut() = launchOp(
         op = ProfileOp.SigningOut,
-        onError = { e -> ProfileEffect.ShowError(e) },
+        onError = onDomainError,
     ) {
         val message = when (signOut.invoke()) {
             SignOutResult.Revoked -> ProfileMessage.SessionClosed
@@ -197,7 +198,7 @@ class ProfileViewModel(
 
     private fun deleteAccount() = launchOp(
         op = ProfileOp.DeletingAccount,
-        onError = { e -> ProfileEffect.ShowError(e) },
+        onError = onDomainError,
     ) {
         deleteUserAccount.invoke()
         sendEffect(ProfileEffect.Notify(ProfileMessage.AccountDeleted))
@@ -205,7 +206,7 @@ class ProfileViewModel(
 
     private fun exportRequested() = launchOp(
         op = ProfileOp.Exporting,
-        onError = { e -> ProfileEffect.ShowError(e) },
+        onError = onDomainError,
     ) {
         val json = backupRepository.exportToJson(
             exportedAt = clock.now().toEpochMilliseconds(),

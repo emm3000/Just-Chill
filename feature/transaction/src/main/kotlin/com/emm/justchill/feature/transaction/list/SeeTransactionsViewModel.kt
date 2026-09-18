@@ -12,6 +12,7 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.domain.transaction.TransactionFilter
 import com.emm.justchill.core.domain.transaction.TransactionRepository
@@ -58,6 +59,9 @@ class SeeTransactionsViewModel(
     private val filter = MutableStateFlow(TransactionFilter.None)
     private val selectedMonth = MutableStateFlow(initialState.month)
     private var calendarMonth = initialState.month
+    private val onDomainError: (DomainException) -> SeeTransactionsEffect = { error ->
+        SeeTransactionsEffect.ShowError(error.toUserMessage())
+    }
 
     init {
         combine(categoryRepository.all(), filter) { categories, current ->
@@ -65,7 +69,7 @@ class SeeTransactionsViewModel(
             if (activeId != null && categories.none { it.categoryId == activeId }) {
                 filter.value = current.copy(categoryIds = emptySet())
             }
-        }.launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
+        }.launchSafeIn(onError = onDomainError)
 
         combine(
             categoryRepository.all(),
@@ -84,13 +88,13 @@ class SeeTransactionsViewModel(
                     )
                 }
             }
-            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
+            .launchSafeIn(onError = onDomainError)
 
         transactionRepository.observeTotals()
             .map<TransactionTotals, Long?> { totals -> totals.movementCount }
             .catch { emit(null) }
             .onEach { count -> updateState { copy(movementCount = count) } }
-            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
+            .launchSafeIn(onError = onDomainError)
 
         combine(selectedMonth, filter, ::Pair)
             .debounce { (_, currentFilter) -> if (currentFilter.query.isBlank()) 0L else SEARCH_DEBOUNCE_MS }
@@ -121,7 +125,7 @@ class SeeTransactionsViewModel(
                 }
             }
             .onEach { slice -> updateState { withListSlice(slice, selectedMonth.value) } }
-            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
+            .launchSafeIn(onError = onDomainError)
 
         // A separate flow on purpose: pending recurring movements never depend on the browsed month
         // or the active filter. Driven by the shared `today` instead, so a movement that comes due
@@ -129,7 +133,7 @@ class SeeTransactionsViewModel(
         today
             .flatMapLatest { date -> getPendingRecurringMovements(date).map { pending -> date to pending } }
             .onEach { (date, pending) -> updateState { mapToPendingUiState(pending, date) } }
-            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
+            .launchSafeIn(onError = onDomainError)
 
         today
             .onEach { date -> updateState { copy(today = date) } }
@@ -139,7 +143,7 @@ class SeeTransactionsViewModel(
                 calendarMonth = month
                 if (month != previousCalendarMonth && selectedMonth.value == previousCalendarMonth) selectMonth(month)
             }
-            .launchSafeIn(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) })
+            .launchSafeIn(onError = onDomainError)
     }
 
     override fun onIntent(intent: SeeTransactionsIntent) {
@@ -188,7 +192,7 @@ class SeeTransactionsViewModel(
     }
 
     private fun onConfirmRecurring(intent: SeeTransactionsIntent.ConfirmRecurring) {
-        launchSafe(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) }) {
+        launchSafe(onError = onDomainError) {
             confirmRecurringMovement(
                 templateId = RecurringMovementId(intent.templateId),
                 yearMonth = intent.period,
@@ -199,7 +203,7 @@ class SeeTransactionsViewModel(
     }
 
     private fun onSkipRecurring(intent: SeeTransactionsIntent.SkipRecurring) {
-        launchSafe(onError = { e -> SeeTransactionsEffect.ShowError(e.toUserMessage()) }) {
+        launchSafe(onError = onDomainError) {
             skipRecurringMovement(
                 templateId = RecurringMovementId(intent.templateId),
                 yearMonth = intent.period,
