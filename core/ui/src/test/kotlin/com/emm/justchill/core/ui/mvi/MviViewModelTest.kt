@@ -1,8 +1,8 @@
 package com.emm.justchill.core.ui.mvi
 
 import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.testing.MainDispatcherRule
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
@@ -11,12 +11,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -28,18 +25,11 @@ import kotlin.test.assertTrue
 // future split cannot let the two drift.
 class MviViewModelTest {
 
-    @Before
-    fun setUp() {
-        // Standard rather than Unconfined so the test drives the suspend/cancel ordering explicitly;
-        // runTest adopts this dispatcher's scheduler, which is what makes runCurrent/advanceUntilIdle
-        // steer the VM.
-        Dispatchers.setMain(StandardTestDispatcher())
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    // Standard rather than Unconfined so the test drives the suspend/cancel ordering explicitly;
+    // runTest adopts this dispatcher's scheduler, which is what makes runCurrent/advanceUntilIdle
+    // steer the VM.
+    @get:Rule
+    val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
 
     @Test
     fun `cancelling a launchSafe job does not emit an error effect`() = runTest {

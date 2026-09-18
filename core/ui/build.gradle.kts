@@ -14,4 +14,6 @@ dependencies {
     api(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.material.icons.extended)
+
+    testImplementation(projects.core.testing)
 }

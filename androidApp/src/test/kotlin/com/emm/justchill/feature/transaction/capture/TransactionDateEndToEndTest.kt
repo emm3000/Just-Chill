@@ -17,17 +17,15 @@ import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.UpdateTransactionUseCase
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -37,6 +35,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -49,6 +48,9 @@ import kotlin.time.Instant
 class TransactionDateEndToEndTest {
 
     private val testDispatcher = StandardTestDispatcher()
+
+    @get:Rule
+    val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule(testDispatcher)
 
     private lateinit var driver: JdbcSqliteDriver
     private lateinit var db: JustChillDatabase
@@ -79,7 +81,6 @@ class TransactionDateEndToEndTest {
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(testDispatcher)
         driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         JustChillDatabase.Schema.create(driver)
         db = JustChillDatabase(driver)
@@ -97,7 +98,6 @@ class TransactionDateEndToEndTest {
 
     @After
     fun tearDown() {
-        Dispatchers.resetMain()
         driver.close()
     }
 
