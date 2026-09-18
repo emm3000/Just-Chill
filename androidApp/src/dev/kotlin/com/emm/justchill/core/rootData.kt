@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.experiences.calendar.Calendar
+import com.emm.justchill.experiences.loandialogs.DeletingLoanDialogScreen
+import com.emm.justchill.experiences.loandialogs.DeletingLoanPaymentDialogScreen
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
 import com.emm.justchill.experiences.timerpicker.MeTimerPicker
 import com.emm.justchill.shell.AppNavHost
@@ -22,6 +24,8 @@ sealed class RootRoutes(val route: String) {
     data object Amount : RootRoutes("amount")
     data object Calendar : RootRoutes("Calendar")
     data object MeTimerPicker : RootRoutes("MeTimerPicker")
+    data object DeletingLoanDialog : RootRoutes("DeletingLoanDialog")
+    data object DeletingLoanPaymentDialog : RootRoutes("DeletingLoanPaymentDialog")
 }
 
 val rootData: List<Feature> = listOf(
@@ -88,5 +92,23 @@ val rootData: List<Feature> = listOf(
         resource = "-",
         route = RootRoutes.MeTimerPicker,
         screen = { MeTimerPicker() }
+    ),
+    Feature(
+        id = UUID.randomUUID().toString(),
+        title = "Loan detail with the delete-loan dialog deleting",
+        description = "The in-flight state of DeleteLoanDialog, unobservable on a real delete",
+        category = "personal",
+        resource = "-",
+        route = RootRoutes.DeletingLoanDialog,
+        screen = { DeletingLoanDialogScreen() }
+    ),
+    Feature(
+        id = UUID.randomUUID().toString(),
+        title = "Loan detail with the delete-payment dialog deleting",
+        description = "The in-flight state of DeleteLoanPaymentDialog, unobservable on a real delete",
+        category = "personal",
+        resource = "-",
+        route = RootRoutes.DeletingLoanPaymentDialog,
+        screen = { DeletingLoanPaymentDialogScreen() }
     )
 ).reversed()
