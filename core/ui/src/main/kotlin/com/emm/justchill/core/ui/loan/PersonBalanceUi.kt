@@ -24,8 +24,6 @@ private fun PersonBalance.toUi() = PersonBalanceUi(
 
 fun List<PersonBalance>.toUi(): List<PersonBalanceUi> = map { it.toUi() }
 
-// Money owed to the user, so a positive total is signed + and tinted at the call site; zero carries
-// no sign, having no direction to point in.
 fun List<PersonBalance>.totalOwedFormatted(): String = totalRemaining().positiveMoneyFormatted()
 
 // The aggregate's own sign — never owingNames' emptiness. Two balances can offset to a zero total
