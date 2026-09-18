@@ -1,8 +1,8 @@
 package com.emm.justchill.shell
 
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.feature.loan.LoansRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.LoansRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import org.junit.Test
 import kotlin.test.assertEquals

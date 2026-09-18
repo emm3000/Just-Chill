@@ -1,0 +1,235 @@
+package com.emm.justchill.feature.loan
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.Pill
+import com.emm.justchill.core.ui.atoms.PillTone
+import com.emm.justchill.core.ui.preview.PreviewRedmi15C
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
+
+@Composable
+fun PersonLoansScreen(
+    state: PersonLoansUiState,
+    onIntent: (PersonLoansIntent) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(colors.bg),
+    ) {
+        JcTopBar(
+            title = state.personName,
+            left = {
+                IconBtn(
+                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
+                    onClick = onBack,
+                    contentDescription = "Volver",
+                )
+            },
+        )
+        Hairline()
+
+        if (state.loans.isEmpty()) {
+            PersonLoansEmptyState(personName = state.personName, modifier = Modifier.fillMaxSize())
+        } else {
+            LazyColumn(contentPadding = PaddingValues(top = spacing.s1, bottom = spacing.s3)) {
+                items(state.loans, key = { it.loanId }) { loan ->
+                    LoanRow(
+                        loan = loan,
+                        onClick = { onIntent(PersonLoansIntent.OnLoanClick(loan.loanId)) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val remainingColor = if (loan.isSettled) colors.textTertiary else colors.textPrimary
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClickLabel = "Ver detalle del préstamo",
+                    onClick = onClick,
+                )
+                .padding(horizontal = spacing.s4, vertical = spacing.s3),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+                ) {
+                    Text(
+                        text = loan.readableLentAt,
+                        style = type.caption,
+                        color = colors.textTertiary,
+                    )
+                    if (loan.isSettled) {
+                        Pill(text = "Liquidado", tone = PillTone.Pos)
+                    }
+                }
+                Spacer(Modifier.height(spacing.s1))
+                Text(
+                    text = loan.remaining,
+                    style = type.amountLead,
+                    color = remainingColor,
+                )
+                Spacer(Modifier.height(spacing.s1))
+                Text(
+                    text = "Prestado ${loan.principal} · Total ${loan.totalDue} · Pagado ${loan.paidSoFar}",
+                    style = type.caption,
+                    color = colors.textSecondary,
+                )
+            }
+        }
+        Hairline()
+    }
+}
+
+@Composable
+private fun PersonLoansEmptyState(personName: String, modifier: Modifier = Modifier) {
+    val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+
+    Column(
+        modifier = modifier.padding(horizontal = spacing.s6),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Payments,
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(48.dp),
+        )
+        Spacer(Modifier.height(spacing.s4))
+        Text(
+            text = "Sin préstamos con $personName",
+            style = type.titleL,
+            color = colors.textPrimary,
+        )
+    }
+}
+
+@Preview
+@PreviewRedmi15C
+@Composable
+private fun PersonLoansScreenPreview() {
+    EmmTheme {
+        PersonLoansScreen(
+            state = PersonLoansUiState(
+                personName = "Juan",
+                loans = listOf(
+                    LoanRowUi(
+                        loanId = "1",
+                        principal = "S/ 200.00",
+                        totalDue = "S/ 210.00",
+                        paidSoFar = "S/ 50.00",
+                        remaining = "S/ 160.00",
+                        isSettled = false,
+                        readableLentAt = "3 de julio",
+                    ),
+                    LoanRowUi(
+                        loanId = "2",
+                        principal = "S/ 100.00",
+                        totalDue = "S/ 100.00",
+                        paidSoFar = "S/ 100.00",
+                        remaining = "S/ 0.00",
+                        isSettled = true,
+                        readableLentAt = "12 de mayo",
+                    ),
+                ),
+            ),
+            onIntent = {},
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Preview
+@PreviewRedmi15C
+@Composable
+private fun PersonLoansScreenEmptyPreview() {
+    EmmTheme {
+        PersonLoansScreen(
+            state = PersonLoansUiState(personName = "Juan"),
+            onIntent = {},
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Preview
+@PreviewRedmi15C
+@Composable
+private fun PersonLoansScreenOverflowPreview() {
+    EmmTheme {
+        PersonLoansScreen(
+            state = PersonLoansUiState(
+                personName = "María Fernanda Rodríguez Quispe",
+                loans = listOf(
+                    LoanRowUi(
+                        loanId = "1",
+                        principal = "S/ 200.00",
+                        totalDue = "S/ 210.00",
+                        paidSoFar = "S/ 50.00",
+                        remaining = "S/ 160.00",
+                        isSettled = false,
+                        readableLentAt = "3 de julio",
+                    ),
+                ),
+            ),
+            onIntent = {},
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
