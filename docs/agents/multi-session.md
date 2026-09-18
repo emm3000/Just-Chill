@@ -44,7 +44,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 
 Every dispatch to a peer session must include:
 
-- Issue number, docs to read first (the relevant ADRs, rules and module `CLAUDE.md`, prior engram memos), branch name, and the peer's **own** worktree path (see Isolation below).
+- Issue number, docs to read first (the relevant ADRs, rules and module `CLAUDE.md`, prior engram memos), branch name, and the peer's **own** worktree path (see Isolation below). The engram tools are deferred MCP tools: a session loads `mcp__plugin_engram_engram__mem_search` and `mem_save` with `ToolSearch("select:...")` before the first call, or gets `No such tool available: mem_search`. The engram hook claims otherwise; the hook is wrong.
 - The line: *"The issue's acceptance criteria are the contract and win over any file list here; run every criterion check before opening the PR."* Prefer criteria phrased as a command with expected empty output.
 - The file list (`fd -e kt`) and their tests, plus the pre-scoped blockers. For a move/refactor, a dependency-closure directive: transitive imports mapped from the consuming layer, non-platform dependencies co-moved, platform symbols hoisted to callbacks.
 - Gates: `./gradlew qualityGate assembleDevDebug` green before every commit (the gate excludes the build on purpose; its definition: `.claude/rules/github-workflows.md`); conventional commits; no `Co-Authored-By` (a PreToolUse hook in `.claude/settings.json` blocks it); English code and docs, Spanish only for UI strings; `rg` / `fd` / `bat` / `sd`; gotchas saved to engram.
