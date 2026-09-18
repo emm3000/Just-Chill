@@ -49,12 +49,12 @@ import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountEntries
+import com.emm.justchill.feature.report.reportEntries
 import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.loan.loanEntries
 import com.emm.justchill.hh.onboarding.onboardingEntries
 import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.recurring.recurringEntries
-import com.emm.justchill.hh.report.reportEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.LoansRoute
@@ -161,7 +161,10 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                             nav.push(CategoryRoute(initialType = categoryType, propagateToTransaction = true))
                         },
                     )
-                    reportEntries(bindings)
+                    reportEntries(
+                        bindings = bindings,
+                        onAddTransaction = { nav -> nav.push(AddTransactionRoute()) },
+                    )
                     recurringEntries(bindings)
                     profileEntries(
                         bindings = bindings,

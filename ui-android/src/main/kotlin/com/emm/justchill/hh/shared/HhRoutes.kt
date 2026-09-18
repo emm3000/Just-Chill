@@ -39,9 +39,6 @@ data object RecurringMovementsRoute : AppRoute
 data class AddEditRecurringMovementRoute(val id: String? = null) : AppRoute
 
 @Serializable
-data object ReportRoute : BottomBarRoute
-
-@Serializable
 data object LoansRoute : AppRoute
 
 @Serializable
@@ -63,7 +60,6 @@ val hhRoutes: List<KClass<out AppRoute>> = listOf(
     EditTransactionRoute::class,
     RecurringMovementsRoute::class,
     AddEditRecurringMovementRoute::class,
-    ReportRoute::class,
     LoansRoute::class,
     PersonLoansRoute::class,
     LoanDetailRoute::class,
