@@ -214,6 +214,19 @@ internal class ConventionPluginFixture(
                     println("REPORT implementationDependencies=" + declared.filter { it.first == "implementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
                     println("REPORT testDependencies=" + declared.filter { it.first == "testImplementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
                     println("REPORT plugins=" + listOf("justchill.detekt", "justchill.quality.gate").filter { project.pluginManager.hasPlugin(it) }.joinToString(","))
+                    val variant = project.providers.gradleProperty("justchill.reportDetektVariant").getOrElse("Debug")
+                    val detekt = project.tasks.findByName("detekt" + variant) as? dev.detekt.gradle.Detekt
+                    val detektBaseline = project.tasks.findByName("detektBaseline" + variant) as? dev.detekt.gradle.DetektCreateBaselineTask
+                    if (detekt != null && detektBaseline != null) {
+                        val kotlinClasses = (project.tasks.getByName("compile" + variant + "Kotlin") as org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile).destinationDirectory.get().asFile
+                        val javaClasses = (project.tasks.getByName("compile" + variant + "JavaWithJavac") as org.gradle.api.tasks.compile.JavaCompile).destinationDirectory.get().asFile
+                        val halves = { classpath: org.gradle.api.file.ConfigurableFileCollection ->
+                            val analysis = classpath.from.mapNotNull { (it as? org.gradle.api.provider.Provider<*>)?.orNull }.filterIsInstance<org.gradle.api.file.Directory>().map { it.asFile }
+                            listOf("kotlin" to kotlinClasses, "java" to javaClasses).filter { it.second in analysis }.map { it.first }.joinToString(",")
+                        }
+                        println("REPORT detektAnalysisClasses=" + halves(detekt.classpath))
+                        println("REPORT detektBaselineAnalysisClasses=" + halves(detektBaseline.classpath))
+                    }
                     val gate = project.tasks.findByName("qualityGate")
                     if (gate != null) {
                         println("REPORT gatedTests=" + gate.dependsOn.filterIsInstance<String>().sorted().joinToString(","))

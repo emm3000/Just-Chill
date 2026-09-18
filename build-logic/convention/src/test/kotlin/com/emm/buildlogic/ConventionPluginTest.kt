@@ -53,6 +53,26 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `detekt analyses a library against both halves of the module's own output`() {
+        val report: Map<String, String> = fixture.report(listOf("justchill.android.library"))
+
+        assertEquals(BOTH_ANALYSIS_HALVES, report["detektAnalysisClasses"])
+        assertEquals(BOTH_ANALYSIS_HALVES, report["detektBaselineAnalysisClasses"])
+    }
+
+    @Test
+    fun `detekt analyses a flavored application variant against both halves of its own output`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.application"),
+            androidConfiguration = FLAVORED_APPLICATION_CONFIGURATION,
+            arguments = REPORT_DEV_DEBUG,
+        )
+
+        assertEquals(BOTH_ANALYSIS_HALVES, report["detektAnalysisClasses"])
+        assertEquals(BOTH_ANALYSIS_HALVES, report["detektBaselineAnalysisClasses"])
+    }
+
+    @Test
     fun `a module that sets its own namespace keeps it over the derived one`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.library"),
@@ -246,6 +266,10 @@ class ConventionPluginTest {
 
         val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
 
+        const val BOTH_ANALYSIS_HALVES: String = "kotlin,java"
+
+        val REPORT_DEV_DEBUG: List<String> = listOf("-Pjustchill.reportDetektVariant=DevDebug")
+
         const val AGGREGATE_GATE_TASKS: String =
             "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
                 "compileDebugAndroidTestKotlin,compileReleaseKotlin,detektMain,detektTest,testDebugUnitTest"
@@ -262,6 +286,23 @@ class ConventionPluginTest {
             keyPassword=key-secret
             storeFile=keys/upload.jks
             storePassword=store-secret
+        """.trimIndent()
+
+        val FLAVORED_APPLICATION_CONFIGURATION: String = """
+            android {
+                namespace = "com.emm.justchill.probe"
+
+                defaultConfig {
+                    applicationId = "com.emm.justchill.probe"
+                }
+
+                flavorDimensions += "environment"
+
+                productFlavors {
+                    create("dev") { dimension = "environment" }
+                    create("prod") { dimension = "environment" }
+                }
+            }
         """.trimIndent()
 
         val APPLICATION_CONFIGURATION: String = """
