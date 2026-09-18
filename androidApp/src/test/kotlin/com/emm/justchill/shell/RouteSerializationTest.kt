@@ -20,15 +20,16 @@ import com.emm.justchill.feature.loan.PersonLoansRoute
 import com.emm.justchill.feature.loan.loanRoutes
 import com.emm.justchill.feature.onboarding.ManifestoRoute
 import com.emm.justchill.feature.onboarding.onboardingRoutes
+import com.emm.justchill.feature.recurring.AddEditRecurringMovementRoute
+import com.emm.justchill.feature.recurring.RecurringMovementsRoute
+import com.emm.justchill.feature.recurring.recurringRoutes
 import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.report.reportRoutes
-import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
-import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.hhRoutes
 import kotlinx.serialization.KSerializer
@@ -74,7 +75,15 @@ class RouteSerializationTest {
     }
 
     private val registries: List<List<KClass<out AppRoute>>> =
-        listOf(hhRoutes, accountRoutes, categoryRoutes, reportRoutes, loanRoutes, onboardingRoutes)
+        listOf(
+            hhRoutes,
+            accountRoutes,
+            categoryRoutes,
+            recurringRoutes,
+            reportRoutes,
+            loanRoutes,
+            onboardingRoutes,
+        )
 
     /**
      * Data classes get NON-DEFAULT field values on purpose: a field whose serializer is broken then

@@ -26,7 +26,6 @@ import com.emm.justchill.hh.profile.toText
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
-import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -38,6 +37,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
     pendingImportJson: () -> String?,
     onImportHandled: () -> Unit,
     onCategoriesClick: (AppNavigator) -> Unit,
+    onRecurringClick: (AppNavigator) -> Unit,
     onAboutClick: (AppNavigator) -> Unit,
 ) {
     entry<ProfileRoute> {
@@ -48,6 +48,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
             pendingImportJson = pendingImportJson,
             clearPendingImport = onImportHandled,
             onCategoriesClick = onCategoriesClick,
+            onRecurringClick = onRecurringClick,
             onAboutClick = onAboutClick,
         )
     }
@@ -68,6 +69,7 @@ private fun ProfileEntry(
     pendingImportJson: () -> String?,
     clearPendingImport: () -> Unit,
     onCategoriesClick: (AppNavigator) -> Unit,
+    onRecurringClick: (AppNavigator) -> Unit,
     onAboutClick: (AppNavigator) -> Unit,
 ) {
     val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
@@ -130,7 +132,7 @@ private fun ProfileEntry(
         appVersion = appVersion,
         commitHash = commitHash,
         onCategoriesClick = { onCategoriesClick(nav) },
-        onRecurringClick = { nav.push(RecurringMovementsRoute) },
+        onRecurringClick = { onRecurringClick(nav) },
         onAboutClick = { onAboutClick(nav) },
         onExportClick = {
             if (bindings.platform.supportsBackup) vm.onIntent(ProfileIntent.ExportRequested)

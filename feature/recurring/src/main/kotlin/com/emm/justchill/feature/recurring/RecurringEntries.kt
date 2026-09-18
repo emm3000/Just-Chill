@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.recurring
+package com.emm.justchill.feature.recurring
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,8 +10,6 @@ import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
-import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
-import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import org.koin.compose.viewmodel.koinViewModel
 
 fun EntryProviderScope<NavKey>.recurringEntries(bindings: NavHostBindings) {

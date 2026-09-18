@@ -29,12 +29,6 @@ data class AddTransactionRoute(
 @Serializable
 data class EditTransactionRoute(val transactionId: String) : CaptureRoute
 
-@Serializable
-data object RecurringMovementsRoute : AppRoute
-
-@Serializable
-data class AddEditRecurringMovementRoute(val id: String? = null) : AppRoute
-
 val hhRoutes: List<KClass<out AppRoute>> = listOf(
     PrivacyPolicyRoute::class,
     SeeTransactionRoute::class,
@@ -42,6 +36,4 @@ val hhRoutes: List<KClass<out AppRoute>> = listOf(
     AuthRoute::class,
     AddTransactionRoute::class,
     EditTransactionRoute::class,
-    RecurringMovementsRoute::class,
-    AddEditRecurringMovementRoute::class,
 )

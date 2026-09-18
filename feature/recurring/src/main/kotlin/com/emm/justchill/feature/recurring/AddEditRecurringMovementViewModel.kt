@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.recurring
+package com.emm.justchill.feature.recurring
 
 import com.emm.justchill.core.domain.account.AccountRepository
 import com.emm.justchill.core.domain.category.Category
