@@ -19,9 +19,15 @@ jobs:
   # the same Gradle configuration only to assemble what it could not have assembled in parallel
   # anyway — it needed the gate to pass first.
   #
-  # The full gate and both builds run here even though the PR workflow already validated the
+  # The gate runs here on every trunk push even though the PR workflow already validated the
   # branch: protection is `strict: false`, so two PRs green on their own can break trunk together,
-  # and admin direct pushes skip PR CI. This is the only net for both. Do not remove it.
+  # and admin direct pushes skip PR CI. Nothing runs the gate locally, so this is the only net for
+  # both. Do not remove it.
+  #
+  # The APKs and their distribution are `workflow_dispatch` only while the ADR 015 migration runs:
+  # a trunk push pays for the gate alone, and the build for the device is requested by hand. The
+  # gate compiles `:androidApp`'s prodRelease variant so the release source set cannot rot
+  # unnoticed, but R8, resource shrinking and release lint only run on a dispatch.
   distribute:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -39,21 +45,30 @@ jobs:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
+      # `compileReleaseKotlin` is on the gate for the library modules only, so `:androidApp` names
+      # its own release compile here.
+      - name: Quality gate
+        run: ./gradlew qualityGate :androidApp:compileProdReleaseKotlin
+
       # The Crashlytics mapping upload is off unless the property is true: trunk only.
-      - name: Quality gate + builds
+      - name: Build APKs
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           MAPPING_UPLOAD: ${{ github.ref == 'refs/heads/trunk' }}
-        run: ./gradlew qualityGate assembleDevDebug assembleProdRelease "-Pjustchill.crashlyticsMappingUpload=$MAPPING_UPLOAD"
+        run: ./gradlew assembleDevDebug assembleProdRelease "-Pjustchill.crashlyticsMappingUpload=$MAPPING_UPLOAD"
 
       - name: Set current date
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: echo "date_today=$(date +'%Y-%m-%d-%H-%M-%S')" >> "$GITHUB_ENV"
 
       - name: Resolve release notes
         id: notes
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: echo "msg=$(git log -1 --pretty=%s)" >> "$GITHUB_OUTPUT"
 
       - name: Resolve APK paths
         id: paths
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           echo "devDebug=$(find androidApp/build/outputs/apk/dev/debug -name '*.apk' | head -n1)" >> "$GITHUB_OUTPUT"
           echo "prodRelease=$(find androidApp/build/outputs/apk/prod/release -name '*.apk' | head -n1)" >> "$GITHUB_OUTPUT"
@@ -62,6 +77,7 @@ jobs:
       # service credentials, and a floating tag can be repointed at new code by anyone who controls
       # the upstream repo. Dependabot (.github/dependabot.yml) proposes the bumps.
       - name: Distribute Dev Debug to Firebase
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
         with:
           appId: ${{ secrets.FIREBASE_DEV_APP_ID }}
@@ -71,6 +87,7 @@ jobs:
           releaseNotes: ${{ steps.notes.outputs.msg }}
 
       - name: Distribute Prod Release to Firebase
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
         with:
           appId: ${{ secrets.FIREBASE_PROD_APP_ID }}
@@ -80,6 +97,7 @@ jobs:
           releaseNotes: ${{ steps.notes.outputs.msg }}
 
       - name: Upload Dev Debug APK artifact
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.date_today }}-dev-debug-apk
@@ -87,6 +105,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Prod Release APK artifact
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ env.date_today }}-prod-release-apk
