@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.core.ui.transaction
 
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
@@ -8,8 +8,6 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.TransactionId
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
-import com.emm.justchill.core.ui.transaction.TransactionUi
-import com.emm.justchill.core.ui.transaction.toUi
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,33 +41,40 @@ class TransactionUiTest {
         ),
     ).toUi().single()
 
-    @Test fun a_written_description_is_the_title() {
+    @Test
+    fun `a written description is the title`() {
         assertEquals("Compra de la semana", row("Compra de la semana").title)
     }
 
-    @Test fun a_blank_description_falls_back_to_the_category_name() {
+    @Test
+    fun `a blank description falls back to the category name`() {
         assertEquals("Supermercado", row("").title)
     }
 
-    @Test fun a_movement_whose_category_is_gone_is_named_Sin_categoria() {
+    @Test
+    fun `a movement whose category is gone is named Sin categoria`() {
         assertEquals("Sin categoría", row("", category = null).categoryName)
         assertEquals("Sin categoría", row("", category = null).title)
     }
 
-    @Test fun a_described_row_subtitles_with_the_category_and_the_account() {
+    @Test
+    fun `a described row subtitles with the category and the account`() {
         assertEquals("Supermercado · BCP", row("Compra de la semana").subtitle)
     }
 
-    @Test fun a_row_titled_by_its_category_subtitles_with_the_account_alone() {
+    @Test
+    fun `a row titled by its category subtitles with the account alone`() {
         assertEquals("BCP", row("").subtitle)
     }
 
-    @Test fun an_account_the_join_could_not_name_leaves_the_category_alone() {
+    @Test
+    fun `an account the join could not name leaves the category alone`() {
         assertEquals("Supermercado", row("Compra de la semana", accountName = "").subtitle)
     }
 
-    @Test fun a_row_with_neither_a_description_nor_an_account_still_has_a_title() {
-        val orphan = row("", category = null, accountName = "")
+    @Test
+    fun `a row with neither a description nor an account still has a title`() {
+        val orphan: TransactionUi = row("", category = null, accountName = "")
 
         assertEquals("Sin categoría", orphan.title)
         assertEquals("", orphan.subtitle)
