@@ -6,10 +6,8 @@ import com.emm.justchill.core.commonCoreModule
 import com.emm.justchill.hh.di.backupModule
 import com.emm.justchill.hh.di.dataModule
 import com.emm.justchill.hh.di.profileModule
-import com.emm.justchill.hh.di.seetransactionsModule
 import com.emm.justchill.hh.di.sharedModule
 import com.emm.justchill.hh.di.supabaseModule
-import com.emm.justchill.hh.di.transactionModule
 import com.emm.justchill.wiring.accountWiring
 import com.emm.justchill.wiring.authWiring
 import com.emm.justchill.wiring.categoryWiring
@@ -25,8 +23,6 @@ import org.koin.core.module.Module
 // commonCoreModule still live in :presentation; each *Wiring module takes over as ADR 015's
 // waves 7 and 8 extract its feature.
 fun appModules(platformModule: Module): List<Module> = listOf(
-    transactionModule,
-    seetransactionsModule,
     profileModule,
     backupModule,
     sharedModule,

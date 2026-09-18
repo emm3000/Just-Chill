@@ -1,0 +1,150 @@
+package com.emm.justchill.feature.transaction.list
+
+import com.emm.justchill.core.domain.shared.YearMonth
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+// The list's empty/loading precedence is decided here, not in a UI when: every consumer reads one
+// value and renders it, so these cases are the whole contract.
+class SeeTransactionsUiStateTest {
+
+    // Stated, not read: none of the cases below is about a month at all, so a real clock read here
+    // would make them depend on the day the suite runs.
+    private val august = YearMonth(2026, Month.AUGUST)
+
+    private val day = DayGroup(
+        date = LocalDate(2026, 8, 10),
+        today = LocalDate(2026, 8, 10),
+        transactions = emptyList(),
+    )
+
+    @Test fun unknown_count_is_loading_not_an_empty_state() {
+        val state = SeeTransactionsUiState(month = august)
+
+        assertEquals(ListDisplayState.Loading, state.listDisplayState)
+    }
+
+    @Test fun the_month_selector_shows_while_the_count_is_still_unknown() {
+        assertTrue(SeeTransactionsUiState(month = august).isMonthSelectorVisible)
+    }
+
+    @Test fun the_month_selector_hides_once_a_filter_makes_the_list_cross_month() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 3, query = "café")
+
+        assertFalse(state.isMonthSelectorVisible)
+    }
+
+    @Test fun a_count_known_to_be_zero_is_an_empty_ledger() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 0)
+
+        assertEquals(ListDisplayState.EmptyLedger, state.listDisplayState)
+    }
+
+    @Test fun searching_an_empty_ledger_resolves_to_the_empty_ledger_alone() {
+        // A ledger with nothing in it cannot have search results to miss, so the ledger state wins.
+        val state = SeeTransactionsUiState(month = august, movementCount = 0, query = "café")
+
+        assertEquals(ListDisplayState.EmptyLedger, state.listDisplayState)
+    }
+
+    @Test fun a_filter_that_matches_nothing_in_a_stocked_ledger_is_no_search_results() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12, query = "café")
+
+        assertEquals(ListDisplayState.NoSearchResults, state.listDisplayState)
+    }
+
+    @Test fun a_category_filter_alone_is_enough_to_reach_no_search_results() {
+        val state = SeeTransactionsUiState(
+            month = august,
+            movementCount = 12,
+            activeCategory = ActiveCategoryInfo(id = "cat-1", name = "Comida"),
+        )
+
+        assertEquals(ListDisplayState.NoSearchResults, state.listDisplayState)
+    }
+
+    @Test fun a_stocked_ledger_with_an_empty_month_and_no_filter_is_an_empty_month() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12)
+
+        assertEquals(ListDisplayState.EmptyMonth, state.listDisplayState)
+    }
+
+    @Test fun rows_render_as_content() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12, days = listOf(day))
+
+        assertEquals(ListDisplayState.Content, state.listDisplayState)
+    }
+
+    @Test fun rows_that_arrive_before_the_count_still_render_as_content() {
+        val state = SeeTransactionsUiState(month = august, days = listOf(day))
+
+        assertEquals(ListDisplayState.Content, state.listDisplayState)
+    }
+
+    @Test fun the_today_nudge_shows_when_the_current_month_has_nothing_dated_today() {
+        val state = SeeTransactionsUiState(
+            month = august,
+            movementCount = 12,
+            days = listOf(day),
+            today = LocalDate(2026, 8, 11),
+        )
+
+        assertTrue(state.isTodayNudgeVisible)
+    }
+
+    @Test fun the_today_nudge_hides_once_a_day_group_is_dated_today() {
+        val state = SeeTransactionsUiState(
+            month = august,
+            movementCount = 12,
+            days = listOf(day),
+            today = day.date,
+        )
+
+        assertFalse(state.isTodayNudgeVisible)
+    }
+
+    @Test fun the_today_nudge_hides_while_a_past_month_is_browsed() {
+        val state = SeeTransactionsUiState(
+            month = YearMonth(2026, Month.JULY),
+            movementCount = 12,
+            currentMonth = august,
+            today = LocalDate(2026, 8, 11),
+        )
+
+        assertFalse(state.isTodayNudgeVisible)
+    }
+
+    @Test fun the_today_nudge_hides_while_a_filter_makes_the_list_cross_month() {
+        val state = SeeTransactionsUiState(
+            month = august,
+            movementCount = 12,
+            activeCategory = ActiveCategoryInfo(id = "cat-1", name = "Comida"),
+            today = LocalDate(2026, 8, 11),
+        )
+
+        assertFalse(state.isTodayNudgeVisible)
+    }
+
+    @Test fun the_today_nudge_hides_on_an_empty_ledger_that_already_says_so_full_screen() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 0, today = LocalDate(2026, 8, 11))
+
+        assertFalse(state.isTodayNudgeVisible)
+    }
+
+    @Test fun the_today_nudge_survives_an_empty_month_inside_a_stocked_ledger() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12, today = LocalDate(2026, 8, 11))
+
+        assertEquals(ListDisplayState.EmptyMonth, state.listDisplayState)
+        assertTrue(state.isTodayNudgeVisible)
+    }
+
+    @Test fun the_today_nudge_stays_hidden_until_the_clock_has_named_a_day() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12)
+
+        assertFalse(state.isTodayNudgeVisible)
+    }
+}

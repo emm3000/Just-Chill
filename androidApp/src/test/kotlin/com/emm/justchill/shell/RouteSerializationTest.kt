@@ -27,11 +27,12 @@ import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringRoutes
 import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.report.reportRoutes
-import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.EditTransactionRoute
+import com.emm.justchill.feature.transaction.AddTransactionRoute
+import com.emm.justchill.feature.transaction.EditTransactionRoute
+import com.emm.justchill.feature.transaction.SeeTransactionRoute
+import com.emm.justchill.feature.transaction.transactionRoutes
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
-import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.hhRoutes
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -85,6 +86,7 @@ class RouteSerializationTest {
             reportRoutes,
             loanRoutes,
             onboardingRoutes,
+            transactionRoutes,
         )
 
     /**

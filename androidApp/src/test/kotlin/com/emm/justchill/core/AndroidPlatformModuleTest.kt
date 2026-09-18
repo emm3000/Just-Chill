@@ -4,7 +4,7 @@ import android.content.Context
 import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.session.KeystoreSessionManager
 import com.emm.justchill.core.shortcuts.ShortcutPublisher
-import com.emm.justchill.hh.transaction.GetSpendShortcutCombos
+import com.emm.justchill.feature.transaction.capture.GetSpendShortcutCombos
 import io.github.jan.supabase.auth.SessionManager
 import io.mockk.mockk
 import org.junit.Test
