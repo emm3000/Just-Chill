@@ -1,8 +1,23 @@
 package com.emm.justchill.wiring
 
+import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
+import com.emm.justchill.core.domain.transaction.DeleteTransactionUseCase
+import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
+import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
+import com.emm.justchill.core.domain.transaction.UpdateTransactionUseCase
+import com.emm.justchill.feature.transaction.capture.GetSpendShortcutCombos
+import com.emm.justchill.feature.transaction.transactionModule
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-// Empty until issue #125 extracts :feature:transaction; that ticket edits this file and no other
-// wiring file. See docs/adr/015-feature-modules-over-layer-modules.md.
-val transactionWiring: Module = module { }
+val transactionWiring: Module = module {
+    includes(transactionModule)
+
+    factoryOf(::CreateTransactionUseCase)
+    factoryOf(::UpdateTransactionUseCase)
+    factoryOf(::DeleteTransactionUseCase)
+    factoryOf(::GetTopUsedCategoryIdsUseCase)
+    factoryOf(::GetFrequentCombosUseCase)
+    factoryOf(::GetSpendShortcutCombos)
+}

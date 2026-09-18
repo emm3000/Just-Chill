@@ -58,12 +58,12 @@ import com.emm.justchill.feature.onboarding.onboardingEntries
 import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringEntries
 import com.emm.justchill.feature.report.reportEntries
+import com.emm.justchill.feature.transaction.AddTransactionRoute
+import com.emm.justchill.feature.transaction.SeeTransactionRoute
+import com.emm.justchill.feature.transaction.capture.transactionEntries
+import com.emm.justchill.feature.transaction.list.seeTransactionsEntries
 import com.emm.justchill.hh.profile.profileEntries
-import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
-import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.rememberPlatformHostActions
-import com.emm.justchill.hh.transaction.transactionEntries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
