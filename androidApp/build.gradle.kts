@@ -67,16 +67,11 @@ composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_reports")
 }
 
-// detektMain and detektTest aggregate all four variants; these three cover every production and
-// unit-test source set once, and leave androidTest to its own task. Tests stay on dev: the prod
-// flavor adds a signing config the gate has no reason to need.
-qualityGate {
-    detektTasks.addAll("detektDevDebug", "detektDevDebugUnitTest", "detektProdRelease")
-}
-
 // Android lint is deliberately absent; .github/workflows/uploadApk.yml runs it on every trunk push.
+// The gate's own `compileReleaseKotlin` never matches here: this module's flavors name the task
+// `compileProdReleaseKotlin`, and `assembleProdRelease` is not on the gate.
 tasks.named("qualityGate") {
-    dependsOn("testDevDebugUnitTest")
+    dependsOn("testDevDebugUnitTest", "compileProdReleaseKotlin")
 }
 
 dependencies {

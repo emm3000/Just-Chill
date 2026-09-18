@@ -50,7 +50,6 @@ private val NOON = LocalTime(12, 0)
 // Mid-month, so nothing here depends on where a month boundary falls.
 private val TODAY = LocalDate(2026, 8, 15)
 
-// Split out of SeeTransactionsViewModelTest so neither class trips detekt's LargeClass.
 @Suppress("IgnoredReturnValue")
 class SeeTransactionsPendingRecurringViewModelTest {
 

@@ -15,7 +15,6 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
 
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("org.jetbrains.kotlin.jvm")
-        apply<DetektConventionPlugin>()
         apply<QualityGateConventionPlugin>()
 
         configureKotlin(BuildConventions.COROUTINES_OPT_INS)

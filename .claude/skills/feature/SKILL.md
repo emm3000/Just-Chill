@@ -55,6 +55,6 @@ Placeholder copy in the screen is a literal Spanish string, tuteo. Shared copy g
 - UI uses **only** `core/ui/atoms/` components; `Text` and `Icon` only with a `LocalEmmType` role and a `LocalEmmColors` token. Never a raw Material3 control.
 - No Compose import in `:presentation`; no `:core:domain` repository import in `:ui-android`.
 - Explicit types on every property and local; no comments.
-- Nesting within detekt `NestedBlockDepth` (allowedDepth 4, a fifth level fails), no nested `also/apply/run/let`, ≤ 2 returns per function.
+- At most 4 levels of nesting, no nested `also/apply/run/let`, ≤ 2 real returns per function — review-enforced, see `.claude/rules/kotlin-style.md`.
 
 After creating the files, run `./gradlew :presentation:testDebugUnitTest :ui-android:testDebugUnitTest` (the Koin graph test and the route test) and `./gradlew assembleDevDebug`.

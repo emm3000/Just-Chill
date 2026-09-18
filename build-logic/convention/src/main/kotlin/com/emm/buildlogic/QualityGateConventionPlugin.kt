@@ -8,13 +8,10 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
 import org.gradle.language.base.plugins.LifecycleBasePlugin
-import java.util.concurrent.Callable
 
 class QualityGateConventionPlugin : Plugin<Project> {
 
     override fun apply(target: Project) {
-        val extension: QualityGateExtension =
-            target.extensions.create(EXTENSION, QualityGateExtension::class.java)
         val boundaries: TaskProvider<CheckModuleBoundariesTask> = target.registerBoundaryCheck()
         val composeFree: TaskProvider<CheckComposeFreeViewModelsTask> = target.registerComposeCheck()
         val snapshots: TaskProvider<CheckSqlDelightSnapshotsTask> = target.registerSnapshotCheck()
@@ -22,7 +19,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
         target.tasks.register(GATE_TASK) {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
-                "Runs every check that must pass before pushing: detektMain and detektTest, " +
+                "Runs every check that must pass before pushing: " +
                     "compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
                     ":build-logic:convention:test on the root, " +
                     "checkModuleBoundaries, checkComposeFreeViewModels and checkSqlDelightSnapshots, " +
@@ -30,8 +27,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
                     "Invoked by CI."
 
             dependsOn(boundaries, composeFree, snapshots)
-            dependsOn(target.tasks.matching { gates(it, extension.detektTasks.get()) })
-            dependsOn(Callable { extension.detektTasks.get().map(target.tasks::named) })
+            dependsOn(target.tasks.matching(::gates))
 
             // Task-name matching never reaches an included build, so this suite has to be named or
             // it silently stops running. `parent == null` rather than `rootProject`: that is the
@@ -42,11 +38,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
         }
     }
 
-    private fun gates(task: Task, detektTasks: Set<String>): Boolean = when (task.name) {
-        in DETEKT_GATE_TASKS -> detektTasks.isEmpty()
-        in COMPILE_GATE_TASKS, in SCHEMA_GATE_TASKS -> true
-        else -> false
-    }
+    private fun gates(task: Task): Boolean =
+        task.name in COMPILE_GATE_TASKS || task.name in SCHEMA_GATE_TASKS
 
     private fun Project.registerBoundaryCheck(): TaskProvider<CheckModuleBoundariesTask> =
         tasks.register<CheckModuleBoundariesTask>(BOUNDARY_TASK) {
@@ -94,7 +87,6 @@ class QualityGateConventionPlugin : Plugin<Project> {
         const val COMPOSE_TASK: String = "checkComposeFreeViewModels"
         const val SNAPSHOT_TASK: String = "checkSqlDelightSnapshots"
 
-        private const val EXTENSION: String = "qualityGate"
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
         private const val TEST_TASK: String = ":convention:test"
         private const val ANDROID_BASE_PLUGIN: String = "com.android.base"
@@ -106,16 +98,9 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val MIGRATION_SOURCES: String = "**/*.sqm"
         private const val SNAPSHOT_SOURCES: String = "*.db"
 
-        // An allowlist: `withType<Detekt>()` would also run the per-variant tasks these two aggregate.
-        val DETEKT_GATE_TASKS: Set<String> = setOf(
-            "detektMain",
-            "detektTest",
-        )
-
-        // detekt passes on unresolvable code, so only compiling `androidTest` catches a signature
-        // change that breaks the instrumented suite. `compileReleaseKotlin` is named because
-        // `assembleProdRelease` is not on the gate and no library module's release variant is
-        // type-checked anywhere else; it used to ride along on `detektRelease` by accident.
+        // Compiling `androidTest` is the only thing that catches a signature change breaking the
+        // instrumented suite. `compileReleaseKotlin` is named because `assembleProdRelease` is not
+        // on the gate and no library module's release variant is type-checked anywhere else.
         val COMPILE_GATE_TASKS: Set<String> = setOf(
             "compileDebugAndroidTestKotlin",
             "compileReleaseKotlin",

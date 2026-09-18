@@ -12,7 +12,7 @@ Plain `com.android.library` (ADR 011): one `src/main`, one `src/test`, `minSdk =
 - `AuthViewModel` is the reference shape: the re-entrancy guard lives in the sealed state and `launchSubmitting`'s `finally` clears it on success, failure and cancellation alike. Every fix lands through `updateState`.
 - `TodayFlow.today()` (`core/time/`) is the one way a ViewModel derives the date; a hand-written `today()` is the second way it exists to remove.
 - Ver's browsed month follows a midnight rollover only while it equals the month the rollover leaves; Report's never moves, a rollover only corrects `isCurrentMonth` and the trends window (`SeeTransactionsViewModelTest`, `ReportViewModelTest` pin both).
-- `SeeTransactionsViewModel` and `AccountsViewModel` sit at detekt's constructor cap (`allowedConstructorParameters: 6`): a datum either needs new joins through the query or an existing flow, not a seventh parameter.
+- `SeeTransactionsViewModel` and `AccountsViewModel` take six constructor parameters, the ceiling review holds them to: a datum either needs new joins through the query or an existing flow, not a seventh parameter.
 
 ## Backup
 

@@ -80,11 +80,11 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       # No assembleDevDebug while the ADR 015 migration runs: the gate already compiles that
-      # variant through `testDevDebugUnitTest`, and packaging it gated nothing. It compiles the
-      # prodRelease variant too, through `:androidApp:detektProdRelease`, whose analysis classpath
-      # is that compile task's output. assembleProdRelease (R8, resource shrinking, release lint)
-      # still runs when the PR touches an R8 keep-rule file or the release convention plugin, or
-      # when `changes` could not tell.
+      # variant through `testDevDebugUnitTest`, and packaging it gated nothing. It type-checks the
+      # prodRelease variant too, through the `compileProdReleaseKotlin` that module names on the
+      # gate. assembleProdRelease (R8, resource shrinking, release lint) still runs when the PR
+      # touches an R8 keep-rule file or the release convention plugin, or when `changes` could not
+      # tell.
       - name: Quality gate + builds
         env:
           RELEASE: ${{ needs.changes.result != 'success' || needs.changes.outputs.release != 'false' }}
@@ -100,12 +100,4 @@ jobs:
           name: unit-test-report
           if-no-files-found: error
           path: '**/build/reports/tests/'
-          retention-days: 7
-
-      - name: Upload detekt reports
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: detekt-reports
-          path: '**/build/reports/detekt/'
           retention-days: 7

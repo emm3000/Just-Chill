@@ -24,8 +24,6 @@ googleIdentityVersion = "1.2.0"
 kotlinVersion = "2.4.10"
 googleServicesVersion = "4.5.0"
 googleCrashlyticsVersion = "3.0.7"
-detekt = "2.0.0-alpha.6"
-composeRulesDetekt = "0.6.4"
 supabaseBom = "3.7.0"
 ktorClientOkhttp = "3.5.2"
 
@@ -94,8 +92,6 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-detekt-ktlint-wrapper = { module = "dev.detekt:detekt-rules-ktlint-wrapper", version.ref = "detekt" }
-detekt-compose-rules = { module = "io.nlopez.compose.rules:detekt", version.ref = "composeRulesDetekt" }
 supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabaseBom" }
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt" }
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
@@ -160,4 +156,3 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 # literal marker coordinate, not this alias, since versioning this alias is what breaks resolution).
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
-detekt = { id = "dev.detekt", version.ref = "detekt" }

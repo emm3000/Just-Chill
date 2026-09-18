@@ -53,56 +53,28 @@ When you delete code, delete it. Git has the history.
 - Prefer expression bodies for functions that are genuinely one expression, with the return type still declared.
 - Prefer `sealed interface` over `enum` when the variants carry data.
 - Use `require` / `check` in `init` to reject invalid state at construction — see `principles.md`, fail fast.
-- A signature that fits in 120 columns sits on one line: detekt's formatting rules (`ClassSignature`, `FunctionExpressionBody`) redden a hand-wrapped short signature.
+- A signature that fits in 120 columns sits on one line; a hand-wrapped short signature is a review comment.
 
-## detekt
+## Complexity limits
 
-Config lives in `config/detekt/detekt.yml`, the only source of thresholds; read the file, a copy here goes stale. `./gradlew qualityGate` must be green before every commit; plain `./gradlew detekt` covers strictly less and is never the gate. Only `:core:domain` still rides the `detektMain` / `detektTest` aggregates. Every Android module names its analyses in its own build file — `detektDebug` and `detektDebugUnitTest`, plus `detektDebugAndroidTest` on `:core:database`, and `detektDevDebug`, `detektDevDebugUnitTest`, `detektProdRelease` on `:androidApp` — because the aggregates also pull a `detektRelease` that re-reads the same files under an identical baseline. Release *type* checking is not detekt's: the gate names `compileReleaseKotlin` itself. The rules that shape code the most:
+No linter runs in this repo, and none is coming back (ADR 016). These limits are review-enforced, and the numbers are the ones the current code was written against:
 
-- `CyclomaticComplexMethod` (14) and `NestedBlockDepth` (allowedDepth 4, a fifth level fails). Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
-- `ReturnCount` (2, labeled returns excluded). More than two real returns means the function should be split.
-- `TooManyFunctions` (8 per file) is the rule the repo leans on for Compose decomposition.
-- `LongMethod` (60) has no test exclusion: a long test method is a red gate, and so is `MultiLineIfElse` in a test.
+- At most 4 levels of nesting. Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
+- At most 2 real returns per function; a labeled return out of a lambda is not one. More than two means the function should be split.
+- At most 8 functions per file — the limit the repo leans on for Compose decomposition.
+- Cyclomatic complexity around 14 per function, and 60 lines is a long function in production and in a test alike.
 
-### Where detekt goes blind
-
-- `LongMethod` ignores `@Composable` and `@Preview` by config; `LargeClass` counts lines in a class, and a Compose screen is a top-level function. `CyclomaticComplexMethod`, `ComplexCondition`, `NestedBlockDepth` and `LongParameterList` do fire on Composables.
-- Type-resolution rules stay silent wherever a symbol does not resolve, and the task still passes. What a module owes is the `compiler errors found during analysis` line its `detekt<Variant>` task prints; `DetektConventionPlugin.putOwnClassesOnAnalysisClasspath` in `build-logic` is what keeps it off, and deleting that wiring deletes analysis silently.
-- `ignoreAnnotatedFunctions` takes simple annotation names: `Preview` matches, a fully-qualified name matches nothing and drops the screen into permanent amnesty.
-- State hygiene in a ViewModel: `LongMethod` skips `init` blocks and no `onIntent` nears the complexity cap. A green gate is evidence about the Composables, never about the state behind them.
-
-### One baseline file per analysis task
-
-Each analysis task derives its own baseline from the stem `config/detekt/baseline-<module>.xml` set in `DetektConventionPlugin`: `detektDebug` reads `baseline-<module>-debug.xml`, `:androidApp` fans further over its flavors. A task with no variant-specific file **falls back to the stem**, so a stem is a live gate baseline, not a spare: `baseline-core-domain.xml` is what `:core:domain:detektMain` and `detektTest` read, and `:androidApp:detektDevDebugUnitTest` had no file of its own either. Delete a stem only after proving every task that falls back to it reports zero findings — that is why `baseline-androidApp.xml` is gone and `baseline-core-domain.xml` is not.
-
-Variant baselines the gate stopped reading are not automatically junk. `baseline-<module>-release.xml` and `:androidApp`'s `-devRelease` / `-prodDebug` still hold live findings their own `detekt` task reports; deleting them reddens `./gradlew detekt` for no gain.
-
-- To grandfather a pre-existing finding, run the matching baseline task and commit what it writes (`./gradlew :core:database:detektBaselineMain`). Never hand-edit a baseline, and never baseline a NEW violation the current change introduced.
-- A baseline entry for a file-level rule is permanent amnesty: `TooManyFunctions:Foo.kt` carries no count, so the file is exempt at any size. Read the current holders out of the baseline files, never out of a doc.
-- Removing an entry or changing detekt config: regenerate into a scratch file and diff against the committed one; a config that silently matches nothing shows up as "no change".
-
-### Burning a baseline down
-
-- A burn-down change only shrinks a baseline. A violation too costly to fix keeps its entry and the commit says why.
-- Fix the code, never relax the rule: no threshold edited in `detekt.yml`, no new `@Suppress`.
-- `DetektCreateBaselineTask` over-reports relative to `Detekt` (it has flagged `EmptyFunctionBlock` and `TooManyFunctions` the check did not). Never commit a baseline for a source set whose check reports zero findings; delete the file.
-- File-level entries are where the effort pays most. `:androidApp`'s `src/dev/.../experiences/` sandbox entries wait on a product call about keeping the sandbox.
-
-### Arbitration and suppression
-
-- Passing the gate is necessary, never sufficient: a reviewer may require a change detekt is happy with.
-- A detekt failure becomes a baseline entry only together with a GitHub issue naming it.
-- Prefer a baseline entry over an inline `@Suppress`: the baseline is inventoried in one file someone can count; an inline `@Suppress` is invisible and permanent.
+`./gradlew qualityGate` must be green before every commit, but it compiles and tests; it never judges style. Passing it is necessary, never sufficient: a reviewer may require a change no number here forbids.
 
 ### Compose sizing
 
 Function length is a weak signal in Compose: a flat 200-line layout reads fine, a 60-line one with remembered state and nested conditionals does not. The repo measures **decomposition, not length**: one file carrying state, layout *and* N sub-components fails review. Both routes count equally, a component package (`hh/report/components/`, `hh/transaction/sheets/`) or sibling files in the feature package (`hh/profile/`, `hh/recurring/`).
 
-A parameter carrying a default does not count toward coupling: the number that matters is what every caller must supply, which is Compose's own idiom. The flag does not launder a real overage; `LongMethod` and the decomposition rule own what a composable builds out of what it receives.
+A parameter carrying a default does not count toward coupling: the number that matters is what every caller must supply, which is Compose's own idiom. The flag does not launder a real overage; the length and decomposition limits own what a composable builds out of what it receives.
 
 ### Check before committing
 
-1. More than 4 levels of nesting (`NestedBlockDepth`)? Extract a function.
+1. More than 4 levels of nesting? Extract a function.
 2. A chain of `else if`? Use `when`, or extract functions.
 3. A function doing several things? Split it — see `principles.md`, SLAP.
 4. Nested `also` / `apply` / `run` / `let`? Refactor into named steps.

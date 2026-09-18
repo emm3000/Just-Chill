@@ -6,10 +6,6 @@ composeCompiler {
     stabilityConfigurationFiles.add(layout.projectDirectory.file("compose_stability.conf"))
 }
 
-qualityGate {
-    detektTasks.addAll("detektDebug", "detektDebugUnitTest")
-}
-
 dependencies {
     api(projects.core.domain)
     api(libs.androidx.lifecycle.viewmodel)
