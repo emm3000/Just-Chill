@@ -22,10 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
 import com.emm.justchill.core.ui.components.EmmCard
@@ -52,6 +52,7 @@ import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun RecurringMovementsScreen(
@@ -223,21 +224,22 @@ private fun RecurringSummaryCard(
 @Composable
 private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("¿Borrar «$name»?") },
-        text = {
-            Text("El movimiento recurrente se borrará permanentemente. Los movimientos ya confirmados no se afectan.")
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = "Borrar", color = colors.danger)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        },
-    )
+    val type = LocalEmmType.current
+
+    EmmDialog(
+        title = "¿Borrar «$name»?",
+        confirmLabel = "Borrar",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
+        confirmTone = IconBtnTone.Danger,
+    ) {
+        Text(
+            text = "El movimiento recurrente se borrará permanentemente. Los movimientos ya confirmados no se afectan.",
+            style = type.bodyM,
+            color = colors.textSecondary,
+        )
+    }
 }
 
 @Composable
