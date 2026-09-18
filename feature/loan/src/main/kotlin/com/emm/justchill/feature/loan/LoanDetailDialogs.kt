@@ -1,22 +1,16 @@
 package com.emm.justchill.feature.loan
 
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.window.DialogProperties
+import com.emm.justchill.core.ui.atoms.EmmDialog
+import com.emm.justchill.core.ui.atoms.IconBtnTone
+import com.emm.justchill.core.ui.atoms.inFlightDialogProperties
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-
-/**
- * A deletion already in flight lands whatever happens here, so every gesture the user reads as
- * "abort" — the scrim, the back press, the Cancelar button — has to stop until it does.
- */
-private fun dismissalProperties(isDeleting: Boolean) = DialogProperties(
-    dismissOnBackPress = !isDeleting,
-    dismissOnClickOutside = !isDeleting,
-)
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 internal fun DeleteLoanDialog(
@@ -25,27 +19,26 @@ internal fun DeleteLoanDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        properties = dismissalProperties(isDeleting),
-        title = { Text("¿Borrar este préstamo?") },
-        text = {
-            Text(
-                "Prestado el ${summary.readableLentAt} por ${summary.principal}. " +
-                    "Se borra junto con sus abonos registrados.",
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm, enabled = !isDeleting) {
-                Text(text = "Borrar", color = colors.danger)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isDeleting) { Text("Cancelar") }
-        },
-    )
+    EmmDialog(
+        title = "¿Borrar este préstamo?",
+        confirmLabel = "Borrar",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
+        properties = inFlightDialogProperties(isDeleting),
+        actionsEnabled = !isDeleting,
+        confirmTone = IconBtnTone.Danger,
+    ) {
+        Text(
+            text = "Prestado el ${summary.readableLentAt} por ${summary.principal}. " +
+                "Se borra junto con sus abonos registrados.",
+            style = type.bodyM,
+            color = colors.textSecondary,
+        )
+    }
 }
 
 private val previewLoanSummary = LoanSummaryUi(
@@ -93,27 +86,26 @@ internal fun DeleteLoanPaymentDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        properties = dismissalProperties(isDeleting),
-        title = { Text("¿Borrar este abono?") },
-        text = {
-            Text(
-                "Abono de ${payment.amount} del ${payment.readablePaidAt}. " +
-                    "El préstamo recupera ese monto como pendiente.",
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm, enabled = !isDeleting) {
-                Text(text = "Borrar", color = colors.danger)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isDeleting) { Text("Cancelar") }
-        },
-    )
+    EmmDialog(
+        title = "¿Borrar este abono?",
+        confirmLabel = "Borrar",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
+        properties = inFlightDialogProperties(isDeleting),
+        actionsEnabled = !isDeleting,
+        confirmTone = IconBtnTone.Danger,
+    ) {
+        Text(
+            text = "Abono de ${payment.amount} del ${payment.readablePaidAt}. " +
+                "El préstamo recupera ese monto como pendiente.",
+            style = type.bodyM,
+            color = colors.textSecondary,
+        )
+    }
 }
 
 private val previewLoanPayment = LoanPaymentRowUi(

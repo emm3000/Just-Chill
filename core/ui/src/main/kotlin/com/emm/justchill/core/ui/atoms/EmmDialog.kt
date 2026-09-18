@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -43,6 +44,8 @@ fun EmmDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit = onDismiss,
+    properties: DialogProperties = DialogProperties(),
+    actionsEnabled: Boolean = true,
     confirmTone: IconBtnTone = IconBtnTone.Accent,
     destructiveAction: (@Composable () -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
@@ -52,7 +55,7 @@ fun EmmDialog(
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
 
-    Dialog(onDismissRequest = onDismissRequest) {
+    Dialog(onDismissRequest = onDismissRequest, properties = properties) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
@@ -82,8 +85,18 @@ fun EmmDialog(
                     .fillMaxWidth()
                     .padding(top = spacing.s4),
             ) {
-                DialogAction(label = dismissLabel, onClick = onDismiss, tone = IconBtnTone.Neutral)
-                DialogAction(label = confirmLabel, onClick = onConfirm, tone = confirmTone)
+                DialogAction(
+                    label = dismissLabel,
+                    onClick = onDismiss,
+                    tone = IconBtnTone.Neutral,
+                    enabled = actionsEnabled,
+                )
+                DialogAction(
+                    label = confirmLabel,
+                    onClick = onConfirm,
+                    tone = confirmTone,
+                    enabled = actionsEnabled,
+                )
             }
         }
     }
@@ -95,29 +108,40 @@ fun DialogAction(
     onClick: () -> Unit,
     tone: IconBtnTone,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val radii: EmmRadii = LocalEmmRadii.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
 
-    val textColor: Color = when (tone) {
+    val toneColor: Color = when (tone) {
         IconBtnTone.Neutral -> colors.textSecondary
         IconBtnTone.Accent -> colors.accent
         IconBtnTone.Danger -> colors.danger
     }
+    val textColor: Color = if (enabled) toneColor else colors.textDisabled
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .clip(radii.rS)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = spacing.s2),
     ) {
         Text(text = label, style = type.labelL, color = textColor)
     }
 }
+
+/**
+ * A write already in flight lands whatever happens here, so every gesture the user reads as
+ * "abort" — the scrim, the back press, the dismiss button — has to stop until it does.
+ */
+fun inFlightDialogProperties(isInFlight: Boolean): DialogProperties = DialogProperties(
+    dismissOnBackPress = !isInFlight,
+    dismissOnClickOutside = !isInFlight,
+)
 
 @Preview
 @PreviewRedmi15CWidth
@@ -131,6 +155,31 @@ private fun EmmDialogPreview() {
             dismissLabel = "Cancelar",
             onDismiss = {},
             onDismissRequest = {},
+            confirmTone = IconBtnTone.Danger,
+            content = {
+                Text(
+                    text = "1 movimiento va a quedar sin categoría. No puedes deshacerlo desde la app.",
+                    style = LocalEmmType.current.bodyM,
+                    color = LocalEmmColors.current.textSecondary,
+                )
+            },
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun EmmDialogBlockedPreview() {
+    EmmTheme {
+        EmmDialog(
+            title = "¿Borrar «Supermercado»?",
+            confirmLabel = "Borrar",
+            onConfirm = {},
+            dismissLabel = "Cancelar",
+            onDismiss = {},
+            onDismissRequest = {},
+            properties = inFlightDialogProperties(isInFlight = true),
+            actionsEnabled = false,
             confirmTone = IconBtnTone.Danger,
             content = {
                 Text(
