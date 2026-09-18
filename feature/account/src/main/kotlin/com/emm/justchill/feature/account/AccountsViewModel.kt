@@ -7,6 +7,7 @@ import com.emm.justchill.core.domain.account.DeleteAccountUseCase
 import com.emm.justchill.core.domain.account.UpdateAccountUseCase
 import com.emm.justchill.core.domain.loan.LoanRepository
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionRepository
@@ -50,6 +51,9 @@ class AccountsViewModel(
         .flatMapLatest { current ->
             transactionRepository.allInRange(current.startInclusiveDay(), current.endExclusiveDay())
         }
+    private val onDomainError: (DomainException) -> AccountsEffect = { error ->
+        AccountsEffect.ShowMessage(error.toUserMessage())
+    }
 
     init {
         combine(
@@ -68,7 +72,7 @@ class AccountsViewModel(
                     )
                 }
             }
-            .launchSafeIn(onError = { e -> AccountsEffect.ShowMessage(e.toUserMessage()) })
+            .launchSafeIn(onError = onDomainError)
 
         // A separate flow on purpose (ADR 010): loans never fold into the accounts query.
         loanRepository.balancesByPerson()
@@ -81,7 +85,7 @@ class AccountsViewModel(
                     )
                 }
             }
-            .launchSafeIn(onError = { e -> AccountsEffect.ShowMessage(e.toUserMessage()) })
+            .launchSafeIn(onError = onDomainError)
     }
 
     override fun onIntent(intent: AccountsIntent) {
@@ -105,7 +109,7 @@ class AccountsViewModel(
     }
 
     private fun confirmEdit() = launchSafe(
-        onError = { e -> AccountsEffect.ShowMessage(e.toUserMessage()) },
+        onError = onDomainError,
     ) {
         val target = currentState.pendingEdit ?: return@launchSafe
         val newName = currentState.editName
