@@ -130,17 +130,29 @@ class ProfileViewModelRowDataTest {
     }
 
     @Test
-    fun `ExportSaved records the export, so the row stops saying Nunca`() = runTest(testDispatcher) {
+    fun `a saved ExportFinished records the export, so the row stops saying Nunca`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
         assertEquals(LastExportUi.Never, vm.state.value.lastExport)
 
         every { localExportHistory.daysSinceLastExport(any()) } returns 0
-        vm.onIntent(ProfileIntent.ExportSaved)
+        vm.onIntent(ProfileIntent.ExportFinished(saved = true))
         advanceUntilIdle()
 
         verify { localExportHistory.recordExport() }
         assertEquals(LastExportUi.DaysAgo(0), vm.state.value.lastExport)
+    }
+
+    @Test
+    fun `a failed ExportFinished records nothing, so the row keeps saying Nunca`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(ProfileIntent.ExportFinished(saved = false))
+        advanceUntilIdle()
+
+        verify(exactly = 0) { localExportHistory.recordExport() }
+        assertEquals(LastExportUi.Never, vm.state.value.lastExport)
     }
 
     @Test

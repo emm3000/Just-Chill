@@ -24,7 +24,7 @@ import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.time.FakeTodayFlow
-import com.emm.justchill.hh.shared.toText
+import com.emm.justchill.hh.profile.toText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -233,6 +233,24 @@ class ProfileViewModelTest {
         assertEquals(ProfileOp.None, vm.state.value.op)
 
         job.cancel()
+    }
+
+    @Test
+    fun `a saved ExportFinished tells the user the export is done`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+
+        val messages = notifiedBy(vm, ProfileIntent.ExportFinished(saved = true))
+
+        assertEquals(listOf(ProfileMessage.ExportDone), messages)
+    }
+
+    @Test
+    fun `a failed ExportFinished tells the user the export failed`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+
+        val messages = notifiedBy(vm, ProfileIntent.ExportFinished(saved = false))
+
+        assertEquals(listOf(ProfileMessage.ExportFailed), messages)
     }
 
     @Test

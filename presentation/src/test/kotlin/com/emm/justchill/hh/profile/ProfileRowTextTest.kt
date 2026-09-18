@@ -1,7 +1,6 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.hh.profile
 
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.hh.profile.LastExportUi
 import org.junit.Test
 import kotlin.test.assertEquals
 

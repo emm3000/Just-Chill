@@ -24,7 +24,7 @@ import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.time.FakeTodayFlow
-import com.emm.justchill.hh.shared.toMetaText
+import com.emm.justchill.hh.profile.toMetaText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

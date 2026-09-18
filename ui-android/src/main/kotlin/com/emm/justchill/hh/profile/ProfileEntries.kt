@@ -19,6 +19,7 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.hh.profile.toText
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.CategoriesListRoute
@@ -28,7 +29,6 @@ import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
 import com.emm.justchill.hh.shared.rememberAppNavigator
-import com.emm.justchill.hh.shared.toText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -80,8 +80,8 @@ private fun ProfileEntry(
                     tone = EmmSnackbarTone.Error,
                 )
 
-                is ProfileEffect.ExportReady -> bindings.platform.requestExport(effect.json) {
-                    vm.onIntent(ProfileIntent.ExportSaved)
+                is ProfileEffect.ExportReady -> bindings.platform.requestExport(effect.json) { saved ->
+                    vm.onIntent(ProfileIntent.ExportFinished(saved))
                 }
 
                 is ProfileEffect.Notify -> bindings.snackbarHostState.showEmmSnackbar(

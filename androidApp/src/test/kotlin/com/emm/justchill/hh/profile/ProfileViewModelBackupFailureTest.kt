@@ -27,7 +27,7 @@ import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.time.FakeTodayFlow
-import com.emm.justchill.hh.shared.toText
+import com.emm.justchill.hh.profile.toText
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk

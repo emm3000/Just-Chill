@@ -45,8 +45,8 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-import com.emm.justchill.hh.shared.categoriesMetaText
-import com.emm.justchill.hh.shared.recurringMetaText
+import com.emm.justchill.hh.profile.categoriesMetaText
+import com.emm.justchill.hh.profile.recurringMetaText
 
 @Composable
 fun ProfileScreen(

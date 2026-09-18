@@ -1,7 +1,4 @@
-package com.emm.justchill.hh.shared
-
-import com.emm.justchill.hh.profile.ProfileMessage
-import com.emm.justchill.hh.profile.buildImportDoneMessage
+package com.emm.justchill.hh.profile
 
 fun ProfileMessage.toText(): String = when (this) {
     ProfileMessage.SessionClosed -> "Sesión cerrada. Tus datos siguen en este teléfono."

@@ -1,10 +1,6 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.hh.profile
 
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
-import com.emm.justchill.hh.profile.BackupRowSeverity
-import com.emm.justchill.hh.profile.BackupRowUi
-import com.emm.justchill.hh.profile.LastSnapshot
-import com.emm.justchill.hh.profile.severity
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
