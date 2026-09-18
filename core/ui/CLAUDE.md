@@ -18,6 +18,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the Sp
 - The sheet never dismisses itself: confirming and skipping are callbacks the hosting list's ViewModel handles, and the caller closes the sheet once the operation succeeds.
 - `PendingRecurringRow`'s `IconTileSize.Lg` matches `TransactionRow`'s tile, so a pending row's text starts on the same column as a transaction's. Shrinking it breaks the alignment no test pins.
 - `danger` on an overdue period label is deliberate: a catch-up month is a broken state, not an amount.
+
 ## Capture vocabulary
 
 - `category/` holds the two catalogs the domain's semantic ids resolve against — `AppIconCatalog` (`IconsAll.kt`) and `allColors` (`ColorsAll.kt`) — plus `CategoryUi`, `SelectableCategory` and the `resolvedIcon` / `resolvedColor` getters in `CategoryResolve.kt` that turn an `iconId` / `colorId` into an `ImageVector` and a `CategoryColor`. A stored `ImageVector` or `Color` is the bug this package exists to prevent.
