@@ -91,5 +91,5 @@ jobs:
           # draft, not completed: the tag push should stage the release, not ship it. Promote from
           # the Play Console after checking the upload. `completed` left no window to abort a bad AAB.
           status: draft
-          track: alpha
+          tracks: alpha
           releaseName: ${{ github.ref_name }}
