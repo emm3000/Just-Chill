@@ -6,6 +6,8 @@ import android.os.Build
 import androidx.core.content.edit
 import com.emm.justchill.BuildConfig
 import com.emm.justchill.BuildInfo
+import com.emm.justchill.core.auth.ActivityGoogleSignInLauncher
+import com.emm.justchill.core.auth.GoogleCredentialClient
 import com.emm.justchill.core.database.provideDb
 import com.emm.justchill.core.database.provideSqlDriver
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
@@ -13,9 +15,7 @@ import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.session.KeystoreSessionCipher
 import com.emm.justchill.core.session.KeystoreSessionManager
 import com.emm.justchill.core.shortcuts.ShortcutPublisher
-import com.emm.justchill.hh.auth.ActivityGoogleSignInLauncher
-import com.emm.justchill.hh.auth.GoogleCredentialClient
-import com.emm.justchill.hh.auth.GoogleSignInLauncher
+import com.emm.justchill.feature.auth.GoogleSignInLauncher
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
 import io.github.jan.supabase.auth.SessionManager

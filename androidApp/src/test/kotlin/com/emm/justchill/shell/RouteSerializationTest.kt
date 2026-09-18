@@ -10,6 +10,8 @@ import com.emm.justchill.core.ui.navigation.AppRoute
 import com.emm.justchill.feature.account.AccountsRoute
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountRoutes
+import com.emm.justchill.feature.auth.AuthRoute
+import com.emm.justchill.feature.auth.authRoutes
 import com.emm.justchill.feature.category.CategoriesListRoute
 import com.emm.justchill.feature.category.CategoryRoute
 import com.emm.justchill.feature.category.categoryRoutes
@@ -26,7 +28,6 @@ import com.emm.justchill.feature.recurring.recurringRoutes
 import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.report.reportRoutes
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
@@ -78,6 +79,7 @@ class RouteSerializationTest {
         listOf(
             hhRoutes,
             accountRoutes,
+            authRoutes,
             categoryRoutes,
             recurringRoutes,
             reportRoutes,

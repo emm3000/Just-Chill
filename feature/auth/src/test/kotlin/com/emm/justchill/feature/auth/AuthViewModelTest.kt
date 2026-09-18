@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.auth
+package com.emm.justchill.feature.auth
 
 import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.ResendConfirmationEmailUseCase

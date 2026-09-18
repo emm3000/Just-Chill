@@ -17,9 +17,6 @@ data object SeeTransactionRoute : BottomBarRoute
 data object ProfileRoute : BottomBarRoute
 
 @Serializable
-data object AuthRoute : AppRoute
-
-@Serializable
 data class AddTransactionRoute(
     val preselectedAccountId: String? = null,
     val preselectedCategoryId: String? = null,
@@ -33,7 +30,6 @@ val hhRoutes: List<KClass<out AppRoute>> = listOf(
     PrivacyPolicyRoute::class,
     SeeTransactionRoute::class,
     ProfileRoute::class,
-    AuthRoute::class,
     AddTransactionRoute::class,
     EditTransactionRoute::class,
 )
