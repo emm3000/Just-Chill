@@ -1,0 +1,29 @@
+package com.emm.justchill.feature.loan
+
+import com.emm.justchill.core.domain.loan.LoanRepository
+import com.emm.justchill.core.ui.error.toUserMessage
+import com.emm.justchill.core.ui.mvi.MviViewModel
+import kotlinx.coroutines.flow.onEach
+
+class PersonLoansViewModel(personKey: String, loanRepository: LoanRepository) :
+    MviViewModel<PersonLoansUiState, PersonLoansIntent, PersonLoansEffect>(PersonLoansUiState()) {
+
+    init {
+        loanRepository.loansWithBalance(personKey)
+            .onEach { balances ->
+                updateState {
+                    copy(
+                        personName = balances.firstOrNull()?.loan?.personName ?: currentState.personName,
+                        loans = balances.toUi(),
+                    )
+                }
+            }
+            .launchSafeIn(onError = { e -> PersonLoansEffect.ShowError(e.toUserMessage()) })
+    }
+
+    override fun onIntent(intent: PersonLoansIntent) {
+        when (intent) {
+            is PersonLoansIntent.OnLoanClick -> sendEffect(PersonLoansEffect.NavigateToLoanDetail(intent.loanId))
+        }
+    }
+}

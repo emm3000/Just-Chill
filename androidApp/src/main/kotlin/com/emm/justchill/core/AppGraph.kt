@@ -6,7 +6,6 @@ import com.emm.justchill.core.commonCoreModule
 import com.emm.justchill.hh.di.authModule
 import com.emm.justchill.hh.di.backupModule
 import com.emm.justchill.hh.di.dataModule
-import com.emm.justchill.hh.di.loanModule
 import com.emm.justchill.hh.di.profileModule
 import com.emm.justchill.hh.di.recurringModule
 import com.emm.justchill.hh.di.seetransactionsModule
@@ -31,7 +30,6 @@ import org.koin.core.module.Module
 fun appModules(platformModule: Module): List<Module> = listOf(
     transactionModule,
     seetransactionsModule,
-    loanModule,
     recurringModule,
     profileModule,
     backupModule,

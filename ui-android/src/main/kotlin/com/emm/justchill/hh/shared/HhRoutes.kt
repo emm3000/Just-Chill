@@ -38,18 +38,6 @@ data object RecurringMovementsRoute : AppRoute
 @Serializable
 data class AddEditRecurringMovementRoute(val id: String? = null) : AppRoute
 
-@Serializable
-data object LoansRoute : AppRoute
-
-@Serializable
-data class PersonLoansRoute(val personKey: String) : AppRoute
-
-@Serializable
-data class LoanDetailRoute(val loanId: String) : AppRoute
-
-@Serializable
-data class AddEditLoanRoute(val loanId: String? = null) : AppRoute
-
 val hhRoutes: List<KClass<out AppRoute>> = listOf(
     ManifestoRoute::class,
     PrivacyPolicyRoute::class,
@@ -60,8 +48,4 @@ val hhRoutes: List<KClass<out AppRoute>> = listOf(
     EditTransactionRoute::class,
     RecurringMovementsRoute::class,
     AddEditRecurringMovementRoute::class,
-    LoansRoute::class,
-    PersonLoansRoute::class,
-    LoanDetailRoute::class,
-    AddEditLoanRoute::class,
 )

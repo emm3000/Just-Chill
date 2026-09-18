@@ -13,17 +13,18 @@ import com.emm.justchill.feature.account.accountRoutes
 import com.emm.justchill.feature.category.CategoriesListRoute
 import com.emm.justchill.feature.category.CategoryRoute
 import com.emm.justchill.feature.category.categoryRoutes
+import com.emm.justchill.feature.loan.AddEditLoanRoute
+import com.emm.justchill.feature.loan.LoanDetailRoute
+import com.emm.justchill.feature.loan.LoansRoute
+import com.emm.justchill.feature.loan.PersonLoansRoute
+import com.emm.justchill.feature.loan.loanRoutes
 import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.report.reportRoutes
-import com.emm.justchill.hh.shared.AddEditLoanRoute
 import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
-import com.emm.justchill.hh.shared.LoanDetailRoute
-import com.emm.justchill.hh.shared.LoansRoute
 import com.emm.justchill.hh.shared.ManifestoRoute
-import com.emm.justchill.hh.shared.PersonLoansRoute
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
@@ -72,7 +73,7 @@ class RouteSerializationTest {
     }
 
     private val registries: List<List<KClass<out AppRoute>>> =
-        listOf(hhRoutes, accountRoutes, categoryRoutes, reportRoutes)
+        listOf(hhRoutes, accountRoutes, categoryRoutes, reportRoutes, loanRoutes)
 
     /**
      * Data classes get NON-DEFAULT field values on purpose: a field whose serializer is broken then
