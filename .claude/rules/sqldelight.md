@@ -12,7 +12,8 @@ paths:
 
 - A change to any `.sq` that alters a `CREATE` statement ships three artifacts in the same commit: the `.sq` edit, `com/emm/justchill/core/database/N.sqm` where `N` is the version before the bump, and `databases/(N+1).db`.
 - Generate the snapshot with `./gradlew :core:database:generateDebugJustChillDatabaseSchema`. It writes the current version to `databases/`.
-- `./gradlew :core:database:verifySqlDelightMigration` replays every `.sqm` over the snapshots and runs on `qualityGate`. It cannot notice a snapshot that was never written; `checkSqlDelightSnapshots`, also on `qualityGate`, fails when an `N.sqm` above the oldest committed snapshot has no `(N+1).db`, or a `.db` has no migration behind it.
+- `./gradlew :core:database:verifySqlDelightMigration` replays every `.sqm` over the snapshots and runs on `qualityGate`. It cannot notice a snapshot that was never written; `checkSqlDelightSnapshots`, also on `qualityGate`, fails when the pinned floor `.db` is gone, when an `N.sqm` at or above the floor has no `(N+1).db`, when a `.db` has no migration behind it, or when a module with schema sources pins no floor.
+- The floor is pinned in `core/database/build.gradle.kts` (`sqlDelightSnapshots { floor.set(3) }`), never derived from the files present, so deleting a committed `.db` fails the check instead of moving the baseline up. Retiring the oldest migrations means raising that one digit, a visible edit in the diff.
 - Never delete or regenerate a committed `.db`, and never reset the schema. Each one is the exact schema a shipped build wrote to disk, and the author's device holds the oldest real data: a missing migration only fires there.
 - Files move freely but never rename: a `.sqm` digit is the version it migrates from (mirrored by its test's `oldVersion`), a `.sq` name is its generated `<Name>Queries` class.
 

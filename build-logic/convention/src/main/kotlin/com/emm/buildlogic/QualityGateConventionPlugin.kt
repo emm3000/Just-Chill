@@ -7,6 +7,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
@@ -62,15 +63,19 @@ class QualityGateConventionPlugin : Plugin<Project> {
             report.set(layout.buildDirectory.file("reports/$COMPOSE_TASK.txt"))
         }
 
-    private fun Project.registerSnapshotCheck(): TaskProvider<CheckSqlDelightSnapshotsTask> =
-        tasks.register<CheckSqlDelightSnapshotsTask>(SNAPSHOT_TASK) {
+    private fun Project.registerSnapshotCheck(): TaskProvider<CheckSqlDelightSnapshotsTask> {
+        val extension: SqlDelightSnapshotsExtension =
+            extensions.create<SqlDelightSnapshotsExtension>(SNAPSHOT_EXTENSION)
+        return tasks.register<CheckSqlDelightSnapshotsTask>(SNAPSHOT_TASK) {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
                 "Fails when a .sqm of this module has no schema snapshot, or a snapshot has no migration."
             migrations.from(fileTree(SQLDELIGHT_DIRECTORY) { include(MIGRATION_SOURCES) })
             snapshots.from(fileTree(SNAPSHOT_DIRECTORY) { include(SNAPSHOT_SOURCES) })
+            floor.set(extension.floor)
             report.set(layout.buildDirectory.file("reports/$SNAPSHOT_TASK.txt"))
         }
+    }
 
     // Split so the task can allow :core:testing from a test configuration alone: a fixture module
     // reached from src/test never reaches a user, while every other edge binds in both.
@@ -92,6 +97,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
         const val BOUNDARY_TASK: String = "checkModuleBoundaries"
         const val COMPOSE_TASK: String = "checkComposeFreeViewModels"
         const val SNAPSHOT_TASK: String = "checkSqlDelightSnapshots"
+        const val SNAPSHOT_EXTENSION: String = "sqlDelightSnapshots"
 
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
         private const val TEST_TASK: String = ":convention:test"
