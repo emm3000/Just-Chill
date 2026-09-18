@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.recurring
+package com.emm.justchill.core.ui.pending
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

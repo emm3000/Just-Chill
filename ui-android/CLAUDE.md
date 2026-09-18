@@ -8,7 +8,7 @@ Plain `com.android.library` (ADR 011), root package `com.emm.justchill.hh.<featu
 
 - The bottom bar holds four tabs plus the centre add button, no more. `HhBottomBar`'s 10sp labels already sit under the 4.5:1 AA floor; a fifth tab shrinks them further. A new destination swaps a tab out, never appends one.
 - A shell screen never recomputes a number another screen owns. `ReportScreen` owns income, spend and balance; `SeeTransactionsScreen` owns the transaction list. Before adding a section, find the owner.
-- `danger` on a pending recurring row's overdue period label (`PendingRecurringComponents.kt`, `ConfirmRecurringSheet.kt`) and on `SavingsRateBlock`'s deficit rate is deliberate: both are broken states, not amounts. The trend pill beside the rate is a comparison and stays `PillTone.Neutral`.
+- `danger` on `SavingsRateBlock`'s deficit rate is deliberate: a deficit is a broken state, not an amount. The trend pill beside the rate is a comparison and stays `PillTone.Neutral`.
 - `hh/shared/PlatformHostActions.kt`'s flags (`supportsBackup`, `showGoogleSignIn`, …) are plain constants the nav entries read; collapsing that seam is a separate change.
 
 ## Build conventions
