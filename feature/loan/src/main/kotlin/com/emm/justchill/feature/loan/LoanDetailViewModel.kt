@@ -137,6 +137,12 @@ class LoanDetailViewModel(
                 updatePayment { copy(note = intent.value) }
             }
 
+            is LoanDetailIntent.PaymentFormIntent.OnPaymentSheetRequested -> {
+                updatePayment { copy(openSheet = intent.sheet) }
+            }
+
+            LoanDetailIntent.PaymentFormIntent.OnPaymentSheetDismissed -> updatePayment { copy(openSheet = null) }
+
             LoanDetailIntent.PaymentFormIntent.OnPaymentDismiss -> updateState { copy(payment = null) }
 
             LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm -> confirmPayment()

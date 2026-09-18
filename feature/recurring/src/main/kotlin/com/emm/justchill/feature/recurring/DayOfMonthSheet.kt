@@ -130,7 +130,10 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(colors.accent)
-                .clickable { onConfirm(selected) },
+                .clickable {
+                    onConfirm(selected)
+                    onDismiss()
+                },
             contentAlignment = Alignment.Center,
         ) {
             Row(

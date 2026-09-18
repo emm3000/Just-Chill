@@ -139,13 +139,19 @@ private fun ProfileEntry(
         onExportClick = {
             if (bindings.platform.supportsBackup) vm.onIntent(ProfileIntent.ExportRequested)
         },
-        onImportClick = { if (bindings.platform.supportsBackup) bindings.platform.requestImport() },
+        onImportClick = { vm.onIntent(ProfileIntent.ImportClicked) },
+        onImportConfirm = {
+            vm.onIntent(ProfileIntent.DialogDismissed)
+            if (bindings.platform.supportsBackup) bindings.platform.requestImport()
+        },
+        onDialogDismiss = { vm.onIntent(ProfileIntent.DialogDismissed) },
         onPrivacyClick = {
             if (bindings.platform.supportsPrivacyPolicy) nav.push(PrivacyPolicyRoute)
         },
         onSignInClick = { onSignInClick(nav) },
         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
-        onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
+        onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccountClicked) },
+        onDeleteAccountConfirm = { vm.onIntent(ProfileIntent.DeleteAccountConfirmed) },
         onBackUpNowClick = { vm.onIntent(ProfileIntent.BackUpNow) },
         onVerifyBackupClick = { vm.onIntent(ProfileIntent.VerifyBackup) },
         onAcknowledgeBackupDestinationClick = {

@@ -16,10 +16,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -102,8 +99,6 @@ private fun EditTransactionContent(
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
 
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     val isSpend = state.transactionType == TransactionType.Spend
     val title = if (isSpend) "Editar gasto" else "Editar ingreso"
 
@@ -124,7 +119,7 @@ private fun EditTransactionContent(
             right = {
                 IconBtn(
                     icon = Icons.Outlined.Delete,
-                    onClick = { showDeleteDialog = true },
+                    onClick = { onIntent(EditTransactionIntent.OnDeleteClick) },
                     contentDescription = if (isSpend) "Eliminar gasto" else "Eliminar ingreso",
                     tone = IconBtnTone.Danger,
                 )
@@ -258,18 +253,15 @@ private fun EditTransactionContent(
         )
     }
 
-    if (showDeleteDialog) {
+    if (state.showDeleteDialog) {
         DeleteTransactionDialog(
             type = state.transactionType,
             amountCents = state.amount,
             accountName = state.accountSelected?.name,
             categoryName = state.categorySelected?.name,
             categoryColor = state.categorySelected?.resolvedColor?.primary,
-            onConfirm = {
-                showDeleteDialog = false
-                onIntent(EditTransactionIntent.OnDelete)
-            },
-            onDismiss = { showDeleteDialog = false },
+            onConfirm = { onIntent(EditTransactionIntent.OnDeleteConfirm) },
+            onDismiss = { onIntent(EditTransactionIntent.OnDeleteDismiss) },
         )
     }
 }

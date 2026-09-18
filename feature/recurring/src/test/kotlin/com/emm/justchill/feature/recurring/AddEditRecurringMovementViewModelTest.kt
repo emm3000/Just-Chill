@@ -427,4 +427,34 @@ class AddEditRecurringMovementViewModelTest {
         assertEquals("cat-income", vm.state.value.selectedCategory?.categoryId?.value)
         assertEquals(listOf("cat-income"), vm.state.value.categories.map { it.categoryId.value })
     }
+
+    @Test
+    fun `every sheet opens and closes through intents`() = runTest {
+        val vm = createViewModel(id = null)
+        advanceUntilIdle()
+
+        RecurringSheet.entries.forEach { sheet ->
+            vm.onIntent(AddEditRecurringMovementIntent.OnSheetRequested(sheet))
+            advanceUntilIdle()
+            assertEquals(sheet, vm.state.value.openSheet)
+
+            vm.onIntent(AddEditRecurringMovementIntent.OnSheetDismissed)
+            advanceUntilIdle()
+            assertNull(vm.state.value.openSheet)
+        }
+    }
+
+    @Test
+    fun `confirming a day sets it and the sheet closes on its own dismiss`() = runTest {
+        val vm = createViewModel(id = null)
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnSheetRequested(RecurringSheet.Day))
+        vm.onIntent(AddEditRecurringMovementIntent.OnDayOfMonthChange(15))
+        vm.onIntent(AddEditRecurringMovementIntent.OnSheetDismissed)
+        advanceUntilIdle()
+
+        assertEquals(15, vm.state.value.dayOfMonth)
+        assertNull(vm.state.value.openSheet)
+    }
 }

@@ -26,10 +26,7 @@ import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,10 +54,13 @@ fun ProfileScreen(
     onAboutClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
     onImportClick: () -> Unit = {},
+    onImportConfirm: () -> Unit = {},
     onPrivacyClick: () -> Unit = {},
     onSignInClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     onDeleteAccountClick: () -> Unit = {},
+    onDeleteAccountConfirm: () -> Unit = {},
+    onDialogDismiss: () -> Unit = {},
     onCopyCommitHashClick: () -> Unit = {},
     onBackUpNowClick: () -> Unit = {},
     onVerifyBackupClick: () -> Unit = {},
@@ -92,8 +92,11 @@ fun ProfileScreen(
             AccountSection(
                 session = signedIn,
                 op = state.op,
+                dialog = state.dialog,
                 onSignOutClick = onSignOutClick,
                 onDeleteAccountClick = onDeleteAccountClick,
+                onDeleteAccountConfirm = onDeleteAccountConfirm,
+                onDialogDismiss = onDialogDismiss,
             )
         }
 
@@ -119,6 +122,8 @@ fun ProfileScreen(
             state = state,
             onExportClick = onExportClick,
             onImportClick = onImportClick,
+            onImportConfirm = onImportConfirm,
+            onDialogDismiss = onDialogDismiss,
             onSignInClick = onSignInClick,
             snapshotActions = SnapshotBackupActions(
                 onBackUpNow = onBackUpNowClick,
@@ -155,18 +160,16 @@ fun ProfileScreen(
 private fun AccountSection(
     session: SessionUiState.SignedIn,
     op: ProfileOp,
+    dialog: ProfileDialog,
     onSignOutClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
+    onDeleteAccountConfirm: () -> Unit,
+    onDialogDismiss: () -> Unit,
 ) {
-    var showDeleteAccountDialog by remember { mutableStateOf(false) }
-
-    if (showDeleteAccountDialog) {
+    if (dialog == ProfileDialog.DeleteAccount) {
         DeleteAccountDialog(
-            onConfirm = {
-                showDeleteAccountDialog = false
-                onDeleteAccountClick()
-            },
-            onDismiss = { showDeleteAccountDialog = false },
+            onConfirm = onDeleteAccountConfirm,
+            onDismiss = onDialogDismiss,
         )
     }
 
@@ -204,7 +207,7 @@ private fun AccountSection(
                 },
                 metaIsPrimary = false,
                 enabled = op == ProfileOp.None || op == ProfileOp.DeletingAccount,
-                onClick = { showDeleteAccountDialog = true }.takeIf { op == ProfileOp.None },
+                onClick = onDeleteAccountClick.takeIf { op == ProfileOp.None },
                 trailing = { ChevronTrailing(enabled = op == ProfileOp.None || op == ProfileOp.DeletingAccount) },
             )
         }

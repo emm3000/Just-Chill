@@ -115,7 +115,10 @@ class ProfileViewModel(
             is ProfileIntent.ExportFinished -> exportFinished(intent.saved)
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
             ProfileIntent.SignOut -> performSignOut()
-            ProfileIntent.DeleteAccount -> deleteAccount()
+            ProfileIntent.DeleteAccountClicked -> updateState { copy(dialog = ProfileDialog.DeleteAccount) }
+            ProfileIntent.DeleteAccountConfirmed -> deleteAccount()
+            ProfileIntent.ImportClicked -> updateState { copy(dialog = ProfileDialog.Import) }
+            ProfileIntent.DialogDismissed -> updateState { copy(dialog = ProfileDialog.None) }
             ProfileIntent.BackUpNow -> backUpNow()
             ProfileIntent.VerifyBackup -> verifyBackup()
             ProfileIntent.AcknowledgeBackupDestination -> acknowledgeBackupDestination()
@@ -196,12 +199,15 @@ class ProfileViewModel(
         sendEffect(ProfileEffect.Notify(message))
     }
 
-    private fun deleteAccount() = launchOp(
-        op = ProfileOp.DeletingAccount,
-        onError = onDomainError,
-    ) {
-        deleteUserAccount.invoke()
-        sendEffect(ProfileEffect.Notify(ProfileMessage.AccountDeleted))
+    private fun deleteAccount() {
+        updateState { copy(dialog = ProfileDialog.None) }
+        launchOp(
+            op = ProfileOp.DeletingAccount,
+            onError = onDomainError,
+        ) {
+            deleteUserAccount.invoke()
+            sendEffect(ProfileEffect.Notify(ProfileMessage.AccountDeleted))
+        }
     }
 
     private fun exportRequested() = launchOp(

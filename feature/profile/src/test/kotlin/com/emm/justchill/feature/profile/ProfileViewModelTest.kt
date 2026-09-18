@@ -389,7 +389,7 @@ class ProfileViewModelTest {
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
 
-        vm.onIntent(ProfileIntent.DeleteAccount)
+        vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { deleteUserAccount.invoke() }
@@ -409,7 +409,7 @@ class ProfileViewModelTest {
         val effects = mutableListOf<ProfileEffect>()
         val job = launch { vm.effect.collect { effects.add(it) } }
 
-        vm.onIntent(ProfileIntent.DeleteAccount)
+        vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
         advanceUntilIdle()
 
         assertTrue(
@@ -431,11 +431,11 @@ class ProfileViewModelTest {
             val effects = mutableListOf<ProfileEffect>()
             val job = launch { vm.effect.collect { effects.add(it) } }
 
-            vm.onIntent(ProfileIntent.DeleteAccount)
+            vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
             advanceUntilIdle()
             assertEquals(ProfileOp.DeletingAccount, vm.state.value.op, "op must be DeletingAccount while in flight")
 
-            vm.onIntent(ProfileIntent.DeleteAccount)
+            vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { deleteUserAccount.invoke() }
@@ -768,6 +768,47 @@ class ProfileViewModelTest {
 
         coVerify(exactly = 0) { backupVerifier.verifyLatest() }
         assertEquals(listOf(ProfileMessage.OperationInProgress), messages)
+    }
+
+    @Test
+    fun `the delete account dialog opens and closes through intents`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(ProfileIntent.DeleteAccountClicked)
+        advanceUntilIdle()
+        assertEquals(ProfileDialog.DeleteAccount, vm.state.value.dialog)
+
+        vm.onIntent(ProfileIntent.DialogDismissed)
+        advanceUntilIdle()
+        assertEquals(ProfileDialog.None, vm.state.value.dialog)
+    }
+
+    @Test
+    fun `the import dialog opens and closes through intents`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(ProfileIntent.ImportClicked)
+        advanceUntilIdle()
+        assertEquals(ProfileDialog.Import, vm.state.value.dialog)
+
+        vm.onIntent(ProfileIntent.DialogDismissed)
+        advanceUntilIdle()
+        assertEquals(ProfileDialog.None, vm.state.value.dialog)
+    }
+
+    @Test
+    fun `confirming the account deletion closes its dialog`() = runTest(testDispatcher) {
+        coEvery { deleteUserAccount.invoke() } returns Unit
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(ProfileIntent.DeleteAccountClicked)
+        vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
+        advanceUntilIdle()
+
+        assertEquals(ProfileDialog.None, vm.state.value.dialog)
     }
 }
 

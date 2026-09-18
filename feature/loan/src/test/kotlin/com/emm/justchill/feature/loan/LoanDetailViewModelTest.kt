@@ -564,4 +564,43 @@ class LoanDetailViewModelTest {
             assertEquals("pay-1", vm.state.value.payment?.editingPaymentId)
             job.cancel()
         }
+
+    @Test
+    fun `every payment sheet opens and closes through intents`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
+        advanceUntilIdle()
+
+        PaymentSheet.entries.forEach { sheet ->
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetRequested(sheet))
+            advanceUntilIdle()
+            assertEquals(sheet, vm.state.value.payment?.openSheet)
+
+            vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetDismissed)
+            advanceUntilIdle()
+            assertNull(vm.state.value.payment?.openSheet)
+        }
+    }
+
+    @Test
+    fun `dismissing the payment form takes its open sheet with it`() = runTest {
+        every { loanRepository.byId(loanIdValue) } returns flowOf(loan)
+        every { loanPaymentRepository.byLoan(loanIdValue) } returns flowOf(emptyList())
+
+        val vm = viewModel()
+        advanceUntilIdle()
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetRequested(PaymentSheet.Amount))
+        advanceUntilIdle()
+        assertEquals(PaymentSheet.Amount, vm.state.value.payment?.openSheet)
+
+        vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDismiss)
+        advanceUntilIdle()
+
+        assertNull(vm.state.value.payment)
+    }
 }

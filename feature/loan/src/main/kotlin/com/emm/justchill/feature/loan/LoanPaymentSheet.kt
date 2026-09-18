@@ -16,10 +16,6 @@ import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,8 +40,6 @@ import kotlinx.datetime.LocalDate
 fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Unit) {
     val colors = LocalEmmColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showAmountSheet by remember { mutableStateOf(false) }
-    var showDateSheet by remember { mutableStateOf(false) }
     val dismissible = !form.isSaving
 
     ModalBottomSheet(
@@ -62,31 +56,32 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
     ) {
         LoanPaymentSheetContent(
             form = form,
-            onAmountClick = { showAmountSheet = true },
-            onDateClick = { showDateSheet = true },
+            onAmountClick = {
+                onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetRequested(PaymentSheet.Amount))
+            },
+            onDateClick = {
+                onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetRequested(PaymentSheet.Date))
+            },
             onIntent = onIntent,
         )
     }
 
-    if (showAmountSheet) {
+    if (form.openSheet == PaymentSheet.Amount) {
         AmountInputSheet(
             amountDigits = form.amountDigits,
             title = "Monto del abono",
             tone = AmountTone.Neutral,
             onAmountConfirm = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange(it)) },
-            onDismiss = { showAmountSheet = false },
+            onDismiss = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetDismissed) },
             subtitle = form.maxAmountLabel?.let { "Máximo $it" },
         )
     }
 
-    if (showDateSheet) {
+    if (form.openSheet == PaymentSheet.Date) {
         DatePickerSheet(
             currentDate = form.date ?: form.today,
-            onConfirm = { date ->
-                onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDateSelected(date))
-                showDateSheet = false
-            },
-            onDismiss = { showDateSheet = false },
+            onConfirm = { date -> onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDateSelected(date)) },
+            onDismiss = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetDismissed) },
         )
     }
 }

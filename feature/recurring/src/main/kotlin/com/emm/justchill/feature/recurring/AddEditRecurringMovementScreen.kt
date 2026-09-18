@@ -26,10 +26,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -105,11 +103,6 @@ private fun AddEditRecurringMovementContent(
 ) {
     val colors = LocalEmmColors.current
 
-    var showAccountPicker by remember { mutableStateOf(false) }
-    var showCategoryPicker by remember { mutableStateOf(false) }
-    var showDaySheet by remember { mutableStateOf(false) }
-    var showAmountSheet by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -157,15 +150,17 @@ private fun AddEditRecurringMovementContent(
                     isVariable = state.isVariableAmount,
                     type = state.type,
                     onVariableToggle = { onIntent(AddEditRecurringMovementIntent.OnVariableAmountToggle(it)) },
-                    onOpenSheet = { showAmountSheet = true },
+                    onOpenSheet = { onIntent(AddEditRecurringMovementIntent.OnSheetRequested(RecurringSheet.Amount)) },
                 )
             }
 
             SelectorPillsRow(
                 state = state,
-                onOpenAccount = { showAccountPicker = true },
-                onOpenCategory = { showCategoryPicker = true },
-                onOpenDay = { showDaySheet = true },
+                onOpenAccount = { onIntent(AddEditRecurringMovementIntent.OnSheetRequested(RecurringSheet.Account)) },
+                onOpenCategory = {
+                    onIntent(AddEditRecurringMovementIntent.OnSheetRequested(RecurringSheet.Category))
+                },
+                onOpenDay = { onIntent(AddEditRecurringMovementIntent.OnSheetRequested(RecurringSheet.Day)) },
             )
 
             ActiveCard(
@@ -193,50 +188,41 @@ private fun AddEditRecurringMovementContent(
         )
     }
 
-    if (showAccountPicker) {
+    if (state.openSheet == RecurringSheet.Account) {
         AccountPickerSheet(
             accounts = state.accounts,
             selectedAccountId = state.selectedAccount?.accountId?.value,
-            onSelect = { account ->
-                onIntent(AddEditRecurringMovementIntent.OnAccountSelected(account))
-                showAccountPicker = false
-            },
-            onDismiss = { showAccountPicker = false },
+            onSelect = { account -> onIntent(AddEditRecurringMovementIntent.OnAccountSelected(account)) },
+            onDismiss = { onIntent(AddEditRecurringMovementIntent.OnSheetDismissed) },
         )
     }
 
-    if (showCategoryPicker) {
+    if (state.openSheet == RecurringSheet.Category) {
         CategoryPickerSheet(
             categories = state.categories,
             selectedCategoryId = state.selectedCategory?.categoryId?.value,
-            onSelect = { category ->
-                onIntent(AddEditRecurringMovementIntent.OnCategorySelected(category))
-                showCategoryPicker = false
-            },
-            onAddNew = { showCategoryPicker = false },
-            onDismiss = { showCategoryPicker = false },
+            onSelect = { category -> onIntent(AddEditRecurringMovementIntent.OnCategorySelected(category)) },
+            onAddNew = { onIntent(AddEditRecurringMovementIntent.OnSheetDismissed) },
+            onDismiss = { onIntent(AddEditRecurringMovementIntent.OnSheetDismissed) },
         )
     }
 
-    if (showDaySheet) {
+    if (state.openSheet == RecurringSheet.Day) {
         DayOfMonthSheet(
             current = state.dayOfMonth,
-            onConfirm = { day ->
-                onIntent(AddEditRecurringMovementIntent.OnDayOfMonthChange(day))
-                showDaySheet = false
-            },
-            onDismiss = { showDaySheet = false },
+            onConfirm = { day -> onIntent(AddEditRecurringMovementIntent.OnDayOfMonthChange(day)) },
+            onDismiss = { onIntent(AddEditRecurringMovementIntent.OnSheetDismissed) },
         )
     }
 
-    if (showAmountSheet) {
+    if (state.openSheet == RecurringSheet.Amount) {
         val typeLabel = if (state.type == TransactionType.Income) "Ingreso" else "Gasto"
         AmountInputSheet(
             amountDigits = state.amountDigits,
             title = "Monto del recurrente",
             tone = if (state.type == TransactionType.Income) AmountTone.Pos else AmountTone.Neutral,
             onAmountConfirm = { onIntent(AddEditRecurringMovementIntent.OnAmountChange(it)) },
-            onDismiss = { showAmountSheet = false },
+            onDismiss = { onIntent(AddEditRecurringMovementIntent.OnSheetDismissed) },
             subtitle = "$typeLabel · se paga cada mes",
         )
     }

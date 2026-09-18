@@ -39,6 +39,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class EditTransactionViewModelTest {
 
@@ -402,7 +403,7 @@ class EditTransactionViewModelTest {
 
         val vm = buildViewModel()
         advanceUntilIdle()
-        vm.onIntent(EditTransactionIntent.OnDelete)
+        vm.onIntent(EditTransactionIntent.OnDeleteConfirm)
         advanceUntilIdle()
 
         coVerify { deleteTransaction.invoke(TransactionId("tx-1")) }
@@ -441,5 +442,31 @@ class EditTransactionViewModelTest {
         vm.onIntent(EditTransactionIntent.OnSheetDismissed)
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
+    }
+
+    @Test
+    fun `the delete dialog opens and closes through intents`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(EditTransactionIntent.OnDeleteClick)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.showDeleteDialog)
+
+        vm.onIntent(EditTransactionIntent.OnDeleteDismiss)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.showDeleteDialog)
+    }
+
+    @Test
+    fun `confirming the deletion closes the dialog`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(EditTransactionIntent.OnDeleteClick)
+        vm.onIntent(EditTransactionIntent.OnDeleteConfirm)
+        advanceUntilIdle()
+
+        assertFalse(vm.state.value.showDeleteDialog)
     }
 }

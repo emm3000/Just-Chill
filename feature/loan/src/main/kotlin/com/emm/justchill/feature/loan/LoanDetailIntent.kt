@@ -25,6 +25,8 @@ sealed interface LoanDetailIntent : UiIntent {
         data class OnPaymentMethodChange(val method: PaymentMethod) : PaymentFormIntent
         data class OnPaymentDateSelected(val value: LocalDate) : PaymentFormIntent
         data class OnPaymentNoteChange(val value: String) : PaymentFormIntent
+        data class OnPaymentSheetRequested(val sheet: PaymentSheet) : PaymentFormIntent
+        data object OnPaymentSheetDismissed : PaymentFormIntent
         data object OnPaymentConfirm : PaymentFormIntent
         data object OnPaymentDismiss : PaymentFormIntent
     }
