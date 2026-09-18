@@ -9,19 +9,19 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.hh.shared.AddEditLoanRoute
-import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.LoanDetailRoute
 import com.emm.justchill.hh.shared.LoansRoute
-import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.PersonLoansRoute
-import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
     entry<LoansRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         LoansEntry(
             onNavigateToPerson = { personKey -> nav.push(PersonLoansRoute(personKey)) },
             onNavigateToAddLoan = { nav.push(AddEditLoanRoute()) },
@@ -31,7 +31,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
     }
 
     entry<PersonLoansRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         PersonLoansEntry(
             personKey = key.personKey,
             onNavigateToLoanDetail = { loanId -> nav.push(LoanDetailRoute(loanId)) },
@@ -41,7 +41,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
     }
 
     entry<LoanDetailRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         LoanDetailEntry(
             loanId = key.loanId,
             onNavigateToEditLoan = { nav.push(AddEditLoanRoute(key.loanId)) },
@@ -52,7 +52,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
     }
 
     entry<AddEditLoanRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         AddEditLoanScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,

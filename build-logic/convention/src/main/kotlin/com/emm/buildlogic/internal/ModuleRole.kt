@@ -28,6 +28,7 @@ internal enum class ModuleRole {
         const val APP_PATH: String = ":androidApp"
         const val CORE_DOMAIN_PATH: String = ":core:domain"
         const val CORE_UI_PATH: String = ":core:ui"
+        const val CORE_TESTING_PATH: String = ":core:testing"
 
         private const val CORE_PREFIX: String = ":core:"
         private const val FEATURE_PREFIX: String = ":feature:"

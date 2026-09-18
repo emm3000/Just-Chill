@@ -1,6 +1,5 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.loan.DeleteLoanUseCase
 import com.emm.justchill.core.domain.loan.Loan
 import com.emm.justchill.core.domain.loan.LoanPayment
@@ -16,7 +15,8 @@ import com.emm.justchill.core.domain.shared.LoanPaymentId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
-import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.testing.FakeTodayFlow
+import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

@@ -9,11 +9,11 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.toSelectable
-import com.emm.justchill.hh.shared.AppNavigator
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.hh.shared.CategoriesListRoute
 import com.emm.justchill.hh.shared.CategoryRoute
-import com.emm.justchill.hh.shared.NavHostBindings
-import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -22,7 +22,7 @@ fun EntryProviderScope<NavKey>.categoryEntries(
     onCategoryForTransaction: (SelectableCategory) -> Unit,
 ) {
     entry<CategoriesListRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         val vm: CategoriesViewModel = koinViewModel()
         val categoriesState by vm.state.collectAsStateWithLifecycle()
 
@@ -44,14 +44,14 @@ fun EntryProviderScope<NavKey>.categoryEntries(
     }
 
     entry<CategoryRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         AddCategoryScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
             onCategorySave = { created ->
                 if (key.propagateToTransaction) {
                     onCategoryForTransaction(created.toSelectable())
-                    nav.popToTransaction()
+                    nav.popToCapture()
                 } else {
                     bindings.showMessage("Categoría «${created.name}» creada")
                     nav.pop()

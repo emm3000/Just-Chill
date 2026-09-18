@@ -59,6 +59,30 @@ class GateCheckTest {
     }
 
     @Test
+    fun `a feature that takes the fixtures module as a test dependency passes the boundary check`() {
+        fixture.check(
+            task = ":feature:loan:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":feature:loan" to module(testDependencies = arrayOf(":core:testing")),
+                ":core:testing" to module(),
+            ),
+        )
+    }
+
+    @Test
+    fun `a feature that ships the fixtures module in production fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":feature:loan" to module(":core:testing"),
+                ":core:testing" to module(),
+            ),
+        )
+
+        assertTrue(output.contains(":feature:loan depends on :core:testing"), output)
+    }
+
+    @Test
     fun `a core module that depends on anything but core domain fails the boundary check`() {
         val output: String = fixture.checkAndFail(
             task = ":core:backup:$BOUNDARY_TASK",

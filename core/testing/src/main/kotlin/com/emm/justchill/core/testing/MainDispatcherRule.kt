@@ -1,4 +1,4 @@
-package com.emm.justchill
+package com.emm.justchill.core.testing
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

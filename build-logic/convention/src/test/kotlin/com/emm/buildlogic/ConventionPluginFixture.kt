@@ -29,10 +29,11 @@ internal class ConventionPluginFixture(
         files: Map<String, String> = emptyMap(),
     ): Map<String, String> {
         files.forEach { (path, content) -> write(path, content) }
-        writeSettings(listOf(":probe", ":core:domain", ":core:ui"))
+        writeSettings(listOf(":probe", ":core:domain", ":core:ui", ":core:testing"))
         writeLocalProperties()
         writeStubModule("core/domain")
         writeStubModule("core/ui")
+        writeStubModule("core/testing")
         writeProbeModule(pluginIds, androidConfiguration)
 
         val result: BuildResult = runner(listOf(":probe:conventionReport") + arguments).build()

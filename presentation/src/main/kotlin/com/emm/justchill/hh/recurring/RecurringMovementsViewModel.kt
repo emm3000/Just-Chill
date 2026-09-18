@@ -4,7 +4,7 @@ import com.emm.justchill.core.domain.recurring.DeleteRecurringMovementUseCase
 import com.emm.justchill.core.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
 import com.emm.justchill.core.domain.shared.RecurringMovementId
-import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.mvi.MviViewModel

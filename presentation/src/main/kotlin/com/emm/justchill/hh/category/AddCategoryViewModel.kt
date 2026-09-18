@@ -2,7 +2,7 @@ package com.emm.justchill.hh.category
 
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.category.CreateCategoryUseCase
-import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.mvi.MviViewModel
 
 class AddCategoryViewModel(

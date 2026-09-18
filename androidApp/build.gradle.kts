@@ -5,7 +5,7 @@ plugins {
     id("justchill.android.application")
     id("justchill.android.release")
     id("justchill.build.info")
-    alias(libs.plugins.kotlin.serialization)
+    id("org.jetbrains.kotlin.plugin.serialization")
     alias(libs.plugins.google.services)
 }
 
@@ -137,6 +137,7 @@ dependencies {
 
     // The Snapshot's end-to-end tests live here: only the app sees both :core:backup, which writes
     // the file, and :core:database, which holds the rows it restores into.
+    testImplementation(projects.core.testing)
     testImplementation(libs.sqlite.driver)
 
     // AppGraphKoinTest's JVM stand-in for the platform module: in-memory Settings plus the

@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.loan
 
 import com.emm.justchill.core.domain.loan.LoanRepository
-import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.loan.toUi
 import com.emm.justchill.core.ui.mvi.MviViewModel
 import kotlinx.coroutines.flow.onEach

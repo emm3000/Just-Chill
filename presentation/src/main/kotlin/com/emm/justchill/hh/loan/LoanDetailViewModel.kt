@@ -13,8 +13,8 @@ import com.emm.justchill.core.domain.loan.remaining
 import com.emm.justchill.core.domain.shared.LoanId
 import com.emm.justchill.core.domain.shared.LoanPaymentId
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.domain.time.TodayFlow
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral

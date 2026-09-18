@@ -1,9 +1,9 @@
 package com.emm.justchill.hh.di
 
 import com.emm.justchill.core.domain.shared.UniqueIdProvider
+import com.emm.justchill.core.domain.time.ClockTodayFlow
+import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.lifecycle.resumeEvents
-import com.emm.justchill.core.time.ClockTodayFlow
-import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.hh.shared.DefaultUniqueIdProvider
 import org.koin.dsl.bind
 import org.koin.dsl.module

@@ -36,6 +36,11 @@ import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.BottomBarRoute
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.PlatformHostActions
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
@@ -49,14 +54,9 @@ import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.report.reportEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
 import com.emm.justchill.hh.shared.AddTransactionRoute
-import com.emm.justchill.hh.shared.AppNavigator
-import com.emm.justchill.hh.shared.BottomBarRoute
 import com.emm.justchill.hh.shared.ManifestoRoute
-import com.emm.justchill.hh.shared.NavHostBindings
-import com.emm.justchill.hh.shared.PlatformHostActions
-import com.emm.justchill.hh.shared.rememberAppNavigator
+import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.rememberPlatformHostActions
-import com.emm.justchill.hh.shared.startTab
 import com.emm.justchill.hh.transaction.transactionEntries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -74,10 +74,10 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
         val disclosurePending: Boolean by backupDisclosure.isPending.collectAsStateWithLifecycle(false)
 
         val startRoute: NavKey = remember {
-            if (appPrefs.firstLaunchSeen) startTab else ManifestoRoute()
+            if (appPrefs.firstLaunchSeen) SeeTransactionRoute else ManifestoRoute()
         }
         val backStack: NavBackStack<NavKey> = rememberNavBackStack(startRoute)
-        val hostNav: AppNavigator = rememberAppNavigator(backStack)
+        val hostNav: AppNavigator = rememberAppNavigator(backStack, SeeTransactionRoute)
         LaunchedEffect(shortcutRequestId) {
             shortcutRouteToPush(shortcut, appPrefs.firstLaunchSeen, backStack.lastOrNull())?.let(hostNav::pushToTop)
         }
@@ -98,6 +98,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
         val showBottomBar: Boolean = currentRoute is BottomBarRoute
         val bindings: NavHostBindings = NavHostBindings(
             backStack = backStack,
+            startTab = SeeTransactionRoute,
             snackbarHostState = snackbarHostState,
             showMessage = showRootMessage,
             platform = platform,

@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.account
 
 import com.emm.justchill.core.domain.account.CreateAccountUseCase
-import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.mvi.MviViewModel
 
 class AddAccountViewModel(private val createAccount: CreateAccountUseCase) :

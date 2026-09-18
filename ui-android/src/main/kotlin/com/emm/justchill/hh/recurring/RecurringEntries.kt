@@ -7,16 +7,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
-import com.emm.justchill.hh.shared.AppNavigator
-import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
-import com.emm.justchill.hh.shared.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
 fun EntryProviderScope<NavKey>.recurringEntries(bindings: NavHostBindings) {
     entry<RecurringMovementsRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         RecurringMovementsEntry(
             onNavigateToAddEdit = { id -> nav.push(AddEditRecurringMovementRoute(id)) },
             onShowError = bindings.showMessage,
@@ -24,7 +24,7 @@ fun EntryProviderScope<NavKey>.recurringEntries(bindings: NavHostBindings) {
     }
 
     entry<AddEditRecurringMovementRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         AddEditRecurringMovementScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,

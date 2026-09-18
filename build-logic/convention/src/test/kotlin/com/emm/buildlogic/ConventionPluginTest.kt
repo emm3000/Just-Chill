@@ -78,7 +78,8 @@ class ConventionPluginTest {
         val report: Map<String, String> = fixture.report(listOf("justchill.android.feature"))
 
         assertEquals("true", report["compose"])
-        assertEquals(":core:domain,:core:ui", report["projectDependencies"])
+        assertEquals(":core:domain,:core:testing,:core:ui", report["projectDependencies"])
+        assertTrue(report.getValue("testDependencies").split(',').contains("testing"), report.getValue("testDependencies"))
         assertTrue(
             report.getValue("implementationDependencies").split(',').containsAll(FEATURE_DEPENDENCIES),
             report.getValue("implementationDependencies"),
@@ -233,6 +234,8 @@ class ConventionPluginTest {
             "koin-compose-viewmodel",
             "lifecycle-viewmodel",
             "lifecycle-viewmodel-compose",
+            "navigation3-runtime",
+            "kotlinx-serialization-json",
         )
 
         const val CHECK_PLUGINS: String = "justchill.quality.gate"

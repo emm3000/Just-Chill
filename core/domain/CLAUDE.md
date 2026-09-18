@@ -2,7 +2,9 @@
 
 Plain `org.jetbrains.kotlin.jvm` library (ADR 011) and the bottom of the graph: no module dependencies at all. Only `kotlinx-coroutines-core` and `kotlinx-datetime`. `android.*` / `androidx.*` cannot resolve here, a dependency-graph guarantee; SQLDelight, Supabase and Ktor stay out by convention, reviewed.
 
-Root package `com.emm.justchill.core.domain.<entity>`: one directory per entity plus `shared/`. Read the directory instead of a list. Naming and the use-case admission rule: `.claude/rules/naming.md`, `.claude/rules/architecture.md`. The vocabulary: `CONTEXT.md` at the repo root.
+Root package `com.emm.justchill.core.domain.<entity>`: one directory per entity plus `shared/` and `time/`. Read the directory instead of a list. Naming and the use-case admission rule: `.claude/rules/naming.md`, `.claude/rules/architecture.md`. The vocabulary: `CONTEXT.md` at the repo root.
+
+`time/` holds `TodayFlow` and `ClockTodayFlow`, the one way a ViewModel derives the date; its `delay` loop schedules against `SystemClock.uptimeMillis()`, so `distinctUntilChanged` swallows a late post-doze wake.
 
 ## Error model
 

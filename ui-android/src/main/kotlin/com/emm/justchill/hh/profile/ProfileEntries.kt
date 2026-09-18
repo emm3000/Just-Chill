@@ -15,20 +15,20 @@ import androidx.compose.ui.platform.toClipEntry
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.error.toUserMessage
+import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.NavHostBindings
+import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.hh.profile.toText
-import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.CategoriesListRoute
 import com.emm.justchill.hh.shared.ManifestoRoute
-import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
-import com.emm.justchill.hh.shared.rememberAppNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -51,7 +51,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
     }
 
     entry<PrivacyPolicyRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         PrivacyPolicyScreen(
             onBack = { nav.pop() },
         )
@@ -66,7 +66,7 @@ private fun ProfileEntry(
     pendingImportJson: () -> String?,
     clearPendingImport: () -> Unit,
 ) {
-    val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
+    val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
     val vm: ProfileViewModel = koinViewModel()
     val profileState by vm.state.collectAsStateWithLifecycle()
     val clipboard: Clipboard = LocalClipboard.current

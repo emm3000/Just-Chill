@@ -3,6 +3,7 @@ package com.emm.buildlogic
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
@@ -47,7 +48,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description = "Fails when this module declares a dependency ADR 015 does not allow."
             modulePath.set(this@registerBoundaryCheck.path)
-            dependencyPaths.set(provider { declaredProjectDependencies() })
+            dependencyPaths.set(provider { declaredProjectDependencies(tests = false) })
+            testDependencyPaths.set(provider { declaredProjectDependencies(tests = true) })
             android.set(provider { pluginManager.hasPlugin(ANDROID_BASE_PLUGIN) })
             report.set(layout.buildDirectory.file("reports/$BOUNDARY_TASK.txt"))
         }
@@ -70,7 +72,10 @@ class QualityGateConventionPlugin : Plugin<Project> {
             report.set(layout.buildDirectory.file("reports/$SNAPSHOT_TASK.txt"))
         }
 
-    private fun Project.declaredProjectDependencies(): Set<String> = configurations
+    // Split so the task can allow :core:testing from a test configuration alone: a fixture module
+    // reached from src/test never reaches a user, while every other edge binds in both.
+    private fun Project.declaredProjectDependencies(tests: Boolean): Set<String> = configurations
+        .filter { it.isTestConfiguration() == tests }
         .flatMap { it.dependencies }
         .filterIsInstance<ProjectDependency>()
         .map { it.path }
@@ -91,6 +96,11 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
         private const val TEST_TASK: String = ":convention:test"
         private const val ANDROID_BASE_PLUGIN: String = "com.android.base"
+        private const val TEST_CONFIGURATION_PREFIX: String = "test"
+        private const val ANDROID_TEST_CONFIGURATION_PREFIX: String = "androidTest"
+
+        private fun Configuration.isTestConfiguration(): Boolean =
+            name.startsWith(TEST_CONFIGURATION_PREFIX) || name.startsWith(ANDROID_TEST_CONFIGURATION_PREFIX)
         private const val SOURCE_DIRECTORY: String = "src"
         private const val VIEW_MODEL_SOURCES: String = "**/*ViewModel.kt"
         private const val UI_STATE_SOURCES: String = "**/*UiState.kt"

@@ -7,10 +7,10 @@ import com.emm.justchill.core.domain.account.DeleteAccountUseCase
 import com.emm.justchill.core.domain.account.UpdateAccountUseCase
 import com.emm.justchill.core.domain.loan.LoanRepository
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionRepository
-import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.loan.owingNames
 import com.emm.justchill.core.ui.loan.totalOwedFormatted
 import com.emm.justchill.core.ui.loan.totalOwedIsPositive

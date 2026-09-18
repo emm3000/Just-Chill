@@ -1,7 +1,6 @@
 package com.emm.justchill.hh.transaction
 
 import androidx.lifecycle.ViewModelStore
-import com.emm.justchill.MainDispatcherRule
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountRepository
 import com.emm.justchill.core.domain.category.Category
@@ -16,7 +15,8 @@ import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionInsert
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.testing.FakeTodayFlow
+import com.emm.justchill.core.testing.MainDispatcherRule
 import com.emm.justchill.core.ui.category.SelectableCategory
 import io.mockk.coEvery
 import io.mockk.coVerify

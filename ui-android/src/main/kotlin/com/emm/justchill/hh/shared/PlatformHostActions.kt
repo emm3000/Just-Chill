@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,27 +14,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.navigation.PlatformHostActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-@Stable
-interface PlatformHostActions {
-    val showGoogleSignIn: Boolean
-    val supportsPrivacyPolicy: Boolean
-    val supportsBackup: Boolean
-    val onShareText: (String) -> Unit
-    val onOpenEmailApp: () -> Unit
-
-    /**
-     * `onResult` fires with `true` only once the bytes are on disk, and with `false` when the write
-     * failed. A picker the user backed out of is silent on this channel, so the caller never hears
-     * about an export nobody asked to finish.
-     */
-    val requestExport: (json: String, onResult: (saved: Boolean) -> Unit) -> Unit
-    val requestImport: () -> Unit
-}
 
 private class PendingExport(val json: String, val onResult: (Boolean) -> Unit)
 
@@ -122,8 +105,6 @@ fun rememberPlatformHostActions(
         }
     }
 }
-
-val startTab: BottomBarRoute = SeeTransactionRoute
 
 private fun suggestedExportFilename(): String {
     val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)

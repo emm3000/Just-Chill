@@ -1,4 +1,4 @@
-package com.emm.justchill.core.time
+package com.emm.justchill.core.domain.time
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

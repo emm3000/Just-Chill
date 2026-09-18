@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.core.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -50,9 +50,9 @@ class AppNavigator internal constructor(
         backStack.add(route)
     }
 
-    fun popToTransaction() {
+    fun popToCapture() {
         if (!isReady()) return
-        val target: Int = backStack.indexOfLast { it is AddTransactionRoute || it is EditTransactionRoute }
+        val target: Int = backStack.indexOfLast { it is CaptureRoute }
         if (target < 0) return
         while (backStack.lastIndex > target) backStack.removeLastOrNull()
     }
@@ -83,7 +83,7 @@ class AppNavigator internal constructor(
  * Activity's owner, which stays RESUMED, and only [AppNavigator.push]'s duplicate check survives.
  */
 @Composable
-fun rememberAppNavigator(backStack: NavBackStack<NavKey>): AppNavigator {
+fun rememberAppNavigator(backStack: NavBackStack<NavKey>, startTab: BottomBarRoute): AppNavigator {
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     return remember(backStack, startTab, lifecycleOwner) {
         AppNavigator(

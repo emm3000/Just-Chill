@@ -1,4 +1,4 @@
-package com.emm.justchill.core.error
+package com.emm.justchill.core.ui.error
 
 import com.emm.justchill.core.domain.auth.MIN_SIGNUP_PASSWORD_LENGTH
 import com.emm.justchill.core.domain.loan.MAX_INTEREST_BPS
@@ -29,7 +29,7 @@ fun DomainException.toUserMessage(): String = when (this) {
 // twenty of them. Suppressed: a flat dispatch table over an enum raises the cyclomatic count by one
 // per case added while staying exactly as simple; splitting it trades exhaustiveness for nothing.
 @Suppress("CyclomaticComplexMethod")
-internal fun ValidationCode.toUserMessage(): String = when (this) {
+fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.NameRequired -> "El nombre no puede estar vacío"
     ValidationCode.AccountRequired -> "Selecciona una cuenta"
     ValidationCode.AmountRequired -> "Ingresa un monto"
