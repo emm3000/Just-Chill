@@ -14,10 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +24,8 @@ import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.ui.atoms.EmmDialog
+import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.components.EmmButton
 import com.emm.justchill.core.ui.components.EmmButtonVariant
 import com.emm.justchill.core.ui.components.EmmTextInput
@@ -98,43 +98,42 @@ private fun EditAccountDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Editar cuenta") },
-        text = {
-            EmmTextInput(
-                value = name,
-                onValueChange = onNameChange,
-                label = "NOMBRE",
-                placeholder = "ejm. Gasto diario",
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text("Guardar") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        },
-    )
+    EmmDialog(
+        title = "Editar cuenta",
+        confirmLabel = "Guardar",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
+    ) {
+        EmmTextInput(
+            value = name,
+            onValueChange = onNameChange,
+            label = "NOMBRE",
+            placeholder = "ejm. Gasto diario",
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Composable
 private fun DeleteAccountDialog(accountName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("¿Borrar «$accountName»?") },
-        text = { Text("Si tiene movimientos asociados, no se puede borrar.") },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = "Borrar", color = colors.danger)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        },
-    )
+    val type = LocalEmmType.current
+
+    EmmDialog(
+        title = "¿Borrar «$accountName»?",
+        confirmLabel = "Borrar",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
+        confirmTone = IconBtnTone.Danger,
+    ) {
+        Text(
+            text = "Si tiene movimientos asociados, no se puede borrar.",
+            style = type.bodyM,
+            color = colors.textSecondary,
+        )
+    }
 }
 
 @Composable
