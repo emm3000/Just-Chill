@@ -216,7 +216,7 @@ class ConventionPluginTest {
     fun `the namespace is the module path under the app prefix`() {
         assertEquals("com.emm.justchill.core.domain", BuildConventions.namespaceOf(":core:domain"))
         assertEquals("com.emm.justchill.feature.loan", BuildConventions.namespaceOf(":feature:loan"))
-        assertEquals("com.emm.justchill.ui.android", BuildConventions.namespaceOf(":ui-android"))
+        assertEquals("com.emm.justchill.core.ui", BuildConventions.namespaceOf(":core:ui"))
     }
 
     private companion object {

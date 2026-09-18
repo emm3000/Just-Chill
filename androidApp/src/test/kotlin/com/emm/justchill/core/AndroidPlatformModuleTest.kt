@@ -80,7 +80,7 @@ class AndroidPlatformModuleTest {
 
     @Test
     fun `androidPlatformModule binds the shortcut publisher`() {
-        // GetSpendShortcutCombos lives in :presentation's appModules(), unreachable from this
+        // GetSpendShortcutCombos is bound in transactionWiring, unreachable from this
         // module alone — a mock stands in so this test proves the binding, not the whole app graph
         // AppGraphKoinTest already owns (and cannot reach this Context-dependent single, either).
         val koin = koinApplication {

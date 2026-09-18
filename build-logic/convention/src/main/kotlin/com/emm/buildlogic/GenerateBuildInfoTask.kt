@@ -44,7 +44,7 @@ abstract class GenerateBuildInfoTask : DefaultTask() {
 
     internal companion object {
         /**
-         * The same literal as `:ui-android`'s `UNKNOWN_COMMIT_HASH`, duplicated because build-logic
+         * The same literal as `:feature:profile`'s `UNKNOWN_COMMIT_HASH`, duplicated because build-logic
          * is not on the app's compile classpath — the two cannot be one constant.
          */
         const val UNKNOWN_COMMIT = "unknown"

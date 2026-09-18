@@ -58,12 +58,11 @@ val androidPlatformModule = module {
 
     single<DiagnosticsLogger> { CrashReportingDiagnosticsLogger() }
 
-    // :presentation cannot generate BuildConfig itself.
     single(named("appVersion")) { BuildConfig.VERSION_NAME }
 
-    // Bound by TYPE, not a qualifier: producer and consumer are different Gradle modules sharing
-    // CommitHash (:presentation). Deliberately not in testPlatformModule: its only consumer is
-    // :ui-android's Android-only Compose host; AndroidPlatformModuleTest guards this binding instead.
+    // Bound by TYPE, not a qualifier: the consumer is :feature:profile, a different Gradle module
+    // sharing CommitHash. Deliberately not in testPlatformModule: its only consumer is a Compose
+    // host AppGraphKoinTest never builds; AndroidPlatformModuleTest guards this binding instead.
     single { CommitHash(BuildInfo.commitHash) }
 
     // Google Sign-In web client id, consumed by AuthViewModel. Empty when supabase.properties is
@@ -82,8 +81,8 @@ val androidPlatformModule = module {
     factoryOf(::GoogleCredentialClient)
     factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 
-    // ShortcutManagerCompat needs an Android Context, so the publisher built from :presentation's
-    // GetSpendShortcutCombos lives here rather than beside it.
+    // ShortcutManagerCompat needs an Android Context, so the publisher built from
+    // :feature:transaction's GetSpendShortcutCombos lives here rather than beside it.
     single { ShortcutPublisher(androidContext(), get()) }
 }
 

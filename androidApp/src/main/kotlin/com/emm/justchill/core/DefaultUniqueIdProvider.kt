@@ -1,6 +1,6 @@
 @file:OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 
-package com.emm.justchill.hh.shared
+package com.emm.justchill.core
 
 import com.emm.justchill.core.domain.shared.UniqueIdProvider
 import kotlin.uuid.Uuid

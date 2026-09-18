@@ -23,7 +23,7 @@ internal object BuildConventions {
     )
 
     fun namespaceOf(projectPath: String): String = projectPath
-        .split(':', '-')
+        .split(':')
         .filter(String::isNotEmpty)
         .joinToString(separator = ".", prefix = "$NAMESPACE_PREFIX.")
 }

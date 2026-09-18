@@ -81,9 +81,7 @@ dependencies {
     implementation(projects.core.backup)
     implementation(projects.core.database)
     implementation(projects.core.ui)
-    implementation(projects.uiAndroid)
 
-    // Empty until each feature's extraction ticket fills it: ADR 015, waves 7 and 8.
     implementation(projects.feature.transaction)
     implementation(projects.feature.account)
     implementation(projects.feature.category)
@@ -102,14 +100,16 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // ProcessLifecycleOwner, which core/lifecycle/ turns into the backup orchestrator's edges.
+    implementation(libs.androidx.lifecycle.process)
 
-    // The nav host and the bottom bar live here since ADR 015's wave 6.
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.coroutines.core)
 
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.android)
@@ -132,7 +132,8 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.google.identity.googleid)
 
-    // CoreModule builds SharedPreferencesSettings, which :presentation does not expose.
+    // AppPreferences and DefaultBackupMetadataStore sit on Settings; AndroidPlatformModule
+    // builds the SharedPreferencesSettings they get.
     implementation(libs.multiplatform.settings)
 
     // The Snapshot's end-to-end tests live here: only the app sees both :core:backup, which writes
