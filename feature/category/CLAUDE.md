@@ -15,7 +15,7 @@ The Categories screen family, ViewModels and Compose together: the list with its
 - `AddCategoryViewModel` takes `initialType` and `initialName` as Koin parameters, so it is a `viewModel { parameters -> }` block, never `viewModelOf`. The entry passes them with `parametersOf(key.initialType, key.initialName)`.
 - Saving with `propagateToTransaction` calls `AppNavigator.popToCapture()`, which pops to whatever implements `:core:ui`'s `CaptureRoute`. The feature never names a transaction route, and the created category reaches the capture screen through the host's `pendingCategory` channel, not through the back stack.
 - Write `""`, never a `String.Empty` extension; that one is gone.
-- `CategoriesScreen` still uses `AlertDialog` and `TextButton` directly for its edit and delete dialogs, inherited from before the move. Replacing them with atoms is a UI change and belongs to its own ticket, not to an extraction.
+- `CategoriesScreen`'s edit and delete dialogs are built on `:core:ui`'s `EmmDialog` atom (#194), general enough for another feature's confirmation dialog to reuse.
 
 ## Testing
 

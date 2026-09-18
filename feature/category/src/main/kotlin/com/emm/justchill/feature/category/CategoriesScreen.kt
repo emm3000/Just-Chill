@@ -23,10 +23,8 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,8 +38,10 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
+import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
@@ -276,28 +276,31 @@ private fun EditCategoryDialog(
     onDelete: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
 
-    AlertDialog(
+    EmmDialog(
+        title = "Editar categoría",
+        confirmLabel = "Guardar",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
         onDismissRequest = onDismiss,
-        title = { Text("Editar categoría") },
-        text = {
-            Column {
-                EmmTextInput(
-                    value = name,
-                    onValueChange = onNameChange,
-                    label = "NOMBRE",
-                    placeholder = "ejm. Supermercado",
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(12.dp))
-                TextButton(onClick = onDelete) {
-                    Text(text = "Borrar categoría", color = colors.danger)
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
-    )
+    ) {
+        EmmTextInput(
+            value = name,
+            onValueChange = onNameChange,
+            label = "NOMBRE",
+            placeholder = "ejm. Supermercado",
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Borrar categoría",
+            style = type.labelL,
+            color = colors.danger,
+            modifier = Modifier.clickable(onClick = onDelete),
+        )
+    }
 }
 
 @Composable
@@ -308,17 +311,19 @@ private fun DeleteCategoryDialog(
     onDismiss: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    AlertDialog(
+    val type = LocalEmmType.current
+
+    EmmDialog(
+        title = "¿Borrar «$categoryName»?",
+        confirmLabel = "Borrar",
+        onConfirm = onConfirm,
+        dismissLabel = "Cancelar",
+        onDismiss = onDismiss,
         onDismissRequest = onDismiss,
-        title = { Text("¿Borrar «$categoryName»?") },
-        text = { Text(buildDeleteCategoryMessage(affectedCount)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = "Borrar", color = colors.danger)
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
-    )
+        confirmTone = IconBtnTone.Danger,
+    ) {
+        Text(text = buildDeleteCategoryMessage(affectedCount), style = type.bodyM, color = colors.textSecondary)
+    }
 }
 
 @Composable
