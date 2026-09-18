@@ -46,7 +46,6 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAmountSheet by remember { mutableStateOf(false) }
     var showDateSheet by remember { mutableStateOf(false) }
-    // Same in-flight-blocks-abort rule as core:ui's inFlightDialogProperties.
     val dismissible = !form.isSaving
 
     ModalBottomSheet(
