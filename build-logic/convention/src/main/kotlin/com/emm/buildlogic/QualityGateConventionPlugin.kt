@@ -17,6 +17,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
         val boundaries: TaskProvider<CheckModuleBoundariesTask> = target.registerBoundaryCheck()
         val composeFree: TaskProvider<CheckComposeFreeViewModelsTask> = target.registerComposeCheck()
         val snapshots: TaskProvider<CheckSqlDelightSnapshotsTask> = target.registerSnapshotCheck()
+        val lazyKeys: TaskProvider<CheckLazyListKeysTask> = target.registerLazyKeyCheck()
 
         target.tasks.register(GATE_TASK) {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -24,12 +25,13 @@ class QualityGateConventionPlugin : Plugin<Project> {
                 "Runs every check that must pass before pushing: " +
                     "compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
                     ":build-logic:convention:test on the root, " +
-                    "checkModuleBoundaries, checkComposeFreeViewModels and checkSqlDelightSnapshots, " +
+                    "checkModuleBoundaries, checkComposeFreeViewModels, checkSqlDelightSnapshots " +
+                    "and checkLazyListKeys, " +
                     "the unit tests the library plugins name, plus the tests and the prodRelease " +
                     "compile :androidApp adds. " +
                     "Invoked by CI."
 
-            dependsOn(boundaries, composeFree, snapshots)
+            dependsOn(boundaries, composeFree, snapshots, lazyKeys)
             dependsOn(target.tasks.matching(::gates))
 
             // Task-name matching never reaches an included build, so this suite has to be named or
@@ -77,6 +79,18 @@ class QualityGateConventionPlugin : Plugin<Project> {
         }
     }
 
+    private fun Project.registerLazyKeyCheck(): TaskProvider<CheckLazyListKeysTask> =
+        tasks.register<CheckLazyListKeysTask>(LAZY_KEY_TASK) {
+            group = LifecycleBasePlugin.VERIFICATION_GROUP
+            description =
+                "Fails when a LazyList key of this module passes an id whose type this module " +
+                    "declares as a value class instead of its underlying primitive. A property " +
+                    "another module declares is invisible to it, and so is a key built from " +
+                    "anything but `it.<property>` or a `Type::property` reference."
+            sources.from(lazyKeySources())
+            report.set(layout.buildDirectory.file("reports/$LAZY_KEY_TASK.txt"))
+        }
+
     // Split so the task can allow :core:testing from a test configuration alone: a fixture module
     // reached from src/test never reaches a user, while every other edge binds in both.
     private fun Project.declaredProjectDependencies(tests: Boolean): Set<String> = configurations
@@ -92,11 +106,15 @@ class QualityGateConventionPlugin : Plugin<Project> {
     private fun Project.composeFreeSources(): FileCollection =
         fileTree(SOURCE_DIRECTORY) { include(VIEW_MODEL_SOURCES, UI_STATE_SOURCES) }
 
+    private fun Project.lazyKeySources(): FileCollection =
+        fileTree(SOURCE_DIRECTORY) { include(KOTLIN_SOURCES) }
+
     companion object {
         const val GATE_TASK: String = "qualityGate"
         const val BOUNDARY_TASK: String = "checkModuleBoundaries"
         const val COMPOSE_TASK: String = "checkComposeFreeViewModels"
         const val SNAPSHOT_TASK: String = "checkSqlDelightSnapshots"
+        const val LAZY_KEY_TASK: String = "checkLazyListKeys"
         const val SNAPSHOT_EXTENSION: String = "sqlDelightSnapshots"
 
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
@@ -110,6 +128,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val SOURCE_DIRECTORY: String = "src"
         private const val VIEW_MODEL_SOURCES: String = "**/*ViewModel.kt"
         private const val UI_STATE_SOURCES: String = "**/*UiState.kt"
+        private const val KOTLIN_SOURCES: String = "**/*.kt"
         private const val SQLDELIGHT_DIRECTORY: String = "src/main/sqldelight"
         private const val SNAPSHOT_DIRECTORY: String = "src/main/sqldelight/databases"
         private const val MIGRATION_SOURCES: String = "**/*.sqm"
