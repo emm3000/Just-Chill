@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,26 +24,23 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.Month
 
 @Composable
 fun PendingRecurringHeader(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Eyebrow(text = "Pendientes")
-    }
+    Eyebrow(text = "Pendientes", modifier = modifier)
 }
 
 @Composable
 fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val interactionSource = remember { MutableInteractionSource() }
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Row(
         modifier = modifier
@@ -64,32 +60,18 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.name,
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W500,
-                    letterSpacing = (-0.15).sp,
-                ),
+                style = type.labelL.copy(fontSize = 15.sp, letterSpacing = (-0.15).sp),
                 color = colors.textPrimary,
             )
             Text(
                 text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.W400,
-                ),
+                style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
                 color = if (item.isCatchUp) colors.danger else colors.textTertiary,
             )
         }
         Text(
             text = item.formattedAmount,
-            style = TextStyle(
-                fontFamily = InterFontFamily,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.W600,
-                letterSpacing = (-0.1).sp,
-            ),
+            style = type.labelL.copy(fontWeight = FontWeight.W600, letterSpacing = (-0.1).sp),
             color = if (item.type == TransactionType.Income) colors.success else colors.textPrimary,
         )
     }
