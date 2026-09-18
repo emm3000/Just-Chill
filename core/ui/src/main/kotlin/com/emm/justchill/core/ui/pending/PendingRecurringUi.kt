@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.recurring
+package com.emm.justchill.core.ui.pending
 
 import com.emm.justchill.core.domain.recurring.PendingRecurring
 import com.emm.justchill.core.domain.recurring.periodKey

@@ -4,7 +4,7 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.mvi.UiState
-import com.emm.justchill.hh.recurring.PendingRecurringUi
+import com.emm.justchill.core.ui.pending.PendingRecurringUi
 import kotlinx.datetime.LocalDate
 
 data class CategorySheetItem(
