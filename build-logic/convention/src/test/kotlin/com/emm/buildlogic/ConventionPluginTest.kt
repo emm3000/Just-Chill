@@ -266,11 +266,13 @@ class ConventionPluginTest {
         """.trimIndent()
 
         const val FLAVORED_GATE_TASKS: String =
-            "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
+            "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
+                "checkSqlDelightSnapshots," +
                 "compileProdReleaseKotlin"
 
         const val GATE_TASKS: String =
-            "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
+            "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
+                "checkSqlDelightSnapshots," +
                 "compileDebugAndroidTestKotlin,compileReleaseKotlin,testDebugUnitTest"
 
         val RELEASE_PLUGINS: List<String> = listOf("justchill.android.application", "justchill.android.release")

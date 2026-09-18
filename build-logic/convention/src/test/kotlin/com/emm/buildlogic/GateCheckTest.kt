@@ -272,6 +272,91 @@ class GateCheckTest {
         assertSucceeded(result, ":core:database:$SNAPSHOT_TASK")
     }
 
+    @Test
+    fun `a key that passes a value class id fails the lazy key check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/main/kotlin/LoanRowUi.kt" to TYPED_ID_MODEL,
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to TYPED_ID_KEY,
+            ),
+        )
+
+        assertTrue(output.contains("PersonLoansScreen.kt:3"), output)
+    }
+
+    @Test
+    fun `a key that passes the underlying primitive passes the lazy key check`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/main/kotlin/LoanRowUi.kt" to TYPED_ID_MODEL,
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to UNDERLYING_VALUE_KEY,
+            ),
+        )
+
+        assertSucceeded(result, ":feature:loan:$LAZY_KEY_TASK")
+    }
+
+    @Test
+    fun `a key that passes an id this module declares as a String passes the lazy key check`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/main/kotlin/LoanRowUi.kt" to PRIMITIVE_ID_MODEL,
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to TYPED_ID_KEY,
+            ),
+        )
+
+        assertSucceeded(result, ":feature:loan:$LAZY_KEY_TASK")
+    }
+
+    @Test
+    fun `a callable reference to a value class id fails the lazy key check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/main/kotlin/LoanRowUi.kt" to TYPED_ID_MODEL,
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to TYPED_ID_REFERENCE_KEY,
+            ),
+        )
+
+        assertTrue(output.contains("LoanRowUi.loanId is LoanId"), output)
+    }
+
+    @Test
+    fun `a key whose property another module declares passes the lazy key check`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to FOREIGN_ID_KEY,
+            ),
+        )
+
+        assertSucceeded(result, ":feature:loan:$LAZY_KEY_TASK")
+    }
+
+    @Test
+    fun `a value class id shadowed by a same-named String elsewhere fails the lazy key check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = mapOf(
+                "feature/loan/src/main/kotlin/LoanRowUi.kt" to TYPED_ID_MODEL,
+                "feature/loan/src/main/kotlin/LoanDetailRoute.kt" to PRIMITIVE_ID_ROUTE,
+                "feature/loan/src/main/kotlin/PersonLoansUiState.kt" to ROW_COLLECTION_STATE,
+                "feature/loan/src/main/kotlin/PersonLoansScreen.kt" to STATE_COLLECTION_KEY,
+            ),
+        )
+
+        assertTrue(output.contains("LoanRowUi.loanId is LoanId"), output)
+    }
+
     private fun assertSucceeded(result: BuildResult, taskPath: String) {
         assertEquals(TaskOutcome.SUCCESS, result.task(taskPath)?.outcome, taskPath)
     }
@@ -297,6 +382,28 @@ class GateCheckTest {
         const val BOUNDARY_TASK: String = QualityGateConventionPlugin.BOUNDARY_TASK
         const val COMPOSE_TASK: String = QualityGateConventionPlugin.COMPOSE_TASK
         const val SNAPSHOT_TASK: String = QualityGateConventionPlugin.SNAPSHOT_TASK
+
+        const val LAZY_KEY_TASK: String = QualityGateConventionPlugin.LAZY_KEY_TASK
+
+        const val TYPED_ID_MODEL: String =
+            "package sample\n\ndata class LoanRowUi(\n    val loanId: LoanId,\n)\n"
+        const val TYPED_ID_KEY: String =
+            "package sample\n\nfun rows() = items(loans, key = { it.loanId }) { }\n"
+        const val UNDERLYING_VALUE_KEY: String =
+            "package sample\n\nfun rows() = items(loans, key = { it.loanId.value }) { }\n"
+        const val PRIMITIVE_ID_MODEL: String =
+            "package sample\n\ndata class LoanRowUi(\n    val loanId: String,\n)\n"
+        const val TYPED_ID_REFERENCE_KEY: String =
+            "package sample\n\nfun rows() = items(loans, key = LoanRowUi::loanId) { }\n"
+        const val PRIMITIVE_ID_ROUTE: String =
+            "package sample\n\ndata class LoanDetailRoute(val loanId: String)\n"
+        const val ROW_COLLECTION_STATE: String =
+            "package sample\n\ndata class PersonLoansUiState(\n    val loans: List<LoanRowUi>,\n)\n"
+        const val STATE_COLLECTION_KEY: String =
+            "package sample\n\nfun rows() = items(state.loans, key = { it.loanId }) { }\n"
+
+        const val FOREIGN_ID_KEY: String =
+            "package sample\n\nfun rows() = items(loans, key = { it.pendingId }) { }\n"
 
         const val COMPOSE_SOURCE: String = "package sample\n\nimport androidx.compose.runtime.Immutable\n"
         const val MIGRATION_DIRECTORY: String = "core/database/src/main/sqldelight/com/sample"
