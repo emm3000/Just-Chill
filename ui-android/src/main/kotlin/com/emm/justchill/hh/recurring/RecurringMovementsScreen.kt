@@ -48,10 +48,10 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.format.formatNeutral
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 
 @Composable
 fun RecurringMovementsScreen(
@@ -355,8 +355,8 @@ private fun RecurringMovementsScreenPreview() {
                         accountName = "Efectivo",
                     ),
                 ),
-                entranFormatted = formatNeutral(fromCentsToSolesWith(Money(350000L))),
-                salenFormatted = formatNeutral(fromCentsToSolesWith(Money(1800L))),
+                entranFormatted = formatNeutral(Money(350000L).format()),
+                salenFormatted = formatNeutral(Money(1800L).format()),
                 variableCount = 0,
             ),
             onIntent = {},

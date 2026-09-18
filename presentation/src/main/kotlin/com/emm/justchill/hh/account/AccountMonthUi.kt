@@ -5,8 +5,8 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 
 // An account has no opening balance, so net is a monthly net and never a balance — the screen owes
@@ -59,4 +59,4 @@ private fun List<Transaction>.net(): Money = fold(Money.Zero) { running, transac
 private fun List<Transaction>.total(type: TransactionType): Money =
     filter { it.type == type }.fold(Money.Zero) { running, transaction -> running + transaction.amount }
 
-private fun Money.unsigned(): String = formatNeutral(fromCentsToSolesWith(this))
+private fun Money.unsigned(): String = formatNeutral(format())

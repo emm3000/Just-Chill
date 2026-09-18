@@ -19,8 +19,8 @@ import com.emm.justchill.core.theme.PlexMonoFontFamily
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 
 private const val CENTS_PER_SOL = 100.0
@@ -54,7 +54,7 @@ private fun SecondaryLine(summary: MonthSummaryUi) {
         modifier = Modifier.padding(top = spacing.s1),
         horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
-        SecondaryAmount(label = "Ingresos", value = formatNeutral(fromCentsToSolesWith(summary.income)))
+        SecondaryAmount(label = "Ingresos", value = formatNeutral(summary.income.format()))
         SecondaryAmount(
             label = "Balance",
             value = summary.net.positiveMoneyFormatted(),

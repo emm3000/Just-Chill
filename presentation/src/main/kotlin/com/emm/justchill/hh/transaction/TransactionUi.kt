@@ -2,9 +2,9 @@ package com.emm.justchill.hh.transaction
 
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 import kotlinx.datetime.LocalDateTime
 
 private const val UNKNOWN_CATEGORY = "Sin categoría"
@@ -30,7 +30,7 @@ data class TransactionUi(
 }
 
 private fun TransactionWithCategory.toUi(): TransactionUi {
-    val formattedNumber: String = fromCentsToSolesWith(amount)
+    val formattedNumber: String = amount.format()
     return TransactionUi(
         transactionId = transactionId.value,
         type = type,

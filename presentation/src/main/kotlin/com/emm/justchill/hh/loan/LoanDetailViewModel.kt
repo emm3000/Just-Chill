@@ -16,8 +16,8 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.core.ui.format.centsToMoney
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.mvi.MviViewModel
 import kotlinx.coroutines.flow.combine
@@ -87,7 +87,7 @@ class LoanDetailViewModel(
         val edited = editingPaymentId?.let { id -> loadedPayments.find { it.id.value == id } }
         val paidSoFar = loadedPayments.fold(Money.Zero) { acc, payment -> acc + payment.amount }
         val ceiling = remaining(loan.totalDue, paidSoFar - (edited?.amount ?: Money.Zero))
-        return copy(remainingCents = ceiling.cents, maxAmountLabel = formatNeutral(fromCentsToSolesWith(ceiling)))
+        return copy(remainingCents = ceiling.cents, maxAmountLabel = formatNeutral(ceiling.format()))
     }
 
     override fun onIntent(intent: LoanDetailIntent) {
