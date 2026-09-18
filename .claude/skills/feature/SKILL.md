@@ -6,6 +6,8 @@ allowed-tools: Read Write Edit Bash(fd:*) Bash(rg:*) Bash(./gradlew:*)
 disable-model-invocation: true
 ---
 
+New features go into `:feature:<name>` per ADR 015; the scaffold below is legacy, for the five features (transaction, recurring, profile, auth, onboarding) still in `:presentation` / `:ui-android` until #128.
+
 Scaffold a new feature called **$ARGUMENTS** across the two modules that own a feature:
 
 - `presentation/src/main/kotlin/com/emm/justchill/hh/<feature>/` — `UiState`, `Intent`, `Effect`, `ViewModel`.

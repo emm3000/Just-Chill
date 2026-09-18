@@ -70,6 +70,13 @@ The device keeps real data, so these names never change: the database file
 shortcuts store it) and the `applicationId`. The schema does not change; the
 migration suite runs on `medium_phone` before and after `:data` moves.
 
+## Amendments (2026-09-18)
+
+- A sealed route hierarchy cannot span modules: routes unsealed, `AppRoute` / `BottomBarRoute` / `CaptureRoute` moved to `:core:ui`'s `navigation/` alongside `AppNavigator` and `NavHostBindings`.
+- `:core:testing` added (JVM, `MainDispatcherRule` + `FakeTodayFlow`, depends on `:core:domain` only); a feature depends on `:core:domain` and `:core:ui`, plus `:core:testing` on the test edge only.
+- `RouteSerializationTest` concatenates one route registry per feature instead of walking `sealedSubclasses`.
+- Waves 6 and 7 merged: `:feature:{account, category, loan, report}` populated.
+
 ## Considered options
 
 - Two modules per feature (`presentation` and `ui`) keeps compose-free as a

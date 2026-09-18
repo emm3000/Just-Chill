@@ -6,10 +6,10 @@ Android entry point and app shell: `MainActivity`, `EmmApp`, the Navigation 3 ho
 
 ## The shell
 
-- `shell/AppNavHost.kt` owns the back stack, the root `Scaffold` with its `SnackbarHostState`, the SAF launchers and the result channels (`pendingCategory`, `pendingImportJson`); it calls each feature's `*Entries` function from `:ui-android`. The concrete routes stay in `:ui-android`'s `hh/shared/HhRoutes.kt` and follow their features in waves 7 and 8; `AppNavigator` and `NavHostBindings` are `:core:ui`'s.
+- `shell/AppNavHost.kt` owns the back stack, the root `Scaffold` with its `SnackbarHostState`, the SAF launchers and the result channels (`pendingCategory`, `pendingImportJson`); it calls each feature's `*Entries` function, from `:feature:{account, category, loan, report}` for the extracted features and from `:ui-android`'s `hh/<feature>/` for the rest. `AppNavigator` and `NavHostBindings` are `:core:ui`'s; `RouteSerializationTest` concatenates one route registry per feature.
 - `shell/AppBottomBar.kt` holds four tabs plus the centre add button, no more. Its 10sp labels already sit under the 4.5:1 AA floor; a fifth tab shrinks them further. A new destination swaps a tab out, never appends one.
 - `shell/ShortcutRoutes.kt` is the launcher intent contract: `MainActivity` flattens an `Intent` into `ShortcutIntent`, `ShortcutPublisher` writes the same action and extra keys, and `ShortcutXmlActionsTest` pins them against both `shortcuts.xml` copies.
-- `wiring/<Feature>Wiring.kt` is one file per feature, listed in `appModules()`. Each is an empty Koin module until its extraction ticket fills it, and an extraction ticket edits its own file only.
+- `wiring/<Feature>Wiring.kt` is one file per feature, listed in `appModules()`, binding that feature's use cases and `includes(<feature>Module)`. `account`, `category`, `loan` and `report` are filled; the rest stay an empty Koin module until their extraction ticket fills it, and an extraction ticket edits its own file only.
 
 ## Platform Koin module
 
