@@ -27,9 +27,9 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.EmmRowMenu
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-import com.emm.justchill.hh.category.findById
 
 @Composable
 private fun DayBadge(dayOfMonth: Int) {

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.components
+package com.emm.justchill.core.ui.transaction
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,12 +19,11 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
+import com.emm.justchill.core.ui.category.resolvedColor
+import com.emm.justchill.core.ui.category.resolvedIcon
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmType
-import com.emm.justchill.hh.transaction.TransactionUi
-import com.emm.justchill.hh.transaction.resolvedColor
-import com.emm.justchill.hh.transaction.resolvedIcon
 
 @Composable
 fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {

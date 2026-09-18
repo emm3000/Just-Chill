@@ -34,9 +34,14 @@ import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.atoms.SelectorChip
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.sheets.AccountPickerSheet
+import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
+import com.emm.justchill.core.ui.sheets.DatePickerSheet
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -45,11 +50,7 @@ import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.transaction.components.ACCOUNT_CHIP_WEIGHT
 import com.emm.justchill.hh.transaction.components.CATEGORY_CHIP_WEIGHT
 import com.emm.justchill.hh.transaction.components.FormMetaRow
-import com.emm.justchill.hh.transaction.components.SelectorChip
 import com.emm.justchill.hh.transaction.components.SignToggle
-import com.emm.justchill.hh.transaction.sheets.AccountPickerSheet
-import com.emm.justchill.hh.transaction.sheets.CategoryPickerSheet
-import com.emm.justchill.hh.transaction.sheets.DatePickerSheet
 import com.emm.justchill.hh.transaction.sheets.NoteSheet
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month

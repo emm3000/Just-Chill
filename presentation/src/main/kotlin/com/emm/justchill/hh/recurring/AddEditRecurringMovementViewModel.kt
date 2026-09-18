@@ -11,12 +11,12 @@ import com.emm.justchill.core.domain.recurring.UpdateRecurringMovementUseCase
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.error.toUserMessage
+import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.category.toSelectable
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.mvi.MviViewModel
-import com.emm.justchill.hh.transaction.Catalog
-import com.emm.justchill.hh.transaction.SelectableCategory
-import com.emm.justchill.hh.transaction.toSelectable
+import com.emm.justchill.core.ui.transaction.Catalog
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach

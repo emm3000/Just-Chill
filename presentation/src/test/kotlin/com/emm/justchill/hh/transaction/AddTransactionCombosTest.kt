@@ -6,6 +6,8 @@ import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.transaction.Catalog
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import org.junit.Test

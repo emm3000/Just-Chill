@@ -1,6 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
-package com.emm.justchill.hh.category
+package com.emm.justchill.core.ui.category
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.DirectionsBike

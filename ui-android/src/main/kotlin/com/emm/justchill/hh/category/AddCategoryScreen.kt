@@ -55,6 +55,8 @@ import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors

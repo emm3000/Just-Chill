@@ -31,14 +31,14 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
-import com.emm.justchill.hh.transaction.Catalog
-import com.emm.justchill.hh.transaction.SelectableCategory
-import com.emm.justchill.hh.transaction.resolvedColor
+import com.emm.justchill.core.ui.transaction.Catalog
 
 @Composable
 private fun SelectorPill(

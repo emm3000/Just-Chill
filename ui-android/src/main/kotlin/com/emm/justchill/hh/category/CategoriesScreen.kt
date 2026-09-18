@@ -46,6 +46,8 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.components.EmmTextInput
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme

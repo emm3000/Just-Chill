@@ -61,7 +61,7 @@ A SQLDelight row, a domain model and a `UiState` are three different things even
 
 - A SQLDelight row never reaches a `UiState`.
 - A domain model never carries presentation concerns (formatted strings, resource ids, colors).
-- A presentation model carries a semantic id (`iconId`, `colorId`), never an `ImageVector` or a `Color`; `:ui-android` resolves it at render time (`hh/transaction/CategoryResolve.kt`).
+- A presentation model carries a semantic id (`iconId`, `colorId`), never an `ImageVector` or a `Color`; the render layer resolves it against the catalog (`:core:ui`'s `core/ui/category/CategoryResolve.kt`).
 
 This is not duplication to be removed. See `principles.md`, DRY.
 

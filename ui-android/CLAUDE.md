@@ -1,8 +1,8 @@
 # :ui-android — CLAUDE.md
 
-Android's Compose UI module: screens and navigation. It renders what `:presentation` exposes and owns nothing else: no ViewModels, no DI, no formatters, and since ADR 015's wave 4 no design system either — the tokens, the atoms and the `Emm*` widgets live in `:core:ui`. No Koin module here, and no exception: a new feature registers its module in `:presentation`'s `appModules()`.
+Android's Compose UI module: screens and navigation. It renders what `:presentation` exposes and owns nothing else: no ViewModels, no DI, no formatters, and since ADR 015's wave 4 no design system either — the tokens, the atoms and the `Emm*` widgets live in `:core:ui`, and since wave 5 so do the shared account, category and date pickers, the transaction row, the selector chips and the icon and colour catalog. No Koin module here, and no exception: a new feature registers its module in `:presentation`'s `appModules()`.
 
-Plain `com.android.library` (ADR 011), root package `com.emm.justchill.hh.<feature>`, `minSdk = 28`. Depends on `:presentation` (api), `:core:ui`, `:core:domain`, `:core:database`. A feature owns `hh/<feature>/`: its Screens plus `<Feature>Entries.kt` for nav wiring. Cross-feature: `hh/shared/` (nav host, routes, bottom bar). The tokens and the atoms come from `:core:ui`. Which atom and which token, and the routes rules: `.claude/rules/ui-components.md`, `.claude/rules/architecture.md`.
+Plain `com.android.library` (ADR 011), root package `com.emm.justchill.hh.<feature>`, `minSdk = 28`. Depends on `:presentation` (api), `:core:ui`, `:core:domain`, `:core:database`. A feature owns `hh/<feature>/`: its Screens plus `<Feature>Entries.kt` for nav wiring. Cross-feature: `hh/shared/` (nav host, routes, bottom bar). The tokens, the atoms, the pickers and the category catalog come from `:core:ui`; a screen or sheet only one feature uses stays in that feature's package. Which atom and which token, and the routes rules: `.claude/rules/ui-components.md`, `.claude/rules/architecture.md`.
 
 ## Navigation shell
 

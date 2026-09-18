@@ -1,11 +1,8 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.core.ui.category
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.emm.justchill.hh.category.AppIconCatalog
-import com.emm.justchill.hh.category.CategoryColor
-import com.emm.justchill.hh.category.findById
 
 val CategoryUi.resolvedIcon: ImageVector
     get() = iconId?.let(AppIconCatalog::findById)?.icon ?: Icons.Rounded.QuestionMark

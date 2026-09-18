@@ -1,7 +1,8 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.core.ui.transaction
 
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.ui.category.SelectableCategory
 
 // Loading is not an empty catalog: only the distinction between them separates "there are no
 // accounts yet" from "the rows have not arrived".

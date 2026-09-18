@@ -1,3 +1,3 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.core.ui.category
 
 data class CategoryUi(val iconId: String?, val colorId: String?)

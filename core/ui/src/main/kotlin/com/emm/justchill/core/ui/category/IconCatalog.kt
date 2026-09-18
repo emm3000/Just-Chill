@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.category
+package com.emm.justchill.core.ui.category
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

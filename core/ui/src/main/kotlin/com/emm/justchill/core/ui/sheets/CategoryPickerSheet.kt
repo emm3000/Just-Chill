@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.sheets
+package com.emm.justchill.core.ui.sheets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,11 +49,11 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
+import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.category.resolvedColor
+import com.emm.justchill.core.ui.category.resolvedIcon
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-import com.emm.justchill.hh.transaction.SelectableCategory
-import com.emm.justchill.hh.transaction.resolvedColor
-import com.emm.justchill.hh.transaction.resolvedIcon
 
 private const val LIST_MAX_HEIGHT_FRACTION = 0.55f
 

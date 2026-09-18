@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.category.CategoryColor
+import com.emm.justchill.core.ui.category.allColors
 
 @Composable
 internal fun ColorRow(selected: CategoryColor, onSelect: (CategoryColor) -> Unit) {

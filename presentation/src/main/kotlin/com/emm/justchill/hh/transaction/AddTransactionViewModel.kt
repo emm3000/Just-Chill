@@ -13,8 +13,11 @@ import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.category.toSelectable
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.ui.transaction.Catalog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged

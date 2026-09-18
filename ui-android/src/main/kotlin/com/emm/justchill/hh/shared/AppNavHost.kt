@@ -35,6 +35,7 @@ import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.hh.account.accountEntries
@@ -46,7 +47,6 @@ import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.report.reportEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
-import com.emm.justchill.hh.transaction.SelectableCategory
 import com.emm.justchill.hh.transaction.transactionEntries
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject

@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.IconCatalog
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 
 @Composable

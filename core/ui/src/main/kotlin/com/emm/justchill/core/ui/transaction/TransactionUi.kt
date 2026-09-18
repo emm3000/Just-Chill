@@ -1,7 +1,8 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.core.ui.transaction
 
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.ui.category.CategoryUi
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome

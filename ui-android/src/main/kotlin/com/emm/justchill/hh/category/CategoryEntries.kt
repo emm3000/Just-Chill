@@ -7,13 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.category.toSelectable
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.CategoriesListRoute
 import com.emm.justchill.hh.shared.CategoryRoute
 import com.emm.justchill.hh.shared.NavHostBindings
 import com.emm.justchill.hh.shared.rememberAppNavigator
-import com.emm.justchill.hh.transaction.SelectableCategory
-import com.emm.justchill.hh.transaction.toSelectable
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
