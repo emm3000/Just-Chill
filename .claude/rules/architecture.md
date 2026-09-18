@@ -22,7 +22,7 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 Allowed dependencies, and nothing else:
 
 ```
-androidApp   -> ui-android, presentation, core:backup, core:database, core:domain
+androidApp   -> ui-android, presentation, core:backup, core:database, core:ui, core:domain
 ui-android   -> presentation, core:database, core:ui, core:domain
 presentation -> core:backup, core:database, core:ui, core:domain
 core:backup  -> core:domain

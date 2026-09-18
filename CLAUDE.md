@@ -11,7 +11,7 @@ No third-party users, but **the author runs the release daily on a device holdin
 ## Modules
 
 ```
-androidApp     -> ui-android, presentation, core:backup, core:database, core:domain
+androidApp     -> ui-android, presentation, core:backup, core:database, core:ui, core:domain
 ui-android     -> presentation, core:database, core:ui, core:domain
 presentation   -> core:backup, core:database, core:ui, core:domain
 core:backup    -> core:domain
