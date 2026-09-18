@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 private val ChipDotSize: Dp = 8.dp
 
 @Composable
-internal fun ChipDot(color: Color) {
+fun ChipDot(color: Color) {
     Box(
         modifier = Modifier
             .size(ChipDotSize)
