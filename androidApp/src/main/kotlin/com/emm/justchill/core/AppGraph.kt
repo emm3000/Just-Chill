@@ -3,10 +3,10 @@ package com.emm.justchill.core
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.commonCoreModule
 import com.emm.justchill.core.domain.shared.backup.SNAPSHOT_BACKUP_ENABLED
-import com.emm.justchill.hh.di.backupModule
-import com.emm.justchill.hh.di.dataModule
-import com.emm.justchill.hh.di.sharedModule
-import com.emm.justchill.hh.di.supabaseModule
+import com.emm.justchill.core.di.backupModule
+import com.emm.justchill.core.di.dataModule
+import com.emm.justchill.core.di.sharedModule
+import com.emm.justchill.core.di.supabaseModule
 import com.emm.justchill.wiring.accountWiring
 import com.emm.justchill.wiring.authWiring
 import com.emm.justchill.wiring.categoryWiring
@@ -18,9 +18,8 @@ import com.emm.justchill.wiring.transactionWiring
 import org.koin.core.Koin
 import org.koin.core.module.Module
 
-// EmmApp calls startKoin with this list plus its own experiencesModule. The hh.di modules and
-// commonCoreModule still live in :presentation; each *Wiring module takes over as ADR 015's
-// waves 7 and 8 extract its feature.
+// EmmApp calls startKoin with this list plus its own experiencesModule. The core/di modules hold
+// what no single feature owns; each *Wiring module binds one feature's use cases.
 fun appModules(platformModule: Module): List<Module> = listOf(
     backupModule,
     sharedModule,

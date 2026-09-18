@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertSame
 
 /**
- * Every `filtered` below is what `sanitizeInterestPercentInput` (`:presentation`) makes of the
+ * Every `filtered` below is what `sanitizeInterestPercentInput` (`:feature:loan`) makes of the
  * `typed` beside it — that module's own suite pins those pairs; this one pins only the caret.
  */
 class FilteredTextCursorTest {

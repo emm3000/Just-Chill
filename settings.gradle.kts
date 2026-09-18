@@ -34,32 +34,25 @@ dependencyResolutionManagement {
     }
 }
 
-// Lets modules reference each other as `projects.uiAndroid` instead of `project(":ui-android")`.
+// Lets modules reference each other as `projects.core.ui` instead of `project(":core:ui")`.
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "JustChill"
 
 // The module map. Read the middle column as the question each module answers.
 //
-//   :core:domain    who am I?         business rules, zero framework   Android
+//   :core:domain    who am I?         business rules, zero framework   JVM only
 //   :core:database  where do I live?  SQLDelight                       Android
 //   :core:backup    who keeps a copy? Supabase, Ktor, the Snapshot     Android
 //   :core:ui        how do I show it? MVI, formatters, design system   Android
 //   :core:testing   how do I test?    MainDispatcherRule, FakeTodayFlow JVM only
 //   :feature:*      what do I let you do? one screen family each      Android
-//   :presentation   what do I think?  ViewModels, MVI, Koin            Android
-//   :ui-android     how do I look?    Compose screens                  Android only
-//   :androidApp     how do I ship?    manifest, signing, flavors, shell Android only
+//   :androidApp     how do I ship?    manifest, shell, Koin graph      Android only
 //
 // Dependency order, top of the graph down:
-//   androidApp -> feature:*, ui-android -> presentation -> core:database, core:backup, core:ui
-//   -> core:domain, and a feature reaches core:ui and core:domain only, plus core:testing as a
-//   test fixture.
-//
-// The nine features are empty scaffolds until each extraction ticket fills its own.
+//   androidApp -> feature:*, core:backup, core:database, core:ui -> core:domain, and a feature
+//   reaches core:ui and core:domain only, plus core:testing as a test fixture.
 include(":androidApp")
-include(":ui-android")
-include(":presentation")
 include(":core:backup")
 include(":core:database")
 include(":core:domain")

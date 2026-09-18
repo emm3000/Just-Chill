@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.shell
 
 import android.content.ActivityNotFoundException
 import android.content.Intent

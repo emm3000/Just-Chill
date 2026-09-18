@@ -23,8 +23,7 @@ class GateCheckTest {
             ":feature:loan" to module(":core:domain", ":core:ui"),
             ":core:ui" to module(":core:domain"),
             ":core:domain" to module(),
-            ":ui-android" to module(":presentation"),
-            ":presentation" to module(),
+            ":core:testing" to module(":core:domain"),
         )
 
         val result: BuildResult = fixture.check(task = BOUNDARY_TASK, modules = modules)
@@ -96,16 +95,13 @@ class GateCheckTest {
     }
 
     @Test
-    fun `a module other than the app that depends on a feature fails the boundary check`() {
+    fun `a module outside the three families fails the boundary check`() {
         val output: String = fixture.checkAndFail(
-            task = ":ui-android:$BOUNDARY_TASK",
-            modules = mapOf(
-                ":ui-android" to module(":feature:loan"),
-                ":feature:loan" to module(),
-            ),
+            task = ":legacy:$BOUNDARY_TASK",
+            modules = mapOf(":legacy" to module(":core:domain"), ":core:domain" to module()),
         )
 
-        assertTrue(output.contains(":ui-android depends on :feature:loan"), output)
+        assertTrue(output.contains(":legacy is neither :androidApp nor a :core: or :feature: module"), output)
     }
 
     @Test

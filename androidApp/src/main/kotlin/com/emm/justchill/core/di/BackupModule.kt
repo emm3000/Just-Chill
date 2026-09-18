@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.di
+package com.emm.justchill.core.di
 
 import com.emm.justchill.core.appScopeQualifier
 import com.emm.justchill.core.backup.BackupDisclosureSignal

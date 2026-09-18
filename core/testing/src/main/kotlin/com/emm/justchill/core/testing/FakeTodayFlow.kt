@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.LocalDate
 
 // Drives the date by hand, not through zone-correct `ClockTodayFlow` (pinned in ClockTodayFlowTest;
-// `presentation/CLAUDE.md` says why a ViewModel test never collects the real one). A ViewModel's
+// `androidApp/CLAUDE.md` says why a ViewModel test never collects the real one). A ViewModel's
 // injected Clock still only answers "what hour", never "what day".
 class FakeTodayFlow(private val dates: MutableStateFlow<LocalDate>) : TodayFlow {
 
