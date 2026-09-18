@@ -247,12 +247,13 @@ class ConventionPluginTest {
         val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
 
         const val AGGREGATE_GATE_TASKS: String =
-            "checkComposeFreeViewModels,checkModuleBoundaries,compileDebugAndroidTestKotlin," +
-                "compileReleaseKotlin,detektMain,detektTest,testDebugUnitTest"
+            "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
+                "compileDebugAndroidTestKotlin,compileReleaseKotlin,detektMain,detektTest,testDebugUnitTest"
 
         const val NAMED_GATE_TASKS: String =
-            "checkComposeFreeViewModels,checkModuleBoundaries,compileDebugAndroidTestKotlin," +
-                "compileReleaseKotlin,detektDebug,detektDebugUnitTest,testDebugUnitTest"
+            "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
+                "compileDebugAndroidTestKotlin,compileReleaseKotlin,detektDebug,detektDebugUnitTest," +
+                "testDebugUnitTest"
 
         val RELEASE_PLUGINS: List<String> = listOf("justchill.android.application", "justchill.android.release")
 

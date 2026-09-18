@@ -17,6 +17,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
             target.extensions.create(EXTENSION, QualityGateExtension::class.java)
         val boundaries: TaskProvider<CheckModuleBoundariesTask> = target.registerBoundaryCheck()
         val composeFree: TaskProvider<CheckComposeFreeViewModelsTask> = target.registerComposeCheck()
+        val snapshots: TaskProvider<CheckSqlDelightSnapshotsTask> = target.registerSnapshotCheck()
 
         target.tasks.register(GATE_TASK) {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -24,11 +25,11 @@ class QualityGateConventionPlugin : Plugin<Project> {
                 "Runs every check that must pass before pushing: detektMain and detektTest, " +
                     "compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
                     ":build-logic:convention:test on the root, " +
-                    "checkModuleBoundaries and checkComposeFreeViewModels, " +
+                    "checkModuleBoundaries, checkComposeFreeViewModels and checkSqlDelightSnapshots, " +
                     "the unit tests the library plugins name, plus the tests and lint :androidApp adds. " +
                     "Invoked by the pre-push hook and by CI."
 
-            dependsOn(boundaries, composeFree)
+            dependsOn(boundaries, composeFree, snapshots)
             dependsOn(target.tasks.matching { gates(it, extension.detektTasks.get()) })
             dependsOn(Callable { extension.detektTasks.get().map(target.tasks::named) })
 
@@ -65,6 +66,16 @@ class QualityGateConventionPlugin : Plugin<Project> {
             report.set(layout.buildDirectory.file("reports/$COMPOSE_TASK.txt"))
         }
 
+    private fun Project.registerSnapshotCheck(): TaskProvider<CheckSqlDelightSnapshotsTask> =
+        tasks.register<CheckSqlDelightSnapshotsTask>(SNAPSHOT_TASK) {
+            group = LifecycleBasePlugin.VERIFICATION_GROUP
+            description =
+                "Fails when a .sqm of this module has no schema snapshot, or a snapshot has no migration."
+            migrations.from(fileTree(SQLDELIGHT_DIRECTORY) { include(MIGRATION_SOURCES) })
+            snapshots.from(fileTree(SNAPSHOT_DIRECTORY) { include(SNAPSHOT_SOURCES) })
+            report.set(layout.buildDirectory.file("reports/$SNAPSHOT_TASK.txt"))
+        }
+
     private fun Project.declaredProjectDependencies(): Set<String> = configurations
         .flatMap { it.dependencies }
         .filterIsInstance<ProjectDependency>()
@@ -81,6 +92,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
         const val GATE_TASK: String = "qualityGate"
         const val BOUNDARY_TASK: String = "checkModuleBoundaries"
         const val COMPOSE_TASK: String = "checkComposeFreeViewModels"
+        const val SNAPSHOT_TASK: String = "checkSqlDelightSnapshots"
 
         private const val EXTENSION: String = "qualityGate"
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
@@ -89,6 +101,10 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val SOURCE_DIRECTORY: String = "src"
         private const val VIEW_MODEL_SOURCES: String = "**/*ViewModel.kt"
         private const val UI_STATE_SOURCES: String = "**/*UiState.kt"
+        private const val SQLDELIGHT_DIRECTORY: String = "src/main/sqldelight"
+        private const val SNAPSHOT_DIRECTORY: String = "src/main/sqldelight/databases"
+        private const val MIGRATION_SOURCES: String = "**/*.sqm"
+        private const val SNAPSHOT_SOURCES: String = "*.db"
 
         // An allowlist: `withType<Detekt>()` would also run the per-variant tasks these two aggregate.
         val DETEKT_GATE_TASKS: Set<String> = setOf(
