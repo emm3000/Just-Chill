@@ -29,7 +29,7 @@ class MviViewModelTest {
     // runTest adopts this dispatcher's scheduler, which is what makes runCurrent/advanceUntilIdle
     // steer the VM.
     @get:Rule
-    val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
+    val mainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
 
     @Test
     fun `cancelling a launchSafe job does not emit an error effect`() = runTest {
