@@ -22,6 +22,9 @@ import com.emm.justchill.feature.loan.PersonLoansRoute
 import com.emm.justchill.feature.loan.loanRoutes
 import com.emm.justchill.feature.onboarding.ManifestoRoute
 import com.emm.justchill.feature.onboarding.onboardingRoutes
+import com.emm.justchill.feature.profile.ProfileRoute
+import com.emm.justchill.feature.profile.privacy.PrivacyPolicyRoute
+import com.emm.justchill.feature.profile.profileRoutes
 import com.emm.justchill.feature.recurring.AddEditRecurringMovementRoute
 import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringRoutes
@@ -31,9 +34,6 @@ import com.emm.justchill.feature.transaction.AddTransactionRoute
 import com.emm.justchill.feature.transaction.EditTransactionRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
 import com.emm.justchill.feature.transaction.transactionRoutes
-import com.emm.justchill.hh.shared.PrivacyPolicyRoute
-import com.emm.justchill.hh.shared.ProfileRoute
-import com.emm.justchill.hh.shared.hhRoutes
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import org.junit.Test
@@ -78,7 +78,6 @@ class RouteSerializationTest {
 
     private val registries: List<List<KClass<out AppRoute>>> =
         listOf(
-            hhRoutes,
             accountRoutes,
             authRoutes,
             categoryRoutes,
@@ -87,6 +86,7 @@ class RouteSerializationTest {
             loanRoutes,
             onboardingRoutes,
             transactionRoutes,
+            profileRoutes,
         )
 
     /**

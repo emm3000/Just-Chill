@@ -37,9 +37,9 @@ import com.emm.justchill.core.ui.navigation.BottomBarRoute
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.feature.account.AccountsRoute
+import com.emm.justchill.feature.profile.ProfileRoute
 import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
-import com.emm.justchill.hh.shared.ProfileRoute
 
 private data class BottomTab(
     val route: BottomBarRoute?,

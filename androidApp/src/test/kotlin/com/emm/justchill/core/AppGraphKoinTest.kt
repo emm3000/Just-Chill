@@ -2,9 +2,9 @@ package com.emm.justchill.core
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.feature.category.AddCategoryViewModel
 import com.emm.justchill.feature.loan.AddEditLoanViewModel
 import com.emm.justchill.feature.loan.LoanDetailViewModel

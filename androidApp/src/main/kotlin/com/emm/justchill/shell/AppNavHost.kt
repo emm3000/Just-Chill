@@ -55,6 +55,7 @@ import com.emm.justchill.feature.loan.LoansRoute
 import com.emm.justchill.feature.loan.loanEntries
 import com.emm.justchill.feature.onboarding.ManifestoRoute
 import com.emm.justchill.feature.onboarding.onboardingEntries
+import com.emm.justchill.feature.profile.profileEntries
 import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringEntries
 import com.emm.justchill.feature.report.reportEntries
@@ -62,7 +63,6 @@ import com.emm.justchill.feature.transaction.AddTransactionRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
 import com.emm.justchill.feature.transaction.capture.transactionEntries
 import com.emm.justchill.feature.transaction.list.seeTransactionsEntries
-import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.shared.rememberPlatformHostActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
