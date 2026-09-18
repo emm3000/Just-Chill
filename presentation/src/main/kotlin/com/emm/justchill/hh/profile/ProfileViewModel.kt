@@ -111,7 +111,7 @@ class ProfileViewModel(
     override fun onIntent(intent: ProfileIntent) {
         when (intent) {
             ProfileIntent.ExportRequested -> exportRequested()
-            ProfileIntent.ExportSaved -> exportSaved()
+            is ProfileIntent.ExportFinished -> exportFinished(intent.saved)
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
             ProfileIntent.SignOut -> performSignOut()
             ProfileIntent.DeleteAccount -> deleteAccount()
@@ -214,9 +214,12 @@ class ProfileViewModel(
         sendEffect(ProfileEffect.ExportReady(json))
     }
 
-    private fun exportSaved() {
-        localExportHistory.recordExport()
-        updateState { copy(lastExport = localExportHistory.toLastExportUi(todayFlow.today())) }
+    private fun exportFinished(saved: Boolean) {
+        if (saved) {
+            localExportHistory.recordExport()
+            updateState { copy(lastExport = localExportHistory.toLastExportUi(todayFlow.today())) }
+        }
+        sendEffect(ProfileEffect.Notify(if (saved) ProfileMessage.ExportDone else ProfileMessage.ExportFailed))
     }
 
     private fun importFromJson(json: String) = launchOp(

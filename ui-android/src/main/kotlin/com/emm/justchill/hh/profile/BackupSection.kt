@@ -31,10 +31,10 @@ import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
-import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE
-import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE_ACTION
-import com.emm.justchill.hh.shared.BACKUP_LOCAL_ONLY_WARNING
-import com.emm.justchill.hh.shared.toMetaText
+import com.emm.justchill.hh.profile.BACKUP_DESTINATION_DISCLOSURE
+import com.emm.justchill.hh.profile.BACKUP_DESTINATION_DISCLOSURE_ACTION
+import com.emm.justchill.hh.profile.BACKUP_LOCAL_ONLY_WARNING
+import com.emm.justchill.hh.profile.toMetaText
 
 @Composable
 internal fun BackupSection(

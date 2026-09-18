@@ -1,9 +1,8 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.hh.profile
 
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.domain.shared.backup.BackupRowCounts
 import com.emm.justchill.core.domain.shared.backup.BackupVerification
-import com.emm.justchill.hh.profile.ProfileMessage
 
 fun ProfileMessage.Backup.toBackupText(): String = when (this) {
     ProfileMessage.BackupDone -> "Listo, tu respaldo está en la nube."

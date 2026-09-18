@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import com.emm.justchill.hh.profile.ProfileMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -30,15 +29,15 @@ interface PlatformHostActions {
     val onOpenEmailApp: () -> Unit
 
     /**
-     * `onSaved` fires only once the bytes are on disk. A picker the user backed out of and a write
-     * that failed are both silent on this channel — an implementation that fires it earlier lets a
-     * caller record an export nobody has.
+     * `onResult` fires with `true` only once the bytes are on disk, and with `false` when the write
+     * failed. A picker the user backed out of is silent on this channel, so the caller never hears
+     * about an export nobody asked to finish.
      */
-    val requestExport: (json: String, onSaved: () -> Unit) -> Unit
+    val requestExport: (json: String, onResult: (saved: Boolean) -> Unit) -> Unit
     val requestImport: () -> Unit
 }
 
-private class PendingExport(val json: String, val onSaved: () -> Unit)
+private class PendingExport(val json: String, val onResult: (Boolean) -> Unit)
 
 /**
  * Call at the [AppNavHost] root, never inside an `entry<...> { }` body: the SAF launchers must be
@@ -62,19 +61,12 @@ fun rememberPlatformHostActions(
         val pending = pendingExport
         pendingExport = null
         if (uri != null && pending != null) {
-            val ok = runCatching {
+            val saved: Boolean = runCatching {
                 context.contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.bufferedWriter().use { it.write(pending.json) }
                 } != null
             }.getOrDefault(false)
-            if (ok) pending.onSaved()
-            val message = if (ok) ProfileMessage.ExportDone else ProfileMessage.ExportFailed
-            scope.launch {
-                snackbarHostState.showEmmSnackbar(
-                    message = message.toText(),
-                    tone = if (ok) EmmSnackbarTone.Success else EmmSnackbarTone.Error,
-                )
-            }
+            pending.onResult(saved)
         }
     }
 
@@ -119,8 +111,8 @@ fun rememberPlatformHostActions(
                 }
             }
 
-            override val requestExport: (String, () -> Unit) -> Unit = { json, onSaved ->
-                pendingExport = PendingExport(json, onSaved)
+            override val requestExport: (String, (Boolean) -> Unit) -> Unit = { json, onResult ->
+                pendingExport = PendingExport(json, onResult)
                 exportLauncher.launch(suggestedExportFilename())
             }
 
