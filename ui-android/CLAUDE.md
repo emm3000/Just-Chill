@@ -2,7 +2,7 @@
 
 Android's Compose UI module: screens, navigation, theme and atoms. It renders what `:presentation` exposes and owns nothing else: no ViewModels, no DI, no formatters. No Koin module here, and no exception: a new feature registers its module in `:presentation`'s `appModules()`.
 
-Plain `com.android.library` (ADR 011), root package `com.emm.justchill.{hh.<feature>, core, components}`, `minSdk = 28`. Depends on `:presentation` (api, which re-exports `:core:ui`), `:core:domain`, `:core:database`. A feature owns `hh/<feature>/`: its Screens plus `<Feature>Entries.kt` for nav wiring. Cross-feature: `hh/shared/` (nav host, routes, bottom bar), `core/theme/` (the tokens), `core/ui/atoms/` (the design system), `components/` (legacy `Emm*` widgets, not the design system). Which atom and which token, and the routes rules: `.claude/rules/ui-components.md`, `.claude/rules/architecture.md`.
+Plain `com.android.library` (ADR 011), root package `com.emm.justchill.{hh.<feature>, core, components}`, `minSdk = 28`. Depends on `:presentation` (api), `:core:ui`, `:core:domain`, `:core:database`. A feature owns `hh/<feature>/`: its Screens plus `<Feature>Entries.kt` for nav wiring. Cross-feature: `hh/shared/` (nav host, routes, bottom bar), `core/theme/` (the tokens), `core/ui/atoms/` (the design system), `components/` (legacy `Emm*` widgets, not the design system). Which atom and which token, and the routes rules: `.claude/rules/ui-components.md`, `.claude/rules/architecture.md`.
 
 ## Navigation shell
 
@@ -20,4 +20,4 @@ Plain `com.android.library` (ADR 011), root package `com.emm.justchill.{hh.<feat
 
 ## Testing
 
-`./gradlew :ui-android:testDebugUnitTest`. Pure UI logic gets a plain function next to the screen and a test here (`commitHashUi()` is the pattern). There is no Compose UI test harness. The Koin graph test and the formatter/mapper suites belong to `:presentation`.
+`./gradlew :ui-android:testDebugUnitTest`. Pure UI logic gets a plain function next to the screen and a test here (`commitHashUi()` is the pattern). There is no Compose UI test harness. The Koin graph test and the mapper suites belong to `:presentation`, the formatter suites to `:core:ui`.

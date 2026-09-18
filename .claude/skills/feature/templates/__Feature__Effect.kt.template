@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.__feature__
 
 import com.emm.justchill.core.domain.shared.error.DomainException
-import com.emm.justchill.core.mvi.UiEffect
+import com.emm.justchill.core.ui.mvi.UiEffect
 
 sealed interface __Feature__Effect : UiEffect {
     data object NavigateBack : __Feature__Effect
