@@ -74,8 +74,7 @@ qualityGate {
     detektTasks.addAll("detektDevDebug", "detektDevDebugUnitTest", "detektProdRelease")
 }
 
-// Android lint is deliberately absent: it cost more than half the gate's unconditional floor on a
-// PR, and .github/workflows/uploadApk.yml now runs it alongside the gate on every trunk push.
+// Android lint is deliberately absent; .github/workflows/uploadApk.yml runs it on every trunk push.
 tasks.named("qualityGate") {
     dependsOn("testDevDebugUnitTest")
 }
