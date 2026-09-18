@@ -4,8 +4,8 @@ import com.emm.justchill.core.domain.loan.Loan
 import com.emm.justchill.core.domain.loan.remaining
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.ui.format.SpanishDateFormat
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 
 data class LoanSummaryUi(
     val personName: String,
@@ -25,11 +25,11 @@ fun loanSummaryUi(loan: Loan, paidSoFar: Money): LoanSummaryUi {
     val remainingMoney = remaining(loan.totalDue, paidSoFar)
     return LoanSummaryUi(
         personName = loan.personName,
-        principal = formatNeutral(fromCentsToSolesWith(loan.principal)),
+        principal = formatNeutral(loan.principal.format()),
         interestPercentLabel = "${bpsToPercentText(loan.interestBps)}%",
-        totalDue = formatNeutral(fromCentsToSolesWith(loan.totalDue)),
-        paidSoFar = formatNeutral(fromCentsToSolesWith(paidSoFar)),
-        remaining = formatNeutral(fromCentsToSolesWith(remainingMoney)),
+        totalDue = formatNeutral(loan.totalDue.format()),
+        paidSoFar = formatNeutral(paidSoFar.format()),
+        remaining = formatNeutral(remainingMoney.format()),
         remainingCents = remainingMoney.cents,
         readableLentAt = SpanishDateFormat.longDate(loan.lentAt.date),
         note = loan.note,

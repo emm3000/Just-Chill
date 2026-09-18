@@ -14,7 +14,8 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
 | `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
-| `:presentation` | Compose-free MVI core, ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, formatters, `UiStrings`. |
+| `:core:ui` | The MVI base and the Spanish money, date and search formatters every feature shares. |
+| `:presentation` | Compose-free ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, the feature copy, `UiStrings`. |
 | `:ui-android` | Compose screens, navigation, theme tokens and atoms. |
 | `:androidApp` | `MainActivity`, `EmmApp`, the platform Koin module, flavors, shortcuts, the session keystore. |
 
@@ -23,9 +24,10 @@ Allowed dependencies, and nothing else:
 ```
 androidApp   -> ui-android, presentation, core:backup, core:database, core:domain
 ui-android   -> presentation, core:database, core:domain
-presentation -> core:backup, core:database, core:domain
+presentation -> core:backup, core:database, core:ui, core:domain
 core:backup  -> core:domain
 core:database -> core:domain
+core:ui      -> core:domain
 ```
 
 - `:core:domain` is pure Kotlin (`kotlin("jvm")`): `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve there; the rest is convention, reviewed.

@@ -12,10 +12,8 @@ fun formatNeutral(value: String): String = "$CURRENCY_SYMBOL $value"
 
 // NumberFormatEs.cents() applies abs() internally, so a Money that can be negative must branch on
 // sign here or lose it silently.
-fun Money.balanceFormatted(): String =
-    if (cents < 0L) formatExpense(fromCentsToSolesWith(this)) else formatNeutral(fromCentsToSolesWith(this))
+fun Money.balanceFormatted(): String = if (cents < 0L) formatExpense(format()) else formatNeutral(format())
 
 // A positive net or balance aggregate is signed + here so the call site can tint it success; zero
 // and negative fall through to balanceFormatted unchanged.
-fun Money.positiveMoneyFormatted(): String =
-    if (cents > 0L) formatIncome(fromCentsToSolesWith(this)) else balanceFormatted()
+fun Money.positiveMoneyFormatted(): String = if (cents > 0L) formatIncome(format()) else balanceFormatted()

@@ -2,8 +2,8 @@ package com.emm.justchill.hh.loan
 
 import com.emm.justchill.core.domain.loan.LoanBalance
 import com.emm.justchill.core.ui.format.SpanishDateFormat
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 
 data class LoanRowUi(
     val loanId: String,
@@ -17,10 +17,10 @@ data class LoanRowUi(
 
 private fun LoanBalance.toUi() = LoanRowUi(
     loanId = loan.id.value,
-    principal = formatNeutral(fromCentsToSolesWith(loan.principal)),
-    totalDue = formatNeutral(fromCentsToSolesWith(loan.totalDue)),
-    paidSoFar = formatNeutral(fromCentsToSolesWith(paidSoFar)),
-    remaining = formatNeutral(fromCentsToSolesWith(remaining)),
+    principal = formatNeutral(loan.principal.format()),
+    totalDue = formatNeutral(loan.totalDue.format()),
+    paidSoFar = formatNeutral(paidSoFar.format()),
+    remaining = formatNeutral(remaining.format()),
     isSettled = remaining.cents == 0L,
     readableLentAt = SpanishDateFormat.longDate(loan.lentAt.date),
 )

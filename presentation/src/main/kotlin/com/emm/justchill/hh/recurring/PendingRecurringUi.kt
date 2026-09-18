@@ -5,9 +5,9 @@ import com.emm.justchill.core.domain.recurring.periodKey
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 import com.emm.justchill.core.ui.format.monthYearLabel
 
 data class PendingRecurringUi(
@@ -32,7 +32,7 @@ fun PendingRecurring.toPendingRecurringUi(currentMonth: YearMonth): PendingRecur
     val formatted = if (isVariable) {
         "Variable"
     } else {
-        val raw = fromCentsToSolesWith(movement.amount as Money)
+        val raw = (movement.amount as Money).format()
         when (movement.type) {
             TransactionType.Income -> formatIncome(raw)
             TransactionType.Spend -> formatExpense(raw)

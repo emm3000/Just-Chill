@@ -2,9 +2,9 @@ package com.emm.justchill.hh.recurring
 
 import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
-import com.emm.justchill.core.ui.format.fromCentsToSolesWith
 
 data class RecurringMovementUi(
     val id: String,
@@ -24,7 +24,7 @@ fun RecurringMovementDetails.toRecurringMovementUi(): RecurringMovementUi {
     val formatted = if (fixedAmount == null) {
         "Variable"
     } else {
-        val raw = fromCentsToSolesWith(fixedAmount)
+        val raw = fixedAmount.format()
         when (type) {
             TransactionType.Income -> formatIncome(raw)
             TransactionType.Spend -> formatExpense(raw)
