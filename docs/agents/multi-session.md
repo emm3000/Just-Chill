@@ -51,7 +51,7 @@ Every dispatch to a peer session must include:
 - For any ticket that adds or changes behavior (a use case, a ViewModel rule, a derived `UiState` field), an instruction to load `mattpocock-skills:tdd` and work red, green, refactor, writing the failing behavior test before the code. Pure layout or restyle tickets skip it.
 - For any screen-touching ticket, a visual check on the `medium_phone` emulator: screenshot every changed screen with `adb exec-out screencap -p` and compare against `.claude/rules/ui-components.md`. Publish the screenshots on a branch named `assets/<N>-visual-check`, with the PR head short SHA in every file name (`home-<sha>.png`), and link them in the PR body with `raw.githubusercontent.com` URLs; the `gh` CLI cannot attach images to a PR. The assets branch is deleted when the cycle closes.
 - An instruction to keep the slice small and stop and report instead of expanding scope.
-- An instruction to open the PR with `Closes #N`, not merge it, not watch CI, and message the orchestrator the PR URL in 1-2 lines.
+- An instruction to open the PR with `Closes #N`, not merge it, not watch CI, and message the orchestrator the PR URL in 1-2 lines. The peer pushes its own ticket branch, its assets branch and any `--force-with-lease` after a rebase, and runs `gh pr create`, without asking the owner: those are the deliverable, not a decision. Only a push to `trunk` needs the owner's OK, and a peer never pushes to `trunk`. *Why: on 2026-09-18 two peers asked the owner before pushing their own branch and stalled the wave.*
 
 ## Launching peers
 
@@ -67,11 +67,12 @@ Every dispatch to a peer session must include:
 - `git checkout trunk` fails inside a worktree while the primary worktree is already on `trunk`; use `git fetch` + `git switch -c <branch> origin/trunk` instead.
 - Cleanup is part of closing the cycle, not a later chore (see Between tickets).
 
-## Isolation: emulator
+## Isolation: emulators
 
-- `medium_phone` is the only AVD. Never boot a second one and never seed a database into it. A migration change runs `:core:database:connectedDebugAndroidTest` there before `trunk`.
-- Because there is one emulator, screen-touching tickets in the same wave take turns: a peer installs with `./gradlew installDevDebug` only after the orchestrator confirms nobody else is mid-check, and reports when its screenshots are on the assets branch.
-- Shut the emulator down (`adb emu kill`) when the review cycle closes, together with the worktree cleanup. Keep the AVD.
+- `medium_phone` (API 36, 1080×2400 @420) holds the dev app's sample data and runs `:core:database:connectedDebugAndroidTest` before any schema change ships. Never seed a database into it and never create a new AVD for it.
+- Peers use the shared AVD pool, one AVD per session, the same phone profile on API 35: `gema-setup`, `gema-students`, `gema-sections`, `gema-activities`, `gema-evaluation`. The orchestrator names the AVD and the port in the dispatch; a session boots only what it was given: `emulator -avd <avd> -port <port> -no-snapshot-save &` gives serial `emulator-<port>`. Never two sessions on one AVD: a second instance of the same AVD needs `-read-only` on every instance, the first included, and the failure lands on the follower. *Why: on 2026-09-18 four peers queued on `medium_phone`, then a `-read-only` second instance failed because the first boot lacked the flag; the owner: reuse Gema's AVDs, one per agent.*
+- `./gradlew installDevDebug` installs on **every** connected adb device. Install with `ANDROID_SERIAL=<serial> ./gradlew installDevDebug` and scope every adb call, screenshots included, with `adb -s <serial>`. Never install on another session's emulator. The pool AVDs carry no sample data: create what the screen needs through the app.
+- When the review cycle closes, the peer shuts its own emulator down with `adb -s <serial> emu kill`, never a bare `adb emu kill`, together with the worktree cleanup. Keep the AVDs. Never shut down an emulator another session still uses. Four emulators plus four Gradle daemons is the Mac's known ceiling: the orchestrator staggers the boots instead of queueing the checks.
 
 ## Review cycle
 

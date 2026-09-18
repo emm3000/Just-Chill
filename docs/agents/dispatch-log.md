@@ -13,7 +13,7 @@ Totals of rows already folded out of Recent.
 | Row | Model:effort | PRs | MERGE | FIX FIRST checklist | FIX FIRST judgment | FIX FIRST spec |
 |---|---|---|---|---|---|---|
 | 1 | sonnet:low | 0 | 0 | 0 | 0 | 0 |
-| 2 | sonnet:medium | 0 | 0 | 0 | 0 | 0 |
+| 2 | sonnet:medium | 5 | 0 | 1 | 3 | 1 |
 | 3 | opus:medium | 0 | 0 | 0 | 0 | 0 |
 | 4 | opus:high | 0 | 0 | 0 | 0 | 0 |
 
@@ -23,11 +23,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause |
 |---|---|---|---|---|---|
-| #134 | #129 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | spec |
-| #136 | #130 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | checklist |
-| #137 | #133 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | judgment |
-| #135 | #132 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | judgment |
-| #139 | #131 | 1 (raised to 2: comment survival is judgment) | sonnet:medium | FIX FIRST | judgment |
 | #141 | #138 | 3 | opus:medium | FIX FIRST | checklist |
 | #143 | #106 | 4 | opus:high | FIX FIRST | checklist |
 | #144 | #107 | 4 | opus:high | MERGE | - |
@@ -42,3 +37,9 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #170 | #167 | 3 | opus:high | FIX FIRST | judgment |
 | #171 | #157 | 3 | opus:high | MERGE | - |
 | #172 | #112 | 4 | opus:high | FIX FIRST | checklist |
+| #176 | #113 | 4 | opus:high | MERGE | - |
+| #177 | #175 | 3 | opus:medium | FIX FIRST | checklist |
+| #178 | #116 | 4 | opus:high | MERGE | - |
+| #181 | #115 | 4 | opus:high | MERGE | - |
+| #183 | #117 | 4 | opus:high | MERGE | - |
+| #184 | #114 | 4 | opus:high | MERGE | - |
