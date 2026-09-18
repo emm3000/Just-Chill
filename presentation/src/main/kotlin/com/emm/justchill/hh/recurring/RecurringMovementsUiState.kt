@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.core.ui.mvi.UiState
 
 data class RecurringMovementsUiState(
     val activeItems: List<RecurringMovementUi> = emptyList(),

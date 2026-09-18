@@ -40,6 +40,7 @@ import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.transaction.components.ACCOUNT_CHIP_WEIGHT
 import com.emm.justchill.hh.transaction.components.CATEGORY_CHIP_WEIGHT

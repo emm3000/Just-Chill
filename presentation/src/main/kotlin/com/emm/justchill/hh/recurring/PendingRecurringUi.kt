@@ -5,10 +5,10 @@ import com.emm.justchill.core.domain.recurring.periodKey
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.hh.shared.formatExpense
-import com.emm.justchill.hh.shared.formatIncome
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
-import com.emm.justchill.hh.shared.monthYearLabel
+import com.emm.justchill.core.ui.format.formatExpense
+import com.emm.justchill.core.ui.format.formatIncome
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
+import com.emm.justchill.core.ui.format.monthYearLabel
 
 data class PendingRecurringUi(
     val id: String,

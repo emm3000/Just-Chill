@@ -41,6 +41,8 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.format.formatCentsForDisplay
 import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.category.AppIconCatalog
 import com.emm.justchill.hh.category.allColors

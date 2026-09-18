@@ -13,7 +13,7 @@ import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.time.FakeTodayFlow
-import com.emm.justchill.hh.transaction.moneyCentsString
+import com.emm.justchill.core.ui.format.moneyCentsString
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

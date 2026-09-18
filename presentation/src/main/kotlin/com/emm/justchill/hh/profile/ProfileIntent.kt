@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.profile
 
-import com.emm.justchill.core.mvi.UiIntent
+import com.emm.justchill.core.ui.mvi.UiIntent
 
 sealed interface ProfileIntent : UiIntent {
     data object ExportRequested : ProfileIntent

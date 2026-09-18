@@ -2,7 +2,7 @@ package com.emm.justchill.hh.loan
 
 import com.emm.justchill.core.domain.loan.LoanRepository
 import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.mvi.MviViewModel
+import com.emm.justchill.core.ui.mvi.MviViewModel
 import kotlinx.coroutines.flow.onEach
 
 class LoansViewModel(loanRepository: LoanRepository) :

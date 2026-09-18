@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.core.ui.format
 
 import kotlin.math.abs
 import kotlin.math.floor

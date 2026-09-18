@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.justchill.core.mvi.UiEffect
+import com.emm.justchill.core.ui.mvi.UiEffect
 
 sealed interface AddEditRecurringMovementEffect : UiEffect {
     data object NavigateBack : AddEditRecurringMovementEffect

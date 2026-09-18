@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.category
 
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.core.ui.mvi.UiState
 import com.emm.justchill.hh.shared.Empty
 
 data class AddCategoryUiState(

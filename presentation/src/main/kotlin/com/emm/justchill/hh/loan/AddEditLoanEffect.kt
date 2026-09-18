@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.justchill.core.mvi.UiEffect
+import com.emm.justchill.core.ui.mvi.UiEffect
 
 sealed interface AddEditLoanEffect : UiEffect {
     data object NavigateBack : AddEditLoanEffect

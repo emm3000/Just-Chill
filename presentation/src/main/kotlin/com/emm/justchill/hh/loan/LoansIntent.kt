@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.loan
 
-import com.emm.justchill.core.mvi.UiIntent
+import com.emm.justchill.core.ui.mvi.UiIntent
 
 sealed interface LoansIntent : UiIntent {
     data class OnPersonClick(val personKey: String) : LoansIntent

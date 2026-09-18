@@ -13,15 +13,17 @@ No third-party users, but **the author runs the release daily on a device holdin
 ```
 androidApp     -> ui-android, presentation, core:backup, core:database, core:domain
 ui-android     -> presentation, core:database, core:domain
-presentation   -> core:backup, core:database, core:domain
+presentation   -> core:backup, core:database, core:ui, core:domain
 core:backup    -> core:domain
 core:database  -> core:domain
+core:ui        -> core:domain
 ```
 
 - `:core:domain` — **pure Kotlin** (`kotlin("jvm")`): models, value objects, use cases and the repository interfaces. `kotlinx-coroutines-core` and `kotlinx-datetime` only.
 - `:core:database` — the domain interfaces implemented: SQLDelight (`JustChillDatabase`, the schema and migrations), mappers, and `SnapshotStore` over the six tables.
 - `:core:backup` — the snapshot file and the account it needs: DTOs, decoder, Supabase Storage, the backup cycle and auth. Never depends on `:core:database`.
-- `:presentation` — the compose-free MVI core, every ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, formatters.
+- `:core:ui` — the UI vocabulary more than one feature uses: the MVI base (`MviViewModel` and its contracts) and the Spanish money, date and search formatters. Never depends on `:core:database` or `:core:backup`.
+- `:presentation` — every ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, the feature copy. Compose-free, and it re-exports `:core:ui` as `api`.
 - `:ui-android` — Compose screens, navigation, theme tokens and atoms. Same Kotlin packages as `:presentation` on purpose.
 - `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 

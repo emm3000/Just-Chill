@@ -1,4 +1,4 @@
-package com.emm.justchill.core.mvi
+package com.emm.justchill.core.ui.mvi
 
 import com.emm.justchill.core.domain.shared.error.DomainException
 import kotlinx.coroutines.CancellationException

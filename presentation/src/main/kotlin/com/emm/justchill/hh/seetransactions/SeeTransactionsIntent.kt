@@ -2,7 +2,7 @@ package com.emm.justchill.hh.seetransactions
 
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.mvi.UiIntent
+import com.emm.justchill.core.ui.mvi.UiIntent
 
 sealed interface SeeTransactionsIntent : UiIntent {
     data object OnPreviousMonth : SeeTransactionsIntent

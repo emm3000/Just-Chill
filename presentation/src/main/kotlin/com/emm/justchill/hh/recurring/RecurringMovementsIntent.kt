@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.recurring
 
-import com.emm.justchill.core.mvi.UiIntent
+import com.emm.justchill.core.ui.mvi.UiIntent
 
 sealed interface RecurringMovementsIntent : UiIntent {
     data object NavigateToAdd : RecurringMovementsIntent

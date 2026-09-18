@@ -1,6 +1,7 @@
-package com.emm.justchill.core.format
+package com.emm.justchill.core.ui.format
 
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.hh.shared.NumberFormatEs
 
 fun Money.format(): String = NumberFormatEs.cents(cents)
+
+fun fromCentsToSolesWith(money: Money): String = money.format()

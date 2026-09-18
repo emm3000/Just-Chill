@@ -2,7 +2,7 @@ package com.emm.justchill.hh.loan
 
 import com.emm.justchill.core.domain.loan.PersonBalance
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.hh.shared.positiveMoneyFormatted
+import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 
 // remainingIsPositive is the raw sign remaining already formats into +/nothing — tone (success vs
 // monochrome) lives at the render site, not here.

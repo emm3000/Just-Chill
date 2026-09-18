@@ -10,8 +10,8 @@ import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.mvi.MviViewModel
 import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.ui.mvi.MviViewModel
 import com.emm.justchill.hh.loan.owingNames
 import com.emm.justchill.hh.loan.totalOwedFormatted
 import com.emm.justchill.hh.loan.totalOwedIsPositive

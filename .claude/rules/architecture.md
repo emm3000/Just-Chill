@@ -65,7 +65,7 @@ This is not duplication to be removed. See `principles.md`, DRY.
 
 ## MVI contract
 
-Naming lives in `naming.md`. This is the flow. The base class is `core/mvi/MviViewModel.kt` in `:presentation`.
+Naming lives in `naming.md`. This is the flow. The base class is `mvi/MviViewModel.kt` in `:core:ui`.
 
 - **One state object per feature.** `<Feature>UiState : UiState` is a `data class` (or a `sealed interface` of data classes) with every field `val` and immutable collections. `:ui-android` declares these classes stable in `compose_stability.conf`; a `var` or a `MutableMap` turns that declaration into a lie no compiler catches.
 - **One public entry point.** `MviViewModel<S, I, E>` exposes `state: StateFlow<S>`, `effect: Flow<E>` and `onIntent(intent: I)`. A screen reaches its ViewModel through those three and nothing else.

@@ -46,7 +46,7 @@ Nothing enforces these rules mechanically: detekt sees Kotlin, not dp, and the g
 ### Typography
 
 - Two families split by job: Inter for language, IBM Plex Mono with `tnum` for every `amount*` role, both bundled. Pick a role by intent: `amountHero` / `amountL` for the one number a screen exists to show, `amountCard` inside a card, `amountLead` for the amount a row leads with, `amountM` / `amountS` where the label leads; `display` / `headlineL` / `headlineM` for titles, `titleL` / `titleM` for cards and section headers, `bodyL` (default) / `bodyM` for running text, `labelL` / `labelM` for buttons and chips, `caption` for metadata, `eyebrow` only through the `Eyebrow` atom.
-- Number formatting is owned by `:presentation`'s `NumberFormatEs.kt` and `CurrencyFormat.kt` and pinned by their golden tests: comma thousands, dot decimals (es-PE, hardcoded), `S/` before the number with one space, the sign before the symbol (`+S/ 1,234.56`), the Unicode minus `−` never the hyphen, two decimals always. In a hero amount the prefix and decimals are deemphasised so the integer part carries the glance.
+- Number formatting is owned by `:core:ui`'s `NumberFormatEs.kt` and `CurrencyFormat.kt` and pinned by their golden tests: comma thousands, dot decimals (es-PE, hardcoded), `S/` before the number with one space, the sign before the symbol (`+S/ 1,234.56`), the Unicode minus `−` never the hyphen, two decimals always. In a hero amount the prefix and decimals are deemphasised so the integer part carries the glance.
 - Italics are reserved for a secondary meta label (the `Variable` marker, a note). Never an amount.
 - Forbidden: all caps outside `Eyebrow`; text sized in `dp`; more than two weights on one screen; mixed alignment inside one vertical column.
 

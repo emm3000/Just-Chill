@@ -6,10 +6,11 @@ import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.mvi.UiState
+import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.format.relativeDayLabel
+import com.emm.justchill.core.ui.mvi.UiState
 import com.emm.justchill.hh.shared.Empty
 import com.emm.justchill.hh.shared.comboLabel
-import com.emm.justchill.hh.shared.relativeDayLabel
 import kotlinx.datetime.LocalDate
 
 data class FrequentUsage(

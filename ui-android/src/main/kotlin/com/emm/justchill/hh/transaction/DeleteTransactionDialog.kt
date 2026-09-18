@@ -34,6 +34,7 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.theme.EmmTheme
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.format.formatCentsForDisplay
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 
 @Composable

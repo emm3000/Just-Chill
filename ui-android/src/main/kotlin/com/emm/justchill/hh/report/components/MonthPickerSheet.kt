@@ -41,7 +41,7 @@ import com.emm.justchill.core.theme.InterFontFamily
 import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.hh.shared.monthAbbrevLabel
+import com.emm.justchill.core.ui.format.monthAbbrevLabel
 import kotlinx.datetime.Month
 
 @Composable

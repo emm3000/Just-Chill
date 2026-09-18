@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.core.ui.format
 
 import com.emm.justchill.core.domain.shared.Money
 import org.junit.Test

@@ -5,9 +5,9 @@ import com.emm.justchill.core.domain.recurring.GetRecurringMonthlyTotalsUseCase
 import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
 import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.mvi.MviViewModel
-import com.emm.justchill.hh.shared.formatNeutral
-import com.emm.justchill.hh.shared.fromCentsToSolesWith
+import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.format.fromCentsToSolesWith
+import com.emm.justchill.core.ui.mvi.MviViewModel
 import kotlinx.coroutines.flow.onEach
 
 class RecurringMovementsViewModel(
