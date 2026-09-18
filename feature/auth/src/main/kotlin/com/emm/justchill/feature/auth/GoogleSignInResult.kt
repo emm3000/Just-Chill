@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.auth
+package com.emm.justchill.feature.auth
 
 sealed interface GoogleSignInResult {
     data class Success(val idToken: String, val rawNonce: String) : GoogleSignInResult

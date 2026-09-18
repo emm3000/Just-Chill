@@ -46,6 +46,8 @@ import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountEntries
+import com.emm.justchill.feature.auth.AuthRoute
+import com.emm.justchill.feature.auth.authEntries
 import com.emm.justchill.feature.category.CategoriesListRoute
 import com.emm.justchill.feature.category.CategoryRoute
 import com.emm.justchill.feature.category.categoryEntries
@@ -56,7 +58,6 @@ import com.emm.justchill.feature.onboarding.onboardingEntries
 import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringEntries
 import com.emm.justchill.feature.report.reportEntries
-import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.profile.profileEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
 import com.emm.justchill.hh.shared.AddTransactionRoute
@@ -176,6 +177,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         onCategoriesClick = { nav -> nav.push(CategoriesListRoute) },
                         onRecurringClick = { nav -> nav.push(RecurringMovementsRoute) },
                         onAboutClick = { nav -> nav.push(ManifestoRoute(isRevisit = true)) },
+                        onSignInClick = { nav -> nav.push(AuthRoute) },
                     )
                 },
             )

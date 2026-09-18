@@ -23,7 +23,6 @@ import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.hh.profile.toText
-import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +38,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
     onCategoriesClick: (AppNavigator) -> Unit,
     onRecurringClick: (AppNavigator) -> Unit,
     onAboutClick: (AppNavigator) -> Unit,
+    onSignInClick: (AppNavigator) -> Unit,
 ) {
     entry<ProfileRoute> {
         ProfileEntry(
@@ -50,6 +50,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
             onCategoriesClick = onCategoriesClick,
             onRecurringClick = onRecurringClick,
             onAboutClick = onAboutClick,
+            onSignInClick = onSignInClick,
         )
     }
 
@@ -71,6 +72,7 @@ private fun ProfileEntry(
     onCategoriesClick: (AppNavigator) -> Unit,
     onRecurringClick: (AppNavigator) -> Unit,
     onAboutClick: (AppNavigator) -> Unit,
+    onSignInClick: (AppNavigator) -> Unit,
 ) {
     val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
     val vm: ProfileViewModel = koinViewModel()
@@ -141,7 +143,7 @@ private fun ProfileEntry(
         onPrivacyClick = {
             if (bindings.platform.supportsPrivacyPolicy) nav.push(PrivacyPolicyRoute)
         },
-        onSignInClick = { nav.push(AuthRoute) },
+        onSignInClick = { onSignInClick(nav) },
         onSignOutClick = { vm.onIntent(ProfileIntent.SignOut) },
         onDeleteAccountClick = { vm.onIntent(ProfileIntent.DeleteAccount) },
         onBackUpNowClick = { vm.onIntent(ProfileIntent.BackUpNow) },

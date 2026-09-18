@@ -1,6 +1,8 @@
-package com.emm.justchill.hh.auth
+package com.emm.justchill.core.auth
 
 import com.emm.justchill.core.platform.CurrentActivityHolder
+import com.emm.justchill.feature.auth.GoogleSignInLauncher
+import com.emm.justchill.feature.auth.GoogleSignInResult
 
 class ActivityGoogleSignInLauncher(
     private val activityHolder: CurrentActivityHolder,

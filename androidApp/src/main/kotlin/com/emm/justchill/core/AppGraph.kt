@@ -3,7 +3,6 @@ package com.emm.justchill.core
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.commonCoreModule
-import com.emm.justchill.hh.di.authModule
 import com.emm.justchill.hh.di.backupModule
 import com.emm.justchill.hh.di.dataModule
 import com.emm.justchill.hh.di.profileModule
@@ -32,7 +31,6 @@ fun appModules(platformModule: Module): List<Module> = listOf(
     backupModule,
     sharedModule,
     supabaseModule,
-    authModule,
     dataModule,
     commonCoreModule,
     transactionWiring,

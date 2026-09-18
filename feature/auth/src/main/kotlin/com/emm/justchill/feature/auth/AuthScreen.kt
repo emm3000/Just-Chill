@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.auth
+package com.emm.justchill.feature.auth
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -69,7 +69,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-import com.emm.justchill.shared.R
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
