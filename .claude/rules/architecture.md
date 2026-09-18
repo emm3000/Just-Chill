@@ -23,7 +23,7 @@ Allowed dependencies, and nothing else:
 
 ```
 androidApp   -> ui-android, presentation, core:backup, core:database, core:domain
-ui-android   -> presentation, core:database, core:domain
+ui-android   -> presentation, core:database, core:ui, core:domain
 presentation -> core:backup, core:database, core:ui, core:domain
 core:backup  -> core:domain
 core:database -> core:domain

@@ -1,6 +1,6 @@
 package com.emm.justchill.hh.__feature__
 
-import com.emm.justchill.core.mvi.UiIntent
+import com.emm.justchill.core.ui.mvi.UiIntent
 
 sealed interface __Feature__Intent : UiIntent {
     data object Back : __Feature__Intent
