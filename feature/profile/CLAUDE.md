@@ -29,5 +29,5 @@ One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState`
 
 ## Screens
 
-- The privacy policy screen still uses raw Material3 `Button`, and `ProfileEntries`' `ImportConfirmationDialog` a raw `AlertDialog` with `TextButton` and `Text`. Both came over unchanged and owe an atoms pass (`.claude/rules/ui-components.md`); the dialog's confirm colour is already `LocalEmmColors.danger`, so only the containers are the debt.
+- The privacy policy screen uses `FilledCta` and `ProfileEntries`' `ImportConfirmationDialog` uses `EmmDialog` (`.claude/rules/ui-components.md`); the atoms pass on both landed in #202.
 - `commitHashUi()` is the pattern for pure UI logic: a plain function beside the screen with a test here, never logic inside a composable.
