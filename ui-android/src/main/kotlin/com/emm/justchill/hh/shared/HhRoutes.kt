@@ -8,9 +8,6 @@ import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 @Serializable
-data class ManifestoRoute(val isRevisit: Boolean = false) : AppRoute
-
-@Serializable
 data object PrivacyPolicyRoute : AppRoute
 
 @Serializable
@@ -39,7 +36,6 @@ data object RecurringMovementsRoute : AppRoute
 data class AddEditRecurringMovementRoute(val id: String? = null) : AppRoute
 
 val hhRoutes: List<KClass<out AppRoute>> = listOf(
-    ManifestoRoute::class,
     PrivacyPolicyRoute::class,
     SeeTransactionRoute::class,
     ProfileRoute::class,
