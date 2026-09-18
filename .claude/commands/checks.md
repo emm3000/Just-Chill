@@ -6,10 +6,10 @@ disable-model-invocation: true
 
 Run the standard pre-commit checks for this Android repo:
 
-1. `./gradlew qualityGate` — detekt per module, every host test suite, `:core:database`'s instrumented compile, `verifySqlDelightMigration`, `:androidApp:lintDevDebug`, `:build-logic:convention:test`. Report any violation or failing test.
+1. `./gradlew qualityGate` — the gate, whose task list is the `qualityGate` task `description` in `build-logic/.../QualityGateConventionPlugin.kt`. Report any violation or failing test.
 2. `./gradlew assembleDevDebug` — the gate excludes the build on purpose; report any compile error.
 
-`qualityGate` is defined once in `build-logic/.../QualityGateConventionPlugin.kt` plus the unit tests the library plugins add and `:androidApp`'s own `tasks.named("qualityGate")` block. Never substitute plain `./gradlew detekt`: it covers strictly less.
+The gate is that plugin plus the unit tests the library plugins add and `:androidApp`'s own `tasks.named("qualityGate")` block. Never substitute plain `./gradlew detekt`: it covers strictly less.
 
 Group findings by module (`:core:domain`, `:core:database`, `:presentation`, `:ui-android`, `:androidApp`, `:build-logic`). For each violation include `file:line` and the rule/test name. Test tasks go `UP-TO-DATE` across sessions; add `--rerun` per task when a real run is needed.
 
