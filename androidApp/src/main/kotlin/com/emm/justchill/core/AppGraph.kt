@@ -9,7 +9,6 @@ import com.emm.justchill.hh.di.dataModule
 import com.emm.justchill.hh.di.loanModule
 import com.emm.justchill.hh.di.profileModule
 import com.emm.justchill.hh.di.recurringModule
-import com.emm.justchill.hh.di.reportModule
 import com.emm.justchill.hh.di.seetransactionsModule
 import com.emm.justchill.hh.di.sharedModule
 import com.emm.justchill.hh.di.supabaseModule
@@ -34,7 +33,6 @@ fun appModules(platformModule: Module): List<Module> = listOf(
     seetransactionsModule,
     loanModule,
     recurringModule,
-    reportModule,
     profileModule,
     backupModule,
     sharedModule,

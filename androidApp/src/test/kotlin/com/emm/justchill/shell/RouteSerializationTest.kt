@@ -13,6 +13,8 @@ import com.emm.justchill.feature.account.accountRoutes
 import com.emm.justchill.feature.category.CategoriesListRoute
 import com.emm.justchill.feature.category.CategoryRoute
 import com.emm.justchill.feature.category.categoryRoutes
+import com.emm.justchill.feature.report.ReportRoute
+import com.emm.justchill.feature.report.reportRoutes
 import com.emm.justchill.hh.shared.AddEditLoanRoute
 import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
@@ -25,7 +27,6 @@ import com.emm.justchill.hh.shared.PersonLoansRoute
 import com.emm.justchill.hh.shared.PrivacyPolicyRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.RecurringMovementsRoute
-import com.emm.justchill.hh.shared.ReportRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.hhRoutes
 import kotlinx.serialization.KSerializer
@@ -71,7 +72,7 @@ class RouteSerializationTest {
     }
 
     private val registries: List<List<KClass<out AppRoute>>> =
-        listOf(hhRoutes, accountRoutes, categoryRoutes)
+        listOf(hhRoutes, accountRoutes, categoryRoutes, reportRoutes)
 
     /**
      * Data classes get NON-DEFAULT field values on purpose: a field whose serializer is broken then

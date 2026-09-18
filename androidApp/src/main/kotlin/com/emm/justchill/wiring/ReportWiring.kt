@@ -1,8 +1,21 @@
 package com.emm.justchill.wiring
 
+import com.emm.justchill.core.domain.report.GetMonthlyAmountByCategoryUseCase
+import com.emm.justchill.core.domain.report.GetMonthlyComparisonUseCase
+import com.emm.justchill.core.domain.report.GetMonthlySectionStatsUseCase
+import com.emm.justchill.core.domain.report.GetSavingsRateUseCase
+import com.emm.justchill.core.domain.report.GetTopCategoriesOverMonthsUseCase
+import com.emm.justchill.feature.report.di.reportModule
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-// Empty until issue #122 extracts :feature:report; that ticket edits this file and no other
-// wiring file. See docs/adr/015-feature-modules-over-layer-modules.md.
-val reportWiring: Module = module { }
+val reportWiring: Module = module {
+    includes(reportModule)
+
+    factoryOf(::GetMonthlyAmountByCategoryUseCase)
+    factoryOf(::GetMonthlyComparisonUseCase)
+    factoryOf(::GetMonthlySectionStatsUseCase)
+    factoryOf(::GetSavingsRateUseCase)
+    factoryOf(::GetTopCategoriesOverMonthsUseCase)
+}
