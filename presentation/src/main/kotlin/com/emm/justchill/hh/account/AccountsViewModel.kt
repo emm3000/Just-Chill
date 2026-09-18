@@ -11,10 +11,10 @@ import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.time.TodayFlow
+import com.emm.justchill.core.ui.loan.owingNames
+import com.emm.justchill.core.ui.loan.totalOwedFormatted
+import com.emm.justchill.core.ui.loan.totalOwedIsPositive
 import com.emm.justchill.core.ui.mvi.MviViewModel
-import com.emm.justchill.hh.loan.owingNames
-import com.emm.justchill.hh.loan.totalOwedFormatted
-import com.emm.justchill.hh.loan.totalOwedIsPositive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.loan
+package com.emm.justchill.core.ui.loan
 
 import com.emm.justchill.core.domain.loan.PersonBalance
 import com.emm.justchill.core.domain.shared.Money
