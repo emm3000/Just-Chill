@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.report
 
 import androidx.compose.ui.graphics.Color
-import com.emm.justchill.core.theme.emmDarkColors
+import com.emm.justchill.core.ui.theme.emmDarkColors
 
 internal fun domainColorToUi(color: String?): Color = when (color) {
     "green" -> emmDarkColors.catSage

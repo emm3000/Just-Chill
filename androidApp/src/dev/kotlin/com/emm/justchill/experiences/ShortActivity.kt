@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmTheme
 
 class ShortActivity : AppCompatActivity() {
 

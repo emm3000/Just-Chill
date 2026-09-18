@@ -26,11 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.theme.BackgroundColor
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
-import com.emm.justchill.core.theme.PrimaryButtonColor
-import com.emm.justchill.core.theme.TextColor
+import com.emm.justchill.core.ui.theme.BackgroundColor
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.PrimaryButtonColor
+import com.emm.justchill.core.ui.theme.TextColor
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.*

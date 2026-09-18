@@ -22,17 +22,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.emm.justchill.components.EmmButton
-import com.emm.justchill.components.EmmButtonVariant
-import com.emm.justchill.components.EmmTextInput
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.components.EmmButton
+import com.emm.justchill.core.ui.components.EmmButtonVariant
+import com.emm.justchill.core.ui.components.EmmTextInput
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.Month
 
 @Composable

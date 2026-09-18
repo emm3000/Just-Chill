@@ -14,9 +14,9 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
 | `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
-| `:core:ui` | The MVI base and the Spanish money, date and search formatters every feature shares. |
+| `:core:ui` | The MVI base, the Spanish money, date and search formatters, and the design system (theme tokens, atoms, `Emm*` widgets, fonts). |
 | `:presentation` | Compose-free ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, the feature copy, `UiStrings`. |
-| `:ui-android` | Compose screens, navigation, theme tokens and atoms. |
+| `:ui-android` | Compose screens and navigation. |
 | `:androidApp` | `MainActivity`, `EmmApp`, the platform Koin module, flavors, shortcuts, the session keystore. |
 
 Allowed dependencies, and nothing else:
@@ -69,7 +69,7 @@ This is not duplication to be removed. See `principles.md`, DRY.
 
 Naming lives in `naming.md`. This is the flow. The base class is `mvi/MviViewModel.kt` in `:core:ui`.
 
-- **One state object per feature.** `<Feature>UiState : UiState` is a `data class` (or a `sealed interface` of data classes) with every field `val` and immutable collections. `:ui-android` declares these classes stable in `compose_stability.conf`; a `var` or a `MutableMap` turns that declaration into a lie no compiler catches.
+- **One state object per feature.** `<Feature>UiState : UiState` is a `data class` (or a `sealed interface` of data classes) with every field `val` and immutable collections. `:ui-android` and `:core:ui` declare these classes stable in `compose_stability.conf`; a `var` or a `MutableMap` turns that declaration into a lie no compiler catches.
 - **One public entry point.** `MviViewModel<S, I, E>` exposes `state: StateFlow<S>`, `effect: Flow<E>` and `onIntent(intent: I)`. A screen reaches its ViewModel through those three and nothing else.
 - **State is a `StateFlow`, effects are one-shot.** Effects (navigation, snackbars) go through the buffered channel and are consumed once. An effect is never stored in `UiState`, because state replays on recomposition and would fire it twice.
 - **State stores what the user chose, never what was resolved.** A selection is an id; the resolved object is a getter over the catalog held in the same state. A stored resolved object is a cache with no invalidation, and it is how a movement gets filed under a deleted category. A save writes the resolved selection, never the raw id.

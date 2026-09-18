@@ -33,10 +33,10 @@ import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.CommitHash
 import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.preferences.AppPreferences
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.hh.account.accountEntries
 import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.category.categoryEntries

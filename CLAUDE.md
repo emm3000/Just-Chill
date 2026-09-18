@@ -22,9 +22,9 @@ core:ui        -> core:domain
 - `:core:domain` — **pure Kotlin** (`kotlin("jvm")`): models, value objects, use cases and the repository interfaces. `kotlinx-coroutines-core` and `kotlinx-datetime` only.
 - `:core:database` — the domain interfaces implemented: SQLDelight (`JustChillDatabase`, the schema and migrations), mappers, and `SnapshotStore` over the six tables.
 - `:core:backup` — the snapshot file and the account it needs: DTOs, decoder, Supabase Storage, the backup cycle and auth. Never depends on `:core:database`.
-- `:core:ui` — the UI vocabulary more than one feature uses: the MVI base (`MviViewModel` and its contracts) and the Spanish money, date and search formatters. Never depends on `:core:database` or `:core:backup`.
+- `:core:ui` — the UI vocabulary more than one feature uses: the MVI base (`MviViewModel` and its contracts), the Spanish money, date and search formatters, and the design system (theme tokens, atoms, the `Emm*` components and the bundled fonts). Never depends on `:core:database` or `:core:backup`.
 - `:presentation` — every ViewModel with its `UiState` / `Intent` / `Effect`, the Koin modules, the feature copy. Compose-free, and it re-exports `:core:ui` as `api`.
-- `:ui-android` — Compose screens, navigation, theme tokens and atoms. Same Kotlin packages as `:presentation` on purpose.
+- `:ui-android` — Compose screens and navigation. Same Kotlin packages as `:presentation` on purpose.
 - `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 
 Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `android.release`, `jvm.library`, `sqldelight`, detekt, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:core:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:core:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
@@ -39,7 +39,7 @@ These bind on every change, including a new file created before any Kotlin has b
 
 - **No comments.** No KDoc, no `//`, no banners, no commented-out code. The code explains itself or it gets renamed. Three narrow exceptions in `.claude/rules/kotlin-style.md`.
 - **Explicit types** on every property and local `val` / `var`, and the supertype when the abstraction is what matters. Omit only when the right-hand side is a constructor call that already names the type.
-- **Only the repo's atoms** (`ui-android/.../core/ui/atoms/`) in feature screens. Never a raw Material3 control. See `.claude/rules/ui-components.md`.
+- **Only the repo's atoms** (`:core:ui`'s `core/ui/atoms/`) in feature screens. Never a raw Material3 control. See `.claude/rules/ui-components.md`.
 - **MVI per feature**: one `UiState` (all `val`), one `onIntent(intent)` entry point on `MviViewModel<S, I, E>`, effects consumed once and never stored in state. ViewModels live in `:presentation` and never import Compose.
 - **`:core:domain` stays pure Kotlin.** If it needs to reach outward, invert with an interface in `:core:domain`. Failure modes extend sealed `DomainException`, never a new exception type.
 - **Dates take an injected `Clock` and `TimeZone`, no defaults.**

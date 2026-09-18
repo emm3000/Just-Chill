@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmColors
 
 @Composable
 internal fun IconGrid(selected: IconCatalog, accent: Color, onSelect: (IconCatalog) -> Unit) {

@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.InterFontFamily
 
 @Composable
 fun LabelTextField(text: String, modifier: Modifier = Modifier) {

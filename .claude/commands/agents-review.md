@@ -22,7 +22,7 @@ Review the pending changes (staged + unstaged) against `CLAUDE.md` and `.claude/
 
 3. **UI**
    - Any raw Material3 control (`Button`, `TextField`, `OutlinedTextField`, `Card`, `IconButton`, a `Switch` without `emmSwitchColors`)?
-   - Any literal `Color(0x...)`, `.sp` or `.dp` outside `core/theme/`?
+   - Any literal `Color(0x...)`, `.sp` or `.dp` outside `:core:ui`'s `core/ui/theme/`?
    - New shared components live in `core/ui/atoms/` with a `@Preview` in `EmmTheme`?
    - Every new route `@Serializable`?
 

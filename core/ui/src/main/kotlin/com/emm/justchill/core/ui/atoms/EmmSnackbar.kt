@@ -1,0 +1,182 @@
+package com.emm.justchill.core.ui.atoms
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarData
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarVisuals
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+
+enum class EmmSnackbarTone { Success, Error }
+
+class EmmSnackbarVisuals(
+    override val message: String,
+    val tone: EmmSnackbarTone = EmmSnackbarTone.Success,
+    override val actionLabel: String? = null,
+    override val duration: SnackbarDuration = SnackbarDuration.Short,
+) : SnackbarVisuals {
+    override val withDismissAction: Boolean = false
+}
+
+@Composable
+fun EmmSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier) {
+    SnackbarHost(modifier = modifier, hostState = hostState) { data ->
+        EmmSnackbarBody(data)
+    }
+}
+
+private data class ToneVisuals(val icon: ImageVector, val tint: Color, val circleBg: Color)
+
+@Composable
+private fun EmmSnackbarBody(data: SnackbarData) {
+    val colors = LocalEmmColors.current
+    val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val shape = radii.rL
+
+    val tone = (data.visuals as? EmmSnackbarVisuals)?.tone ?: EmmSnackbarTone.Success
+
+    val visuals: ToneVisuals = when (tone) {
+        EmmSnackbarTone.Success -> ToneVisuals(
+            icon = Icons.Outlined.Check,
+            tint = colors.success,
+            circleBg = colors.posMuted,
+        )
+
+        EmmSnackbarTone.Error -> ToneVisuals(
+            icon = Icons.Outlined.ErrorOutline,
+            tint = colors.danger,
+            circleBg = colors.negMuted,
+        )
+    }
+
+    val actionLabel = data.visuals.actionLabel
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.s4)
+            .clip(shape)
+            .background(colors.surface2)
+            .border(1.dp, colors.border, shape)
+            .padding(horizontal = 14.dp, vertical = spacing.s3),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(22.dp)
+                .clip(CircleShape)
+                .background(visuals.circleBg),
+        ) {
+            Icon(
+                imageVector = visuals.icon,
+                contentDescription = null,
+                tint = visuals.tint,
+                modifier = Modifier.size(13.dp),
+            )
+        }
+        Text(
+            text = highlightQuoted(data.visuals.message),
+            fontSize = 13.sp,
+            fontFamily = InterFontFamily,
+            color = colors.textPrimary,
+            fontWeight = FontWeight.W500,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = if (actionLabel != null) Modifier.weight(1f) else Modifier,
+        )
+        if (actionLabel != null) {
+            Text(
+                text = actionLabel,
+                fontSize = 13.sp,
+                fontFamily = InterFontFamily,
+                color = colors.accent,
+                fontWeight = FontWeight.W600,
+                maxLines = 1,
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .heightIn(min = 48.dp)
+                    .widthIn(min = 48.dp)
+                    .clickable(onClick = data::performAction)
+                    .semantics { role = Role.Button }
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+            )
+        }
+    }
+}
+
+internal fun highlightQuoted(message: String): AnnotatedString = buildAnnotatedString {
+    var i = 0
+    while (i < message.length) {
+        val open = message.indexOf('«', i)
+        if (open == -1) {
+            append(message.substring(i))
+            return@buildAnnotatedString
+        }
+        val close = message.indexOf('»', open + 1)
+        if (close == -1) {
+            append(message.substring(i))
+            return@buildAnnotatedString
+        }
+        append(message.substring(i, open + 1))
+        withStyle(SpanStyle(fontWeight = FontWeight.W700)) {
+            append(message.substring(open + 1, close))
+        }
+        append('»')
+        i = close + 1
+    }
+}
+
+suspend fun SnackbarHostState.showEmmSnackbar(
+    message: String,
+    tone: EmmSnackbarTone = EmmSnackbarTone.Success,
+    actionLabel: String? = null,
+    duration: SnackbarDuration = SnackbarDuration.Short,
+): SnackbarResult = showSnackbar(
+    EmmSnackbarVisuals(
+        message = message,
+        tone = tone,
+        actionLabel = actionLabel,
+        duration = duration,
+    ),
+)
