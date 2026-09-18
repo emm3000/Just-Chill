@@ -44,7 +44,8 @@ import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-import com.emm.justchill.hh.account.accountEntries
+import com.emm.justchill.feature.account.AddAccountRoute
+import com.emm.justchill.feature.account.accountEntries
 import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.category.categoryEntries
 import com.emm.justchill.hh.loan.loanEntries
@@ -54,6 +55,7 @@ import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.report.reportEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
 import com.emm.justchill.hh.shared.AddTransactionRoute
+import com.emm.justchill.hh.shared.LoansRoute
 import com.emm.justchill.hh.shared.ManifestoRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
 import com.emm.justchill.hh.shared.rememberPlatformHostActions
@@ -139,7 +141,10 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                     onboardingEntries(bindings, appPrefs)
                     authEntries(bindings)
                     seeTransactionsEntries(bindings)
-                    accountEntries(bindings)
+                    accountEntries(
+                        bindings = bindings,
+                        onOpenLoans = { nav -> nav.push(LoansRoute) },
+                    )
                     loanEntries(bindings)
                     categoryEntries(
                         bindings = bindings,
@@ -149,6 +154,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         bindings = bindings,
                         pendingCategory = { pendingCategory },
                         onPendingCategoryConsumed = { pendingCategory = null },
+                        onAddNewAccount = { nav -> nav.push(AddAccountRoute) },
                     )
                     reportEntries(bindings)
                     recurringEntries(bindings)

@@ -7,8 +7,9 @@ import androidx.navigation3.runtime.serialization.NavKeySerializer
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.navigation.AppRoute
-import com.emm.justchill.hh.shared.AccountsRoute
-import com.emm.justchill.hh.shared.AddAccountRoute
+import com.emm.justchill.feature.account.AccountsRoute
+import com.emm.justchill.feature.account.AddAccountRoute
+import com.emm.justchill.feature.account.accountRoutes
 import com.emm.justchill.hh.shared.AddEditLoanRoute
 import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
@@ -68,7 +69,7 @@ class RouteSerializationTest {
         }
     }
 
-    private val registries: List<List<KClass<out AppRoute>>> = listOf(hhRoutes)
+    private val registries: List<List<KClass<out AppRoute>>> = listOf(hhRoutes, accountRoutes)
 
     /**
      * Data classes get NON-DEFAULT field values on purpose: a field whose serializer is broken then

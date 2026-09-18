@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account
+package com.emm.justchill.feature.account
 
 import com.emm.justchill.core.ui.atoms.AmountTone
 import kotlin.test.Test

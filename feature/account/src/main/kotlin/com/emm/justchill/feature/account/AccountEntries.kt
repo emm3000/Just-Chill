@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account
+package com.emm.justchill.feature.account
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
@@ -10,12 +10,12 @@ import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
-import com.emm.justchill.hh.shared.AccountsRoute
-import com.emm.justchill.hh.shared.AddAccountRoute
-import com.emm.justchill.hh.shared.LoansRoute
 import org.koin.compose.viewmodel.koinViewModel
 
-fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings) {
+fun EntryProviderScope<NavKey>.accountEntries(
+    bindings: NavHostBindings,
+    onOpenLoans: (AppNavigator) -> Unit,
+) {
     entry<AccountsRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         val vm: AccountsViewModel = koinViewModel()
@@ -33,7 +33,7 @@ fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings) {
             state = accountsState,
             onIntent = vm::onIntent,
             addAccount = { nav.push(AddAccountRoute) },
-            navigateToLoans = { nav.push(LoansRoute) },
+            navigateToLoans = { onOpenLoans(nav) },
             modifier = Modifier.fillMaxSize(),
         )
     }
