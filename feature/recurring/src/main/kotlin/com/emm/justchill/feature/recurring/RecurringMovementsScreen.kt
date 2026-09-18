@@ -50,6 +50,7 @@ import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -224,7 +225,7 @@ private fun RecurringSummaryCard(
 @Composable
 private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val type: EmmType = LocalEmmType.current
 
     EmmDialog(
         title = "¿Borrar «$name»?",
