@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account
+package com.emm.justchill.feature.account
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance

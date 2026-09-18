@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account
+package com.emm.justchill.feature.account
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -7,7 +7,6 @@ import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
-import com.emm.justchill.hh.shared.AddAccountRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.CategoryRoute
 import com.emm.justchill.hh.shared.EditTransactionRoute
@@ -17,6 +16,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     bindings: NavHostBindings,
     pendingCategory: () -> SelectableCategory?,
     onPendingCategoryConsumed: () -> Unit,
+    onAddNewAccount: (AppNavigator) -> Unit,
 ) {
     entry<AddTransactionRoute> { key ->
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
@@ -51,9 +51,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
                     ),
                 )
             },
-            onAddNewAccount = {
-                nav.push(AddAccountRoute)
-            },
+            onAddNewAccount = { onAddNewAccount(nav) },
         )
     }
 
@@ -63,7 +61,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
             transactionId = key.transactionId,
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
-            onAddNewAccount = { nav.push(AddAccountRoute) },
+            onAddNewAccount = { onAddNewAccount(nav) },
         )
     }
 }

@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.navigation.BottomBarRoute
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-import com.emm.justchill.hh.shared.AccountsRoute
+import com.emm.justchill.feature.account.AccountsRoute
 import com.emm.justchill.hh.shared.ProfileRoute
 import com.emm.justchill.hh.shared.ReportRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute

@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.account
+package com.emm.justchill.feature.account
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,9 +30,9 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 /**
- * Always mounted, however empty the ledger is: this row is the only door to `LoansRoute` inside the
- * app, and gating a feature's entry point on that feature already having data is the landmine
- * `ui-android/CLAUDE.md` records.
+ * Always mounted, however empty the ledger is: this row is the only door to the ledger, the one
+ * caller of the feature's `onOpenLoans` callback, and gating a feature's entry point on that
+ * feature already having data leaves it unreachable.
  */
 @Composable
 internal fun LoansSection(totalOwed: String, totalOwedIsPositive: Boolean, people: List<String>, onClick: () -> Unit) {
