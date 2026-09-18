@@ -36,3 +36,9 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #148 | #147 | 3 | opus:medium | MERGE | - |
 | #152 | #151 | 4 | opus:high | MERGE | - |
 | #154 | #110 | 4 | opus:high | FIX FIRST | checklist |
+| #156 | #153 | 3 | opus:medium | FIX FIRST | judgment |
+| #161 | #111 | 4 | opus:high | FIX FIRST | checklist |
+| #166 | #163 | 3 | fable:medium | MERGE | - |
+| #170 | #167 | 3 | opus:high | FIX FIRST | judgment |
+| #171 | #157 | 3 | opus:high | MERGE | - |
+| #172 | #112 | 4 | opus:high | FIX FIRST | checklist |
