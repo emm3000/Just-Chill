@@ -4,6 +4,7 @@ import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.shared.RemoteWriteMutex
+import com.emm.justchill.core.domain.shared.backup.BackupEvent
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.domain.shared.backup.BackupFailureState
 import com.emm.justchill.core.domain.shared.backup.BackupMetadataStore

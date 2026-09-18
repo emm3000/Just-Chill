@@ -6,6 +6,7 @@ import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.shared.RemoteWriteMutex
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.domain.shared.backup.BackupFailureState
+import com.emm.justchill.core.domain.shared.backup.BackupHealth
 import com.emm.justchill.core.domain.shared.backup.BackupMetadataStore
 import com.emm.justchill.core.domain.shared.backup.BackupPruneReport
 import com.emm.justchill.core.domain.shared.backup.BackupPruner

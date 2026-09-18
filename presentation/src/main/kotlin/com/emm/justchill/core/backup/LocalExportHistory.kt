@@ -1,5 +1,6 @@
 package com.emm.justchill.core.backup
 
+import com.emm.justchill.core.domain.shared.backup.ExportHistory
 import com.russhwolf.settings.Settings
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -11,17 +12,21 @@ import kotlin.time.Instant
 // The file the user saves themselves, never the cloud snapshot pipeline: no userId scopes the key,
 // because an exported file leaves the device whoever is signed in, and every
 // DefaultBackupMetadataStore key is per-user by construction.
-class LocalExportHistory(private val settings: Settings, private val clock: Clock, private val timeZone: TimeZone) {
+class LocalExportHistory(
+    private val settings: Settings,
+    private val clock: Clock,
+    private val timeZone: TimeZone,
+) : ExportHistory {
 
     // today is the caller's, never this class's: TodayFlow is the app's one source of it.
-    fun daysSinceLastExport(today: LocalDate): Int? {
+    override fun daysSinceLastExport(today: LocalDate): Int? {
         val exportedAt: Long = settings.getLong(KEY_LAST_EXPORT_AT, NEVER)
         if (exportedAt == NEVER) return null
         val exportDay = Instant.fromEpochMilliseconds(exportedAt).toLocalDateTime(timeZone).date
         return exportDay.daysUntil(today).coerceAtLeast(0)
     }
 
-    fun recordExport() = settings.putLong(KEY_LAST_EXPORT_AT, clock.now().toEpochMilliseconds())
+    override fun recordExport() = settings.putLong(KEY_LAST_EXPORT_AT, clock.now().toEpochMilliseconds())
 
     private companion object {
         const val NEVER = -1L

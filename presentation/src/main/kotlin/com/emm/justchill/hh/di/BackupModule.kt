@@ -1,13 +1,14 @@
 package com.emm.justchill.hh.di
 
 import com.emm.justchill.core.appScopeQualifier
-import com.emm.justchill.core.backup.BackupController
 import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.backup.DefaultBackupMetadataStore
 import com.emm.justchill.core.backup.LocalExportHistory
 import com.emm.justchill.core.domain.shared.RemoteWriteMutex
+import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupMetadataStore
+import com.emm.justchill.core.domain.shared.backup.ExportHistory
 import com.emm.justchill.core.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.lifecycle.backgroundEvents
@@ -26,7 +27,7 @@ val backupModule = module {
 
     factoryOf(::DefaultBackupMetadataStore) { bind<BackupMetadataStore>() }
 
-    factoryOf(::LocalExportHistory)
+    factoryOf(::LocalExportHistory) { bind<ExportHistory>() }
 
     // Shared between BackupOrchestrator and DeleteUserAccountUseCase so a backup upload and an
     // account deletion never race each other.

@@ -1,6 +1,6 @@
 package com.emm.justchill
 
-import com.emm.justchill.hh.profile.UNKNOWN_COMMIT_HASH
+import com.emm.justchill.feature.profile.UNKNOWN_COMMIT_HASH
 import org.junit.Test
 import kotlin.test.assertTrue
 

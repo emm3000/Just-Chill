@@ -1,0 +1,33 @@
+# :feature:profile — CLAUDE.md
+
+The Perfil tab and everything it opens: the profile screen with its category, recurring and about rows, the backup section (Respaldar, Verificar, the disclosure acknowledgement), export and restore over SAF, the commit hash row, and `privacy/` with the privacy policy screen and its route. `ProfileViewModel` with its `UiState` / `Intent` / `Effect`, both routes, `profileEntries` and the copy mappers live in `com.emm.justchill.feature.profile`.
+
+One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState` and their copy mappers read its types, so a `backup/` sub-package would import the root and be imported back. The privacy screen shares nothing with them and sits on its own.
+
+`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended` (the cloud, shield and file glyphs). Depends on `:core:ui` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge. The atoms, the tokens and `toUserMessage` are `:core:ui`'s: consume them, never copy them here.
+
+`./gradlew :feature:profile:testDebugUnitTest`. `MainDispatcherRule` and `FakeTodayFlow` come from `:core:testing`. `ProfileViewModelBackupFailureTest` stayed in `:androidApp`'s test set under this package: it wires a real `BackupOrchestrator`, a `:presentation` class a feature module may not see.
+
+## Koin and the graph
+
+`profileModule` is declared here and binds `ProfileViewModel`, nothing else; the DSL builds its constructor by hand, so every dependency is listed, `clock` included. `:androidApp`'s `wiring/ProfileWiring.kt` includes it and binds no use case of its own: every port this feature injects is app-level backup, auth, category or recurring vocabulary already bound in `backupModule`, `dataModule`, `authWiring` and `recurringWiring`. `ProfileViewModel` is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
+
+## Routes and cross-feature navigation
+
+`ProfileRoute` is a `BottomBarRoute`, the fourth tab in `:androidApp`'s `AppBottomBar`; `PrivacyPolicyRoute` is a plain `AppRoute` pushed from the profile screen, the one door into `privacy/`. Both are in `profileRoutes`, which `RouteSerializationTest` concatenates. Categories, recurring movements, the manifesto and sign-in all leave this feature, so each arrives as an `(AppNavigator) -> Unit` callback supplied by `AppNavHost`, never as a route value. `rememberPlatformHostActions` stays in `:ui-android`: the SAF launchers must be registered at the nav host root, or a picker result arriving after its entry left composition is dropped.
+
+## Backup
+
+- `SNAPSHOT_BACKUP_ENABLED` (`:core:domain`'s `shared/backup/BackupKillSwitch.kt`) is `false`. `BackupSection` reads it in one `if/else` that keeps the sign-in row and the local-only note exclusive; never split it into two reads. Flipping it is a disclosure change first — see `presentation/CLAUDE.md` `## Backup` and ADR 009.
+- A backup failure never signs out and reaches the UI only as `ProfileEffect.Notify`, never `ShowError`, which would read as expired credentials. `verifyBackup` follows the same rule.
+- `BackupRowUi` ranks `NeedsAccount` > `DisclosurePending` > `BackingUp`: the orchestrator raises `isBackingUp` for the whole cycle, including one about to refuse, so ranking `BackingUp` higher would flash "Respaldando…" over a device uploading nothing. `DisclosurePending` is `Warning`, never `Danger`. A failure annotates the snapshot (`Failed` carries a `LastSnapshot`); warn on the count, never on the reason.
+- `severity()` and `toMetaText()` stay out of composables (`ProfileViewModelBackupRowTest` pins them). The Perfil badge (`disclosureIsPending`, `:presentation`) and `resolveBackupRow` answer the same question and must agree.
+- The acknowledgement is written regardless of the running op so it is never lost; only the follow-on cycle is gated.
+- Staleness is read through `GetBackupStalenessUseCase` inside a broad catch on purpose: a frozen Perfil is the alternative, and the row falls back to an undated snapshot rather than claiming a health it could not determine.
+- `ExportHistory` (`:core:domain`) is the export watermark seam; its Settings-backed `LocalExportHistory` stays in `:presentation` until #128. A saved export records itself only when the SAF write succeeded.
+- Restoring replaces everything, so `ImportConfirmationDialog` gates it and the json arrives through the host's `pendingImportJson` accessor, read as a `() -> T` because a `NavEntry.content` closure is cached until the back stack changes.
+
+## Screens
+
+- The privacy policy screen still uses raw Material3 `Button`, and `ProfileEntries`' `ImportConfirmationDialog` a raw `AlertDialog` with `TextButton` and `Text`. Both came over unchanged from `:ui-android` and owe an atoms pass (`.claude/rules/ui-components.md`); the dialog's confirm colour is already `LocalEmmColors.danger`, so only the containers are the debt.
+- `commitHashUi()` is the pattern for pure UI logic: a plain function beside the screen with a test here, never logic inside a composable.

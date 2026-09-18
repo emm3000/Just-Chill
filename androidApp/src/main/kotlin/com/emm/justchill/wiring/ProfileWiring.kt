@@ -1,8 +1,9 @@
 package com.emm.justchill.wiring
 
+import com.emm.justchill.feature.profile.profileModule
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-// Empty until issue #126 extracts :feature:profile; that ticket edits this file and no other
-// wiring file. See docs/adr/015-feature-modules-over-layer-modules.md.
-val profileWiring: Module = module { }
+val profileWiring: Module = module {
+    includes(profileModule)
+}
