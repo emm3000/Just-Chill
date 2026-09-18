@@ -38,38 +38,7 @@ class ConventionPluginTest {
         )
 
         assertEquals("testDebugUnitTest", report["gatedTests"])
-        assertEquals(AGGREGATE_GATE_TASKS, report["gateTasks"])
-    }
-
-    @Test
-    fun `naming detekt tasks replaces the aggregates the gate runs by default`() {
-        val report: Map<String, String> = fixture.report(
-            pluginIds = listOf("justchill.android.library"),
-            androidConfiguration = """qualityGate { detektTasks.addAll("detektDebug", "detektDebugUnitTest") }""",
-            arguments = REPORT_GATE_TASKS,
-        )
-
-        assertEquals(NAMED_GATE_TASKS, report["gateTasks"])
-    }
-
-    @Test
-    fun `detekt analyses a library against both halves of the module's own output`() {
-        val report: Map<String, String> = fixture.report(listOf("justchill.android.library"))
-
-        assertEquals(BOTH_ANALYSIS_HALVES, report["detektAnalysisClasses"])
-        assertEquals(BOTH_ANALYSIS_HALVES, report["detektBaselineAnalysisClasses"])
-    }
-
-    @Test
-    fun `detekt analyses a flavored application variant against both halves of its own output`() {
-        val report: Map<String, String> = fixture.report(
-            pluginIds = listOf("justchill.android.application"),
-            androidConfiguration = FLAVORED_APPLICATION_CONFIGURATION,
-            arguments = REPORT_DEV_DEBUG,
-        )
-
-        assertEquals(BOTH_ANALYSIS_HALVES, report["detektAnalysisClasses"])
-        assertEquals(BOTH_ANALYSIS_HALVES, report["detektBaselineAnalysisClasses"])
+        assertEquals(GATE_TASKS, report["gateTasks"])
     }
 
     @Test
@@ -238,13 +207,6 @@ class ConventionPluginTest {
         assertEquals("com.emm.justchill.ui.android", BuildConventions.namespaceOf(":ui-android"))
     }
 
-    @Test
-    fun `the detekt baseline is named after the module path`() {
-        assertEquals("core-domain", BuildConventions.baselineNameOf(":core:domain"))
-        assertEquals("feature-loan", BuildConventions.baselineNameOf(":feature:loan"))
-        assertEquals("ui-android", BuildConventions.baselineNameOf(":ui-android"))
-    }
-
     private companion object {
         const val COROUTINES_OPT_INS: String = "kotlinx.coroutines.ExperimentalCoroutinesApi,kotlinx.coroutines.FlowPreview"
 
@@ -262,22 +224,13 @@ class ConventionPluginTest {
             "lifecycle-viewmodel-compose",
         )
 
-        const val CHECK_PLUGINS: String = "justchill.detekt,justchill.quality.gate"
+        const val CHECK_PLUGINS: String = "justchill.quality.gate"
 
         val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
 
-        const val BOTH_ANALYSIS_HALVES: String = "kotlin,java"
-
-        val REPORT_DEV_DEBUG: List<String> = listOf("-Pjustchill.reportDetektVariant=DevDebug")
-
-        const val AGGREGATE_GATE_TASKS: String =
+        const val GATE_TASKS: String =
             "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
-                "compileDebugAndroidTestKotlin,compileReleaseKotlin,detektMain,detektTest,testDebugUnitTest"
-
-        const val NAMED_GATE_TASKS: String =
-            "checkComposeFreeViewModels,checkModuleBoundaries,checkSqlDelightSnapshots," +
-                "compileDebugAndroidTestKotlin,compileReleaseKotlin,detektDebug,detektDebugUnitTest," +
-                "testDebugUnitTest"
+                "compileDebugAndroidTestKotlin,compileReleaseKotlin,testDebugUnitTest"
 
         val RELEASE_PLUGINS: List<String> = listOf("justchill.android.application", "justchill.android.release")
 
@@ -286,23 +239,6 @@ class ConventionPluginTest {
             keyPassword=key-secret
             storeFile=keys/upload.jks
             storePassword=store-secret
-        """.trimIndent()
-
-        val FLAVORED_APPLICATION_CONFIGURATION: String = """
-            android {
-                namespace = "com.emm.justchill.probe"
-
-                defaultConfig {
-                    applicationId = "com.emm.justchill.probe"
-                }
-
-                flavorDimensions += "environment"
-
-                productFlavors {
-                    create("dev") { dimension = "environment" }
-                    create("prod") { dimension = "environment" }
-                }
-            }
         """.trimIndent()
 
         val APPLICATION_CONFIGURATION: String = """

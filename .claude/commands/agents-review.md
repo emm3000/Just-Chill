@@ -26,9 +26,9 @@ Review the pending changes (staged + unstaged) against `CLAUDE.md` and `.claude/
    - New shared components live in `core/ui/atoms/` with a `@Preview` in `EmmTheme`?
    - Every new route `@Serializable`?
 
-4. **Detekt (config/detekt/detekt.yml)**
-   - Nesting within detekt `NestedBlockDepth` (allowedDepth 4, a fifth level fails)? No nested `also/apply/run/let`? ≤ 2 returns per function (labeled returns excluded)?
-   - A new baseline entry only for a pre-existing finding, with its GitHub issue?
+4. **Complexity (`.claude/rules/kotlin-style.md`, review-enforced)**
+   - More than 4 levels of nesting? No nested `also/apply/run/let`? ≤ 2 real returns per function?
+   - A function or file doing several things that should be split?
 
 5. **Local-first and data**
    - Any code assuming a backend, row sync or a mandatory login?

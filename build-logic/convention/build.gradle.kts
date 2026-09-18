@@ -14,7 +14,6 @@ fun marker(plugin: Provider<PluginDependency>): String = plugin.get().run {
 
 dependencies {
     implementation(marker(libs.plugins.android.application))
-    implementation(marker(libs.plugins.detekt))
     implementation(marker(libs.plugins.google.crashlytics))
     implementation(marker(libs.plugins.kotlin.compose))
     implementation(marker(libs.plugins.sqldelight))
@@ -54,10 +53,6 @@ gradlePlugin {
         register("jvmLibrary") {
             id = "justchill.jvm.library"
             implementationClass = "com.emm.buildlogic.JvmLibraryConventionPlugin"
-        }
-        register("detekt") {
-            id = "justchill.detekt"
-            implementationClass = "com.emm.buildlogic.DetektConventionPlugin"
         }
         register("qualityGate") {
             id = "justchill.quality.gate"

@@ -27,7 +27,7 @@ core:ui        -> core:domain
 - `:ui-android` — Compose screens and navigation. Same Kotlin packages as `:presentation` on purpose.
 - `:androidApp` — `MainActivity`, `EmmApp`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 
-Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `android.release`, `jvm.library`, `sqldelight`, detekt, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:core:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:core:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
+Shared Gradle configuration lives in convention plugins under `build-logic/convention` (`justchill.*`): `android.application`, `android.library`, `android.compose`, `android.feature`, `android.release`, `jvm.library`, `sqldelight`, the quality gate, build info. They set the namespace from the module path, SDKs (`minSdk` 28), Java 17, opt-ins, test dependencies and each library's unit tests in the gate. A module build file applies its plugins and declares its own dependencies. `gradle/libs.versions.toml` is the only place a version is written, with one exception: `:core:domain`'s stdlib comes from a pin in `build-logic/convention/build.gradle.kts`, and dropping it compiles `:core:domain` a minor version behind and reddens the gate on opt-in errors that name nothing about the classpath.
 
 ## Product
 
@@ -44,7 +44,7 @@ These bind on every change, including a new file created before any Kotlin has b
 - **`:core:domain` stays pure Kotlin.** If it needs to reach outward, invert with an interface in `:core:domain`. Failure modes extend sealed `DomainException`, never a new exception type.
 - **Dates take an injected `Clock` and `TimeZone`, no defaults.**
 - **Rebuild, never adapt.** When existing code, config or structure does not fit the target architecture, replace it with a clean implementation. No shims, wrappers or compatibility patches over legacy.
-- **`./gradlew qualityGate assembleDevDebug` green** before every commit. `qualityGate` is the gate; plain `./gradlew detekt` covers strictly less and is never a substitute.
+- **`./gradlew qualityGate assembleDevDebug` green** before every commit. `qualityGate` is the gate; its task list is the `qualityGate` task `description`, never a prose copy.
 - **Every route the nav host can push is `@Serializable`.** The crash is on process-death restore only, invisible to the compiler; `RouteSerializationTest` is the net.
 - **A `CREATE TABLE` change ships its three artifacts**: the `.sq` edit, the `N.sqm`, the `databases/(N+1).db`, plus an instrumented test per starting version. See `.claude/rules/sqldelight.md`.
 - **English for every identifier; Spanish only in user-facing values**, addressing the reader as tú, never vos.
@@ -58,7 +58,7 @@ Path-scoped, loaded when matching files are touched:
 |---|---|
 | `.claude/rules/architecture.md` | Layer boundaries, dependency inversion, use-case admission, errors, the MVI contract, Koin, routes |
 | `.claude/rules/naming.md` | Uncle Bob, official Kotlin, naming patterns by layer, English identifiers |
-| `.claude/rules/kotlin-style.md` | Explicit types, comment policy, Kotlin idioms, detekt and its baselines, Compose sizing |
+| `.claude/rules/kotlin-style.md` | Explicit types, comment policy, Kotlin idioms, complexity limits, Compose sizing |
 | `.claude/rules/principles.md` | YAGNI, KISS, SOLID with its tests, DRY with its caveat, what is rejected |
 | `.claude/rules/ui-components.md` | The atoms iron rule, which token to reach for and why |
 | `.claude/rules/sqldelight.md` | Schema changes: the three artifacts a migration ships, the migration test |

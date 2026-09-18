@@ -22,15 +22,8 @@ internal object BuildConventions {
         "androidx.compose.ui.ExperimentalComposeUiApi",
     )
 
-    fun isGeneratedSource(invariantPath: String): Boolean = invariantPath.contains("/build/")
-
     fun namespaceOf(projectPath: String): String = projectPath
         .split(':', '-')
         .filter(String::isNotEmpty)
         .joinToString(separator = ".", prefix = "$NAMESPACE_PREFIX.")
-
-    fun baselineNameOf(projectPath: String): String = projectPath
-        .split(':')
-        .filter(String::isNotEmpty)
-        .joinToString(separator = "-")
 }

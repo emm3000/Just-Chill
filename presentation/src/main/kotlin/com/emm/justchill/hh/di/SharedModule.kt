@@ -17,7 +17,6 @@ val sharedModule = module {
 
     // These two factories are the ONLY way a Clock or a TimeZone enters the injected graph; see
     // issue #7 for the small set of :ui-android reads that bypass it by design.
-    // FQN avoids an ImportOrdering detekt violation.
     factory { kotlinx.datetime.TimeZone.currentSystemDefault() }
     factory<kotlin.time.Clock> { kotlin.time.Clock.System }
 }

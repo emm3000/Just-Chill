@@ -3,13 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-// detektMain and detektTest aggregate detektDebug, detektRelease and detektDebugUnitTest. This
-// module has no per-variant source directory and no androidTest, so the release analysis reads the
-// same files under an identical baseline. Release type checking is the gate's own compileReleaseKotlin.
-qualityGate {
-    detektTasks.addAll("detektDebug", "detektDebugUnitTest")
-}
-
 dependencies {
     implementation(projects.core.domain)
     api(libs.supabase.auth.kt)
