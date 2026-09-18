@@ -29,5 +29,5 @@ One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState`
 
 ## Screens
 
-- The privacy policy screen uses `FilledCta` and `ProfileEntries`' `ImportConfirmationDialog` uses `EmmDialog` (`.claude/rules/ui-components.md`); the atoms pass on both landed in #202.
+- The privacy policy screen uses `FilledCta` and `ProfileEntries`' `ImportConfirmationDialog`, `DeleteAccountDialog` and `ImportBackupDialog` all use `EmmDialog` (`.claude/rules/ui-components.md`); the atoms pass on the first landed in #202, on the latter two in #214.
 - `commitHashUi()` is the pattern for pure UI logic: a plain function beside the screen with a test here, never logic inside a composable.
