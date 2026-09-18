@@ -10,7 +10,7 @@ import com.emm.justchill.components.EmmAmountChill
 import com.emm.justchill.experiences.calendar.Calendar
 import com.emm.justchill.experiences.readjsonfromassets.ui.Experiences
 import com.emm.justchill.experiences.timerpicker.MeTimerPicker
-import com.emm.justchill.hh.shared.AppNavHost
+import com.emm.justchill.shell.AppNavHost
 import java.util.UUID
 
 sealed class RootRoutes(val route: String) {

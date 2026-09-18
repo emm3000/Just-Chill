@@ -65,6 +65,7 @@ android {
 composeCompiler {
     metricsDestination = layout.buildDirectory.dir("compose_metrics")
     reportsDestination = layout.buildDirectory.dir("compose_reports")
+    stabilityConfigurationFiles.add(layout.projectDirectory.file("compose_stability.conf"))
 }
 
 // Android lint is deliberately absent; .github/workflows/uploadApk.yml runs it on every trunk push.
@@ -82,6 +83,17 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.uiAndroid)
 
+    // Empty until each feature's extraction ticket fills it: ADR 015, waves 7 and 8.
+    implementation(projects.feature.transaction)
+    implementation(projects.feature.account)
+    implementation(projects.feature.category)
+    implementation(projects.feature.recurring)
+    implementation(projects.feature.report)
+    implementation(projects.feature.loan)
+    implementation(projects.feature.profile)
+    implementation(projects.feature.auth)
+    implementation(projects.feature.onboarding)
+
     implementation(libs.androidx.core.ktx)
     // res/values/themes.xml inherits Theme.Material3.DayNight.NoActionBar from it.
     implementation(libs.material)
@@ -89,6 +101,12 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // The nav host and the bottom bar live here since ADR 015's wave 6.
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
@@ -97,6 +115,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.core)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.compose)
     implementation(libs.androidx.material.icons.extended)
 
     // Only the dev experiences playground uses these. Quoted: AGP generates no typed accessor
@@ -119,4 +138,9 @@ dependencies {
     // The Snapshot's end-to-end tests live here: only the app sees both :core:backup, which writes
     // the file, and :core:database, which holds the rows it restores into.
     testImplementation(libs.sqlite.driver)
+
+    // AppGraphKoinTest's JVM stand-in for the platform module: in-memory Settings plus the
+    // androidx.startup hook supabaseModule's install(Auth) needs.
+    testImplementation(libs.multiplatform.settings.test)
+    testImplementation(libs.multiplatform.settings.no.arg)
 }

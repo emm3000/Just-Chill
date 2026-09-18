@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.shell
 
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -6,6 +6,25 @@ import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import androidx.navigation3.runtime.serialization.NavKeySerializer
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.hh.shared.AccountsRoute
+import com.emm.justchill.hh.shared.AddAccountRoute
+import com.emm.justchill.hh.shared.AddEditLoanRoute
+import com.emm.justchill.hh.shared.AddEditRecurringMovementRoute
+import com.emm.justchill.hh.shared.AddTransactionRoute
+import com.emm.justchill.hh.shared.AppRoute
+import com.emm.justchill.hh.shared.AuthRoute
+import com.emm.justchill.hh.shared.CategoriesListRoute
+import com.emm.justchill.hh.shared.CategoryRoute
+import com.emm.justchill.hh.shared.EditTransactionRoute
+import com.emm.justchill.hh.shared.LoanDetailRoute
+import com.emm.justchill.hh.shared.LoansRoute
+import com.emm.justchill.hh.shared.ManifestoRoute
+import com.emm.justchill.hh.shared.PersonLoansRoute
+import com.emm.justchill.hh.shared.PrivacyPolicyRoute
+import com.emm.justchill.hh.shared.ProfileRoute
+import com.emm.justchill.hh.shared.RecurringMovementsRoute
+import com.emm.justchill.hh.shared.ReportRoute
+import com.emm.justchill.hh.shared.SeeTransactionRoute
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import org.junit.Test

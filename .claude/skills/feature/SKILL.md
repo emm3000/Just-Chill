@@ -45,9 +45,9 @@ Placeholder copy in the screen is a literal Spanish string, tuteo. Shared copy g
 ## Wiring
 
 1. Add `@Serializable data object $ARGUMENTSRoute : AppRoute` to `hh/shared/HhRoutes.kt` (a `data class` when it carries arguments; every field serializable). `RouteSerializationTest` picks it up.
-2. Add `<feature>Module` to the list in `appModules()` (`presentation/.../core/AppGraph.kt`).
-3. Add `$ARGUMENTSViewModel::class` to `EXPECTED_VIEW_MODELS` in `presentation/src/test/.../core/AppGraphKoinTest.kt`.
-4. Call `<feature>Entries(bindings)` inside `entryProvider { }` in `ui-android/.../hh/shared/AppNavHost.kt`.
+2. Add `<feature>Module` to the list in `appModules()` (`androidApp/.../core/AppGraph.kt`).
+3. Add `$ARGUMENTSViewModel::class` to `EXPECTED_VIEW_MODELS` in `androidApp/src/test/.../core/AppGraphKoinTest.kt`.
+4. Call `<feature>Entries(bindings)` inside `entryProvider { }` in `androidApp/.../shell/AppNavHost.kt`.
 5. Give the route a door: a `nav.push($ARGUMENTSRoute)` from an existing entry, and a second one if the first is gated (`architecture.md`, one door is no door).
 
 ## Hard rules (from `CLAUDE.md` and `.claude/rules/`)
@@ -57,4 +57,4 @@ Placeholder copy in the screen is a literal Spanish string, tuteo. Shared copy g
 - Explicit types on every property and local; no comments.
 - At most 4 levels of nesting, no nested `also/apply/run/let`, ≤ 2 real returns per function — review-enforced, see `.claude/rules/kotlin-style.md`.
 
-After creating the files, run `./gradlew :presentation:testDebugUnitTest :ui-android:testDebugUnitTest` (the Koin graph test and the route test) and `./gradlew assembleDevDebug`.
+After creating the files, run `./gradlew :androidApp:testDevDebugUnitTest` (the Koin graph test and the route test) and `./gradlew assembleDevDebug`.

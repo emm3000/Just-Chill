@@ -16,19 +16,23 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
 | `:core:ui` | The MVI base, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
 | `:presentation` | Compose-free ViewModels with their `UiState` / `Intent` / `Effect`, Koin modules, the feature copy, `UiStrings`. |
-| `:ui-android` | Compose screens and navigation. |
-| `:androidApp` | `MainActivity`, `EmmApp`, the platform Koin module, flavors, shortcuts, the session keystore. |
+| `:feature:*` | One screen family: its ViewModels and its Compose screens. Empty until ADR 015's waves 7 and 8. |
+| `:ui-android` | Compose screens and each feature's nav entries, plus the routes and host bindings they share. |
+| `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, bottom bar, shortcut routes), the Koin graph and the per-feature wiring files, the platform Koin module, flavors, shortcuts, the session keystore. |
 
 Allowed dependencies, and nothing else:
 
 ```
-androidApp   -> ui-android, presentation, core:backup, core:database, core:ui, core:domain
+androidApp   -> feature:*, ui-android, presentation, core:backup, core:database, core:ui, core:domain
+feature:*    -> core:ui, core:domain
 ui-android   -> presentation, core:database, core:ui, core:domain
 presentation -> core:backup, core:database, core:ui, core:domain
 core:backup  -> core:domain
 core:database -> core:domain
 core:ui      -> core:domain
 ```
+
+`checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` may depend on a feature.
 
 - `:core:domain` is pure Kotlin (`kotlin("jvm")`): `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve there; the rest is convention, reviewed.
 - Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `hh/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
@@ -96,7 +100,7 @@ MockK never leaks into `src/main` either.
 
 ## Koin
 
-- A binding is registered exactly once: a feature module in `hh/di/`, listed in `appModules()` (`core/AppGraph.kt`); a platform binding in `:androidApp`'s `androidPlatformModule`. `startKoin` is called only in `:androidApp`.
+- A binding is registered exactly once: a feature module in `:presentation`'s `hh/di/`, or, once its feature is extracted, in `:androidApp`'s `wiring/<Feature>Wiring.kt`. Both are listed in `appModules()` (`:androidApp`'s `core/AppGraph.kt`), which is also where a platform binding's `androidPlatformModule` joins. `startKoin` is called only in `:androidApp`.
 - Every new ViewModel goes into `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`. A binding whose only consumer is a `koinInject` / `koin.get` outside the graph owes its own test.
 
 ## Routes and the back stack

@@ -1,12 +1,19 @@
 # :androidApp — CLAUDE.md
 
-Thin Android entry point: `MainActivity`, `EmmApp`, and the Android halves of the ports `:presentation` declares (the platform Koin module, `DispatchersProvider`, the Crashlytics `DiagnosticsLogger` sink, `CurrentActivityHolder`, the Google sign-in launcher), plus the `@Preview` host in `components/`. ViewModels, the MVI core and the Koin graph are `:presentation`; Compose UI is `:ui-android`.
+Android entry point and app shell: `MainActivity`, `EmmApp`, the Navigation 3 host and bottom bar in `shell/`, the Koin graph in `core/AppGraph.kt` with one wiring file per feature in `wiring/`, and the Android halves of the ports `:presentation` declares (the platform Koin module, `DispatchersProvider`, the Crashlytics `DiagnosticsLogger` sink, `CurrentActivityHolder`, the Google sign-in launcher), plus the `@Preview` host in `components/`. ViewModels and the MVI core are `:presentation`; feature screens and their nav entries are `:ui-android`.
 
-`com.android.application` on AGP 9's built-in Kotlin, root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`. Depends on `:ui-android`, and on `:core:domain` and `:core:database` directly because `AndroidPlatformModule` constructs the SQLDelight driver itself.
+`com.android.application` on AGP 9's built-in Kotlin, root package `com.emm.justchill`, `minSdk = 28`, `compileSdk = 37`. Depends on the nine `:feature:*` modules and on `:ui-android`, and on `:core:domain` and `:core:database` directly because `AndroidPlatformModule` constructs the SQLDelight driver itself.
+
+## The shell
+
+- `shell/AppNavHost.kt` owns the back stack, the root `Scaffold` with its `SnackbarHostState`, the SAF launchers and the result channels (`pendingCategory`, `pendingImportJson`); it calls each feature's `*Entries` function from `:ui-android`. The routes, `AppNavigator` and `NavHostBindings` stay in `:ui-android` while the entries do, and follow their features in waves 7 and 8.
+- `shell/AppBottomBar.kt` holds four tabs plus the centre add button, no more. Its 10sp labels already sit under the 4.5:1 AA floor; a fifth tab shrinks them further. A new destination swaps a tab out, never appends one.
+- `shell/ShortcutRoutes.kt` is the launcher intent contract: `MainActivity` flattens an `Intent` into `ShortcutIntent`, `ShortcutPublisher` writes the same action and extra keys, and `ShortcutXmlActionsTest` pins them against both `shortcuts.xml` copies.
+- `wiring/<Feature>Wiring.kt` is one file per feature, listed in `appModules()`. Each is an empty Koin module until its extraction ticket fills it, and an extraction ticket edits its own file only.
 
 ## Platform Koin module
 
-`androidPlatformModule` (`core/AndroidPlatformModule.kt`) supplies only genuine platform bits. `startKoin` lives here and nowhere else: it needs `androidContext()` / `androidLogger()` from koin-android. A new feature module is registered in `appModules()` in `:presentation`, never here. `AndroidPlatformModuleTest` covers these bindings; `AppGraphKoinTest` in `:presentation` cannot see them.
+`androidPlatformModule` (`core/AndroidPlatformModule.kt`) supplies only genuine platform bits. `startKoin` lives here and nowhere else: it needs `androidContext()` / `androidLogger()` from koin-android. A feature's own bindings go in its `wiring/` file or, until it is extracted, in `:presentation`'s `hh/di/`, never here. `AndroidPlatformModuleTest` covers these bindings; `AppGraphKoinTest` builds the graph against `TestPlatformModule` and so cannot see them.
 
 ## Product flavors
 
@@ -24,7 +31,7 @@ Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev
 ## Spend shortcuts
 
 - The amount digits are irreducible: every entry point shortens the path to the amount pad and never adds a field, chip row or sheet to `AddTransactionScreen`.
-- Which combos to surface is core logic (`GetFrequentCombosUseCase`, `:core:domain`); pushing them to the launcher is Android (`ShortcutManagerCompat`, `TileService`, Glance stay here or in `:ui-android`).
+- Which combos to surface is core logic (`GetFrequentCombosUseCase`, `:core:domain`); pushing them to the launcher is Android (`ShortcutManagerCompat`, `TileService`, Glance stay here).
 - `selectFrequentCombo` no-ops until the account and category catalogs land, and a preselection from outside the app always arrives on a cold start, before them. It survives late data (a host test pins the ordering) and is consumed once per ViewModel (`preselectConsumed`): the entry's `LaunchedEffect(key)` restarts on rotation, theme change and pop-back, and a second firing silently reverts the user's choice.
 - A combo can name a deleted account or category: resolve by id, fall back to the normal defaults, never crash, never show an empty selection.
 - Flavor resources replace, never merge: `src/main/res/xml/shortcuts.xml` and `src/dev/res/xml/shortcuts.xml` are two full copies, every change lands in both, and `ShortcutXmlActionsTest` pins the action strings against both.
@@ -35,6 +42,6 @@ Dimension `tier`. `dev` adds `applicationIdSuffix = ".dev"` and carries `src/dev
 
 ## Testing
 
-`./gradlew :androidApp:testDevDebugUnitTest`; no instrumented source set. The MockK ViewModel tests live here, not in `:presentation`, although the ViewModels are in `presentation/src/main`: same package, MockK's JVM engine. Keep that placement unless you move the whole suite. `MainDispatcherRule` goes in every ViewModel test that touches `viewModelScope`.
+`./gradlew :androidApp:testDevDebugUnitTest`; no instrumented source set. The MockK ViewModel tests live here, not in `:presentation`, although the ViewModels are in `presentation/src/main`: same package, MockK's JVM engine. Keep that placement unless you move the whole suite. `AppGraphKoinTest`, `RouteSerializationTest` and `ShortcutRoutesTest` live here because the shell does. `MainDispatcherRule` goes in every ViewModel test that touches `viewModelScope`.
 
 The snapshot tests that run a JSON file into real SQLite live here too (`src/test/.../core/backup/`), for the same reason: only the app sees `:core:backup`, which writes the file, and `:core:database`, which owns the rows. `src/test/resources/backup/snapshot-v4-trunk.json` is what the exporter produced before the split, and `GoldenSnapshotRestoreTest` fails the day a format change stops reading it.

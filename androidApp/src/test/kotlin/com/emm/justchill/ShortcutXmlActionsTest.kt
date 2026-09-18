@@ -1,6 +1,6 @@
 package com.emm.justchill
 
-import com.emm.justchill.hh.shared.ACTION_OPEN_LOANS
+import com.emm.justchill.shell.ACTION_OPEN_LOANS
 import org.junit.Test
 import org.w3c.dom.Element
 import java.io.File

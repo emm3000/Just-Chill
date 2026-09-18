@@ -1,18 +1,17 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.shell
 
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.hh.shared.AddTransactionRoute
+import com.emm.justchill.hh.shared.AppRoute
+import com.emm.justchill.hh.shared.LoansRoute
 
-const val ACTION_OPEN_LOANS = "com.emm.justchill.action.OPEN_LOANS"
-const val ACTION_ADD_TRANSACTION = "com.emm.justchill.action.ADD_TRANSACTION"
-const val EXTRA_ACCOUNT_ID = "com.emm.justchill.extra.ACCOUNT_ID"
-const val EXTRA_CATEGORY_ID = "com.emm.justchill.extra.CATEGORY_ID"
-const val EXTRA_TYPE = "com.emm.justchill.extra.TYPE"
+const val ACTION_OPEN_LOANS: String = "com.emm.justchill.action.OPEN_LOANS"
+const val ACTION_ADD_TRANSACTION: String = "com.emm.justchill.action.ADD_TRANSACTION"
+const val EXTRA_ACCOUNT_ID: String = "com.emm.justchill.extra.ACCOUNT_ID"
+const val EXTRA_CATEGORY_ID: String = "com.emm.justchill.extra.CATEGORY_ID"
+const val EXTRA_TYPE: String = "com.emm.justchill.extra.TYPE"
 
-/**
- * The only shape a launcher intent may cross into `:androidApp` as: nav3 and `:core:domain` types
- * cannot follow, since `ui-android/build.gradle.kts` declares nav3 `implementation`, not `api`.
- */
 data class ShortcutIntent(
     val action: String? = null,
     val accountId: String? = null,

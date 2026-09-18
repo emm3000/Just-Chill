@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.shared
+package com.emm.justchill.shell
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,6 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.hh.shared.AccountsRoute
+import com.emm.justchill.hh.shared.BottomBarRoute
+import com.emm.justchill.hh.shared.ProfileRoute
+import com.emm.justchill.hh.shared.ReportRoute
+import com.emm.justchill.hh.shared.SeeTransactionRoute
 
 private data class BottomTab(
     val route: BottomBarRoute?,
@@ -43,7 +48,7 @@ private data class BottomTab(
     val isAdd: Boolean = false,
 )
 
-private val BOTTOM_TABS = listOf(
+private val BOTTOM_TABS: List<BottomTab> = listOf(
     BottomTab(SeeTransactionRoute, "Movimientos", Icons.AutoMirrored.Outlined.List),
     BottomTab(ReportRoute, "Reporte", Icons.Outlined.Insights),
     BottomTab(null, "Anotar", Icons.Outlined.Add, isAdd = true),
@@ -52,7 +57,7 @@ private val BOTTOM_TABS = listOf(
 )
 
 @Composable
-fun HhBottomBar(
+fun AppBottomBar(
     current: BottomBarRoute?,
     onTabClick: (BottomBarRoute) -> Unit,
     onAddClick: () -> Unit,

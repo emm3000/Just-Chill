@@ -45,12 +45,16 @@ rootProject.name = "JustChill"
 //   :core:database  where do I live?  SQLDelight                       Android
 //   :core:backup    who keeps a copy? Supabase, Ktor, the Snapshot     Android
 //   :core:ui        how do I show it? MVI, formatters, design system   Android
+//   :feature:*      what do I let you do? one screen family each      Android
 //   :presentation   what do I think?  ViewModels, MVI, Koin            Android
-//   :ui-android     how do I look?    Compose screens, navigation      Android only
-//   :androidApp     how do I ship?    manifest, signing, flavors       Android only
+//   :ui-android     how do I look?    Compose screens                  Android only
+//   :androidApp     how do I ship?    manifest, signing, flavors, shell Android only
 //
 // Dependency order, top of the graph down:
-//   androidApp -> ui-android -> presentation -> core:database, core:backup, core:ui -> core:domain
+//   androidApp -> feature:*, ui-android -> presentation -> core:database, core:backup, core:ui
+//   -> core:domain, and a feature reaches core:ui and core:domain only.
+//
+// The nine features are empty scaffolds until each extraction ticket fills its own.
 include(":androidApp")
 include(":ui-android")
 include(":presentation")
@@ -58,3 +62,12 @@ include(":core:backup")
 include(":core:database")
 include(":core:domain")
 include(":core:ui")
+include(":feature:transaction")
+include(":feature:account")
+include(":feature:category")
+include(":feature:recurring")
+include(":feature:report")
+include(":feature:loan")
+include(":feature:profile")
+include(":feature:auth")
+include(":feature:onboarding")
