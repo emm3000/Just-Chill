@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -52,9 +50,10 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 color = colors.textPrimary,
             )
             Text(
-                text = "Si creas una cuenta (opcional), tu data se sincroniza cifrada con " +
-                    "nuestros servidores para que la veas en todos tus dispositivos. " +
-                    "No la vendemos ni la compartimos.",
+                text = "Si creas una cuenta (opcional), guardamos tu correo para " +
+                    "identificarte. Tu data financiera —montos, categorías, movimientos— " +
+                    "no se sube a nuestros servidores: hoy tener cuenta no la respalda " +
+                    "ni la lleva entre tus celulares. No la vendemos ni la compartimos.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
@@ -71,8 +70,10 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 color = colors.textPrimary,
             )
             Text(
-                text = "Sin cuenta, si cambias de celular sin exportar primero, la data " +
-                    "se pierde. Con cuenta, inicia sesión y tu data vuelve.",
+                text = "Si cambias de celular sin exportar primero, tu data se pierde — " +
+                    "pasa igual con cuenta o sin ella, porque tu data financiera no está " +
+                    "en nuestros servidores. Para recuperarla necesitas un archivo JSON " +
+                    "que hayas exportado tú.",
                 style = type.bodyL,
                 color = colors.textPrimary,
             )
@@ -87,21 +88,10 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
         Spacer(Modifier.weight(1f))
 
-        Button(
+        FilledCta(
+            label = "Volver",
             onClick = onBack,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colors.accent,
-                contentColor = colors.textOnAccent,
-            ),
-        ) {
-            Text(
-                text = "Volver",
-                style = type.titleL,
-            )
-        }
+        )
 
         Spacer(Modifier.height(spacing.s4))
     }
