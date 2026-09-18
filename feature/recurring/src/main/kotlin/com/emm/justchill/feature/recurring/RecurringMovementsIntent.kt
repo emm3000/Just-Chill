@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.recurring
+package com.emm.justchill.feature.recurring
 
 import com.emm.justchill.core.ui.mvi.UiIntent
 

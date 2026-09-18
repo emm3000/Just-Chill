@@ -53,10 +53,11 @@ import com.emm.justchill.feature.loan.LoansRoute
 import com.emm.justchill.feature.loan.loanEntries
 import com.emm.justchill.feature.onboarding.ManifestoRoute
 import com.emm.justchill.feature.onboarding.onboardingEntries
+import com.emm.justchill.feature.recurring.RecurringMovementsRoute
+import com.emm.justchill.feature.recurring.recurringEntries
 import com.emm.justchill.feature.report.reportEntries
 import com.emm.justchill.hh.auth.authEntries
 import com.emm.justchill.hh.profile.profileEntries
-import com.emm.justchill.hh.recurring.recurringEntries
 import com.emm.justchill.hh.seetransactions.seeTransactionsEntries
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.SeeTransactionRoute
@@ -173,6 +174,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         pendingImportJson = { pendingImportJson },
                         onImportHandled = { pendingImportJson = null },
                         onCategoriesClick = { nav -> nav.push(CategoriesListRoute) },
+                        onRecurringClick = { nav -> nav.push(RecurringMovementsRoute) },
                         onAboutClick = { nav -> nav.push(ManifestoRoute(isRevisit = true)) },
                     )
                 },

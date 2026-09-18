@@ -9,7 +9,7 @@ import com.emm.justchill.feature.category.AddCategoryViewModel
 import com.emm.justchill.feature.loan.AddEditLoanViewModel
 import com.emm.justchill.feature.loan.LoanDetailViewModel
 import com.emm.justchill.feature.loan.PersonLoansViewModel
-import com.emm.justchill.hh.recurring.AddEditRecurringMovementViewModel
+import com.emm.justchill.feature.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.hh.transaction.EditTransactionViewModel
 import com.russhwolf.settings.SettingsInitializer
 import io.mockk.mockk
