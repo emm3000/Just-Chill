@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.emm.justchill.core.theme.LocalEmmType
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 internal fun DialogActionButton(

@@ -30,12 +30,12 @@ import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.InterFontFamily
-import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.hh.transaction.Catalog
 import com.emm.justchill.hh.transaction.SelectableCategory
 import com.emm.justchill.hh.transaction.resolvedColor

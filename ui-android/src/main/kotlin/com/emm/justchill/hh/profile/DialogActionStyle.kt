@@ -1,7 +1,7 @@
 package com.emm.justchill.hh.profile
 
 import androidx.compose.ui.graphics.Color
-import com.emm.justchill.core.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmColors
 
 internal data class DialogActionStyle(val bg: Color, val border: Color, val textColor: Color)
 

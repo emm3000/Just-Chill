@@ -41,12 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountType
-import com.emm.justchill.core.theme.InterFontFamily
-import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
+import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.LocalEmmColors
 import kotlinx.coroutines.launch
 
 @Composable
@@ -254,7 +254,7 @@ private fun AccountRow(account: Account, isActive: Boolean, swatchColor: Color, 
 internal fun accountSwatchColor(
     name: String,
     type: AccountType,
-    colors: com.emm.justchill.core.theme.EmmColors,
+    colors: com.emm.justchill.core.ui.theme.EmmColors,
 ): Color {
     val lower = name.lowercase()
     return when {

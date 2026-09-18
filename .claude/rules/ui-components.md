@@ -1,24 +1,25 @@
 ---
 paths:
   - "ui-android/src/main/kotlin/**"
+  - "core/ui/src/main/kotlin/**"
 ---
 
 # Shared UI rules
 
-The design system lives in `:ui-android`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/theme/` (`com.emm.justchill.core.theme`). `components/` holds legacy `Emm*` widgets that are **not** the design system; `hh/shared/` is the cross-feature package (nav host, bottom bar, sheets), not a feature package.
+The design system lives in `:core:ui`: the atoms under `core/ui/atoms/` (`com.emm.justchill.core.ui.atoms`) and the tokens under `core/ui/theme/` (`com.emm.justchill.core.ui.theme`). `core/ui/components/` holds legacy `Emm*` widgets that are **not** the design system. In `:ui-android`, `hh/shared/` is the cross-feature package (nav host, bottom bar, sheets), not a feature package.
 
 ## The iron rule
 
 Feature screens call **only** the repo's atoms. **Never** a raw Material3 control — no `Button`, `TextField`, `OutlinedTextField`, `Card`, `IconButton`, `Snackbar`, `TopAppBar`. The atoms for those are `FilledCta` / `OutlinedCta` / `StickyCTA`, `UnderlineTextField`, `IconBtn`, `showEmmSnackbar`, `JcTopBar`.
 
-`Switch` has no atom: it is allowed only with `colors = emmSwitchColors(...)` from `core/ui/atoms/EmmSwitch.kt`, never Material's default colours. `Text` and `Icon` have no atom; they are allowed only with a `LocalEmmType` role and a `LocalEmmColors` token, never an inline `TextStyle` or a literal color. `ModalBottomSheet` is the one Material3 container in use, always with `SheetDragHandle`.
+`Switch` has no atom: it is allowed only with `colors = emmSwitchColors(...)` from `:core:ui`'s `core/ui/atoms/EmmSwitch.kt`, never Material's default colours. `Text` and `Icon` have no atom; they are allowed only with a `LocalEmmType` role and a `LocalEmmColors` token, never an inline `TextStyle` or a literal color. `ModalBottomSheet` is the one Material3 container in use, always with `SheetDragHandle`.
 
 A custom component written inside a screen never replaces an atom that exists for that purpose. If the atom does not fit, extend or modify it first.
 
 ## Before creating a component
 
 1. **Check `core/ui/atoms/` first.** If it exists, use it. No exceptions.
-2. **Decide the scope.** Used by a single screen, it belongs to the feature package (`hh/<feature>/`, as a sibling file or under `components/`). Used app-wide, it belongs in `core/ui/atoms/`.
+2. **Decide the scope.** Used by a single screen, it belongs to the feature package in `:ui-android` (`hh/<feature>/`, as a sibling file or under `components/`). Used app-wide, it belongs in `:core:ui`'s `core/ui/atoms/`.
 3. **If it must be created**, template on `IconBtn.kt` (the 48dp target around a smaller glyph) or `FilledCta.kt`, name it by its role with a matching file name, and include a `@Preview` wrapped in `EmmTheme`.
 
 ## Theme tokens are the style guide
@@ -32,8 +33,8 @@ Nothing enforces these rules mechanically: detekt sees Kotlin, not dp, and the g
 1. **Numbers are the hero.** The amount is what the user came for. The `amount*` roles are the largest type in the app and the only ones in the mono family. A screen's summary has **one** hero amount; the others step down to `textSecondary` on one line.
 2. **Negative space is a component.** Whitespace has a name (`EmmSpacing`), a size and a reason. Crowding is a design failure.
 3. **Hierarchy through type and tone, never through hue.** Emphasis is a step down the text ladder (`textPrimary` → `textSecondary` → `textTertiary`) or a change of size and weight. Hue is reserved for meaning: one accent, four status tokens, six category tints.
-4. **Positive is tinted; negative stays monochrome.** An income amount takes `success`; an expense stays `textPrimary`, never red. `danger` means destructive or broken, not "money leaving". A signed net or balance aggregate (a month net, a total owed) follows the same rule: positive takes `+` and `success`, zero or negative stays monochrome. A magnitude under its own label ("Por cobrar", "Entran") is not a net and keeps the unsigned income/expense semantics. A new net or balance routes its sign and tint through `Money.positiveMoneyFormatted()` (`:presentation`) and `AmountTone.color()` (`core/ui/atoms/AmountTone.kt`); an inline `if` there reopens the monochrome-positive bug.
-5. **Hairline over shadow.** Surfaces separate with space, a 1dp `border` `Hairline`, or a surface step. There is not one elevation shadow in `:ui-android`; keep it that way.
+4. **Positive is tinted; negative stays monochrome.** An income amount takes `success`; an expense stays `textPrimary`, never red. `danger` means destructive or broken, not "money leaving". A signed net or balance aggregate (a month net, a total owed) follows the same rule: positive takes `+` and `success`, zero or negative stays monochrome. A magnitude under its own label ("Por cobrar", "Entran") is not a net and keeps the unsigned income/expense semantics. A new net or balance routes its sign and tint through `Money.positiveMoneyFormatted()` (`:presentation`) and `AmountTone.color()` (`:core:ui`'s `core/ui/atoms/AmountTone.kt`); an inline `if` there reopens the monochrome-positive bug.
+5. **Hairline over shadow.** Surfaces separate with space, a 1dp `border` `Hairline`, or a surface step. There is not one elevation shadow in the design system; keep it that way.
 
 ### Colour
 
@@ -75,7 +76,7 @@ Contrast ≥ 4.5:1 for text, ≥ 3:1 for large text, no token grandfathered. Eve
 ## Never
 
 - A raw Material3 control in a feature screen.
-- A literal color, `.sp` size or `.dp` padding outside `core/theme/`.
+- A literal color, `.sp` size or `.dp` padding outside `:core:ui`'s `core/ui/theme/`.
 - Semantic colors (`success` / `warning` / `danger`) used to mean anything other than a system state.
 - An illustrated mascot in an empty state.
 - Emoji as an icon. Icons are vector assets or drawn paths.

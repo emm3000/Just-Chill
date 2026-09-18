@@ -44,9 +44,9 @@ rootProject.name = "JustChill"
 //   :core:domain    who am I?         business rules, zero framework   Android
 //   :core:database  where do I live?  SQLDelight                       Android
 //   :core:backup    who keeps a copy? Supabase, Ktor, the Snapshot     Android
-//   :core:ui        how do I show it? MviViewModel, the formatters     Android
+//   :core:ui        how do I show it? MVI, formatters, design system   Android
 //   :presentation   what do I think?  ViewModels, MVI, Koin            Android
-//   :ui-android     how do I look?    Compose screens, nav, theme      Android only
+//   :ui-android     how do I look?    Compose screens, navigation      Android only
 //   :androidApp     how do I ship?    manifest, signing, flavors       Android only
 //
 // Dependency order, top of the graph down:

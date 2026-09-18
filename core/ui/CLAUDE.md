@@ -1,8 +1,15 @@
 # :core:ui — CLAUDE.md
 
-The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/` and the Spanish money, date and search formatters in `format/`. It depends on `:core:domain` and nothing else — `checkModuleBoundaries` holds that edge — so Koin, SQLDelight, Supabase and Ktor cannot appear here. The theme and the atoms land in a later ADR 015 ticket.
+The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the Spanish money, date and search formatters in `format/`, and the design system — the tokens in `theme/`, the atoms in `atoms/`, the legacy `Emm*` widgets in `components/`, `Numpad.kt` and the `@Preview` device wrappers in `preview/`. It depends on `:core:domain` and nothing else — `checkModuleBoundaries` holds that edge — so Koin, SQLDelight, Supabase and Ktor cannot appear here.
 
-`justchill.android.compose` (`com.android.library` plus the Compose compiler), namespace `com.emm.justchill.core.ui`, `minSdk = 28`, one `src/main` and one `src/test`. Everything it exposes is `api`: `MviViewModel` publishes `ViewModel`, `StateFlow` and `DomainException`, and the formatters publish `Money`, `YearMonth` and `kotlinx.datetime`.
+`justchill.android.compose` (`com.android.library` plus the Compose compiler), namespace `com.emm.justchill.core.ui`, `minSdk = 28`, one `src/main` and one `src/test`. Everything it exposes is `api`: `MviViewModel` publishes `ViewModel`, `StateFlow` and `DomainException`, the formatters publish `Money`, `YearMonth` and `kotlinx.datetime`, and the atoms publish `Icons.Outlined.*`. Compose itself comes from `justchill.android.compose`, so no Compose coordinate is written here.
+
+## Design system
+
+- Which atom and which token, and why: `.claude/rules/ui-components.md`. That file is the style guide; the values live in `theme/EmmColors.kt`, `EmmType.kt`, `EmmSpacing.kt` and `EmmRadii.kt`.
+- The Inter and IBM Plex Mono faces are this module's own resources under `src/main/res/font/`, reached through `com.emm.justchill.core.ui.R`. `EmmType` is the only file that touches `R`; `:ui-android`'s `com.emm.justchill.shared.R` no longer carries a font.
+- `compose_stability.conf` declares `com.emm.justchill.**` stable, so an atom taking a `:core:domain` `Money` still skips recomposition.
+- `components/` holds the legacy `EmmButton`, `EmmCard`, `EmmListItem`, `EmmTextInput` widgets. They are not the design system and no new screen reaches for them.
 
 ## MVI base
 

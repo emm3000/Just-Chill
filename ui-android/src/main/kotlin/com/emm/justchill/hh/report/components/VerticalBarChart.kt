@@ -31,12 +31,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.hh.report.MonthlyBarItem
 import kotlinx.coroutines.delay
 
@@ -154,7 +154,7 @@ fun EntroVsSalioCard(
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
-    val radii = com.emm.justchill.core.theme.LocalEmmRadii.current
+    val radii = com.emm.justchill.core.ui.theme.LocalEmmRadii.current
 
     Column(
         modifier = modifier

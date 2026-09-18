@@ -26,11 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.backup.SNAPSHOT_BACKUP_ENABLED
-import com.emm.justchill.core.theme.InterFontFamily
-import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmRadii
-import com.emm.justchill.core.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.atoms.FilledCta
+import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE
 import com.emm.justchill.hh.shared.BACKUP_DESTINATION_DISCLOSURE_ACTION
 import com.emm.justchill.hh.shared.BACKUP_LOCAL_ONLY_WARNING

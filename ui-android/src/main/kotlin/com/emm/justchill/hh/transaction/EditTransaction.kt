@@ -25,10 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LocalEmmColors
-import com.emm.justchill.core.theme.LocalEmmSpacing
-import com.emm.justchill.core.theme.LocalEmmType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -41,6 +37,10 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.hh.account.accountDotColor
 import com.emm.justchill.hh.transaction.components.ACCOUNT_CHIP_WEIGHT
 import com.emm.justchill.hh.transaction.components.CATEGORY_CHIP_WEIGHT

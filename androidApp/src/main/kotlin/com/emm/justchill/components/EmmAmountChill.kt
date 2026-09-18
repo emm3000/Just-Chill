@@ -20,9 +20,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.theme.DeleteButtonColor
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.PlexMonoFontFamily
+import com.emm.justchill.core.ui.theme.DeleteButtonColor
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 import java.math.BigDecimal
 import java.text.DecimalFormat
 

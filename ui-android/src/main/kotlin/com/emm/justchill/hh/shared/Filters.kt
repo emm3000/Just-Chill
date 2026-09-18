@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.emm.justchill.core.theme.BackgroundColor
-import com.emm.justchill.core.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.BackgroundColor
+import com.emm.justchill.core.ui.theme.EmmTheme
 
 @Composable
 fun Filters(modifier: Modifier = Modifier) {

@@ -6,8 +6,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
-import com.emm.justchill.core.theme.EmmTheme
-import com.emm.justchill.core.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.LocalEmmColors
 
 /**
  * A deletion already in flight lands whatever happens here, so every gesture the user reads as

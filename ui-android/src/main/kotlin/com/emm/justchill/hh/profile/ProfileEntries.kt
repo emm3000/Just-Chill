@@ -16,9 +16,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.error.toUserMessage
-import com.emm.justchill.core.theme.LocalEmmColors
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
+import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.hh.shared.AppNavigator
 import com.emm.justchill.hh.shared.AuthRoute
 import com.emm.justchill.hh.shared.CategoriesListRoute
