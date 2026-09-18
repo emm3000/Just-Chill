@@ -47,6 +47,7 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.category.CategoryUi
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.pending.ConfirmRecurringSheet
@@ -58,9 +59,8 @@ import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-import com.emm.justchill.hh.transaction.CategoryUi
-import com.emm.justchill.hh.transaction.TransactionUi
-import com.emm.justchill.hh.transaction.components.TransactionRow
+import com.emm.justchill.core.ui.transaction.TransactionRow
+import com.emm.justchill.core.ui.transaction.TransactionUi
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month

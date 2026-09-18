@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction.sheets
+package com.emm.justchill.core.ui.sheets
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

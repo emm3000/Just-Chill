@@ -1,4 +1,4 @@
-package com.emm.justchill.hh.transaction
+package com.emm.justchill.core.ui.category
 
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType

@@ -3,6 +3,7 @@ package com.emm.justchill.hh.transaction
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.hh.shared.AddAccountRoute
 import com.emm.justchill.hh.shared.AddTransactionRoute
 import com.emm.justchill.hh.shared.AppNavigator

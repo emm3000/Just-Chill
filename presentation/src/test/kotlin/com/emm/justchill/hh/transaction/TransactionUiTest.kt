@@ -8,6 +8,8 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.TransactionId
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.ui.transaction.TransactionUi
+import com.emm.justchill.core.ui.transaction.toUi
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals

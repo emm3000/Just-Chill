@@ -2,8 +2,8 @@ package com.emm.justchill.hh.recurring
 
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.mvi.UiIntent
-import com.emm.justchill.hh.transaction.SelectableCategory
 
 sealed interface AddEditRecurringMovementIntent : UiIntent {
     data class OnNameChange(val value: String) : AddEditRecurringMovementIntent

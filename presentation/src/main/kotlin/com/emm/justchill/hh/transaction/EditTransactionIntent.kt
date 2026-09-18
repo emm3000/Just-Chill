@@ -2,6 +2,7 @@ package com.emm.justchill.hh.transaction
 
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.mvi.UiIntent
 import kotlinx.datetime.LocalDate
 

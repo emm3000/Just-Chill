@@ -17,6 +17,7 @@ import com.emm.justchill.core.domain.transaction.TransactionInsert
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.time.FakeTodayFlow
+import com.emm.justchill.core.ui.category.SelectableCategory
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

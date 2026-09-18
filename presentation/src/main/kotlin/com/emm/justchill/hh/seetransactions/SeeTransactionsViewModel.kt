@@ -21,7 +21,7 @@ import com.emm.justchill.core.error.toUserMessage
 import com.emm.justchill.core.time.TodayFlow
 import com.emm.justchill.core.ui.mvi.MviViewModel
 import com.emm.justchill.core.ui.pending.toPendingRecurringUi
-import com.emm.justchill.hh.transaction.toUi
+import com.emm.justchill.core.ui.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

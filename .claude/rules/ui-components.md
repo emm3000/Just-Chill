@@ -65,7 +65,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 - Text inputs are underline-only (`UnderlineTextField`): `border` at rest, `accentFocus` on focus, `danger` on error with the helper text matching.
 - One `accent` element per screen. A destructive action is never accent-styled: `danger` text and a `danger` hairline on a transparent ground.
 - Bars and charts have no track; the bar decorates and the row carries the meaning (`contentDescription` on the row, the graphic hidden from TalkBack).
-- A transaction row is titled by what the user wrote, then by the category, never by a placeholder; `TransactionUi.title` / `subtitle` derive it in `:presentation`.
+- A transaction row is titled by what the user wrote, then by the category, never by a placeholder; `TransactionUi.title` / `subtitle` derive it in `:core:ui`.
 - No screen shows an account "balance": accounts have no opening balance, so every per-account figure is a month-scoped net and says so.
 - A screen never applies window insets itself: `AppNavHost`'s `Scaffold` owns them and hands them down as `PaddingValues`. `ModalBottomSheet` is its own window and the one exception.
 

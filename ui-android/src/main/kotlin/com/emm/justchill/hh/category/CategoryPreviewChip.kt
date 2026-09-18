@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.ui.category.CategoryColor
+import com.emm.justchill.core.ui.category.IconCatalog
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 
