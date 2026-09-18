@@ -154,7 +154,7 @@ class GateCheckTest {
     fun `a migration whose snapshot was never written fails the snapshot check`() {
         val output: String = fixture.checkAndFail(
             task = ":core:database:$SNAPSHOT_TASK",
-            modules = mapOf(":core:database" to module()),
+            modules = mapOf(":core:database" to module(snapshotFloor = 1)),
             sources = mapOf(
                 "$MIGRATION_DIRECTORY/0.sqm" to MIGRATION_SOURCE,
                 "$MIGRATION_DIRECTORY/1.sqm" to MIGRATION_SOURCE,
@@ -169,7 +169,7 @@ class GateCheckTest {
     fun `a migration that ships its snapshot passes the snapshot check`() {
         val result: BuildResult = fixture.check(
             task = ":core:database:$SNAPSHOT_TASK",
-            modules = mapOf(":core:database" to module()),
+            modules = mapOf(":core:database" to module(snapshotFloor = 1)),
             sources = mapOf(
                 "$MIGRATION_DIRECTORY/0.sqm" to MIGRATION_SOURCE,
                 "$SNAPSHOT_DIRECTORY/1.db" to SNAPSHOT_SOURCE,
@@ -180,7 +180,7 @@ class GateCheckTest {
     }
 
     @Test
-    fun `the current baseline shape passes the snapshot check`() {
+    fun `the current pinned shape passes the snapshot check`() {
         val migrations: Map<String, String> = (0..5).associate { version ->
             "$MIGRATION_DIRECTORY/$version.sqm" to MIGRATION_SOURCE
         }
@@ -190,7 +190,7 @@ class GateCheckTest {
 
         val result: BuildResult = fixture.check(
             task = ":core:database:$SNAPSHOT_TASK",
-            modules = mapOf(":core:database" to module()),
+            modules = mapOf(":core:database" to module(snapshotFloor = 3)),
             sources = migrations + snapshots,
         )
 
@@ -201,7 +201,7 @@ class GateCheckTest {
     fun `a snapshot with no migration behind it fails the snapshot check`() {
         val output: String = fixture.checkAndFail(
             task = ":core:database:$SNAPSHOT_TASK",
-            modules = mapOf(":core:database" to module()),
+            modules = mapOf(":core:database" to module(snapshotFloor = 1)),
             sources = mapOf(
                 "$MIGRATION_DIRECTORY/0.sqm" to MIGRATION_SOURCE,
                 "$SNAPSHOT_DIRECTORY/1.db" to SNAPSHOT_SOURCE,
@@ -210,6 +210,56 @@ class GateCheckTest {
         )
 
         assertTrue(output.contains("3.db has no migration 2.sqm"), output)
+    }
+
+    @Test
+    fun `a committed snapshot deleted above the floor fails the snapshot check`() {
+        val migrations: Map<String, String> = (0..5).associate { version ->
+            "$MIGRATION_DIRECTORY/$version.sqm" to MIGRATION_SOURCE
+        }
+        val surviving: Map<String, String> = (4..6).associate { version ->
+            "$SNAPSHOT_DIRECTORY/$version.db" to SNAPSHOT_SOURCE
+        }
+
+        val output: String = fixture.checkAndFail(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module(snapshotFloor = 3)),
+            sources = migrations + surviving,
+        )
+
+        assertTrue(output.contains("2.sqm has no snapshot 3.db"), output)
+    }
+
+    @Test
+    fun `a deleted floor snapshot whose migration was retired fails the snapshot check`() {
+        val migrations: Map<String, String> = (3..5).associate { version ->
+            "$MIGRATION_DIRECTORY/$version.sqm" to MIGRATION_SOURCE
+        }
+        val surviving: Map<String, String> = (4..6).associate { version ->
+            "$SNAPSHOT_DIRECTORY/$version.db" to SNAPSHOT_SOURCE
+        }
+
+        val output: String = fixture.checkAndFail(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module(snapshotFloor = 3)),
+            sources = migrations + surviving,
+        )
+
+        assertTrue(output.contains("the pinned floor 3.db is missing"), output)
+    }
+
+    @Test
+    fun `a module with migrations and no pinned floor fails the snapshot check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to module()),
+            sources = mapOf(
+                "$MIGRATION_DIRECTORY/0.sqm" to MIGRATION_SOURCE,
+                "$SNAPSHOT_DIRECTORY/1.db" to SNAPSHOT_SOURCE,
+            ),
+        )
+
+        assertTrue(output.contains("no pinned snapshot floor"), output)
     }
 
     @Test
@@ -229,8 +279,12 @@ class GateCheckTest {
     private fun module(
         vararg dependencies: String,
         testDependencies: Array<String> = emptyArray(),
+        snapshotFloor: Int? = null,
     ): String = buildString {
         appendLine("""plugins { id("justchill.jvm.library") }""")
+        if (snapshotFloor != null) {
+            appendLine("sqlDelightSnapshots { floor.set($snapshotFloor) }")
+        }
         if (dependencies.isNotEmpty() || testDependencies.isNotEmpty()) {
             appendLine("dependencies {")
             dependencies.forEach { appendLine("""    implementation(project("$it"))""") }

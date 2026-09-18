@@ -3,6 +3,10 @@ plugins {
     id("justchill.sqldelight")
 }
 
+sqlDelightSnapshots {
+    floor.set(3)
+}
+
 android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
