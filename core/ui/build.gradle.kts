@@ -15,5 +15,5 @@ dependencies {
     api(libs.androidx.lifecycle.viewmodel)
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.datetime)
-    api(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.material.icons.extended)
 }

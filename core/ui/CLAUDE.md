@@ -2,7 +2,7 @@
 
 The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the Spanish money, date and search formatters in `format/`, and the design system — the tokens in `theme/`, the atoms in `atoms/`, the legacy `Emm*` widgets in `components/`, `Numpad.kt` and the `@Preview` device wrappers in `preview/`. It depends on `:core:domain` and nothing else — `checkModuleBoundaries` holds that edge — so Koin, SQLDelight, Supabase and Ktor cannot appear here.
 
-`justchill.android.compose` (`com.android.library` plus the Compose compiler), namespace `com.emm.justchill.core.ui`, `minSdk = 28`, one `src/main` and one `src/test`. Everything it exposes is `api`: `MviViewModel` publishes `ViewModel`, `StateFlow` and `DomainException`, the formatters publish `Money`, `YearMonth` and `kotlinx.datetime`, and the atoms publish `Icons.Outlined.*`. Compose itself comes from `justchill.android.compose`, so no Compose coordinate is written here.
+`justchill.android.compose` (`com.android.library` plus the Compose compiler), namespace `com.emm.justchill.core.ui`, `minSdk = 28`, one `src/main` and one `src/test`. Everything it exposes is `api`: `MviViewModel` publishes `ViewModel`, `StateFlow` and `DomainException`, the formatters publish `Money`, `YearMonth` and `kotlinx.datetime`, and the atoms publish `ImageVector`. Compose itself comes from `justchill.android.compose`, so no Compose coordinate is written here.
 
 ## Design system
 
