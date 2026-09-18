@@ -54,6 +54,7 @@ import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 private const val LIST_MAX_HEIGHT_FRACTION = 0.55f
 
@@ -67,6 +68,7 @@ fun CategoryPickerSheet(
     frequentCategoryIds: List<String> = emptyList(),
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
@@ -123,18 +125,24 @@ fun CategoryPickerSheet(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, CircleShape)
+                    .size(spacing.s12)
                     .clickable(onClick = onDismiss),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = "Cerrar",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(13.dp),
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(colors.surface1)
+                        .border(1.dp, colors.border, CircleShape),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Cerrar",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
             }
         }
 
@@ -248,7 +256,7 @@ fun CategoryPickerSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
-                .height(46.dp)
+                .height(spacing.s12)
                 .clip(addButtonShape)
                 .border(1.dp, colors.borderFocus, addButtonShape)
                 .clickable {

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 private const val DAY_GRID_COLUMNS = 7
 private const val MIN_DAY = 1
@@ -47,6 +48,7 @@ private const val MAX_DAY = 31
 @Composable
 fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selected by remember { mutableIntStateOf(current) }
 
@@ -75,18 +77,24 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, CircleShape)
+                    .size(spacing.s12)
                     .clickable(onClick = onDismiss),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = "Cerrar",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(13.dp),
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(colors.surface1)
+                        .border(1.dp, colors.border, CircleShape),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Cerrar",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
             }
         }
 
@@ -171,6 +179,7 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
 @Composable
 private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val days = (MIN_DAY..MAX_DAY).toList()
     val rows = days.chunked(DAY_GRID_COLUMNS)
 
@@ -194,7 +203,7 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .weight(1f)
-                            .height(36.dp)
+                            .height(spacing.s12)
                             .clip(cellShape)
                             .background(cellBg)
                             .border(1.dp, cellBorder, cellShape)

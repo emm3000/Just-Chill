@@ -34,7 +34,7 @@ fun TodayPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
     Box(
         modifier = modifier
-            .height(44.dp)
+            .height(spacing.s12)
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)

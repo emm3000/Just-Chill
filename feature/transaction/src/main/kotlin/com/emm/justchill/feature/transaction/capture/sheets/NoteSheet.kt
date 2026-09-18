@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 
 private const val NOTE_MAX_CHARS = 120
@@ -192,6 +193,7 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
 private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
 
     val bg = if (primary) colors.textPrimary else androidx.compose.ui.graphics.Color.Transparent
     val fg = if (primary) colors.bg else colors.textPrimary
@@ -200,7 +202,7 @@ private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, mo
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .height(46.dp)
+            .height(spacing.s12)
             .clip(radii.rM)
             .background(bg)
             .border(1.dp, borderColor, radii.rM)

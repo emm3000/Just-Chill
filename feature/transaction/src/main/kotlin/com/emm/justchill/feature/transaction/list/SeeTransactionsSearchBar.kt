@@ -75,15 +75,17 @@ private fun SearchInput(
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing = LocalEmmSpacing.current
+    val clearIconGiveback = (spacing.s12 - 14.dp) / 2
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .height(48.dp)
+            .height(spacing.s12)
             .clip(RoundedCornerShape(12.dp))
             .background(colors.surface1)
             .border(1.dp, colors.border, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp),
+            .padding(start = 12.dp, end = (12.dp - clearIconGiveback).coerceAtLeast(0.dp)),
     ) {
         Icon(
             imageVector = Icons.Outlined.Search,
@@ -124,7 +126,7 @@ private fun SearchInput(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(spacing.s12)
                     .clickable { onQueryChange("") },
             ) {
                 Icon(

@@ -55,6 +55,7 @@ import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.format.stripSpanishAccents
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
 internal fun CategoryFilterSheet(
@@ -68,6 +69,7 @@ internal fun CategoryFilterSheet(
     onDismiss: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var segment by rememberSaveable { mutableStateOf(initialSegment) }
@@ -114,18 +116,24 @@ internal fun CategoryFilterSheet(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(colors.surface1)
-                        .border(1.dp, colors.border, CircleShape)
+                        .size(spacing.s12)
                         .clickable(onClick = onDismiss),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = "Cerrar",
-                        tint = colors.textSecondary,
-                        modifier = Modifier.size(13.dp),
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(colors.surface1)
+                            .border(1.dp, colors.border, CircleShape),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = "Cerrar",
+                            tint = colors.textSecondary,
+                            modifier = Modifier.size(13.dp),
+                        )
+                    }
                 }
             }
 

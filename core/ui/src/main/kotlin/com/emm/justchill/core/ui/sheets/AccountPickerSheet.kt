@@ -47,6 +47,7 @@ import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,6 +59,7 @@ fun AccountPickerSheet(
     onAddNew: (() -> Unit)? = null,
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
@@ -86,18 +88,24 @@ fun AccountPickerSheet(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, CircleShape)
+                    .size(spacing.s12)
                     .clickable(onClick = onDismiss),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = "Cerrar",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(13.dp),
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(colors.surface1)
+                        .border(1.dp, colors.border, CircleShape),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Cerrar",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
             }
         }
 
@@ -144,7 +152,7 @@ fun AccountPickerSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
-                    .height(46.dp)
+                    .height(spacing.s12)
                     .clip(addButtonShape)
                     .border(1.dp, colors.borderFocus, addButtonShape)
                     // hide() does not fire onDismissRequest, so the caller's "sheet is open" flag

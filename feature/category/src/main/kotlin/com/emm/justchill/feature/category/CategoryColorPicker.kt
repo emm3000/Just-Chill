@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.category.CategoryColor
 import com.emm.justchill.core.ui.category.allColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
 internal fun ColorRow(selected: CategoryColor, onSelect: (CategoryColor) -> Unit) {
@@ -41,25 +42,33 @@ internal fun ColorRow(selected: CategoryColor, onSelect: (CategoryColor) -> Unit
 
 @Composable
 private fun ColorDot(color: CategoryColor, selected: Boolean, onClick: () -> Unit) {
+    val spacing = LocalEmmSpacing.current
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(color.primary)
+            .size(spacing.s12)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
             ),
     ) {
-        if (selected) {
-            Icon(
-                imageVector = Icons.Outlined.Check,
-                contentDescription = "Seleccionado",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp),
-            )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(color.primary),
+        ) {
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = "Seleccionado",
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }

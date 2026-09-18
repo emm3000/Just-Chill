@@ -262,12 +262,13 @@ private fun ReportTopBar(onShare: () -> Unit) {
 @Composable
 private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val shape = RoundedCornerShape(12.dp)
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(spacing.s12)
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)

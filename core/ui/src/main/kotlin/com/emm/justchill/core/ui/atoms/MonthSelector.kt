@@ -76,7 +76,7 @@ private fun PlainMonthSelector(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(48.dp)
+                .size(36.dp)
                 .clip(radii.rFull)
                 .clickable(onClick = onPrevious),
         ) {
@@ -99,7 +99,7 @@ private fun PlainMonthSelector(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(48.dp)
+                .size(36.dp)
                 .clip(radii.rFull)
                 .clickable(onClick = onNext),
         ) {
@@ -128,7 +128,7 @@ private fun PickerMonthSelector(
 
     Row(
         modifier = modifier
-            .height(48.dp)
+            .height(spacing.s12)
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)
@@ -176,11 +176,12 @@ private fun PickerMonthSelector(
 @Composable
 private fun ChevronButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(spacing.s12)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,

@@ -43,6 +43,7 @@ import com.emm.justchill.core.ui.format.SpanishDateFormat
 import com.emm.justchill.core.ui.format.titlecaseFirstChar
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -58,6 +59,7 @@ private data class Shortcut(val label: String, val date: LocalDate)
 @Composable
 fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val zone = TimeZone.currentSystemDefault()
@@ -105,7 +107,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 icon = Icons.Outlined.Close,
                 onClick = onDismiss,
                 contentDescription = "Cerrar",
-                modifier = Modifier.size(36.dp),
             )
         }
 
@@ -151,7 +152,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 icon = Icons.Outlined.ChevronLeft,
                 onClick = { displayedMonth = displayedMonth.minus(1, DateTimeUnit.MONTH) },
                 contentDescription = "Mes anterior",
-                modifier = Modifier.size(36.dp),
             )
             val monthLabel = remember(displayedMonth) {
                 SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
@@ -172,7 +172,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 icon = Icons.Outlined.ChevronRight,
                 onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
                 contentDescription = "Mes siguiente",
-                modifier = Modifier.size(36.dp),
                 enabled = canGoForward,
             )
         }
@@ -218,9 +217,11 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                             if (date != null) {
                                 val isSelected = date == selectedDate
                                 val isFuture = date > today
+                                // 7 columns at 20dp side padding stay >= 48dp wide from 376dp screens up;
+                                // narrower devices clamp this box's width below 48dp (#93).
                                 Box(
                                     modifier = Modifier
-                                        .size(48.dp)
+                                        .size(spacing.s12)
                                         .clip(CircleShape)
                                         .background(if (isSelected) colors.accent else Color.Transparent)
                                         .clickable(enabled = !isFuture) { selectedDate = date },
@@ -254,7 +255,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 8.dp)
-                .height(46.dp)
+                .height(spacing.s12)
                 .clip(confirmShape)
                 .background(colors.textPrimary)
                 .clickable {
