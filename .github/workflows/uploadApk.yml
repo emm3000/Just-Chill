@@ -47,8 +47,20 @@ jobs:
 
       # `compileReleaseKotlin` is on the gate for the library modules only, so `:androidApp` names
       # its own release compile here.
+      #
+      # lintDevDebug rides in the same call rather than on the gate: it is the slowest thing the PR
+      # gate used to run, and a failure here fails this job exactly as a gate task would. It stays
+      # on the push-triggered step, not behind the dispatch, so every trunk commit is still linted.
       - name: Quality gate
-        run: ./gradlew qualityGate :androidApp:compileProdReleaseKotlin
+        run: ./gradlew qualityGate lintDevDebug :androidApp:compileProdReleaseKotlin
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lint-report
+          path: '**/build/reports/lint-results-*.html'
+          retention-days: 7
 
       # The Crashlytics mapping upload is off unless the property is true: trunk only.
       - name: Build APKs

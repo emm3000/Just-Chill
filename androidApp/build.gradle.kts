@@ -68,14 +68,16 @@ composeCompiler {
 }
 
 // detektMain and detektTest aggregate all four variants; these three cover every production and
-// unit-test source set once, and leave androidTest to its own task. Tests and lint stay on dev: the
-// prod flavor adds a signing config the gate has no reason to need.
+// unit-test source set once, and leave androidTest to its own task. Tests stay on dev: the prod
+// flavor adds a signing config the gate has no reason to need.
 qualityGate {
     detektTasks.addAll("detektDevDebug", "detektDevDebugUnitTest", "detektProdRelease")
 }
 
+// Android lint is deliberately absent: it cost more than half the gate's unconditional floor on a
+// PR, and .github/workflows/uploadApk.yml now runs it alongside the gate on every trunk push.
 tasks.named("qualityGate") {
-    dependsOn("testDevDebugUnitTest", "lintDevDebug")
+    dependsOn("testDevDebugUnitTest")
 }
 
 dependencies {
