@@ -1,7 +1,6 @@
 ---
 status: accepted
 date: 2026-09-18
-amends: ADR 011 (the `qualityGate` legs it lists), ADR 015 (the convention plugin list)
 ---
 # No linter: the gate compiles and tests
 

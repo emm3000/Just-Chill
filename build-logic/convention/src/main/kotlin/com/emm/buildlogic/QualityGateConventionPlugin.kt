@@ -23,7 +23,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
                     "compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
                     ":build-logic:convention:test on the root, " +
                     "checkModuleBoundaries, checkComposeFreeViewModels and checkSqlDelightSnapshots, " +
-                    "the unit tests the library plugins name, plus the tests :androidApp adds. " +
+                    "the unit tests the library plugins name, plus the tests and the prodRelease " +
+                    "compile :androidApp adds. " +
                     "Invoked by CI."
 
             dependsOn(boundaries, composeFree, snapshots)
