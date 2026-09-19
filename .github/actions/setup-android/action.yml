@@ -24,7 +24,7 @@ inputs:
     required: false
     default: 'false'
   cache-encryption-key:
-    description: Key that encrypts the configuration-cache entry. Without it setup-gradle saves and restores no configuration-cache data at all, so every run recalculates the task graph.
+    description: Key that would encrypt a stored configuration-cache entry. Necessary and not sufficient - at the pinned setup-gradle SHA the configuration cache is stored only with DEVELOCITY_STORE_CONFIGURATION_CACHE and a Develocity trial token, so every run recalculates the task graph whether or not this is passed (#153).
     required: false
     default: ''
 
