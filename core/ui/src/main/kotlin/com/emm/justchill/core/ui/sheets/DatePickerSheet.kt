@@ -326,7 +326,7 @@ private fun DayCell(
                     fontWeight = FontWeight.W500,
                     fontFamily = InterFontFamily,
                     color = when {
-                        isSelected -> Color.White
+                        isSelected -> colors.textOnAccent
                         isFuture -> colors.textTertiary
                         else -> colors.textPrimary
                     },

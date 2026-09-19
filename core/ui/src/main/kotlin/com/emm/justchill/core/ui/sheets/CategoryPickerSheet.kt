@@ -337,7 +337,7 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
                 Icon(
                     imageVector = Icons.Outlined.Close,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = colors.textOnAccent,
                     modifier = Modifier.size(10.dp),
                 )
             }
