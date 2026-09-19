@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,13 +68,7 @@ fun StickyCTA(
                 .height(CtaHeight)
                 .clip(radii.rL)
                 .background(bgColor)
-                .then(
-                    if (interactive) {
-                        Modifier.clickable(onClick = onClick)
-                    } else {
-                        Modifier
-                    },
-                ),
+                .clickable(enabled = interactive, role = Role.Button, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
             if (interaction == CtaInteraction.Loading) {
