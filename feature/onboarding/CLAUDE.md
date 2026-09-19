@@ -19,4 +19,10 @@ The manifesto: the first screen a fresh install opens on, and the same screen Pr
 
 ## Testing
 
-`./gradlew :feature:onboarding:testDebugUnitTest`. No unit tests: the module holds one stateless composable with inline copy and no pure function to assert on. `ManifestoRoute`'s round trip is covered by `:androidApp`'s `RouteSerializationTest`.
+`./gradlew :feature:onboarding:testDebugUnitTest`. Composition tests only — there is no pure function and no ViewModel here, so the harness `:feature:loan` piloted is what reaches the one decision: Robolectric and `androidx.compose.ui:ui-test-junit4` on `testImplementation`, `ui-test-manifest` on `debugImplementation`, `testOptions.unitTests.isIncludeAndroidResources` in this build file, and `src/test/resources/robolectric.properties` carrying `sdk=35` and `qualifiers=w411dp-h891dp` once for the module rather than a `@Config` per suite.
+
+`ManifestoScreenTest` renders `ManifestoScreen` inside `EmmTheme` and pins the `isRevisit` branch by label: "Empezar" on a fresh install, "Volver" on a revisit, each with a click action and each invoking `onStart` exactly once, plus the absence of "Empezar" on the revisit. The arrow's side is not asserted and cannot be: `StartButton` passes `contentDescription = null` to both `Icon`s, so neither arrow reaches the semantics tree at all.
+
+`OnboardingEntriesTest` reaches `onboardingEntries` without a `NavDisplay` — nav3's `entryProvider { }` returns a `(NavKey) -> NavEntry<NavKey>` and `NavEntry.Content()` is public, so the real entry body composes against a real `NavBackStack` and a test `BottomBarRoute`. First launch calls `onFirstLaunchSeen` once and leaves the stack rooted at the start tab; the revisit pops one entry and never writes the preference. The revisit seeds three entries on purpose: `AppNavigator.pop()` refuses a stack of one, and on a two-entry stack `pop()` and `replaceAll(startTab)` both land on `[startTab]`, so the stack shape alone would not tell the branches apart. Composing an entry outside a `NavDisplay` also makes `LocalLifecycleOwner` the Robolectric activity, always RESUMED, so `AppNavigator`'s mid-transition guard is inert here — the full recipe and its caveat live in `feature/loan/CLAUDE.md`.
+
+`ManifestoRoute`'s round trip is covered by `:androidApp`'s `RouteSerializationTest`.

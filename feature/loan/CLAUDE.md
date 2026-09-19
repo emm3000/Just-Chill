@@ -8,13 +8,27 @@ The informal-loan ledger: the person list, a person's loans, a loan's detail wit
 
 ## Composition tests
 
-This module is the repo's composition-test pilot. Robolectric and `androidx.compose.ui:ui-test-junit4` are `testImplementation` here alone, with `ui-test-manifest` on `debugImplementation` for the host activity, and `testOptions.unitTests.isIncludeAndroidResources` is enabled in this module's build file rather than in `AndroidLibraryConventionPlugin`, so no other library module pays for it.
+This module is the repo's composition-test pilot; `:feature:onboarding` copied the harness (#240) and is the only other module carrying it. Robolectric and `androidx.compose.ui:ui-test-junit4` are `testImplementation` in those two modules only, with `ui-test-manifest` on `debugImplementation` for the host activity, and `testOptions.unitTests.isIncludeAndroidResources` is enabled in each module's own build file rather than in `AndroidLibraryConventionPlugin`, so no other library module pays for it.
 
 `LoanDetailScreenTest` renders `LoanDetailScreen` inside `EmmTheme` with a recording `onIntent` and pins what the ViewModel suite cannot see: both top-bar actions exist by content description and carry a click action, the `ABONOS` eyebrow renders, the `Registrar abono` CTA renders and clicks through to `OnAddPaymentClick`, and each top-bar click records `OnEditLoanClick` / `OnDeleteLoanClick`. A settled summary (`remainingCents = 0L`) asserts the CTA **keeps** its click action and is not enabled: `StickyCTA` passes `enabled = interactive` to one `clickable`, and `clickable(enabled = false)` leaves `SemanticsActions.OnClick` in place and adds `disabled()`, so the disabled state is a disabled semantic, never a missing node (#243).
 
 `src/test/resources/robolectric.properties` carries `sdk=35` and `qualifiers=w411dp-h891dp` once for the module, not a `@Config` per suite: Robolectric refuses SDK 36 on Java 17 (`Android SDK 36 requires Java 21`) and this project is on the 17 toolchain, and the fixed viewport keeps the eyebrow and the CTA composed regardless of the host's default device. A new suite here inherits both and adds no annotation.
 
 Copying this into another module: take the three dependency lines, the properties file, and nothing else. `debugImplementation(ui-test-manifest)` merges a test-only `ComponentActivity` into that module's debug manifest — AndroidX's documented way to host `createComposeRule()`, debug-only, and it stays. `LoanDetailScreenTest` sits at exactly 8 functions, the per-file ceiling in `.claude/rules/kotlin-style.md`, so the next screen suite in this module is a new file rather than more tests in this one.
+
+### Composing a nav entry against a real back stack
+
+A `<feature>Entries` body needs no `NavDisplay`. `entryProvider { }` is a plain builder returning `(NavKey) -> NavEntry<NavKey>`, `NavEntry.Content()` is public, and `NavBackStack` has a public `vararg` constructor, so the real entry composes against real stack state:
+
+```kotlin
+val backStack: NavBackStack<NavKey> = NavBackStack(StartTabRoute, DetailRoute, ManifestoRoute())
+val resolveEntry: (NavKey) -> NavEntry<NavKey> = entryProvider { onboardingEntries(bindings, onFirstLaunchSeen) }
+composeRule.setContent { EmmTheme { resolveEntry(backStack.last()).Content() } }
+```
+
+The assertion is then `backStack.toList()` after the click, so seed enough entries that each navigation verb leaves a different shape — a stack where `pop()` and `replaceAll(startTab)` both land on `[startTab]` cannot tell the two branches apart. `:feature:onboarding`'s `OnboardingEntriesTest` is the worked example.
+
+The caveat: outside a `NavDisplay`, `LocalLifecycleOwner` is the Robolectric host activity, which is always RESUMED, so `AppNavigator.kt:88`'s mid-transition guard is inert under this recipe and only `push`'s duplicate check survives. Harmless for the onboarding tests, which assert the verbs and not the guard, but a suite meant to pin that guard needs a real `NavDisplay` instead.
 
 ## Koin and the graph
 
