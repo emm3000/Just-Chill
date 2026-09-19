@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,14 +36,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.SpanishDateFormat
 import com.emm.justchill.core.ui.format.titlecaseFirstChar
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -58,6 +62,7 @@ private data class Shortcut(val label: String, val date: LocalDate)
 @Composable
 fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val zone = TimeZone.currentSystemDefault()
@@ -75,11 +80,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
         )
     }
 
-    val pillShape = RoundedCornerShape(999.dp)
-    val activePillBg = colors.textPrimary
-    val activePillFg = colors.bg
-    val inactivePillFg = colors.textSecondary
-
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -90,7 +90,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
+                .padding(start = 20.dp, end = ICON_ROW_EDGE_PADDING, bottom = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -105,7 +105,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 icon = Icons.Outlined.Close,
                 onClick = onDismiss,
                 contentDescription = "Cerrar",
-                modifier = Modifier.size(36.dp),
             )
         }
 
@@ -116,34 +115,21 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(shortcuts) { shortcut ->
-                val isActive = shortcut.label == "Hoy" && selectedDate == today
-
-                Box(
-                    modifier = Modifier
-                        .clip(pillShape)
-                        .background(if (isActive) activePillBg else Color.Transparent)
-                        .border(BorderStroke(1.dp, if (isActive) activePillBg else colors.border), pillShape)
-                        .clickable {
-                            onConfirm(shortcut.date)
-                            onDismiss()
-                        }
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                ) {
-                    Text(
-                        text = shortcut.label,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
-                        color = if (isActive) activePillFg else inactivePillFg,
-                    )
-                }
+                ShortcutPill(
+                    label = shortcut.label,
+                    isActive = shortcut.label == "Hoy" && selectedDate == today,
+                    onClick = {
+                        onConfirm(shortcut.date)
+                        onDismiss()
+                    },
+                )
             }
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = ICON_ROW_EDGE_PADDING, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -151,7 +137,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 icon = Icons.Outlined.ChevronLeft,
                 onClick = { displayedMonth = displayedMonth.minus(1, DateTimeUnit.MONTH) },
                 contentDescription = "Mes anterior",
-                modifier = Modifier.size(36.dp),
             )
             val monthLabel = remember(displayedMonth) {
                 SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
@@ -172,7 +157,6 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 icon = Icons.Outlined.ChevronRight,
                 onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
                 contentDescription = "Mes siguiente",
-                modifier = Modifier.size(36.dp),
                 enabled = canGoForward,
             )
         }
@@ -211,35 +195,13 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 Row(modifier = Modifier.fillMaxWidth()) {
                     for (col in 0 until 7) {
                         val date = days[week * 7 + col]
-                        Box(
+                        DayCell(
+                            date = date,
+                            isSelected = date == selectedDate,
+                            isFuture = date != null && date > today,
+                            onSelect = { if (date != null) selectedDate = date },
                             modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (date != null) {
-                                val isSelected = date == selectedDate
-                                val isFuture = date > today
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(if (isSelected) colors.accent else Color.Transparent)
-                                        .clickable(enabled = !isFuture) { selectedDate = date },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = date.dayOfMonth.toString(),
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.W500,
-                                        fontFamily = InterFontFamily,
-                                        color = when {
-                                            isSelected -> Color.White
-                                            isFuture -> colors.textTertiary
-                                            else -> colors.textPrimary
-                                        },
-                                    )
-                                }
-                            }
-                        }
+                        )
                     }
                 }
             }
@@ -254,7 +216,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 8.dp)
-                .height(46.dp)
+                .height(spacing.s12)
                 .clip(confirmShape)
                 .background(colors.textPrimary)
                 .clickable {
@@ -275,6 +237,87 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
         }
     }
 }
+
+@Composable
+private fun ShortcutPill(label: String, isActive: Boolean, onClick: () -> Unit) {
+    val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val pillShape = RoundedCornerShape(999.dp)
+    val pillBg = if (isActive) colors.textPrimary else Color.Transparent
+    val pillBorder = if (isActive) colors.textPrimary else colors.border
+
+    Box(
+        modifier = Modifier
+            .height(spacing.s12)
+            .clip(pillShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(pillShape)
+                .background(pillBg)
+                .border(BorderStroke(1.dp, pillBorder), pillShape)
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+        ) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = if (isActive) colors.bg else colors.textSecondary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DayCell(
+    date: LocalDate?,
+    isSelected: Boolean,
+    isFuture: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    // Seven columns share the grid's 20dp gutters, so under ~376dp of width the slot cannot also be 48dp wide.
+    Box(
+        modifier = modifier.height(spacing.s12),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (date == null) return@Box
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(enabled = !isFuture, onClick = onSelect),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) colors.accent else Color.Transparent),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.W500,
+                    fontFamily = InterFontFamily,
+                    color = when {
+                        isSelected -> Color.White
+                        isFuture -> colors.textTertiary
+                        else -> colors.textPrimary
+                    },
+                )
+            }
+        }
+    }
+}
+
+private val ICON_ROW_EDGE_PADDING: Dp = 14.dp
 
 private const val CALENDAR_GRID_CELLS = 42
 

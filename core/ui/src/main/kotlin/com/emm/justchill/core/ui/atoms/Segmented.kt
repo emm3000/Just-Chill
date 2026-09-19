@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,23 +19,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun <T> Segmented(options: List<SegmentOption<T>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val shape = RoundedCornerShape(12.dp)
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
+            .height(spacing.s12)
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)
-            .padding(3.dp),
+            .padding(horizontal = CELL_INSET),
     ) {
         options.forEach { option ->
             val isSelected = option.value == selected
@@ -64,20 +69,29 @@ private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit,
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .clip(cellShape)
-            .background(bg)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = 12.dp),
+            .padding(vertical = CELL_INSET),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = label,
-            style = type.labelL,
-            color = textColor,
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(cellShape)
+                .background(bg)
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = label,
+                style = type.labelL,
+                color = textColor,
+            )
+        }
     }
 }
+
+private val CELL_INSET: Dp = 3.dp

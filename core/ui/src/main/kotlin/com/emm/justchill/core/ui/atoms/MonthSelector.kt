@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
@@ -63,6 +65,7 @@ private fun PlainMonthSelector(
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -70,12 +73,12 @@ private fun PlainMonthSelector(
         modifier = modifier
             .clip(radii.rFull)
             .border(BorderStroke(1.dp, colors.border), radii.rFull)
-            .padding(horizontal = 4.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(36.dp)
+                .size(spacing.s12)
                 .clip(radii.rFull)
                 .clickable(onClick = onPrevious),
         ) {
@@ -98,7 +101,7 @@ private fun PlainMonthSelector(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(36.dp)
+                .size(spacing.s12)
                 .clip(radii.rFull)
                 .clickable(onClick = onNext),
         ) {
@@ -127,7 +130,7 @@ private fun PickerMonthSelector(
 
     Row(
         modifier = modifier
-            .height(44.dp)
+            .height(spacing.s12)
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)
@@ -142,6 +145,7 @@ private fun PickerMonthSelector(
         )
         Row(
             modifier = Modifier
+                .fillMaxHeight()
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -174,11 +178,12 @@ private fun PickerMonthSelector(
 @Composable
 private fun ChevronButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(spacing.s12)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,

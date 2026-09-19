@@ -45,8 +45,10 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,6 +60,7 @@ fun AccountPickerSheet(
     onAddNew: (() -> Unit)? = null,
 ) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
@@ -71,7 +74,7 @@ fun AccountPickerSheet(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, end = 16.dp, bottom = 14.dp),
+                .padding(start = 24.dp, end = 8.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -86,18 +89,25 @@ fun AccountPickerSheet(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(spacing.s12)
                     .clip(CircleShape)
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, CircleShape)
                     .clickable(onClick = onDismiss),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = "Cerrar",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(13.dp),
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(colors.surface1)
+                        .border(1.dp, colors.border, CircleShape),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Cerrar",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
             }
         }
 
@@ -144,7 +154,7 @@ fun AccountPickerSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
-                    .height(46.dp)
+                    .height(spacing.s12)
                     .clip(addButtonShape)
                     .border(1.dp, colors.borderFocus, addButtonShape)
                     // hide() does not fire onDismissRequest, so the caller's "sheet is open" flag
