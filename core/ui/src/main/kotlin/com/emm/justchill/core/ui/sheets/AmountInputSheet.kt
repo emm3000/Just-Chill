@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -168,16 +169,10 @@ private fun AmountInputSheetContent(
                 .height(CtaHeight)
                 .clip(radii.rL)
                 .background(ctaBg)
-                .then(
-                    if (confirmEnabled) {
-                        Modifier.clickable {
-                            onAmountConfirm(draftDigits)
-                            onDismiss()
-                        }
-                    } else {
-                        Modifier
-                    },
-                ),
+                .clickable(enabled = confirmEnabled, role = Role.Button) {
+                    onAmountConfirm(draftDigits)
+                    onDismiss()
+                },
             contentAlignment = Alignment.Center,
         ) {
             // These three mirror StickyCTA's own inline label — no role holds 15sp Inter W600, and

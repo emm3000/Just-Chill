@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 
@@ -55,7 +56,7 @@ fun IconBtn(
             .alpha(alpha)
             .clip(shape)
             .border(BorderStroke(1.dp, borderColor), shape)
-            .clickable(enabled = enabled, onClick = onClick),
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     ) {
         Icon(
             imageVector = icon,

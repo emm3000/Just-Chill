@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.loan
 
 import androidx.compose.ui.test.assertHasClickAction
-import androidx.compose.ui.test.assertHasNoClickAction
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -96,10 +96,12 @@ class LoanDetailScreenTest {
     }
 
     @Test
-    fun `a settled loan leaves the payment call to action without a click action`() {
+    fun `a settled loan keeps the payment call to action announced as a disabled button`() {
         renderLoanDetail(summary = settledLoan)
 
-        composeRule.onNodeWithText("Registrar abono").assertHasNoClickAction()
+        composeRule.onNodeWithText("Registrar abono")
+            .assertHasClickAction()
+            .assertIsNotEnabled()
     }
 
     private fun renderLoanDetail(summary: LoanSummaryUi) {
