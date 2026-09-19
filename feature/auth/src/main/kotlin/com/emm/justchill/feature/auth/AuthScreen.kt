@@ -266,15 +266,19 @@ private fun AuthFormStep(
 
             Spacer(Modifier.height(spacing.s8))
 
-            Text(
-                text = toggleLabel,
-                style = type.bodyM,
-                color = colors.accent,
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .clickable(role = Role.Button) { onIntent(AuthIntent.ToggleMode) }
-                    .padding(vertical = spacing.s2),
-            )
+                    .height(spacing.s12)
+                    .clickable(role = Role.Button) { onIntent(AuthIntent.ToggleMode) },
+            ) {
+                Text(
+                    text = toggleLabel,
+                    style = type.bodyM,
+                    color = colors.accent,
+                )
+            }
 
             Spacer(Modifier.height(spacing.s4))
         }
@@ -381,18 +385,22 @@ private fun CheckEmailStep(
                 color = colors.textTertiary,
             )
             val resendActive = !state.isResending && state.canResend
-            Text(
-                text = if (state.isResending) "Reenviando…" else "Reenviar enlace",
-                style = type.bodyM,
-                color = if (resendActive) colors.accent else colors.textTertiary,
-                // Padding sits outside the branch so the row keeps its height when the link
+            Box(
+                contentAlignment = Alignment.Center,
+                // The height sits outside the branch so the row keeps it when the link
                 // disables mid-cooldown.
                 modifier = if (resendActive) {
                     Modifier.clickable(role = Role.Button) { onIntent(AuthIntent.ResendEmail) }
                 } else {
                     Modifier
-                }.padding(vertical = spacing.s3),
-            )
+                }.height(spacing.s12),
+            ) {
+                Text(
+                    text = if (state.isResending) "Reenviando…" else "Reenviar enlace",
+                    style = type.bodyM,
+                    color = if (resendActive) colors.accent else colors.textTertiary,
+                )
+            }
         }
 
         Spacer(Modifier.height(spacing.s4))

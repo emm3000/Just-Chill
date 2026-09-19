@@ -3,6 +3,8 @@ package com.emm.justchill.feature.transaction.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -30,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,8 +57,10 @@ import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.AppIconCatalog
 import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.format.stripSpanishAccents
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
 internal fun CategoryFilterSheet(
@@ -68,6 +74,7 @@ internal fun CategoryFilterSheet(
     onDismiss: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var segment by rememberSaveable { mutableStateOf(initialSegment) }
@@ -111,21 +118,33 @@ internal fun CategoryFilterSheet(
                     color = colors.textPrimary,
                     letterSpacing = (-0.15).sp,
                 )
+                val closeInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(colors.surface1)
-                        .border(1.dp, colors.border, CircleShape)
-                        .clickable(onClick = onDismiss),
+                        .size(spacing.s12)
+                        .clickable(
+                            interactionSource = closeInteraction,
+                            indication = null,
+                            onClick = onDismiss,
+                        ),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = "Cerrar",
-                        tint = colors.textSecondary,
-                        modifier = Modifier.size(13.dp),
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(colors.surface1)
+                            .border(1.dp, colors.border, CircleShape)
+                            .indication(closeInteraction, ripple()),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = "Cerrar",
+                            tint = colors.textSecondary,
+                            modifier = Modifier.size(13.dp),
+                        )
+                    }
                 }
             }
 
@@ -247,14 +266,16 @@ private fun SegmentedRow(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val outerShape = RoundedCornerShape(12.dp)
 
     Row(
         modifier = modifier
+            .height(spacing.s12)
             .clip(outerShape)
             .background(colors.surface1)
             .border(1.dp, colors.border, outerShape)
-            .padding(4.dp),
+            .padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         SegmentCell(
@@ -286,22 +307,35 @@ private fun SegmentCell(
     val shape = RoundedCornerShape(9.dp)
     val bg = if (selected) colors.surface3 else Color.Transparent
     val textColor = if (selected) colors.textPrimary else colors.textSecondary
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .clip(shape)
-            .background(bg)
-            .clickable(onClick = onClick)
-            .padding(vertical = 9.dp),
+            .fillMaxHeight()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .padding(vertical = 4.dp),
     ) {
-        Text(
-            text = "$label · $count",
-            fontSize = 12.sp,
-            fontFamily = InterFontFamily,
-            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
-            color = textColor,
-        )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape)
+                .background(bg)
+                .indication(interactionSource, ripple()),
+        ) {
+            Text(
+                text = "$label · $count",
+                fontSize = 12.sp,
+                fontFamily = InterFontFamily,
+                fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
+                color = textColor,
+            )
+        }
     }
 }
 

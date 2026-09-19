@@ -3,6 +3,7 @@ package com.emm.justchill.feature.report
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,6 +44,7 @@ import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.format.monthLabel
 import com.emm.justchill.core.ui.format.monthYearLabel
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -262,15 +265,13 @@ private fun ReportTopBar(onShare: () -> Unit) {
 @Composable
 private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val shape = RoundedCornerShape(12.dp)
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
-            .size(44.dp)
-            .clip(shape)
-            .background(colors.surface1)
-            .border(width = 1.dp, color = colors.border, shape = shape)
+            .size(spacing.s12)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -278,12 +279,22 @@ private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: (
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = colors.textPrimary,
-            modifier = Modifier.size(20.dp),
-        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(shape)
+                .background(colors.surface1)
+                .border(width = 1.dp, color = colors.border, shape = shape)
+                .indication(interactionSource, ripple()),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = colors.textPrimary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
     }
 }
 
@@ -371,23 +382,31 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(spacing.s4))
+        val ctaShape = RoundedCornerShape(6.dp)
         val interactionSource = remember { MutableInteractionSource() }
         Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
+                .height(spacing.s12)
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = onAddTransaction,
-                )
-                .background(colors.accent)
-                .padding(horizontal = spacing.s5, vertical = spacing.s3),
+                ),
         ) {
-            Text(
-                text = cta,
-                style = typeTokens.labelL,
-                color = colors.textOnAccent,
-            )
+            Box(
+                modifier = Modifier
+                    .clip(ctaShape)
+                    .background(colors.accent)
+                    .indication(interactionSource, ripple())
+                    .padding(horizontal = spacing.s5, vertical = spacing.s3),
+            ) {
+                Text(
+                    text = cta,
+                    style = typeTokens.labelL,
+                    color = colors.textOnAccent,
+                )
+            }
         }
     }
 }

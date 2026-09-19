@@ -3,6 +3,7 @@ package com.emm.justchill.feature.account
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,9 +60,11 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -207,35 +211,44 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
     val bgColor = if (selected) colors.surface3 else colors.surface1
     val borderColor = if (selected) colors.textPrimary else colors.border
     val textColor = if (selected) colors.textPrimary else colors.textSecondary
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
-    Row(
+    Box(
+        contentAlignment = Alignment.Center,
         modifier = Modifier
-            .clip(shape)
-            .background(bgColor)
-            .border(1.dp, borderColor, shape)
+            .height(spacing.s12)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
-            )
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ),
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(6.dp)
-                .clip(CircleShape)
-                .background(dotColor),
-        )
-        Text(
-            text = label,
-            fontSize = 13.sp,
-            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = textColor,
-            letterSpacing = (-0.06).sp,
-        )
+                .clip(shape)
+                .background(bgColor)
+                .border(1.dp, borderColor, shape)
+                .indication(interactionSource, ripple())
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(dotColor),
+            )
+            Text(
+                text = label,
+                fontSize = 13.sp,
+                fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = textColor,
+                letterSpacing = (-0.06).sp,
+            )
+        }
     }
 }
 
