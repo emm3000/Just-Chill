@@ -198,7 +198,7 @@ private fun SkipPeriodAction(periodLabel: String, onSkip: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onSkip)
-            .padding(vertical = 14.dp),
+            .padding(vertical = 16.dp),
         textAlign = TextAlign.Center,
         style = emmType.labelM.copy(fontSize = 13.sp, letterSpacing = 0.sp),
         color = colors.textSecondary,

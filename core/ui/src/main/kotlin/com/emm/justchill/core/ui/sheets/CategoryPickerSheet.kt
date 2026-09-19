@@ -52,8 +52,10 @@ import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 private const val LIST_MAX_HEIGHT_FRACTION = 0.55f
 
@@ -67,6 +69,7 @@ fun CategoryPickerSheet(
     frequentCategoryIds: List<String> = emptyList(),
 ) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
@@ -108,7 +111,7 @@ fun CategoryPickerSheet(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, end = 16.dp, bottom = 14.dp),
+                .padding(start = 24.dp, end = 8.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -123,18 +126,25 @@ fun CategoryPickerSheet(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(spacing.s12)
                     .clip(CircleShape)
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, CircleShape)
                     .clickable(onClick = onDismiss),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = "Cerrar",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(13.dp),
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(colors.surface1)
+                        .border(1.dp, colors.border, CircleShape),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Cerrar",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
             }
         }
 
@@ -248,7 +258,7 @@ fun CategoryPickerSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
-                .height(46.dp)
+                .height(spacing.s12)
                 .clip(addButtonShape)
                 .border(1.dp, colors.borderFocus, addButtonShape)
                 .clickable {
@@ -294,7 +304,7 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
             .fillMaxWidth()
             .background(if (isActive) colors.surface1 else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 10.dp),
+            .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
