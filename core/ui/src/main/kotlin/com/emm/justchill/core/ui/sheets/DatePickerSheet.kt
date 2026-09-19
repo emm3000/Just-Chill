@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +48,7 @@ import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.SpanishDateFormat
 import com.emm.justchill.core.ui.format.titlecaseFirstChar
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
@@ -247,17 +251,17 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
 
 @Composable
 private fun ShortcutPill(label: String, isActive: Boolean, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val pillShape = RoundedCornerShape(999.dp)
-    val pillBg = if (isActive) colors.textPrimary else Color.Transparent
-    val pillBorder = if (isActive) colors.textPrimary else colors.border
+    val pillBg: Color = if (isActive) colors.textPrimary else Color.Transparent
+    val pillBorder: Color = if (isActive) colors.textPrimary else colors.border
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
             .height(spacing.s12)
-            .clip(pillShape)
-            .clickable(onClick = onClick),
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Box(
@@ -265,6 +269,7 @@ private fun ShortcutPill(label: String, isActive: Boolean, onClick: () -> Unit) 
                 .clip(pillShape)
                 .background(pillBg)
                 .border(BorderStroke(1.dp, pillBorder), pillShape)
+                .indication(interactionSource, ripple())
                 .padding(horizontal = 14.dp, vertical = 6.dp),
         ) {
             Text(
@@ -286,8 +291,9 @@ private fun DayCell(
     onSelect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     // Seven columns share the grid's 20dp gutters, so under ~376dp of width the slot cannot also be 48dp wide.
     Box(
@@ -298,14 +304,20 @@ private fun DayCell(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clickable(enabled = !isFuture, onClick = onSelect),
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = !isFuture,
+                    onClick = onSelect,
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) colors.accent else Color.Transparent),
+                    .background(if (isSelected) colors.accent else Color.Transparent)
+                    .indication(interactionSource, ripple()),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
