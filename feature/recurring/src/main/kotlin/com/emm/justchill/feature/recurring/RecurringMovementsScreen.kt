@@ -3,6 +3,7 @@ package com.emm.justchill.feature.recurring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,10 +51,12 @@ import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
@@ -246,35 +250,44 @@ private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss
 @Composable
 private fun AddRecurringButton(onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val shape = RoundedCornerShape(999.dp)
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
-    Row(
+    Box(
+        contentAlignment = Alignment.Center,
         modifier = Modifier
-            .clip(shape)
-            .background(colors.surface3)
-            .border(1.dp, colors.borderFocus, shape)
+            .height(spacing.s12)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
-            )
-            .padding(horizontal = 12.dp, vertical = 7.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ),
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = null,
-            tint = colors.textPrimary,
-            modifier = Modifier.size(14.dp),
-        )
-        Text(
-            text = "Nueva",
-            fontSize = 13.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-        )
+        Row(
+            modifier = Modifier
+                .clip(shape)
+                .background(colors.surface3)
+                .border(1.dp, colors.borderFocus, shape)
+                .indication(interactionSource, ripple())
+                .padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = null,
+                tint = colors.textPrimary,
+                modifier = Modifier.size(14.dp),
+            )
+            Text(
+                text = "Nueva",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.W600,
+                fontFamily = InterFontFamily,
+                color = colors.textPrimary,
+            )
+        }
     }
 }
 

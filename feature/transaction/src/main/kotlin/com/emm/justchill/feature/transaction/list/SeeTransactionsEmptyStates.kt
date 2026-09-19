@@ -3,6 +3,8 @@ package com.emm.justchill.feature.transaction.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +22,9 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +35,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
@@ -120,6 +126,7 @@ internal fun EmptyFilteredNoResults(
 ) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     val headline = buildAnnotatedString {
         withStyle(
@@ -179,26 +186,39 @@ internal fun EmptyFilteredNoResults(
             modifier = Modifier.widthIn(max = 240.dp),
         )
         Spacer(Modifier.height(20.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        val pillShape = RoundedCornerShape(999.dp)
+        val clearInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .border(1.dp, colors.borderFocus, RoundedCornerShape(999.dp))
-                .clickable { onClear() }
-                .padding(horizontal = 14.dp, vertical = 9.dp),
+                .height(spacing.s12)
+                .clickable(
+                    interactionSource = clearInteraction,
+                    indication = null,
+                    onClick = onClear,
+                ),
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = null,
-                tint = colors.textPrimary,
-                modifier = Modifier.size(11.dp),
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = "Limpiar filtros",
-                style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
-                color = colors.textPrimary,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(pillShape)
+                    .border(1.dp, colors.borderFocus, pillShape)
+                    .indication(clearInteraction, ripple())
+                    .padding(horizontal = 14.dp, vertical = 9.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = null,
+                    tint = colors.textPrimary,
+                    modifier = Modifier.size(11.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "Limpiar filtros",
+                    style = type.labelM.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+                    color = colors.textPrimary,
+                )
+            }
         }
     }
 }

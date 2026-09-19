@@ -3,6 +3,8 @@ package com.emm.justchill.feature.report.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -25,9 +27,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,8 +43,10 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.monthAbbrevLabel
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.Month
 
@@ -48,6 +54,7 @@ import kotlinx.datetime.Month
 fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var displayYear by rememberSaveable { mutableIntStateOf(current.year) }
@@ -74,21 +81,33 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
                 color = colors.textPrimary,
                 letterSpacing = (-0.15).sp,
             )
+            val closeInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(colors.surface1)
-                    .border(1.dp, colors.border, CircleShape)
-                    .clickable(onClick = onDismiss),
+                    .size(spacing.s12)
+                    .clickable(
+                        interactionSource = closeInteraction,
+                        indication = null,
+                        onClick = onDismiss,
+                    ),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = "Cerrar",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(13.dp),
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(colors.surface1)
+                        .border(1.dp, colors.border, CircleShape)
+                        .indication(closeInteraction, ripple()),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = "Cerrar",
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
             }
         }
 
@@ -101,7 +120,8 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(spacing.s12)
+                    .clip(CircleShape)
                     .clickable { displayYear-- },
                 contentAlignment = Alignment.Center,
             ) {
@@ -119,7 +139,8 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
             )
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(spacing.s12)
+                    .clip(CircleShape)
                     .clickable { displayYear++ },
                 contentAlignment = Alignment.Center,
             ) {

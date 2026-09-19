@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,6 +55,7 @@ import com.emm.justchill.core.ui.pending.ConfirmRecurringSheet
 import com.emm.justchill.core.ui.pending.PendingRecurringHeader
 import com.emm.justchill.core.ui.pending.PendingRecurringRow
 import com.emm.justchill.core.ui.pending.PendingRecurringUi
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
@@ -280,6 +282,7 @@ private fun PendingConfirmSheetHost(
 private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val shape = RoundedCornerShape(10.dp)
 
     val displayText = buildAnnotatedString {
@@ -301,10 +304,11 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .padding(bottom = 12.dp)
+            .height(spacing.s12)
             .clip(shape)
             .background(colors.accentMuted)
             .border(1.dp, colors.accent.copy(alpha = 0.2f), shape)
-            .padding(horizontal = 12.dp, vertical = 9.dp),
+            .padding(start = 12.dp),
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.List,
@@ -329,9 +333,10 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .fillMaxHeight()
                 .clip(RoundedCornerShape(8.dp))
                 .clickable(onClick = onClear)
-                .padding(horizontal = 6.dp, vertical = 2.dp),
+                .padding(horizontal = 12.dp),
         ) {
             Text(
                 text = "Limpiar",
