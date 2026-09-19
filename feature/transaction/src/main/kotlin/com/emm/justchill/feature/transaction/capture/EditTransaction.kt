@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.account.accountDotColor
@@ -59,6 +60,7 @@ fun EditTransaction(
     transactionId: String,
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onAddNewCategory: (CategoryType) -> Unit,
     onAddNewAccount: () -> Unit = {},
     vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(transactionId) }),
 ) {
@@ -84,6 +86,7 @@ fun EditTransaction(
         state = state,
         onIntent = vm::onIntent,
         onBack = onBack,
+        onAddNewCategory = onAddNewCategory,
         onAddNewAccount = onAddNewAccount,
     )
 }
@@ -93,6 +96,7 @@ private fun EditTransactionContent(
     state: EditTransactionUiState,
     onIntent: (EditTransactionIntent) -> Unit,
     onBack: () -> Unit,
+    onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
@@ -231,7 +235,7 @@ private fun EditTransactionContent(
             categories = state.categories,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
             onSelect = { onIntent(EditTransactionIntent.OnCategorySelected(it)) },
-            onAddNew = { onIntent(EditTransactionIntent.OnSheetDismissed) },
+            onAddNew = { onAddNewCategory(state.transactionType.categoryType) },
             onDismiss = { onIntent(EditTransactionIntent.OnSheetDismissed) },
             frequentCategoryIds = state.frequentCategoryIds,
         )
