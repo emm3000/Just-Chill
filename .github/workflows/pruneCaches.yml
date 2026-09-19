@@ -1,0 +1,103 @@
+name: Prune Gradle Cache Generations
+
+# The Actions cache store has a hard 10 GiB cap and GitHub evicts by LRU once it is crossed, so a
+# PR can lose an entry it was going to restore for reasons unrelated to its own diff (#256).
+# `uploadApk` on `trunk` is the only writer, and setup-gradle writes a fresh extracted entry per
+# component whenever that component's content hash moved. The transforms directory moves on every
+# push, so every trunk push adds another ~286,700,000-byte copy of a directory otherwise unchanged.
+# Measured on 2026-09-19: 20 live `gradle-transforms-v2` generations at 6,661,916,290 bytes and 20
+# `gradle-build-cache-v2` at 2,654,265,850, 84.7% of a store holding 10,997,862,247 across 77
+# entries, against a cap of 10 GiB = 10,737,418,240.
+#
+# Only the newest generation is ever restored. Nothing in setup-gradle's inputs removes the old
+# ones, so this job does, right after the writer finishes and once a day as a net.
+
+on:
+  workflow_run:
+    workflows:
+      - Android Action Generated APKs
+    types:
+      - completed
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Report the victims and delete nothing
+        required: false
+        default: 'true'
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Candidates are `gradle-*` keys only: this rule was written for setup-gradle's churn and has
+      # no business evicting a cache some future workflow keeps for its own reasons.
+      # Two independent guards then apply, and an entry has to fail both to be deleted:
+      #   - KEEP_PER_PREFIX newest generations of every component survive by `created_at`, so the
+      #     manifest the next run restores and its extracted entries are never candidates;
+      #   - anything a run touched within GRACE_HOURS of the newest `gradle-home-v2` entry survives
+      #     by `last_accessed_at`. This is the one the code cannot justify on its own: creation
+      #     order is not liveness, so once a component carries more than KEEP_PER_PREFIX
+      #     generations the first guard stops covering the entry the runs actually read. It also
+      #     covers a PR job that began restoring a generation moments before `workflow_run` fired
+      #     this one. The evidence is in `.claude/rules/github-workflows.md`; do not drop it
+      #     because a snapshot shows it deleting nothing.
+      - name: Prune stale generations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          KEEP_PER_PREFIX: '3'
+          GRACE_HOURS: '4'
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
+        run: |
+          set -euo pipefail
+
+          gh api "repos/$REPO/actions/caches?per_page=100" --paginate --jq '.actions_caches[]' \
+            | jq -s '.' > caches.json
+
+          jq -r '"before: \([.[].size_in_bytes] | add // 0) bytes across \(length) entries"' caches.json
+
+          jq --argjson keep "$KEEP_PER_PREFIX" --argjson grace "$GRACE_HOURS" '
+            def ts(s): (s[0:19] + "Z") | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime;
+            def prefix(k): k | split("|")[0] | sub("-[0-9a-f]{32}$"; "");
+            [.[] | . + {p: prefix(.key)} | select(.p | startswith("gradle-"))] as $all
+            | ([$all[] | select(.p == "gradle-home-v2") | ts(.created_at)] | max) as $live
+            | ([$all | group_by(.p) | .[] | sort_by(.created_at) | reverse | .[0:$keep] | .[].id]
+               | unique) as $newest
+            | if $live == null then []
+              else [$all[]
+                    | select((.id | IN($newest[]) | not)
+                             and (ts(.last_accessed_at) < ($live - $grace * 3600)))]
+              end
+          ' caches.json > victims.json
+
+          jq -r '"victims: \(length) entries, \([.[].size_in_bytes] | add // 0) bytes"' victims.json
+          jq -r '.[] | "  \(.key) \(.size_in_bytes) last_accessed=\(.last_accessed_at)"' victims.json
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo 'dry run: nothing deleted'
+            exit 0
+          fi
+
+          # A 404 here means another run of this job took the same entry first, which is the one
+          # concurrent outcome that is not a failure. Nothing else is tolerated.
+          while read -r id; do
+            if [ -n "$id" ] && ! gh api --method DELETE "repos/$REPO/actions/caches/$id" --silent 2>delete.err; then
+              case "$(tr -d '\n' < delete.err)" in
+                *"HTTP 404"*) echo "  $id already gone" ;;
+                *) cat delete.err >&2; exit 1 ;;
+              esac
+            fi
+          done < <(jq -r '.[].id' victims.json)
+
+          gh api "repos/$REPO/actions/cache/usage" \
+            --jq '"after: \(.active_caches_size_in_bytes) bytes across \(.active_caches_count) entries"'
