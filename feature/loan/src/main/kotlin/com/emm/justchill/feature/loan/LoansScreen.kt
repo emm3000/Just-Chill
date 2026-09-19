@@ -3,6 +3,7 @@ package com.emm.justchill.feature.loan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,9 +24,11 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -100,13 +103,17 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
     val spacing = LocalEmmSpacing.current
     val nameColor = if (person.isSettled) colors.textTertiary else colors.textPrimary
     val remainingColor = personRemainingTone(person.isSettled, person.remainingIsPositive).color(colors)
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
+    val rowBackground: Color = if (isPressed) colors.surface1 else Color.Transparent
 
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(rowBackground)
                 .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
+                    interactionSource = interactionSource,
                     indication = null,
                     onClickLabel = "Ver los préstamos de esta persona",
                     onClick = onClick,
@@ -135,6 +142,8 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
                     Pill(text = "Liquidado", tone = PillTone.Pos)
                 }
             }
+
+            LoanChevronTrailing()
         }
         Hairline()
     }

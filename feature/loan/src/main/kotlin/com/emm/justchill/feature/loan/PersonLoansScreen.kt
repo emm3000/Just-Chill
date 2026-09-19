@@ -3,6 +3,7 @@ package com.emm.justchill.feature.loan
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,9 +22,11 @@ import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -85,19 +88,24 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     val remainingColor = if (loan.isSettled) colors.textTertiary else colors.textPrimary
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
+    val rowBackground: Color = if (isPressed) colors.surface1 else Color.Transparent
 
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(rowBackground)
                 .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
+                    interactionSource = interactionSource,
                     indication = null,
                     onClickLabel = "Ver detalle del préstamo",
                     onClick = onClick,
                 )
                 .padding(horizontal = spacing.s4, vertical = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(
@@ -126,6 +134,8 @@ private fun LoanRow(loan: LoanRowUi, onClick: () -> Unit) {
                     color = colors.textSecondary,
                 )
             }
+
+            LoanChevronTrailing()
         }
         Hairline()
     }
