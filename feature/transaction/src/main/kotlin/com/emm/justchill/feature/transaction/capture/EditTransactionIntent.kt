@@ -20,6 +20,8 @@ sealed interface EditTransactionIntent : UiIntent {
 
     data class OnCategorySelected(val value: SelectableCategory) : EditTransactionIntent
 
+    data class OnNewValueFromOthers(val value: SelectableCategory) : EditTransactionIntent
+
     data object OnSave : EditTransactionIntent
 
     data object OnDeleteClick : EditTransactionIntent

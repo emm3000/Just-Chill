@@ -1,6 +1,7 @@
 package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.Transaction
@@ -24,6 +25,9 @@ data class EditTransactionUiState(
     val catalog: Catalog = Catalog.Loading,
     val accountId: AccountId? = null,
     val categoryId: CategoryId? = null,
+    // Bridges the frame between creating a category here and the repository flow re-emitting with
+    // it. The catalog's row supersedes it by id, so this can never serve a stale copy.
+    val extraCategories: List<SelectableCategory> = emptyList(),
     val frequentCategoryIds: List<String> = emptyList(),
     val openSheet: TransactionSheet? = null,
     val showDeleteDialog: Boolean = false,
@@ -32,8 +36,7 @@ data class EditTransactionUiState(
 
     val accounts: List<Account> get() = catalog.accounts
 
-    val categories: List<SelectableCategory>
-        get() = catalog.loaded?.categories?.get(transactionType.categoryType).orEmpty()
+    val categories: List<SelectableCategory> get() = categoriesOf(transactionType.categoryType)
 
     val accountSelected: Account? get() = accounts.find { it.accountId == accountId }
 
@@ -63,6 +66,14 @@ data class EditTransactionUiState(
                 accountSelected?.accountId != stored.accountId ||
                 categoryEdited(stored.categoryId)
         }
+
+    private fun categoriesOf(type: CategoryType): List<SelectableCategory> {
+        val known: List<SelectableCategory> = catalog.loaded?.categories?.get(type).orEmpty()
+        val pending: List<SelectableCategory> = extraCategories.filter { extra ->
+            extra.categoryType == type && known.none { it.categoryId == extra.categoryId }
+        }
+        return if (pending.isEmpty()) known else pending + known
+    }
 
     // Compares the RESOLVED selection: a stored category the catalog can no longer offer is not an
     // edit the user made, or the CTA would be armed the moment such a screen opens.

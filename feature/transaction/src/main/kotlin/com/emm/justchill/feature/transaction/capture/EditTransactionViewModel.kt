@@ -63,12 +63,23 @@ class EditTransactionViewModel(
             is EditTransactionIntent.OnDateSelected -> updateState { copy(date = intent.value) }
             is EditTransactionIntent.OnAccountSelected -> updateState { copy(accountId = intent.value.accountId) }
             is EditTransactionIntent.OnCategorySelected -> updateState { copy(categoryId = intent.value.categoryId) }
+            is EditTransactionIntent.OnNewValueFromOthers -> addCategoryFromOthers(intent.value)
             EditTransactionIntent.OnSave -> saveChanges()
             EditTransactionIntent.OnDeleteClick -> updateState { copy(showDeleteDialog = true) }
             EditTransactionIntent.OnDeleteDismiss -> updateState { copy(showDeleteDialog = false) }
             EditTransactionIntent.OnDeleteConfirm -> performDelete()
             is EditTransactionIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
             EditTransactionIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
+        }
+    }
+
+    // The schema refuses a cross-type (categoryId, type) pair; the screen always asks for the
+    // movement's own type, so this guard should never fire.
+    private fun addCategoryFromOthers(category: SelectableCategory) {
+        if (category.categoryType != currentState.transactionType.categoryType) return
+        updateState {
+            val others: List<SelectableCategory> = extraCategories.filterNot { it.categoryId == category.categoryId }
+            copy(extraCategories = listOf(category) + others, categoryId = category.categoryId)
         }
     }
 

@@ -16,11 +16,13 @@ import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionUpdate
 import com.emm.justchill.core.domain.transaction.UpdateTransactionUseCase
+import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.CapturingSlot
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -95,8 +97,9 @@ class EditTransactionViewModelTest {
     private val accountRepository = mockk<AccountRepository> {
         every { all() } returns flowOf(accounts)
     }
+    private val storedCategories = MutableStateFlow(categories)
     private val categoryRepository = mockk<CategoryRepository> {
-        every { all() } returns flowOf(categories)
+        every { all() } returns storedCategories
     }
     private val transactionRepository = mockk<TransactionRepository>()
     private val updateTransaction = mockk<UpdateTransactionUseCase>(relaxed = true)
@@ -218,7 +221,7 @@ class EditTransactionViewModelTest {
         vm.onIntent(EditTransactionIntent.OnSave)
         advanceUntilIdle()
 
-        val update = slot<TransactionUpdate>()
+        val update: CapturingSlot<TransactionUpdate> = slot()
         coVerify { updateTransaction.invoke(storedTransaction, capture(update)) }
         assertEquals(LocalDateTime(newDay, LocalTime(9, 15, 33)), update.captured.occurredAt)
     }
@@ -468,5 +471,125 @@ class EditTransactionViewModelTest {
         advanceUntilIdle()
 
         assertFalse(vm.state.value.showDeleteDialog)
+    }
+
+    @Test
+    fun `a category created from the edit screen is selected and offered first`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val created = SelectableCategory(
+            categoryId = CategoryId("subscriptions"),
+            name = "Suscripciones",
+            iconId = "card",
+            categoryType = CategoryType.Spend,
+            colorId = "blue",
+        )
+
+        vm.onIntent(EditTransactionIntent.OnNewValueFromOthers(created))
+        advanceUntilIdle()
+
+        val state: EditTransactionUiState = vm.state.value
+        assertEquals(created, state.categorySelected)
+        assertEquals(created, state.categories.first(), "the new one is offered first")
+        assertTrue(state.categories.all { it.categoryType == CategoryType.Spend })
+    }
+
+    @Test
+    fun `a category created from the edit screen arms the save CTA`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertFalse(vm.state.value.isEnabled)
+
+        vm.onIntent(
+            EditTransactionIntent.OnNewValueFromOthers(
+                SelectableCategory(
+                    categoryId = CategoryId("subscriptions"),
+                    name = "Suscripciones",
+                    iconId = "card",
+                    categoryType = CategoryType.Spend,
+                    colorId = "blue",
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isEnabled)
+    }
+
+    @Test
+    fun `saving writes the category created from the edit screen`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val update = slot<TransactionUpdate>()
+        coEvery { updateTransaction.invoke(any(), capture(update)) } returns Unit
+
+        vm.onIntent(
+            EditTransactionIntent.OnNewValueFromOthers(
+                SelectableCategory(
+                    categoryId = CategoryId("subscriptions"),
+                    name = "Suscripciones",
+                    iconId = "card",
+                    categoryType = CategoryType.Spend,
+                    colorId = "blue",
+                ),
+            ),
+        )
+        vm.onIntent(EditTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        assertEquals(CategoryId("subscriptions"), update.captured.categoryId)
+    }
+
+    @Test
+    fun `the catalog's row supersedes the one created here, without duplicating it`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val created = SelectableCategory(
+            categoryId = CategoryId("subscriptions"),
+            name = "Suscripciones",
+            iconId = "card",
+            categoryType = CategoryType.Spend,
+            colorId = "blue",
+        )
+        vm.onIntent(EditTransactionIntent.OnNewValueFromOthers(created))
+        advanceUntilIdle()
+
+        val persisted = Category(
+            categoryId = CategoryId("subscriptions"),
+            name = "Suscripciones",
+            icon = "card",
+            color = "purple",
+            categoryType = CategoryType.Spend,
+        )
+        storedCategories.value = categories + persisted
+        advanceUntilIdle()
+
+        val offered: List<SelectableCategory> = vm.state.value.categories
+        assertEquals(1, offered.count { it.categoryId == created.categoryId })
+        assertEquals("purple", offered.first { it.categoryId == created.categoryId }.colorId)
+        assertEquals(CategoryId("subscriptions"), vm.state.value.categorySelected?.categoryId)
+    }
+
+    @Test
+    fun `a category of the other type is not attached to the edited movement`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val before: EditTransactionUiState = vm.state.value
+
+        vm.onIntent(
+            EditTransactionIntent.OnNewValueFromOthers(
+                SelectableCategory(
+                    categoryId = CategoryId("salary"),
+                    name = "Sueldo",
+                    iconId = "money",
+                    categoryType = CategoryType.Income,
+                    colorId = "green",
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        assertEquals(before.categorySelected, vm.state.value.categorySelected)
+        assertTrue(vm.state.value.categories.all { it.categoryType == CategoryType.Spend })
     }
 }
