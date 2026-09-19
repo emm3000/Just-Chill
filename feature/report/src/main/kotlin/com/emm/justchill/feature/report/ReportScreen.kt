@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.shared.YearMonth
@@ -59,6 +60,10 @@ import com.emm.justchill.feature.report.components.TotalAmountHero
 import com.emm.justchill.feature.report.components.TrendsContent
 import kotlinx.datetime.Month
 import org.koin.compose.viewmodel.koinViewModel
+
+private val TopBarTileSize: Dp = 44.dp
+
+private val EmptyStateTileSize: Dp = 44.dp
 
 @Composable
 fun ReportScreen(
@@ -244,7 +249,7 @@ private fun ReportTopBar(onShare: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .padding(horizontal = spacing.s4),
+            .padding(start = spacing.s4, end = spacing.s4 - spacing.topBarTileEdgeGiveback),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -281,7 +286,7 @@ private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: (
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(TopBarTileSize)
                 .clip(shape)
                 .background(colors.surface1)
                 .border(width = 1.dp, color = colors.border, shape = shape)
@@ -314,7 +319,7 @@ private fun MonthEmptyState(month: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(EmptyStateTileSize)
                 .clip(tileShape)
                 .background(colors.surface1)
                 .border(width = 1.dp, color = colors.border, shape = tileShape),
@@ -495,3 +500,6 @@ private fun ReportScreenEmptyPreview() {
         )
     }
 }
+
+private val EmmSpacing.topBarTileEdgeGiveback: Dp
+    get() = (s12 - TopBarTileSize) / 2
