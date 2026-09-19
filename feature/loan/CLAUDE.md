@@ -6,6 +6,16 @@ The informal-loan ledger: the person list, a person's loans, a loan's detail wit
 
 `./gradlew :feature:loan:testDebugUnitTest`. The MockK ViewModel suite moved here from `:androidApp` with the ViewModels; `MainDispatcherRule` and `FakeTodayFlow` come from `:core:testing`.
 
+## Composition tests
+
+This module is the repo's composition-test pilot. Robolectric and `androidx.compose.ui:ui-test-junit4` are `testImplementation` here alone, with `ui-test-manifest` on `debugImplementation` for the host activity, and `testOptions.unitTests.isIncludeAndroidResources` is enabled in this module's build file rather than in `AndroidLibraryConventionPlugin`, so no other library module pays for it.
+
+`LoanDetailScreenTest` renders `LoanDetailScreen` inside `EmmTheme` with a recording `onIntent` and pins what the ViewModel suite cannot see: both top-bar actions exist by content description and carry a click action, the `ABONOS` eyebrow renders, the `Registrar abono` CTA renders and clicks through to `OnAddPaymentClick`, and each top-bar click records `OnEditLoanClick` / `OnDeleteLoanClick`. A settled summary (`remainingCents = 0L`) asserts the CTA has **no** click action, because `StickyCTA` attaches `Modifier.clickable` only when the interaction is `Enabled`; the disabled state is the absence of a click action, not a disabled semantic.
+
+`src/test/resources/robolectric.properties` carries `sdk=35` and `qualifiers=w411dp-h891dp` once for the module, not a `@Config` per suite: Robolectric refuses SDK 36 on Java 17 (`Android SDK 36 requires Java 21`) and this project is on the 17 toolchain, and the fixed viewport keeps the eyebrow and the CTA composed regardless of the host's default device. A new suite here inherits both and adds no annotation.
+
+Copying this into another module: take the three dependency lines, the properties file, and nothing else. `debugImplementation(ui-test-manifest)` merges a test-only `ComponentActivity` into that module's debug manifest — AndroidX's documented way to host `createComposeRule()`, debug-only, and it stays. `LoanDetailScreenTest` sits at exactly 8 functions, the per-file ceiling in `.claude/rules/kotlin-style.md`, so the next screen suite in this module is a new file rather than more tests in this one.
+
 ## Koin and the graph
 
 `loanModule` is declared here and binds the four ViewModels, nothing else. `:androidApp`'s `wiring/LoanWiring.kt` includes it and adds the five loan use cases, and is the only file outside this module that binds anything of the ledger's; the repositories stay in `:androidApp`'s `core/di/DataModule.kt`, since only the app sees `:core:database`. Every ViewModel here is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
