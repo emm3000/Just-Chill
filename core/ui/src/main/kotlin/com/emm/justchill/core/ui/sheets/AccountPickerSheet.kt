@@ -253,7 +253,7 @@ private fun AccountRow(account: Account, isActive: Boolean, swatchColor: Color, 
                 Icon(
                     imageVector = Icons.Outlined.AccountBalanceWallet,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = colors.textOnAccent,
                     modifier = Modifier.size(12.dp),
                 )
             }

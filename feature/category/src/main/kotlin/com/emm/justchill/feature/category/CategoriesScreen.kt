@@ -41,6 +41,7 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.ui.atoms.DialogAction
 import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -352,21 +353,10 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(spacing.s6))
-        Box(
-            modifier = Modifier
-                .clickable(onClick = onCreate)
-                .background(colors.accent)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-        ) {
-            Text(
-                text = "Crear categoría",
-                fontSize = 15.sp,
-                fontFamily = InterFontFamily,
-                fontWeight = FontWeight.W600,
-                color = Color.White,
-                letterSpacing = (-0.15).sp,
-            )
-        }
+        FilledCta(
+            label = "Crear categoría",
+            onClick = onCreate,
+        )
     }
 }
 

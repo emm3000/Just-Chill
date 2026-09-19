@@ -382,7 +382,7 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
                 Icon(
                     imageVector = Icons.Outlined.Check,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = colors.textOnAccent,
                     modifier = Modifier.size(12.dp),
                 )
             }
