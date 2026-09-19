@@ -76,7 +76,7 @@ jobs:
       - uses: ./.github/actions/setup-android
         with:
           supabase-properties: ${{ secrets.SUPABASE_PROPERTIES }}
-          cache-read-only: 'true'
+          cache-read-only: 'false'
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       # No assembleDevDebug while the ADR 015 migration runs: the gate already compiles that
