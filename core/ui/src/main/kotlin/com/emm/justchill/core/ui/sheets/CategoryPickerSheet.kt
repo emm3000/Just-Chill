@@ -299,12 +299,13 @@ private fun SectionHeader(text: String) {
 @Composable
 private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(if (isActive) colors.surface1 else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 24.dp, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
