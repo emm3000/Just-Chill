@@ -51,7 +51,7 @@ val emmDarkColors: EmmColors = EmmColors(
     textSecondary = Color(0xFFA8A8A8),
     textTertiary = Color(0xFF6E6E6E),
     textDisabled = Color(0xFF4A4A4A),
-    textOnAccent = Color(0xFFFFFFFF),
+    textOnAccent = Color(0xFF191919),
 
     accent = Color(0xFFE07856),
     accentMuted = Color(0x24E07856),
