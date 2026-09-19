@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -87,121 +89,126 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
         contentWindowInsets = { WindowInsets.navigationBars },
         dragHandle = { SheetDragHandle() },
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = ICON_ROW_EDGE_PADDING, bottom = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState()),
         ) {
-            Text(
-                text = "Selecciona fecha",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = colors.textPrimary,
-            )
-            IconBtn(
-                icon = Icons.Outlined.Close,
-                onClick = onDismiss,
-                contentDescription = "Cerrar",
-            )
-        }
-
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(shortcuts) { shortcut ->
-                ShortcutPill(
-                    label = shortcut.label,
-                    isActive = shortcut.label == "Hoy" && selectedDate == today,
-                    onClick = {
-                        onConfirm(shortcut.date)
-                        onDismiss()
-                    },
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = ICON_ROW_EDGE_PADDING, bottom = 14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Selecciona fecha",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.W600,
+                    fontFamily = InterFontFamily,
+                    color = colors.textPrimary,
+                )
+                IconBtn(
+                    icon = Icons.Outlined.Close,
+                    onClick = onDismiss,
+                    contentDescription = "Cerrar",
                 )
             }
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = ICON_ROW_EDGE_PADDING, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconBtn(
-                icon = Icons.Outlined.ChevronLeft,
-                onClick = { displayedMonth = displayedMonth.minus(1, DateTimeUnit.MONTH) },
-                contentDescription = "Mes anterior",
-            )
-            val monthLabel = remember(displayedMonth) {
-                SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
-            }
-            Text(
-                text = monthLabel,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
-            )
-            // A transaction records money that already moved, so there is no month after this one
-            // to browse. The domain rejects a future date outright (TransactionDateRules); this
-            // chevron and the day cells' own enabled gate keep the user away from that error.
-            val canGoForward = displayedMonth < today.firstOfMonth()
-            IconBtn(
-                icon = Icons.Outlined.ChevronRight,
-                onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
-                contentDescription = "Mes siguiente",
-                enabled = canGoForward,
-            )
-        }
-
-        val weekdayLabels = listOf("L", "M", "M", "J", "V", "S", "D")
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 8.dp),
-        ) {
-            weekdayLabels.forEach { label ->
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = label,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
-                        color = colors.textTertiary,
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(shortcuts) { shortcut ->
+                    ShortcutPill(
+                        label = shortcut.label,
+                        isActive = shortcut.label == "Hoy" && selectedDate == today,
+                        onClick = {
+                            onConfirm(shortcut.date)
+                            onDismiss()
+                        },
                     )
                 }
             }
-        }
 
-        val days = remember(displayedMonth) { displayedMonth.daysGrid() }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            for (week in 0 until 6) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    for (col in 0 until 7) {
-                        val date = days[week * 7 + col]
-                        DayCell(
-                            date = date,
-                            isSelected = date == selectedDate,
-                            isFuture = date != null && date > today,
-                            onSelect = { if (date != null) selectedDate = date },
-                            modifier = Modifier.weight(1f),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = ICON_ROW_EDGE_PADDING, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconBtn(
+                    icon = Icons.Outlined.ChevronLeft,
+                    onClick = { displayedMonth = displayedMonth.minus(1, DateTimeUnit.MONTH) },
+                    contentDescription = "Mes anterior",
+                )
+                val monthLabel = remember(displayedMonth) {
+                    SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
+                }
+                Text(
+                    text = monthLabel,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.W600,
+                    fontFamily = InterFontFamily,
+                    color = colors.textPrimary,
+                    letterSpacing = (-0.15).sp,
+                )
+                // A transaction records money that already moved, so there is no month after this one
+                // to browse. The domain rejects a future date outright (TransactionDateRules); this
+                // chevron and the day cells' own enabled gate keep the user away from that error.
+                val canGoForward = displayedMonth < today.firstOfMonth()
+                IconBtn(
+                    icon = Icons.Outlined.ChevronRight,
+                    onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
+                    contentDescription = "Mes siguiente",
+                    enabled = canGoForward,
+                )
+            }
+
+            val weekdayLabels = listOf("L", "M", "M", "J", "V", "S", "D")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 8.dp),
+            ) {
+                weekdayLabels.forEach { label ->
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = label,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.W500,
+                            fontFamily = InterFontFamily,
+                            color = colors.textTertiary,
                         )
+                    }
+                }
+            }
+
+            val days = remember(displayedMonth) { displayedMonth.daysGrid() }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+            ) {
+                for (week in 0 until 6) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        for (col in 0 until 7) {
+                            val date = days[week * 7 + col]
+                            DayCell(
+                                date = date,
+                                isSelected = date == selectedDate,
+                                isFuture = date != null && date > today,
+                                onSelect = { if (date != null) selectedDate = date },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 }
             }
