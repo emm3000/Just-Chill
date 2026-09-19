@@ -73,7 +73,7 @@ private fun MonthSelectorWithTodayPreview() {
                 .padding(16.dp),
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MonthSelector(label = "Abril 2026", onPrevious = {}, onNext = {}, onLabelClick = {})
+                MonthSelector(label = "Mayo 2026", onPrevious = {}, onNext = {}, onLabelClick = {})
                 TodayPill(onClick = {})
             }
         }
