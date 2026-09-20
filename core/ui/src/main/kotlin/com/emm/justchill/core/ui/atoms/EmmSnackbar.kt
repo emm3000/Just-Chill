@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -38,8 +39,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
@@ -95,7 +101,7 @@ private fun EmmSnackbarBody(data: SnackbarData) {
             .fillMaxWidth()
             .padding(horizontal = spacing.s4)
             .clip(shape)
-            .background(colors.surface2)
+            .background(colors.bg)
             .border(1.dp, colors.border, shape)
             .padding(horizontal = 14.dp, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
@@ -180,3 +186,37 @@ suspend fun SnackbarHostState.showEmmSnackbar(
         duration = duration,
     ),
 )
+
+private class PreviewSnackbarData(override val visuals: SnackbarVisuals) : SnackbarData {
+    override fun performAction() = Unit
+    override fun dismiss() = Unit
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun EmmSnackbarPreview() {
+    EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
+        val spacing: EmmSpacing = LocalEmmSpacing.current
+        Column(
+            verticalArrangement = Arrangement.spacedBy(spacing.s2),
+            modifier = Modifier
+                .background(colors.bg)
+                .padding(vertical = spacing.s4),
+        ) {
+            EmmSnackbarBody(
+                PreviewSnackbarData(EmmSnackbarVisuals(message = "Guardado «Supermercado»")),
+            )
+            EmmSnackbarBody(
+                PreviewSnackbarData(
+                    EmmSnackbarVisuals(
+                        message = "No se pudo guardar",
+                        tone = EmmSnackbarTone.Error,
+                        actionLabel = "Reintentar",
+                    ),
+                ),
+            )
+        }
+    }
+}

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,8 +24,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -66,7 +72,6 @@ fun SelectorChip(
                 .fillMaxWidth()
                 .height(spacing.s10)
                 .clip(radii.rFull)
-                .background(colors.surface1)
                 .border(1.dp, colors.border, radii.rFull)
                 .padding(horizontal = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
@@ -88,6 +93,35 @@ fun SelectorChip(
                 contentDescription = null,
                 tint = colors.textTertiary,
                 modifier = Modifier.size(ChipChevronSize),
+            )
+        }
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun SelectorChipPreview() {
+    EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
+        val spacing: EmmSpacing = LocalEmmSpacing.current
+        Column(
+            verticalArrangement = Arrangement.spacedBy(spacing.s2),
+            modifier = Modifier
+                .background(colors.bg)
+                .padding(spacing.s4),
+        ) {
+            SelectorChip(
+                label = "BCP",
+                dotColor = null,
+                onClickLabel = "Cambiar cuenta",
+                onClick = {},
+            )
+            SelectorChip(
+                label = "Supermercado",
+                dotColor = colors.catSage,
+                onClickLabel = "Cambiar categoría",
+                onClick = {},
             )
         }
     }

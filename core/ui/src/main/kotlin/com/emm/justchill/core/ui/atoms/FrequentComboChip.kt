@@ -17,7 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -50,7 +55,6 @@ fun FrequentComboChip(
             modifier = Modifier
                 .height(spacing.s8)
                 .clip(radii.rFull)
-                .background(if (active) colors.surface2 else colors.surface1)
                 .border(1.dp, if (active) colors.borderFocus else colors.border, radii.rFull)
                 .padding(horizontal = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
@@ -65,6 +69,31 @@ fun FrequentComboChip(
                 color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun FrequentComboChipPreview() {
+    EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
+        val spacing: EmmSpacing = LocalEmmSpacing.current
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            modifier = Modifier
+                .background(colors.bg)
+                .padding(spacing.s4),
+        ) {
+            FrequentComboChip(label = "Comida", dotColor = colors.catOchre, onClick = {})
+            FrequentComboChip(
+                label = "Transporte",
+                dotColor = colors.catSlate,
+                onClick = {},
+                active = true,
             )
         }
     }
