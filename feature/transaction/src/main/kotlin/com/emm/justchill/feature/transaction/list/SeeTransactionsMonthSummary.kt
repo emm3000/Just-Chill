@@ -108,9 +108,9 @@ private fun SecondaryLine(summary: MonthSummaryUi) {
         horizontalArrangement = Arrangement.spacedBy(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
-        SecondaryAmount(label = "Ingresos", value = formatNeutral(summary.income.format()))
+        SecondaryAmount(label = "Entró", value = formatNeutral(summary.income.format()))
         SecondaryAmount(
-            label = "Balance",
+            label = "Neto",
             value = summary.net.positiveMoneyFormatted(),
             tone = balanceTone(summary.net),
         )
