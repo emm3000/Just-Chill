@@ -68,10 +68,8 @@ fun Numpad(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 row.forEach { key ->
-                    // A digit is the default action and reads as the ground; the keys that edit
-                    // what is already typed step forward off it.
-                    val isEditingKey = key !is NumKey.Digit
-                    val bgColor = if (isEditingKey) colors.surface1 else Color.Transparent
+                    val isEditingKey: Boolean = key !is NumKey.Digit
+                    val bgColor: Color = if (isEditingKey) colors.surface1 else Color.Transparent
 
                     Box(
                         contentAlignment = Alignment.Center,

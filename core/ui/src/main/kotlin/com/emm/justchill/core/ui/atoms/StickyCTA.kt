@@ -18,14 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
-import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 
 val CtaHeight = 52.dp
 
@@ -41,7 +39,6 @@ fun StickyCTA(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     sublabel: String? = null,
-    inlineSublabel: Boolean = false,
     tone: CtaTone = CtaTone.Neutral,
     interaction: CtaInteraction = CtaInteraction.Enabled,
 ) {
@@ -81,31 +78,6 @@ fun StickyCTA(
                         strokeWidth = 2.dp,
                     )
                     CtaLabel(text = label, color = fgColor)
-                }
-            } else if (inlineSublabel && sublabel != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    CtaLabel(text = label, color = fgColor)
-                    Text(
-                        text = "·",
-                        color = fgColor.copy(alpha = 0.6f),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
-                    )
-                    Text(
-                        text = sublabel,
-                        color = fgColor.copy(alpha = 0.9f),
-                        style = TextStyle(
-                            fontFamily = PlexMonoFontFamily,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.W500,
-                            letterSpacing = (-0.15).sp,
-                            fontFeatureSettings = "tnum",
-                        ),
-                    )
                 }
             } else {
                 Column(

@@ -79,7 +79,7 @@ private data class TransactionKindContent(
     val describeAmount: (Money) -> String,
 )
 
-private val SpendKind = TransactionKindContent(
+private val SPEND_KIND = TransactionKindContent(
     amountTone = AmountTone.Neutral,
     ctaLabel = "Anotar gasto",
     signDescription = "Cambiar a ingreso",
@@ -87,7 +87,7 @@ private val SpendKind = TransactionKindContent(
     describeAmount = { money -> "Gasto de ${money.balanceFormatted()}" },
 )
 
-private val IncomeKind = TransactionKindContent(
+private val INCOME_KIND = TransactionKindContent(
     amountTone = AmountTone.Pos,
     ctaLabel = "Anotar ingreso",
     signDescription = "Cambiar a gasto",
@@ -143,7 +143,7 @@ private fun AddTransactionScreenContent(
     val isSpend = state.transactionType == TransactionType.Spend
     val noAccounts = state.hasNoAccounts
 
-    val kind: TransactionKindContent = if (isSpend) SpendKind else IncomeKind
+    val kind: TransactionKindContent = if (isSpend) SPEND_KIND else INCOME_KIND
     val ctaLabel: String = if (noAccounts) "Crea una cuenta primero" else kind.ctaLabel
     val amountDescription: String = remember(state.amount, kind) {
         kind.describeAmount(centsToMoney(state.amount))
