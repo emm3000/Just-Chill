@@ -15,7 +15,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 fun EntryProviderScope<NavKey>.seeTransactionsEntries(bindings: NavHostBindings) {
     entry<SeeTransactionRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: SeeTransactionsViewModel = koinViewModel()
 
         LaunchedEffect(vm) {

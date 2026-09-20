@@ -20,7 +20,7 @@ fun EntryProviderScope<NavKey>.categoryEntries(
     onCategoryForTransaction: (SelectableCategory) -> Unit,
 ) {
     entry<CategoriesListRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: CategoriesViewModel = koinViewModel()
         val categoriesState by vm.state.collectAsStateWithLifecycle()
 
@@ -42,7 +42,7 @@ fun EntryProviderScope<NavKey>.categoryEntries(
     }
 
     entry<CategoryRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         AddCategoryScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,

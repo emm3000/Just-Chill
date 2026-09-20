@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -100,6 +100,7 @@ fun AddTransactionScreen(
     vm: AddTransactionViewModel,
     popBackStack: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onOpenMenu: () -> Unit = {},
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -122,7 +123,7 @@ fun AddTransactionScreen(
     AddTransactionScreenContent(
         state = state,
         onIntent = vm::onIntent,
-        popBackStack = popBackStack,
+        onOpenMenu = onOpenMenu,
         onAddNewCategory = onAddNewCategory,
         onAddNewAccount = onAddNewAccount,
     )
@@ -132,7 +133,7 @@ fun AddTransactionScreen(
 private fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
-    popBackStack: () -> Unit,
+    onOpenMenu: () -> Unit = {},
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -154,7 +155,7 @@ private fun AddTransactionScreenContent(
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        FormHeader(onClose = popBackStack)
+        FormHeader(onOpenMenu = onOpenMenu)
 
         Box(
             contentAlignment = Alignment.Center,
@@ -303,7 +304,7 @@ private fun AddTransactionScreenContent(
 }
 
 @Composable
-private fun FormHeader(onClose: () -> Unit) {
+private fun FormHeader(onOpenMenu: () -> Unit) {
     val spacing = LocalEmmSpacing.current
 
     Row(
@@ -312,7 +313,7 @@ private fun FormHeader(onClose: () -> Unit) {
             .padding(horizontal = spacing.s4, vertical = spacing.s2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconBtn(icon = Icons.Outlined.Close, onClick = onClose, contentDescription = "Cerrar")
+        IconBtn(icon = Icons.Outlined.Menu, onClick = onOpenMenu, contentDescription = "Abrir el menú")
     }
 }
 
@@ -375,7 +376,6 @@ private fun AddTransactionPreview() {
                 transactionType = TransactionType.Spend,
             ),
             onIntent = {},
-            popBackStack = {},
         )
     }
 }

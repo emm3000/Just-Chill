@@ -8,7 +8,7 @@ import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 
 fun EntryProviderScope<NavKey>.authEntries(bindings: NavHostBindings) {
     entry<AuthRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         AuthScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,

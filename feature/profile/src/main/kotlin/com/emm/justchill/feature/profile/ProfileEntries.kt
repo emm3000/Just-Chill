@@ -63,7 +63,7 @@ fun EntryProviderScope<NavKey>.profileEntries(
     }
 
     entry<PrivacyPolicyRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         PrivacyPolicyScreen(
             onBack = { nav.pop() },
         )
@@ -86,7 +86,7 @@ private fun ProfileEntry(
     onAboutClick: (AppNavigator) -> Unit,
     onSignInClick: (AppNavigator) -> Unit,
 ) {
-    val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+    val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
     val vm: ProfileViewModel = koinViewModel()
     val profileState by vm.state.collectAsStateWithLifecycle()
     val clipboard: Clipboard = LocalClipboard.current

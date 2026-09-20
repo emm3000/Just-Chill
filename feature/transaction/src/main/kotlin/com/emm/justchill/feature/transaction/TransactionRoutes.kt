@@ -2,13 +2,12 @@ package com.emm.justchill.feature.transaction
 
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.navigation.AppRoute
-import com.emm.justchill.core.ui.navigation.BottomBarRoute
 import com.emm.justchill.core.ui.navigation.CaptureRoute
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
 @Serializable
-data object SeeTransactionRoute : BottomBarRoute
+data object SeeTransactionRoute : AppRoute
 
 @Serializable
 data class AddTransactionRoute(

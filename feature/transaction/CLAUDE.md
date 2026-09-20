@@ -12,7 +12,7 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 
 ## Routes and cross-feature navigation
 
-`SeeTransactionRoute` is the `BottomBarRoute` the app starts on: `:androidApp`'s `AppNavHost` uses it as `startTab` and `AppBottomBar` as its first tab. `AddTransactionRoute` and `EditTransactionRoute` are `CaptureRoute`s, the marker `popToCapture()` reads. Adding a category or an account from the form leaves this feature, so both arrive as `(AppNavigator) -> Unit` callbacks supplied by `AppNavHost`, never as a route value; the category created there comes back through the host's `pendingCategory` accessor, read as a `() -> T` because a `NavEntry.content` closure is cached until the back stack changes.
+`AddTransactionRoute()` with no preselection is the app's home screen (ADR 017): `:androidApp`'s `AppEntryGraph.kt` names it `HOME_ROUTE` and roots the back stack on it, so the pad's save never pops — `AddTransactionViewModel` empties the amount, the note and the date itself and keeps the resolved defaults. `SeeTransactionRoute` is a plain `AppRoute` the "Más" menu pushes until W3's month screen replaces it. `AddTransactionRoute` and `EditTransactionRoute` are `CaptureRoute`s, the marker `popToCapture()` reads. Opening the menu, adding a category and adding an account all leave this feature, so each arrives as an `(AppNavigator) -> Unit` callback supplied by the host, never as a route value; the category created there comes back through the host's `pendingCategory` accessor, read as a `() -> T` because a `NavEntry.content` closure is cached until the back stack changes.
 
 ## Capture
 

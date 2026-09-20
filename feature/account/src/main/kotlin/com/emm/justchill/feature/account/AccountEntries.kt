@@ -17,7 +17,7 @@ fun EntryProviderScope<NavKey>.accountEntries(
     onOpenLoans: (AppNavigator) -> Unit,
 ) {
     entry<AccountsRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: AccountsViewModel = koinViewModel()
         val accountsState by vm.state.collectAsStateWithLifecycle()
 
@@ -39,7 +39,7 @@ fun EntryProviderScope<NavKey>.accountEntries(
     }
 
     entry<AddAccountRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         AddAccountScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,

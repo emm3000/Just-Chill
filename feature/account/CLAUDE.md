@@ -7,7 +7,7 @@ Accounts: the month list, create, edit, delete, and the Loan balance row that si
 ## DI and navigation
 
 - `accountModule` exposes the two ViewModels and nothing else. `:androidApp`'s `wiring/AccountWiring.kt` `includes` it and binds the three use cases, because a use case is not the feature's to own.
-- `AccountRoutes.kt` holds `AccountsRoute` (a `BottomBarRoute`) and `AddAccountRoute`, both `@Serializable`, plus `accountRoutes`, the registry `:androidApp`'s `RouteSerializationTest` unions. A new route lands in both or it is never round-tripped.
+- `AccountRoutes.kt` holds `AccountsRoute` and `AddAccountRoute`, both `@Serializable`, plus `accountRoutes`, the registry `:androidApp`'s `RouteSerializationTest` unions. A new route lands in both or it is never round-tripped.
 - `accountEntries` takes `onOpenLoans: (AppNavigator) -> Unit`; `:androidApp` supplies the push, since the Loans feature is not this module's to import. `LoansSection` is the only caller, and it is mounted even with an empty ledger: gating it on the ledger having data leaves the ledger unreachable.
 
 ## Feature gotchas

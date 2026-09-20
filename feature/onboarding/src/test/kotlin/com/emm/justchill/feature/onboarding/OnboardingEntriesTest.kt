@@ -9,7 +9,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import com.emm.justchill.core.ui.navigation.BottomBarRoute
+import com.emm.justchill.core.ui.navigation.AppRoute
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.PlatformHostActions
 import com.emm.justchill.core.ui.theme.EmmTheme
@@ -21,7 +21,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @Serializable
-private data object StartTabRoute : BottomBarRoute
+private data object HomeRoute : AppRoute
 
 @Serializable
 private data object ProfileRoute : NavKey
@@ -45,37 +45,36 @@ class OnboardingEntriesTest {
     private var firstLaunchSeenWrites: Int = 0
 
     @Test
-    fun `starting from the first launch marks the manifesto seen and roots the stack at the start tab`() {
+    fun `starting from the first launch marks the manifesto seen and roots the stack at the home pad`() {
         val backStack: NavBackStack<NavKey> = NavBackStack(ManifestoRoute())
         renderManifestoEntry(backStack)
 
         composeRule.onNodeWithText("Empezar").performClick()
 
         assertEquals(1, firstLaunchSeenWrites)
-        assertEquals(listOf<NavKey>(StartTabRoute), backStack.toList())
+        assertEquals(listOf<NavKey>(HomeRoute), backStack.toList())
     }
 
     @Test
     fun `returning from a revisit pops the manifesto and never marks it seen`() {
-        val backStack: NavBackStack<NavKey> = NavBackStack(StartTabRoute, ProfileRoute, ManifestoRoute(isRevisit = true))
+        val backStack: NavBackStack<NavKey> = NavBackStack(HomeRoute, ProfileRoute, ManifestoRoute(isRevisit = true))
         renderManifestoEntry(backStack)
 
         composeRule.onNodeWithText("Volver").performClick()
 
         assertEquals(0, firstLaunchSeenWrites)
-        assertEquals(listOf<NavKey>(StartTabRoute, ProfileRoute), backStack.toList())
+        assertEquals(listOf<NavKey>(HomeRoute, ProfileRoute), backStack.toList())
     }
 
     private fun renderManifestoEntry(backStack: NavBackStack<NavKey>) {
         val bindings: NavHostBindings = NavHostBindings(
             backStack = backStack,
-            startTab = StartTabRoute,
             snackbarHostState = SnackbarHostState(),
             showMessage = {},
             platform = SilentPlatformHostActions,
         )
         val resolveEntry: (NavKey) -> NavEntry<NavKey> = entryProvider {
-            onboardingEntries(bindings, onFirstLaunchSeen = { firstLaunchSeenWrites += 1 })
+            onboardingEntries(bindings, home = HomeRoute, onFirstLaunchSeen = { firstLaunchSeenWrites += 1 })
         }
         val manifestoEntry: NavEntry<NavKey> = resolveEntry(backStack.last())
 

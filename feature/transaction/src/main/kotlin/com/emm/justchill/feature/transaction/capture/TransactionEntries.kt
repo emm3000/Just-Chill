@@ -19,9 +19,10 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     onPendingCategoryConsumed: () -> Unit,
     onAddNewAccount: (AppNavigator) -> Unit,
     onAddNewCategory: (AppNavigator, CategoryType) -> Unit,
+    onOpenMenu: (AppNavigator) -> Unit,
 ) {
     entry<AddTransactionRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: AddTransactionViewModel = koinViewModel()
 
         LaunchedEffect(key) {
@@ -45,13 +46,14 @@ fun EntryProviderScope<NavKey>.transactionEntries(
             vm = vm,
             popBackStack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
+            onOpenMenu = { onOpenMenu(nav) },
             onAddNewCategory = { categoryType -> onAddNewCategory(nav, categoryType) },
             onAddNewAccount = { onAddNewAccount(nav) },
         )
     }
 
     entry<EditTransactionRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: EditTransactionViewModel = koinViewModel(parameters = { parametersOf(key.transactionId) })
 
         LaunchedEffect(pendingCategory()) {
