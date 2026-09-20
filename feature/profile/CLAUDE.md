@@ -1,6 +1,6 @@
 # :feature:profile — CLAUDE.md
 
-The Perfil tab and everything it opens: the profile screen with its category, recurring and about rows, the backup section (Respaldar, Verificar, the disclosure acknowledgement), export and restore over SAF, the commit hash row, and `privacy/` with the privacy policy screen and its route. `ProfileViewModel` with its `UiState` / `Intent` / `Effect`, both routes, `profileEntries` and the copy mappers live in `com.emm.justchill.feature.profile`.
+The Perfil tab and everything it opens: the menu screen, titled "Más" after ADR 017's mockup, with its destinations group (Movimientos, Reporte del mes, Cuentas, Categorías, Recurrentes, Préstamos) and its about rows, the backup section (Respaldar, Verificar, the disclosure acknowledgement), export and restore over SAF, the commit hash row, and `privacy/` with the privacy policy screen and its route. `ProfileViewModel` with its `UiState` / `Intent` / `Effect`, both routes, `profileEntries` and the copy mappers live in `com.emm.justchill.feature.profile`.
 
 One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState` and their copy mappers read its types, so a `backup/` sub-package would import the root and be imported back. The privacy screen shares nothing with them and sits on its own.
 
@@ -14,7 +14,7 @@ One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState`
 
 ## Routes and cross-feature navigation
 
-`ProfileRoute` is a `BottomBarRoute`, the fourth tab in `:androidApp`'s `AppBottomBar`; `PrivacyPolicyRoute` is a plain `AppRoute` pushed from the profile screen, the one door into `privacy/`. Both are in `profileRoutes`, which `RouteSerializationTest` concatenates. Categories, recurring movements, the manifesto and sign-in all leave this feature, so each arrives as an `(AppNavigator) -> Unit` callback supplied by `AppNavHost`, never as a route value. `rememberPlatformHostActions` stays in `:androidApp`'s `shell/`: the SAF launchers must be registered at the nav host root, or a picker result arriving after its entry left composition is dropped.
+`ProfileRoute` is a `BottomBarRoute`, the fourth tab in `:androidApp`'s `AppBottomBar`; `PrivacyPolicyRoute` is a plain `AppRoute` pushed from the profile screen, the one door into `privacy/`. Both are in `profileRoutes`, which `RouteSerializationTest` concatenates. Transactions, the report, accounts, categories, recurring movements, loans, the manifesto and sign-in all leave this feature, so each arrives as an `(AppNavigator) -> Unit` callback supplied by `AppNavHost`, never as a route value. The four destinations the bottom bar also carries take `pushToTop`, never `push`: they may already sit on the stack, and `push` would silently do nothing. `rememberPlatformHostActions` stays in `:androidApp`'s `shell/`: the SAF launchers must be registered at the nav host root, or a picker result arriving after its entry left composition is dropped.
 
 ## Backup
 
@@ -30,4 +30,5 @@ One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState`
 ## Screens
 
 - The privacy policy screen uses `FilledCta` and `ProfileEntries`' `ImportConfirmationDialog`, `DeleteAccountDialog` and `ImportBackupDialog` all use `EmmDialog` (`.claude/rules/ui-components.md`); the atoms pass on the first landed in #202, on the latter two in #214.
+- The screen is layout only: `ProfileScreen.kt` composes `AccountSection.kt`, `DestinationsSection.kt`, `BackupSection.kt`, `AppSection.kt` and `CommitFooter.kt`, one sibling file per section.
 - `commitHashUi()` is the pattern for pure UI logic: a plain function beside the screen with a test here, never logic inside a composable.

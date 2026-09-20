@@ -44,6 +44,7 @@ import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.feature.account.AccountsRoute
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountEntries
 import com.emm.justchill.feature.auth.AuthRoute
@@ -58,6 +59,7 @@ import com.emm.justchill.feature.onboarding.onboardingEntries
 import com.emm.justchill.feature.profile.profileEntries
 import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringEntries
+import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.report.reportEntries
 import com.emm.justchill.feature.transaction.AddTransactionRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
@@ -180,8 +182,12 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         commitHash = commitHash,
                         pendingImportJson = { pendingImportJson },
                         onImportHandled = { pendingImportJson = null },
+                        onTransactionsClick = { nav -> nav.pushToTop(SeeTransactionRoute) },
+                        onReportClick = { nav -> nav.pushToTop(ReportRoute) },
+                        onAccountsClick = { nav -> nav.pushToTop(AccountsRoute) },
                         onCategoriesClick = { nav -> nav.push(CategoriesListRoute) },
                         onRecurringClick = { nav -> nav.push(RecurringMovementsRoute) },
+                        onLoansClick = { nav -> nav.pushToTop(LoansRoute) },
                         onAboutClick = { nav -> nav.push(ManifestoRoute(isRevisit = true)) },
                         onSignInClick = { nav -> nav.push(AuthRoute) },
                     )
