@@ -1,27 +1,17 @@
 package com.emm.justchill.feature.transaction.list
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -29,6 +19,8 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.MonthChevron
+import com.emm.justchill.core.ui.atoms.MonthChevronDirection
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
@@ -80,35 +72,12 @@ private fun MonthNavigationRow(onIntent: (SeeTransactionsIntent) -> Unit) {
     ) {
         Spacer(Modifier.weight(1f))
         MonthChevron(
-            icon = Icons.Outlined.ChevronLeft,
-            contentDescription = "Mes anterior",
+            direction = MonthChevronDirection.Previous,
             onClick = { onIntent(SeeTransactionsIntent.OnPreviousMonth) },
         )
         MonthChevron(
-            icon = Icons.Outlined.ChevronRight,
-            contentDescription = "Mes siguiente",
+            direction = MonthChevronDirection.Next,
             onClick = { onIntent(SeeTransactionsIntent.OnNextMonth) },
-        )
-    }
-}
-
-@Composable
-private fun MonthChevron(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
-    val colors: EmmColors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(spacing.s12)
-            .clip(CircleShape)
-            .clickable(onClick = onClick),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = colors.textSecondary,
-            modifier = Modifier.size(spacing.s5),
         )
     }
 }

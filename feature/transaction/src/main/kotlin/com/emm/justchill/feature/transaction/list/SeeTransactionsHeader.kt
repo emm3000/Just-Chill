@@ -59,6 +59,7 @@ internal fun ScreenHeader(
                 )
             }
         },
+        column = spacing.s6,
     )
 }
 

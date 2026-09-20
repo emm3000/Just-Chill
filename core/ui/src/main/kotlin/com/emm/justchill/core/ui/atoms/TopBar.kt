@@ -44,14 +44,14 @@ fun JcTopBar(
     left: @Composable (() -> Unit)? = null,
     right: @Composable (() -> Unit)? = null,
     rightArtwork: Dp = LocalEmmSpacing.current.s12,
+    column: Dp = LocalEmmSpacing.current.s4,
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
-    val contentColumn: Dp = spacing.s4
     val backGiveback: Dp = spacing.edgeGiveback(spacing.s6)
-    val startPadding: Dp = contentColumn - backGiveback
-    val endPadding: Dp = contentColumn - spacing.edgeGiveback(rightArtwork)
+    val startPadding: Dp = column - backGiveback
+    val endPadding: Dp = column - spacing.edgeGiveback(rightArtwork)
     val titleColumnGap: Dp = backGiveback
     val titleGap: Dp = spacing.s2
     val slotSize: Dp = spacing.s12

@@ -59,6 +59,7 @@ fun ProfileScreen(
         JcTopBar(
             title = "Más",
             left = { BackBtn(onClick = onBack) },
+            column = spacing.s6,
         )
 
         (state.session as? SessionUiState.SignedIn)?.let { signedIn ->

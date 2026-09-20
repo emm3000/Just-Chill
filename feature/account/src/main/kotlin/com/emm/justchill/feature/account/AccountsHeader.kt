@@ -33,6 +33,7 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.format.monthLabel
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -42,11 +43,14 @@ private val SummaryDividerHeight: Dp = 36.dp
 
 @Composable
 internal fun AccountsHeader(state: AccountsUiState, addAccount: () -> Unit, onBack: () -> Unit) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
     Column(modifier = Modifier.fillMaxWidth()) {
         JcTopBar(
             title = "Cuentas",
             left = { BackBtn(onClick = onBack) },
             right = { NewAccountButton(onClick = addAccount) },
+            column = spacing.s6,
         )
 
         MonthSummaryStrip(state = state)
