@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
@@ -32,6 +33,8 @@ import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
+
+val EmmRowMenuGlyphSize: Dp = 18.dp
 
 @Composable
 fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
@@ -51,7 +54,7 @@ fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> U
                 imageVector = Icons.Outlined.MoreVert,
                 contentDescription = contentDescription,
                 tint = colors.textTertiary,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(EmmRowMenuGlyphSize),
             )
         }
         DropdownMenu(

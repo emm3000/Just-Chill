@@ -50,6 +50,7 @@ import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
+import com.emm.justchill.core.ui.theme.edgeGiveback
 import com.emm.justchill.feature.report.components.CategoryBarsCard
 import com.emm.justchill.feature.report.components.ComparisonPill
 import com.emm.justchill.feature.report.components.MonthPickerSheet
@@ -82,7 +83,7 @@ fun ReportScreen(
 }
 
 @Composable
-private fun ReportScreen(
+internal fun ReportScreen(
     state: ReportUiState,
     onAddTransaction: () -> Unit,
     onIntent: (ReportIntent) -> Unit,
@@ -249,7 +250,7 @@ private fun ReportTopBar(onShare: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .padding(start = spacing.s4, end = spacing.s4 - spacing.topBarTileEdgeGiveback),
+            .padding(start = spacing.s4, end = spacing.s4 - spacing.edgeGiveback(TopBarTileSize)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -500,6 +501,3 @@ private fun ReportScreenEmptyPreview() {
         )
     }
 }
-
-private val EmmSpacing.topBarTileEdgeGiveback: Dp
-    get() = (s12 - TopBarTileSize) / 2

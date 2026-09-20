@@ -6,7 +6,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the na
 
 ## Design system
 
-- Which atom and which token, and why: `.claude/rules/ui-components.md`. That file is the style guide; the values live in `theme/EmmColors.kt`, `EmmType.kt`, `EmmSpacing.kt` and `EmmRadii.kt`.
+- Which atom and which token, and why: `.claude/rules/ui-components.md`. That file is the style guide; the values live in `theme/EmmColors.kt`, `EmmType.kt`, `EmmSpacing.kt` and `EmmRadii.kt`. `theme/EdgeGiveback.kt`'s `EmmSpacing.edgeGiveback(artwork)` is the one derivation of `(s12 - artwork) / 2`, the padding a 48dp touch target hands back at a screen edge so its smaller glyph still lands on the rows' column; a feature calls it with the artwork it paints (`EmmRowMenuGlyphSize` for `EmmRowMenu`) instead of writing the difference down (#271).
 - The Inter and IBM Plex Mono faces are this module's own resources under `src/main/res/font/`, reached through `com.emm.justchill.core.ui.R`. `EmmType` is the only file that touches `R`.
 - `compose_stability.conf` declares `com.emm.justchill.**` stable, so an atom taking a `:core:domain` `Money` still skips recomposition.
 - A new or rebuilt dialog is an `EmmDialog`, never a hand-rolled `Dialog` or an `AlertDialog`; recurring, account and transaction still carry raw ones and are the queue, not the precedent. A write in flight passes `inFlightDialogProperties(isInFlight)` and `actionsEnabled = false` together, so the scrim, the back press and both actions stop as one.

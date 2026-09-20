@@ -9,10 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.EmmRowMenu
+import com.emm.justchill.core.ui.atoms.EmmRowMenuGlyphSize
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
@@ -20,10 +19,7 @@ import com.emm.justchill.core.ui.atoms.color
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-
-// EmmRowMenu wraps an 18dp glyph in a 48dp target; the row gives the surplus
-// back at the screen edge so the glyph still sits on the 24dp column the header and the tiles use.
-private val RowMenuEdgeGiveback: Dp = 15.dp
+import com.emm.justchill.core.ui.theme.edgeGiveback
 
 @Composable
 internal fun AccountRow(row: AccountMonthUi, onEdit: () -> Unit, onDelete: () -> Unit) {
@@ -37,7 +33,7 @@ internal fun AccountRow(row: AccountMonthUi, onEdit: () -> Unit, onDelete: () ->
                 .fillMaxWidth()
                 .padding(
                     start = spacing.s6,
-                    end = spacing.s6 - RowMenuEdgeGiveback,
+                    end = spacing.s6 - spacing.edgeGiveback(EmmRowMenuGlyphSize),
                     top = spacing.s4,
                     bottom = spacing.s4,
                 ),

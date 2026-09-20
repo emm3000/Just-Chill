@@ -57,7 +57,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 ### Spacing, radii, elevation, icons
 
 - Base unit 4dp: `EmmSpacing` `s0`…`s12`. Screen horizontal padding `s4`, never less; `s6` between sections of distinct purpose.
-- Touch targets are 48×48dp, non-negotiable. A child of a fixed-height row is not 48dp by inheritance: `Alignment.CenterVertically` measures at intrinsic height, so a clickable inside a 48dp band carries `fillMaxHeight()` itself. A 48dp header target keeps its glyph on the rows' column by giving the padding back at the edge, never by shrinking the target.
+- Touch targets are 48×48dp, non-negotiable. A child of a fixed-height row is not 48dp by inheritance: `Alignment.CenterVertically` measures at intrinsic height, so a clickable inside a 48dp band carries `fillMaxHeight()` itself. A 48dp header target keeps its glyph on the rows' column by giving the padding back at the edge, never by shrinking the target; the giveback is `EmmSpacing.edgeGiveback(artwork)` in `core/ui/theme/EdgeGiveback.kt`, never a per-module copy of `(s12 - artwork) / 2`.
 - `EmmRadii` `r0`…`rXXL`, `rLTop` for sheet tops, `rFull` for circles. Default to the smallest radius that reads right. No shadows: a modal that must read as "above" gets `surface1`, a hairline and rounded top corners.
 - `Icons.Outlined.*`; filled only when the icon represents a state. 24dp standard, 20dp inline with body text, 32dp rare. An icon is `textSecondary` or `textTertiary`, never tinted: an account shows its type's icon in grey. Never a brand logo or a bank's registered colours. The icon and label maps stay in `:feature:account`'s `AccountPalette.kt`.
 

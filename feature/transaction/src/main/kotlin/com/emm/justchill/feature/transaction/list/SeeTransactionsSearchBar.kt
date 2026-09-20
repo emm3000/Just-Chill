@@ -35,6 +35,7 @@ import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
+import com.emm.justchill.core.ui.theme.edgeGiveback
 
 @Composable
 internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
@@ -50,7 +51,7 @@ internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: 
             .padding(
                 top = 12.dp,
                 start = 24.dp,
-                end = spacing.s6 - spacing.headerEdgeGiveback,
+                end = spacing.s6 - spacing.edgeGiveback(spacing.s5),
                 bottom = 14.dp,
             ),
     ) {
