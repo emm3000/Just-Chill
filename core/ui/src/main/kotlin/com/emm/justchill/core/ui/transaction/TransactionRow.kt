@@ -10,27 +10,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.atoms.CategoryDot
+import com.emm.justchill.core.ui.atoms.CategoryDotSlot
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
 
     val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
+    val dotColor: Color = tx.category.resolvedColor.primary
 
     val baseModifier = modifier
         .fillMaxWidth()
@@ -47,11 +52,9 @@ fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
-                if (tx.categoryLeadsTitle) {
-                    CategoryDot(color = tx.category.resolvedColor.primary)
-                }
+                CategoryDotSlot(color = dotColor.takeIf { tx.categoryLeadsTitle })
                 Text(
                     text = tx.title,
                     style = TextStyle(
@@ -68,11 +71,9 @@ fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
-                if (!tx.categoryLeadsTitle) {
-                    CategoryDot(color = tx.category.resolvedColor.primary)
-                }
+                CategoryDotSlot(color = dotColor.takeIf { !tx.categoryLeadsTitle })
                 Text(
                     text = tx.subtitle,
                     style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),

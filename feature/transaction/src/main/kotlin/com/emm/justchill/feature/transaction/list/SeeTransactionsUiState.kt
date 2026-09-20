@@ -11,7 +11,6 @@ data class CategorySheetItem(
     val id: String,
     val name: String,
     val iconId: String,
-    val colorId: String,
     val type: CategoryType,
     val isActive: Boolean,
 )

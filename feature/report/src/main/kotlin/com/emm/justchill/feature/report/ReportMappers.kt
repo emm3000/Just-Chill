@@ -24,7 +24,6 @@ internal fun CategoryAggregate.toTopCategoryItem(): TopCategoryItem = TopCategor
     categoryId = categoryId.value,
     name = categoryName,
     iconKey = categoryIcon,
-    colorKey = categoryColor,
     totalFormatted = formatSoles(totalAmount.cents),
     topMetaText = ReportShareFormatter.buildTopMetaText(monthsInTop, totalMonths),
 )

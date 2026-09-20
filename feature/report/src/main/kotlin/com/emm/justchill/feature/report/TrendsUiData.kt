@@ -25,8 +25,6 @@ data class TopCategoryItem(
     val categoryId: String,
     val name: String,
     val iconKey: String,
-    // Domain color string, resolved to a cat.* token at render time via domainColorToUi.
-    val colorKey: String?,
     val totalFormatted: String,
     val topMetaText: String,
 )

@@ -21,13 +21,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.atoms.CategoryDotSlot
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.Month
 
@@ -39,6 +42,7 @@ fun PendingRecurringHeader(modifier: Modifier = Modifier) {
 @Composable
 fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
@@ -54,20 +58,33 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Same tile size as TransactionRow, so a pending row's text starts on the same column.
+        // Same tile size and empty dot slot as TransactionRow, so a pending row's text starts on
+        // the same column. A Pending has no category, so its slot is never filled.
         IconTile(icon = Icons.Outlined.Repeat, size = IconTileSize.Lg)
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.name,
-                style = type.labelL.copy(fontSize = 15.sp, letterSpacing = (-0.15).sp),
-                color = colors.textPrimary,
-            )
-            Text(
-                text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
-                style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
-                color = if (item.isCatchUp) colors.danger else colors.textTertiary,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            ) {
+                CategoryDotSlot(color = null)
+                Text(
+                    text = item.name,
+                    style = type.labelL.copy(fontSize = 15.sp, letterSpacing = (-0.15).sp),
+                    color = colors.textPrimary,
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            ) {
+                CategoryDotSlot(color = null)
+                Text(
+                    text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
+                    style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+                    color = if (item.isCatchUp) colors.danger else colors.textTertiary,
+                )
+            }
         }
         Text(
             text = item.formattedAmount,
