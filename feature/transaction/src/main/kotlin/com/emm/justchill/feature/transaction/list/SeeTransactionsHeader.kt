@@ -59,7 +59,6 @@ internal fun ScreenHeader(
                 )
             }
         },
-        rightArtwork = spacing.s12,
     )
 }
 
