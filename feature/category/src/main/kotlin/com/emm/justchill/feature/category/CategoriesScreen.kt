@@ -22,7 +22,6 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.DialogAction
 import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.Eyebrow
@@ -211,12 +211,7 @@ private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> U
         )
         MovementMeta(count = movementCount, muted = false)
         Spacer(Modifier.size(6.dp))
-        Icon(
-            imageVector = Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(16.dp),
-        )
+        ChevronTrailing()
     }
 }
 
@@ -248,12 +243,7 @@ private fun UncategorizedRow(count: Int) {
         )
         MovementMeta(count = count, muted = true)
         Spacer(Modifier.size(6.dp))
-        Icon(
-            imageVector = Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = colors.textDisabled,
-            modifier = Modifier.size(16.dp),
-        )
+        ChevronTrailing(enabled = false)
     }
 }
 
