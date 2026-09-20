@@ -173,6 +173,54 @@ class GetFrequentCombosUseCaseTest {
         assertTrue(result.isEmpty())
     }
 
+    @Test
+    fun `at the same hour, an amount outside the band loses to one inside it`() = runTest {
+        val insideBand = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
+        val outsideBand = FrequentCombo(AccountId("yape"), CategoryId("transport"), TransactionType.Spend)
+        coEvery {
+            repo.comboOccurrences(type = TransactionType.Spend, startInclusive = any<String>())
+        } returns listOf(
+            occurrence(insideBand, cents = 5000L, hour = "12"),
+            occurrence(outsideBand, cents = 9999L, hour = "12"),
+            occurrence(outsideBand, cents = 9999L, hour = "12"),
+            occurrence(outsideBand, cents = 9999L, hour = "12"),
+        )
+
+        val result = useCase(TransactionType.Spend, amount = Money(5000L))
+
+        assertEquals(insideBand, result.first())
+    }
+
+    @Test
+    fun `a small typed amount uses the band floor, not a tiny relative slice`() = runTest {
+        val withinFloor = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
+        val distractor = FrequentCombo(AccountId("yape"), CategoryId("transport"), TransactionType.Spend)
+        coEvery {
+            repo.comboOccurrences(type = TransactionType.Spend, startInclusive = any<String>())
+        } returns listOf(
+            occurrence(withinFloor, cents = 280L, hour = "12"),
+            occurrence(distractor, cents = 9999L, hour = "12"),
+            occurrence(distractor, cents = 9999L, hour = "12"),
+        )
+
+        val result = useCase(TransactionType.Spend, amount = Money(100L))
+
+        assertEquals(withinFloor, result.first())
+    }
+
+    @Test
+    fun `a zero typed amount keeps today's order and never queries occurrences`() = runTest {
+        val combo1 = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery {
+            repo.topUsedCombos(type = TransactionType.Spend, startInclusive = any<String>(), limit = any<Int>())
+        } returns listOf(combo1)
+
+        val result = useCase(TransactionType.Spend, amount = Money.Zero)
+
+        assertEquals(listOf(combo1), result)
+        coVerify(exactly = 0) { repo.comboOccurrences(any(), any()) }
+    }
+
     private fun occurrence(combo: FrequentCombo, cents: Long, hour: String): ComboOccurrence = ComboOccurrence(
         accountId = combo.accountId,
         categoryId = combo.categoryId,
