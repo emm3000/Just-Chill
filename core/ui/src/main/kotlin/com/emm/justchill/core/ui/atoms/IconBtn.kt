@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -46,6 +47,7 @@ fun IconBtn(
     modifier: Modifier = Modifier,
     tone: IconBtnTone = IconBtnTone.Neutral,
     enabled: Boolean = true,
+    glyphSize: Dp = LocalEmmSpacing.current.s5,
 ) {
     val colors = LocalEmmColors.current
 
@@ -75,7 +77,7 @@ fun IconBtn(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = iconColor,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(glyphSize),
         )
     }
 }
