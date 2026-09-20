@@ -60,7 +60,7 @@ fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> U
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            containerColor = colors.surface2,
+            containerColor = colors.surface1,
         ) {
             DropdownMenuItem(
                 text = {

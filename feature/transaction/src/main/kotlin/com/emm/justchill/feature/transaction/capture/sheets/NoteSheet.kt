@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -198,7 +199,7 @@ private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, mo
 
     val bg = if (primary) colors.textPrimary else androidx.compose.ui.graphics.Color.Transparent
     val fg = if (primary) colors.bg else colors.textPrimary
-    val borderColor = if (primary) colors.textPrimary else colors.border
+    val borderColor: Color = if (primary) colors.borderFocus else colors.border
 
     Box(
         contentAlignment = Alignment.Center,

@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -290,7 +291,7 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
         TYPE_OPTIONS.forEach { type ->
             val isSelected = selected == type
             val shape = RoundedCornerShape(12.dp)
-            val borderColor = if (isSelected) colors.textPrimary else colors.border
+            val borderColor: Color = if (isSelected) colors.borderFocus else colors.border
             val bgColor = if (isSelected) colors.surface3 else colors.surface1
             val textColor = if (isSelected) colors.textPrimary else colors.textSecondary
 

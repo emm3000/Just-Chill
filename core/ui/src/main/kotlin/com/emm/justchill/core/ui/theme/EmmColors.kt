@@ -40,7 +40,7 @@ val emmDarkColors: EmmColors = EmmColors(
     surface2 = Color(0xFF262626),
     surface3 = Color(0xFF2D2D2D),
     border = Color(0xFF2E2E2E),
-    borderFocus = Color(0xFF383838),
+    borderFocus = Color(0xFF767676),
 
     textPrimary = Color(0xFFE6E6E6),
     textSecondary = Color(0xFFA8A8A8),
