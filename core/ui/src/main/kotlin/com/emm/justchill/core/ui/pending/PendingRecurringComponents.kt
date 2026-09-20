@@ -58,8 +58,6 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Same tile size and empty dot slot as TransactionRow, so a pending row's text starts on
-        // the same column. A Pending has no category, so its slot is never filled.
         IconTile(icon = Icons.Outlined.Repeat, size = IconTileSize.Lg)
 
         Column(modifier = Modifier.weight(1f)) {
