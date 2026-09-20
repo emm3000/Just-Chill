@@ -155,7 +155,7 @@ private fun AddEditRecurringMovementContent(
                 )
             }
 
-            SelectorPillsRow(
+            SelectorChipsRow(
                 state = state,
                 onOpenAccount = { onIntent(AddEditRecurringMovementIntent.OnSheetRequested(RecurringSheet.Account)) },
                 onOpenCategory = {

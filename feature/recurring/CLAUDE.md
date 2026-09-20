@@ -19,6 +19,7 @@ Recurring movement templates: the list with its monthly totals and its paused se
 - The category list is cut per type at read time, so an Income template is never offered a Spend category; the composite foreign key the schema holds (ADR 008) is never tested by this screen.
 - `Save` writes `selectedCategory` / `selectedAccount`, the **resolved** selection, never the raw id: a category deleted while the form was open is written as "sin categoría" instead of as an id whose row is gone.
 - `AddEditRecurringMovementRoute` is a `CaptureRoute`, the marker `popToCapture()` reads: the form offers "+ Nueva categoría", and without the marker the picker's return leg walks past it to a buried transaction form. The created category comes back through the host's `pendingCategory` accessor and lands as `OnNewValueFromOthers`, bridged on `extraCategories` until the repository flow re-emits with the stored row, which supersedes it by id.
+- The account, category and day selectors are `:core:ui`'s `SelectorChip` inside a `FormSection` column each, in `RecurringSelectorChips.kt` (#185). The hand-drawn `SelectorPill` they replaced is gone; the chip's chevron, its ripple and its ellipsis are the atom's, not this screen's.
 - A variable template stores a null amount. `isVariableAmount` and `amountDigits` are separate fields on purpose — toggling variable off restores the digits the user already typed.
 - `selectedAccount` missing when `Save` runs is an `error(...)`, not a silent no-op: the CTA is disabled until an account is picked, so reaching it means the screen lied.
 
