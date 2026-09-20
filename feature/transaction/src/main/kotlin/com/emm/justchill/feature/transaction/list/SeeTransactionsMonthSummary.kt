@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -133,9 +134,10 @@ private fun MonthTotals(summary: MonthSummaryUi) {
 private fun SecondaryLine(summary: MonthSummaryUi) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    Row(
+    FlowRow(
         modifier = Modifier.padding(top = spacing.s1),
         horizontalArrangement = Arrangement.spacedBy(spacing.s4),
+        verticalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
         SecondaryAmount(label = "Ingresos", value = formatNeutral(summary.income.format()))
         SecondaryAmount(
