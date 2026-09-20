@@ -10,6 +10,7 @@ import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import com.emm.justchill.feature.transaction.AddTransactionRoute
 import com.emm.justchill.feature.transaction.EditTransactionRoute
+import com.emm.justchill.feature.transaction.SeeTransactionRoute
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -47,6 +48,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
             popBackStack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
             onOpenMenu = { onOpenMenu(nav) },
+            onOpenTransactions = { nav.pushToTop(SeeTransactionRoute) },
             onAddNewCategory = { categoryType -> onAddNewCategory(nav, categoryType) },
             onAddNewAccount = { onAddNewAccount(nav) },
         )

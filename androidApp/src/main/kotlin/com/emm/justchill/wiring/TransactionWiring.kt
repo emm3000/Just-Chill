@@ -3,6 +3,7 @@ package com.emm.justchill.wiring
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.DeleteTransactionUseCase
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
+import com.emm.justchill.core.domain.transaction.GetMonthSpendUseCase
 import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.UpdateTransactionUseCase
 import com.emm.justchill.feature.transaction.capture.GetSpendShortcutCombos
@@ -19,5 +20,6 @@ val transactionWiring: Module = module {
     factoryOf(::DeleteTransactionUseCase)
     factoryOf(::GetTopUsedCategoryIdsUseCase)
     factoryOf(::GetFrequentCombosUseCase)
+    factoryOf(::GetMonthSpendUseCase)
     factoryOf(::GetSpendShortcutCombos)
 }

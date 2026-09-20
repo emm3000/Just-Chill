@@ -6,10 +6,12 @@ import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
+import com.emm.justchill.core.domain.transaction.GetMonthSpendUseCase
 import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionInsert
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
@@ -42,11 +44,11 @@ class AddTransactionViewModel(
     private val createTransaction: CreateTransactionUseCase,
     private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase,
     private val getFrequentCombos: GetFrequentCombosUseCase,
+    private val getMonthSpend: GetMonthSpendUseCase,
     private val transactionStatsRepository: TransactionStatsRepository,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository,
     private val todayFlow: TodayFlow,
-    // Only the hour of the save comes from these; the day is TodayFlow's answer.
     private val clock: Clock,
     private val zone: TimeZone,
 ) : MviViewModel<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect>(
@@ -77,6 +79,16 @@ class AddTransactionViewModel(
             .distinctUntilChanged()
             .flatMapLatest(::loadFrequentUsage)
             .onEach { usage -> updateState { copy(frequentUsage = usage) } }
+            .launchSafeIn(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) })
+
+        // flatMapLatest on the day, not on a single read: a pad left open across midnight re-queries
+        // the month it lands in, and a save inside the browsed month re-emits through the same
+        // repository flow.
+        todayFlow()
+            .map(YearMonth::of)
+            .distinctUntilChanged()
+            .flatMapLatest { month -> getMonthSpend(month).map { total -> MonthSpend(month, total) } }
+            .onEach { spend -> updateState { copy(monthSpend = spend) } }
             .launchSafeIn(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) })
     }
 

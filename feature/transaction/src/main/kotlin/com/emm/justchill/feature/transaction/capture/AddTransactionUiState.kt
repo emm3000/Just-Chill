@@ -4,15 +4,21 @@ import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.format.monthLabel
 import com.emm.justchill.core.ui.format.relativeDayLabel
 import com.emm.justchill.core.ui.mvi.UiState
 import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.comboLabel
 import kotlinx.datetime.LocalDate
+
+data class MonthSpend(val month: YearMonth, val total: Money)
 
 data class FrequentUsage(
     val loadedFor: TransactionType,
@@ -41,7 +47,13 @@ data class AddTransactionUiState(
     // preselect. Only the first registration may act; every repeat is a no-op.
     val preselectConsumed: Boolean = false,
     val openSheet: TransactionSheet? = null,
+    val monthSpend: MonthSpend = MonthSpend(YearMonth.of(today), Money.Zero),
 ) : UiState {
+
+    val monthSpendLabel: String get() = "Gastado en ${monthSpend.month.monthLabel()}"
+
+    val monthSpendAmount: String get() = monthSpend.total.balanceFormatted()
+
     val dateLabel: String get() = date?.let { relativeDayLabel(it, today) } ?: "Hoy"
 
     val pickerDate: LocalDate get() = date ?: today

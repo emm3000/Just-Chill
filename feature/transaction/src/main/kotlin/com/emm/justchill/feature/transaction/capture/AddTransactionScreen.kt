@@ -62,6 +62,7 @@ import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.components.ACCOUNT_CHIP_WEIGHT
 import com.emm.justchill.feature.transaction.capture.components.CATEGORY_CHIP_WEIGHT
 import com.emm.justchill.feature.transaction.capture.components.FormMetaRow
+import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -102,6 +103,7 @@ fun AddTransactionScreen(
     popBackStack: () -> Unit,
     snackbarHostState: SnackbarHostState,
     onOpenMenu: () -> Unit,
+    onOpenTransactions: () -> Unit,
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -125,16 +127,18 @@ fun AddTransactionScreen(
         state = state,
         onIntent = vm::onIntent,
         onOpenMenu = onOpenMenu,
+        onOpenTransactions = onOpenTransactions,
         onAddNewCategory = onAddNewCategory,
         onAddNewAccount = onAddNewAccount,
     )
 }
 
 @Composable
-private fun AddTransactionScreenContent(
+internal fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
     onOpenMenu: () -> Unit,
+    onOpenTransactions: () -> Unit,
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -157,6 +161,12 @@ private fun AddTransactionScreenContent(
             .background(colors.bg),
     ) {
         FormHeader(onOpenMenu = onOpenMenu)
+
+        MonthSpendLine(
+            label = state.monthSpendLabel,
+            amount = state.monthSpendAmount,
+            onClick = onOpenTransactions,
+        )
 
         Box(
             contentAlignment = Alignment.Center,
@@ -379,6 +389,7 @@ private fun AddTransactionPreview() {
             ),
             onIntent = {},
             onOpenMenu = {},
+            onOpenTransactions = {},
         )
     }
 }
