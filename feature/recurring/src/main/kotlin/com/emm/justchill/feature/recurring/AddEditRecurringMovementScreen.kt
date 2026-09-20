@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -67,6 +68,7 @@ import org.koin.core.parameter.parametersOf
 fun AddEditRecurringMovementScreen(
     onBack: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    onAddNewCategory: (CategoryType) -> Unit,
     id: String? = null,
     vm: AddEditRecurringMovementViewModel = koinViewModel(
         parameters = { parametersOf(id) },
@@ -92,6 +94,7 @@ fun AddEditRecurringMovementScreen(
         state = state,
         onIntent = vm::onIntent,
         onBack = currentOnBack,
+        onAddNewCategory = onAddNewCategory,
     )
 }
 
@@ -100,6 +103,7 @@ private fun AddEditRecurringMovementContent(
     state: AddEditRecurringMovementUiState,
     onIntent: (AddEditRecurringMovementIntent) -> Unit,
     onBack: () -> Unit = {},
+    onAddNewCategory: (CategoryType) -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
 
@@ -202,7 +206,7 @@ private fun AddEditRecurringMovementContent(
             categories = state.categories,
             selectedCategoryId = state.selectedCategory?.categoryId?.value,
             onSelect = { category -> onIntent(AddEditRecurringMovementIntent.OnCategorySelected(category)) },
-            onAddNew = { onIntent(AddEditRecurringMovementIntent.OnSheetDismissed) },
+            onAddNew = { onAddNewCategory(state.type.categoryType) },
             onDismiss = { onIntent(AddEditRecurringMovementIntent.OnSheetDismissed) },
         )
     }

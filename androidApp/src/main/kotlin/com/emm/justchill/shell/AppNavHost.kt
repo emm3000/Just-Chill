@@ -166,7 +166,14 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
                         bindings = bindings,
                         onAddTransaction = { nav -> nav.push(AddTransactionRoute()) },
                     )
-                    recurringEntries(bindings)
+                    recurringEntries(
+                        bindings = bindings,
+                        pendingCategory = { pendingCategory },
+                        onPendingCategoryConsumed = { pendingCategory = null },
+                        onAddNewCategory = { nav, categoryType ->
+                            nav.push(CategoryRoute(initialType = categoryType, propagateToTransaction = true))
+                        },
+                    )
                     profileEntries(
                         bindings = bindings,
                         appVersion = appVersion,

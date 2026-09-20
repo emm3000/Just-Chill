@@ -1,6 +1,7 @@
 package com.emm.justchill.feature.recurring
 
 import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.TransactionType
@@ -24,12 +25,14 @@ data class AddEditRecurringMovementUiState(
     val accountId: AccountId? = null,
     // Null is "Sin categoría", which the save writes as such.
     val categoryId: CategoryId? = null,
+    // Bridges the frame between creating a category from this form and the repository flow
+    // re-emitting with it. The catalog's row supersedes it by id, so it can never serve a stale copy.
+    val extraCategories: List<SelectableCategory> = emptyList(),
     val openSheet: RecurringSheet? = null,
 ) : UiState {
     val accounts: List<Account> get() = catalog.accounts
 
-    val categories: List<SelectableCategory>
-        get() = catalog.loaded?.categories?.get(type.categoryType).orEmpty()
+    val categories: List<SelectableCategory> get() = categoriesOf(type.categoryType)
 
     // The first account is both the create-mode default and what a deleted account falls back to.
     val selectedAccount: Account? get() = accounts.find { it.accountId == accountId } ?: accounts.firstOrNull()
@@ -38,4 +41,12 @@ data class AddEditRecurringMovementUiState(
 
     val isSaveEnabled: Boolean
         get() = name.isNotBlank() && selectedAccount != null && (isVariableAmount || amountDigits.isSavableAmount())
+
+    private fun categoriesOf(categoryType: CategoryType): List<SelectableCategory> {
+        val known: List<SelectableCategory> = catalog.loaded?.categories?.get(categoryType).orEmpty()
+        val pending: List<SelectableCategory> = extraCategories.filter { extra ->
+            extra.categoryType == categoryType && known.none { it.categoryId == extra.categoryId }
+        }
+        return if (pending.isEmpty()) known else pending + known
+    }
 }

@@ -77,11 +77,23 @@ class AddEditRecurringMovementViewModel(
                 updateState { copy(categoryId = intent.category?.categoryId) }
             }
 
+            is AddEditRecurringMovementIntent.OnNewValueFromOthers -> attachCreatedCategory(intent.category)
+
             is AddEditRecurringMovementIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
 
             AddEditRecurringMovementIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
 
             AddEditRecurringMovementIntent.Save -> save()
+        }
+    }
+
+    // The schema refuses a cross-type (categoryId, type) pair; the screen always asks for the
+    // template's own type, so this guard should never fire.
+    private fun attachCreatedCategory(category: SelectableCategory) {
+        if (category.categoryType != currentState.type.categoryType) return
+        updateState {
+            val others: List<SelectableCategory> = extraCategories.filterNot { it.categoryId == category.categoryId }
+            copy(extraCategories = listOf(category) + others, categoryId = category.categoryId)
         }
     }
 

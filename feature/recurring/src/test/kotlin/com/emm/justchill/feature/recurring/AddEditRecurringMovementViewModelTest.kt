@@ -19,6 +19,7 @@ import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.testing.MainDispatcherRule
+import com.emm.justchill.core.ui.category.SelectableCategory
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -413,6 +414,90 @@ class AddEditRecurringMovementViewModelTest {
         val insert = slot<RecurringMovementInsert>()
         coVerify { createRecurring(capture(insert)) }
         assertNull(insert.captured.categoryId, "a deleted category must never reach the database")
+    }
+
+    private val createdSpendCategory = SelectableCategory(
+        categoryId = CategoryId("cat-new"),
+        name = "Suscripciones",
+        iconId = "card",
+        categoryType = CategoryType.Spend,
+        colorId = "blue",
+    )
+
+    @Test
+    fun `a category created from the form is selected and offered first`() = runTest {
+        every { categoryRepository.all() } returns flowOf(listOf(spendCategory, incomeCategory))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnNewValueFromOthers(createdSpendCategory))
+        advanceUntilIdle()
+
+        assertEquals(createdSpendCategory, vm.state.value.selectedCategory)
+        assertEquals(createdSpendCategory, vm.state.value.categories.first())
+        assertTrue(vm.state.value.categories.all { it.categoryType == CategoryType.Spend })
+    }
+
+    @Test
+    fun `saving writes the category created from the form as a resolved selection`() = runTest {
+        every { categoryRepository.all() } returns flowOf(listOf(spendCategory))
+        coEvery { createRecurring(any()) } returns Unit
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditRecurringMovementIntent.OnNameChange("Netflix"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnAmountChange("1800"))
+        vm.onIntent(AddEditRecurringMovementIntent.OnNewValueFromOthers(createdSpendCategory))
+        vm.onIntent(AddEditRecurringMovementIntent.Save)
+        advanceUntilIdle()
+
+        val insert = slot<RecurringMovementInsert>()
+        coVerify { createRecurring(capture(insert)) }
+        assertEquals(CategoryId("cat-new"), insert.captured.categoryId)
+    }
+
+    @Test
+    fun `the stored row supersedes the category created here, without duplicating it`() = runTest {
+        val categoriesFlow = MutableSharedFlow<List<Category>>(replay = 1)
+        every { categoryRepository.all() } returns categoriesFlow
+        categoriesFlow.emit(listOf(spendCategory))
+        val vm = createViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddEditRecurringMovementIntent.OnNewValueFromOthers(createdSpendCategory))
+        advanceUntilIdle()
+
+        val persisted = Category(CategoryId("cat-new"), "Suscripciones", "card", "purple", CategoryType.Spend)
+        categoriesFlow.emit(listOf(spendCategory, persisted))
+        advanceUntilIdle()
+
+        val offered: List<SelectableCategory> = vm.state.value.categories
+        assertEquals(1, offered.count { it.categoryId == CategoryId("cat-new") })
+        assertEquals("purple", offered.first { it.categoryId == CategoryId("cat-new") }.colorId)
+        assertEquals(CategoryId("cat-new"), vm.state.value.selectedCategory?.categoryId)
+    }
+
+    @Test
+    fun `a category of the other type is not attached to the template`() = runTest {
+        every { categoryRepository.all() } returns flowOf(listOf(spendCategory, incomeCategory))
+        val vm = createViewModel()
+        advanceUntilIdle()
+        val before: SelectableCategory? = vm.state.value.selectedCategory
+
+        vm.onIntent(
+            AddEditRecurringMovementIntent.OnNewValueFromOthers(
+                SelectableCategory(
+                    categoryId = CategoryId("cat-salary"),
+                    name = "Sueldo",
+                    iconId = "salary",
+                    categoryType = CategoryType.Income,
+                    colorId = "green",
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        assertEquals(before, vm.state.value.selectedCategory)
+        assertTrue(vm.state.value.categories.all { it.categoryType == CategoryType.Spend })
     }
 
     @Test
