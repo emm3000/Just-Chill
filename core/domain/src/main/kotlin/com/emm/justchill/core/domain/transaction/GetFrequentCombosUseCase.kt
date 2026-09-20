@@ -8,6 +8,10 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.math.abs
 import kotlin.time.Clock
 
+private const val AMOUNT_BAND_MIN_CENTS = 200L
+
+fun amountBandKey(amount: Money): Long = amount.cents / AMOUNT_BAND_MIN_CENTS
+
 class GetFrequentCombosUseCase(
     private val transactionStatsRepository: TransactionStatsRepository,
     private val clock: Clock,
@@ -84,7 +88,6 @@ class GetFrequentCombosUseCase(
         const val WINDOW_DAYS = 90
         const val DEFAULT_LIMIT = 5
         const val AMOUNT_BAND_FRACTION = 0.2
-        const val AMOUNT_BAND_MIN_CENTS = 200L
         const val HOUR_WINDOW_RADIUS = 2
         const val HOURS_IN_DAY = 24
     }
