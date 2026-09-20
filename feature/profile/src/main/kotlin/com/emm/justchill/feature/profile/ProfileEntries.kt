@@ -145,6 +145,7 @@ private fun ProfileEntry(
         state = profileState,
         appVersion = appVersion,
         commitHash = commitHash,
+        onBack = { nav.pop() },
         onTransactionsClick = { onTransactionsClick(nav) },
         onReportClick = { onReportClick(nav) },
         onAccountsClick = { onAccountsClick(nav) },

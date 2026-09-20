@@ -75,6 +75,7 @@ import kotlin.uuid.Uuid
 fun SeeTransactionsScreen(
     onEditTransaction: (String) -> Unit,
     onAddTransaction: () -> Unit,
+    onBack: () -> Unit,
     vm: SeeTransactionsViewModel,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -84,6 +85,7 @@ fun SeeTransactionsScreen(
         onIntent = vm::onIntent,
         navigateToEdit = onEditTransaction,
         navigateToAdd = onAddTransaction,
+        onBack = onBack,
     )
 }
 
@@ -93,6 +95,7 @@ private fun SeeTransactionsContent(
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
     navigateToAdd: () -> Unit,
+    onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
 
@@ -117,13 +120,19 @@ private fun SeeTransactionsContent(
             ScreenHeader(
                 month = state.month.takeIf { state.isMonthSelectorVisible },
                 isCategoryFilterActive = state.activeCategory != null,
+                onBack = onBack,
                 onIntent = onIntent,
             )
         }
 
-        val summary = state.summary?.takeIf { state.listDisplayState == ListDisplayState.Content }
-        if (summary != null) {
-            MonthSummary(summary = summary)
+        val summary: MonthSummaryUi? = state.summary
+            ?.takeIf { state.listDisplayState == ListDisplayState.Content }
+        if (state.isMonthSelectorVisible || summary != null) {
+            MonthStrip(
+                isMonthNavigationVisible = state.isMonthSelectorVisible,
+                summary = summary,
+                onIntent = onIntent,
+            )
         }
 
         if (state.isTodayNudgeVisible) {

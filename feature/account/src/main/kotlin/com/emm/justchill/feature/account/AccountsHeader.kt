@@ -28,8 +28,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.format.monthLabel
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
@@ -39,26 +41,16 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 private val SummaryDividerHeight: Dp = 36.dp
 
 @Composable
-internal fun AccountsHeader(state: AccountsUiState, addAccount: () -> Unit) {
-    val colors = LocalEmmColors.current
+internal fun AccountsHeader(state: AccountsUiState, addAccount: () -> Unit, onBack: () -> Unit) {
     val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.s6, vertical = spacing.s2),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Cuentas",
-                style = type.headlineL,
-                color = colors.textPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            NewAccountButton(onClick = addAccount)
-        }
+        JcTopBar(
+            title = "Cuentas",
+            left = { BackBtn(onClick = onBack) },
+            right = { NewAccountButton(onClick = addAccount) },
+            rightArtwork = spacing.s12,
+        )
 
         MonthSummaryStrip(state = state)
         Hairline()

@@ -39,7 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
@@ -50,7 +52,6 @@ import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-import com.emm.justchill.core.ui.theme.edgeGiveback
 import com.emm.justchill.feature.report.components.CategoryBarsCard
 import com.emm.justchill.feature.report.components.ComparisonPill
 import com.emm.justchill.feature.report.components.MonthPickerSheet
@@ -70,6 +71,7 @@ private val EmptyStateTileSize: Dp = 44.dp
 fun ReportScreen(
     modifier: Modifier = Modifier,
     onAddTransaction: () -> Unit = {},
+    onBack: () -> Unit = {},
     vm: ReportViewModel = koinViewModel(),
 ) {
     val state: ReportUiState by vm.state.collectAsStateWithLifecycle()
@@ -78,6 +80,7 @@ fun ReportScreen(
         state = state,
         onAddTransaction = onAddTransaction,
         onIntent = vm::onIntent,
+        onBack = onBack,
         modifier = modifier,
     )
 }
@@ -87,6 +90,7 @@ internal fun ReportScreen(
     state: ReportUiState,
     onAddTransaction: () -> Unit,
     onIntent: (ReportIntent) -> Unit,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -97,7 +101,10 @@ internal fun ReportScreen(
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        ReportTopBar(onShare = { onIntent(ReportIntent.ShareReport) })
+        ReportTopBar(
+            onShare = { onIntent(ReportIntent.ShareReport) },
+            onBack = onBack,
+        )
 
         val tabOptions = listOf(
             SegmentOption(ReportTab.Month, "Mes"),
@@ -241,31 +248,19 @@ private fun TotalHeroBlock(state: ReportUiState) {
 }
 
 @Composable
-private fun ReportTopBar(onShare: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(start = spacing.s4, end = spacing.s4 - spacing.edgeGiveback(TopBarTileSize)),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "Reporte",
-            style = type.titleL,
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center,
-        )
-        TopBarTile(
-            icon = Icons.Outlined.IosShare,
-            contentDescription = "Compartir reporte",
-            onClick = onShare,
-        )
-    }
+private fun ReportTopBar(onShare: () -> Unit, onBack: () -> Unit) {
+    JcTopBar(
+        title = "Reporte",
+        left = { BackBtn(onClick = onBack) },
+        right = {
+            TopBarTile(
+                icon = Icons.Outlined.IosShare,
+                contentDescription = "Compartir reporte",
+                onClick = onShare,
+            )
+        },
+        rightArtwork = TopBarTileSize,
+    )
 }
 
 @Composable

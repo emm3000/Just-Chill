@@ -22,6 +22,7 @@ fun EntryProviderScope<NavKey>.reportEntries(
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         ReportEntry(
             onAddTransaction = { onAddTransaction(nav) },
+            onBack = { nav.pop() },
             onShareText = bindings.platform.onShareText,
             snackbarHostState = bindings.snackbarHostState,
         )
@@ -31,6 +32,7 @@ fun EntryProviderScope<NavKey>.reportEntries(
 @Composable
 private fun ReportEntry(
     onAddTransaction: () -> Unit,
+    onBack: () -> Unit,
     onShareText: (String) -> Unit,
     snackbarHostState: SnackbarHostState,
 ) {
@@ -50,5 +52,5 @@ private fun ReportEntry(
         }
     }
 
-    ReportScreen(vm = vm, onAddTransaction = onAddTransaction)
+    ReportScreen(vm = vm, onAddTransaction = onAddTransaction, onBack = onBack)
 }

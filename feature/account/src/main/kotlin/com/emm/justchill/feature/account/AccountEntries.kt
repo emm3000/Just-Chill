@@ -34,6 +34,7 @@ fun EntryProviderScope<NavKey>.accountEntries(
             onIntent = vm::onIntent,
             addAccount = { nav.push(AddAccountRoute) },
             navigateToLoans = { onOpenLoans(nav) },
+            onBack = { nav.pop() },
             modifier = Modifier.fillMaxSize(),
         )
     }
