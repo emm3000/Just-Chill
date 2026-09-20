@@ -143,7 +143,7 @@ fun AmountHero(
             style = numberStyle,
             color = mainColor,
             autoSize = TextAutoSize.StepBased(
-                minFontSize = size / 2,
+                minFontSize = size / AUTO_SIZE_MIN_DIVISOR,
                 maxFontSize = size,
                 stepSize = AUTO_SIZE_STEP,
             ),
@@ -159,6 +159,8 @@ fun AmountHero(
 private const val CARET_ID = "caret"
 
 private val TIGHT_TRACKING: TextUnit = (-0.04).em
+
+private const val AUTO_SIZE_MIN_DIVISOR: Int = 4
 
 private val AUTO_SIZE_STEP: TextUnit = 2.sp
 

@@ -68,7 +68,6 @@ internal val emmType: EmmType = EmmType(
         letterSpacing = (-2.08).sp,
         fontFeatureSettings = TABULAR,
     ),
-    // A card's content width cannot hold amountHero: eleven mono digits at 64sp overrun it.
     amountCard = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontSize = 32.sp,
