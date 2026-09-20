@@ -60,8 +60,10 @@ internal class SaveMotion(private val animatorDurationScale: Float) {
         lineCenterY = coordinates.boundsInRoot().center.y
     }
 
-    fun Modifier.heroOrigin(): Modifier = onGloballyPositioned { coordinates ->
+    fun Modifier.restingHero(): Modifier = onGloballyPositioned { coordinates ->
         heroCenterY = coordinates.boundsInRoot().center.y
+    }.graphicsLayer {
+        alpha = if (flyingAmount == null) 1f else progress.value
     }
 
     fun Modifier.inFlight(): Modifier = graphicsLayer {

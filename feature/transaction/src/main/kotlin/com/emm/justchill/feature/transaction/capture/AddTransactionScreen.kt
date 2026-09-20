@@ -68,6 +68,7 @@ import com.emm.justchill.feature.transaction.capture.components.SaveMotion
 import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -122,7 +123,7 @@ fun AddTransactionScreen(
             when (effect) {
                 is AddTransactionEffect.TransactionSaved -> {
                     currentPopBackStack()
-                    flight?.cancel()
+                    flight?.cancelAndJoin()
                     flight = launch { motion.fly(effect.amount) }
                 }
 
@@ -136,9 +137,10 @@ fun AddTransactionScreen(
 
     AddTransactionScreenContent(
         state = state,
-        onIntent = { intent ->
-            if (intent == AddTransactionIntent.OnSave) motion.holdTotal(state.monthSpendAmount)
-            vm.onIntent(intent)
+        onIntent = vm::onIntent,
+        onSave = {
+            motion.holdTotal(state.monthSpendAmount)
+            vm.onIntent(AddTransactionIntent.OnSave)
         },
         motion = motion,
         onOpenMenu = onOpenMenu,
@@ -154,6 +156,7 @@ internal fun AddTransactionScreenContent(
     onIntent: (AddTransactionIntent) -> Unit,
     onOpenMenu: () -> Unit,
     onOpenTransactions: () -> Unit,
+    onSave: () -> Unit,
     motion: SaveMotion = rememberSaveMotion(),
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
@@ -191,8 +194,7 @@ internal fun AddTransactionScreenContent(
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s6)
                 .padding(top = spacing.s8, bottom = spacing.s6)
-                .clearAndSetSemantics { contentDescription = amountDescription }
-                .then(with(motion) { Modifier.heroOrigin() }),
+                .clearAndSetSemantics { contentDescription = amountDescription },
         ) {
             AmountHero(
                 value = centsToSoles(state.amount),
@@ -200,6 +202,7 @@ internal fun AddTransactionScreenContent(
                 tone = kind.amountTone,
                 showCaret = true,
                 signed = true,
+                modifier = with(motion) { Modifier.restingHero() },
             )
             motion.flyingAmount?.let { saved ->
                 AmountHero(
@@ -299,7 +302,7 @@ internal fun AddTransactionScreenContent(
         StickyCTA(
             label = ctaLabel,
             interaction = ctaInteraction(state),
-            onClick = { onIntent(AddTransactionIntent.OnSave) },
+            onClick = onSave,
         )
     }
 
@@ -417,6 +420,7 @@ private fun AddTransactionPreview() {
             onIntent = {},
             onOpenMenu = {},
             onOpenTransactions = {},
+            onSave = {},
         )
     }
 }

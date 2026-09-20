@@ -30,6 +30,7 @@ class MonthSpendLineTapTest {
                     onIntent = {},
                     onOpenMenu = {},
                     onOpenTransactions = { opened += 1 },
+                    onSave = {},
                 )
             }
         }
