@@ -161,12 +161,21 @@ class AddTransactionViewModel(
             val timeOfDay = clock.now().toLocalDateTime(zone).time
             val insert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
             createTransaction(insert)
-            // Left true on purpose: the screen pops on this effect, and lowering it here would
-            // re-enable the CTA during the navigation frame.
+            updateState { emptiedForTheNextMovement() }
             sendEffect(AddTransactionEffect.TransactionSaved)
         }
     }
 }
+
+// The pad is the home screen and nothing pops it, so the movement has to leave the state instead:
+// what the user typed goes, what the ranking and the user's picks resolved stays for the next one.
+private fun AddTransactionUiState.emptiedForTheNextMovement(): AddTransactionUiState = copy(
+    amount = "",
+    description = "",
+    date = null,
+    isSaving = false,
+    openSheet = null,
+)
 
 // The day is the user's pick or, untouched, TodayFlow's answer — never a second derivation from
 // the clock, which is here only for the hour the save actually happens at.

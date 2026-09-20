@@ -302,6 +302,45 @@ class AddTransactionViewModelTest {
     }
 
     @Test
+    fun `a save empties the amount, the note and the date and leaves the defaults standing`() =
+        runTest(testDispatcher) {
+            val vm = buildViewModel()
+            advanceUntilIdle()
+
+            vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+            vm.onIntent(AddTransactionIntent.OnDescriptionChange("Almuerzo"))
+            vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
+            vm.onIntent(AddTransactionIntent.OnAccountSelected(account2))
+            advanceUntilIdle()
+
+            vm.onIntent(AddTransactionIntent.OnSave)
+            advanceUntilIdle()
+
+            val state: AddTransactionUiState = vm.state.value
+            assertEquals("", state.amount, "the pad is the home screen: a saved amount that stays gets saved twice")
+            assertEquals("", state.description)
+            assertNull(state.date)
+            assertEquals(account2, state.accountSelected, "the next movement lost the account the user had picked")
+        }
+
+    @Test
+    fun `a save leaves the CTA live for the next movement`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+
+        assertFalse(
+            vm.state.value.isSaving,
+            "nothing pops the home pad any more, so a saving flag left raised freezes it for good",
+        )
+    }
+
+    @Test
     fun `a second OnSave sent before the write resolves does not call createTransaction again`() =
         runTest(testDispatcher) {
             val gate = CompletableDeferred<Unit>()
