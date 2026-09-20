@@ -145,12 +145,13 @@ private fun summaryLabel(categoryName: String?, accountName: String?, colors: Em
 @Composable
 private fun DeleteTransactionDialogPreview() {
     EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
         DeleteTransactionDialog(
             type = TransactionType.Spend,
             amountCents = "8540",
             accountName = "Yape",
             categoryName = "Comida",
-            categoryColor = Color(0xFFC97A5C),
+            categoryColor = colors.catTerracotta,
             onConfirm = {},
             onDismiss = {},
         )
@@ -162,12 +163,13 @@ private fun DeleteTransactionDialogPreview() {
 @Composable
 private fun DeleteTransactionDialogOverflowPreview() {
     EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
         DeleteTransactionDialog(
             type = TransactionType.Spend,
             amountCents = "99999999",
             accountName = "Tarjeta de crédito BCP",
             categoryName = "Cuidado personal y salud",
-            categoryColor = Color(0xFFC97A5C),
+            categoryColor = colors.catTerracotta,
             onConfirm = {},
             onDismiss = {},
         )
