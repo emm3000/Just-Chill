@@ -13,6 +13,7 @@ import com.emm.justchill.core.domain.shared.UniqueIdProvider
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.DeleteTransactionUseCase
+import com.emm.justchill.core.domain.transaction.GetMonthSpendUseCase
 import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
@@ -201,6 +202,7 @@ class TransactionDateEndToEndTest {
         ),
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         getFrequentCombos = mockk { coEvery { this@mockk.invoke(any(), any(), any()) } returns emptyList() },
+        getMonthSpend = GetMonthSpendUseCase(transactionRepository),
         transactionStatsRepository = mockk<TransactionStatsRepository> {
             coEvery { lastUsedAccountId() } returns null
         },

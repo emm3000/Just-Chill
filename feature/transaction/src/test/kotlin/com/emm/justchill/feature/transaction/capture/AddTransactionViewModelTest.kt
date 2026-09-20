@@ -12,8 +12,10 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
+import com.emm.justchill.core.domain.transaction.GetMonthSpendUseCase
 import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionInsert
+import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.testing.FakeTodayFlow
@@ -122,6 +124,9 @@ class AddTransactionViewModelTest {
     private val getTopUsedCategoryIds = mockk<GetTopUsedCategoryIdsUseCase>()
     private val getFrequentCombos = mockk<GetFrequentCombosUseCase>()
     private val transactionStatsRepository = mockk<TransactionStatsRepository>()
+    private val transactionRepository = mockk<TransactionRepository> {
+        every { allInRange(any(), any()) } returns flowOf(emptyList())
+    }
 
     @Before
     fun setupDefaults() {
@@ -137,6 +142,7 @@ class AddTransactionViewModelTest {
         createTransaction = createTransaction,
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         getFrequentCombos = getFrequentCombos,
+        getMonthSpend = GetMonthSpendUseCase(transactionRepository),
         transactionStatsRepository = transactionStatsRepository,
         accountRepository = accountRepository,
         categoryRepository = categoryRepository,
