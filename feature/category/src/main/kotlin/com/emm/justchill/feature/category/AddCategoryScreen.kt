@@ -180,7 +180,6 @@ private fun AddCategoryContent(
             Section(eyebrow = "ÍCONO") {
                 IconGrid(
                     selected = selectedIcon,
-                    swatch = selectedColor.primary,
                     onSelect = { onIntent(AddCategoryIntent.OnIconChange(it.id)) },
                 )
             }

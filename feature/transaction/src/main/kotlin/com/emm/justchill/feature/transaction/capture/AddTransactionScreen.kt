@@ -28,7 +28,6 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
-import com.emm.justchill.core.ui.account.accountDotColor
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
@@ -178,7 +177,7 @@ private fun AddTransactionScreenContent(
             } else {
                 SelectorChip(
                     label = state.accountSelected?.name ?: "—",
-                    dotColor = state.accountSelected?.let { accountDotColor(it.name, colors) },
+                    dotColor = null,
                     onClickLabel = "Cambiar la cuenta",
                     onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Account)) },
                     modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),

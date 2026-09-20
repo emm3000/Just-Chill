@@ -113,7 +113,6 @@ internal fun SelectorPillsRow(
             SelectorPill(
                 eyebrow = "CUENTA",
                 value = state.selectedAccount?.name ?: "Seleccionar",
-                dotColor = colors.catGraphite,
                 onClick = onOpenAccount,
             )
         }

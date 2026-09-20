@@ -43,7 +43,6 @@ import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
@@ -129,15 +128,9 @@ fun AccountPickerSheet(
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(accounts, key = { it.accountId.value }) { account ->
                     val isActive = account.accountId.value == selectedAccountId
-                    val swatchColor = accountSwatchColor(
-                        name = account.name,
-                        type = account.type,
-                        colors = colors,
-                    )
                     AccountRow(
                         account = account,
                         isActive = isActive,
-                        swatchColor = swatchColor,
                         onClick = {
                             onSelect(account)
                             onDismiss()
@@ -190,7 +183,7 @@ fun AccountPickerSheet(
 }
 
 @Composable
-private fun AccountRow(account: Account, isActive: Boolean, swatchColor: Color, onClick: () -> Unit) {
+private fun AccountRow(account: Account, isActive: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val icon: ImageVector = when (account.type) {
         AccountType.Bank -> Icons.Outlined.AccountBalance
@@ -217,12 +210,7 @@ private fun AccountRow(account: Account, isActive: Boolean, swatchColor: Color, 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        IconTile(
-            icon = icon,
-            size = IconTileSize.Md,
-            tone = IconTileTone.Swatch,
-            swatch = swatchColor,
-        )
+        IconTile(icon = icon, size = IconTileSize.Md)
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -258,25 +246,5 @@ private fun AccountRow(account: Account, isActive: Boolean, swatchColor: Color, 
                 )
             }
         }
-    }
-}
-
-internal fun accountSwatchColor(
-    name: String,
-    type: AccountType,
-    colors: com.emm.justchill.core.ui.theme.EmmColors,
-): Color {
-    val lower = name.lowercase()
-    return when {
-        "yape" in lower -> colors.catMauve
-        "plin" in lower -> colors.catSage
-        "bcp" in lower -> colors.catSlate
-        "bbva" in lower -> colors.catTerracotta
-        "interbank" in lower -> colors.catOchre
-        "scotiabank" in lower -> colors.catMauve
-        "efectivo" in lower || type == AccountType.Cash -> colors.catOchre
-        type == AccountType.CreditCard -> colors.catTerracotta
-        type == AccountType.Investment -> colors.catSage
-        else -> colors.catGraphite
     }
 }

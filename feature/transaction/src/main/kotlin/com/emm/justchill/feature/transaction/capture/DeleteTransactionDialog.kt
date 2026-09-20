@@ -21,7 +21,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.atoms.ChipDot
+import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.format.formatCentsForDisplay
@@ -106,7 +106,7 @@ private fun TransactionSummaryRow(
             .padding(horizontal = spacing.s3, vertical = spacing.s3),
     ) {
         if (categoryColor != null) {
-            ChipDot(color = categoryColor)
+            CategoryDot(color = categoryColor)
             Spacer(Modifier.width(spacing.s2))
         }
         Text(

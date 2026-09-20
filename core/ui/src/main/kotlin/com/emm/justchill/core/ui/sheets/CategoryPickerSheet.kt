@@ -44,10 +44,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.resolvedColor
@@ -309,22 +309,23 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        IconTile(
-            icon = category.resolvedIcon,
-            size = IconTileSize.Sm,
-            tone = IconTileTone.Swatch,
-            swatch = category.resolvedColor.primary,
-        )
+        IconTile(icon = category.resolvedIcon, size = IconTileSize.Sm)
 
-        Text(
-            text = category.name,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-            letterSpacing = (-0.15).sp,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             modifier = Modifier.weight(1f),
-        )
+        ) {
+            CategoryDot(color = category.resolvedColor.primary)
+            Text(
+                text = category.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = colors.textPrimary,
+                letterSpacing = (-0.15).sp,
+            )
+        }
 
         if (isActive) {
             Box(

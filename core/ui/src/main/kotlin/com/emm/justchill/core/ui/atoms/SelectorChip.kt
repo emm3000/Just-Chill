@@ -78,7 +78,7 @@ fun SelectorChip(
             horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
             if (dotColor != null) {
-                ChipDot(color = dotColor)
+                CategoryDot(color = dotColor)
             }
             Text(
                 text = label,
