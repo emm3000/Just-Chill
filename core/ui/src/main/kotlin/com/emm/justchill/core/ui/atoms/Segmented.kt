@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,9 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -37,7 +42,6 @@ fun <T> Segmented(options: List<SegmentOption<T>>, selected: T, onSelect: (T) ->
             .fillMaxWidth()
             .height(spacing.s12)
             .clip(shape)
-            .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)
             .padding(horizontal = CELL_INSET),
     ) {
@@ -95,3 +99,23 @@ private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit,
 }
 
 private val CELL_INSET: Dp = 3.dp
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun SegmentedPreview() {
+    EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
+        val spacing: EmmSpacing = LocalEmmSpacing.current
+        Column(modifier = Modifier.background(colors.bg).padding(spacing.s4)) {
+            Segmented(
+                options = listOf(
+                    SegmentOption(value = "expense", label = "Gasto"),
+                    SegmentOption(value = "income", label = "Ingreso"),
+                ),
+                selected = "expense",
+                onSelect = {},
+            )
+        }
+    }
+}

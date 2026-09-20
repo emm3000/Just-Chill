@@ -61,7 +61,7 @@ fun EmmDialog(
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .clip(radii.rXL)
-                .background(colors.surface1)
+                .background(colors.bg)
                 .border(width = 1.dp, color = colors.border, shape = radii.rXL)
                 .padding(spacing.s5),
         ) {
