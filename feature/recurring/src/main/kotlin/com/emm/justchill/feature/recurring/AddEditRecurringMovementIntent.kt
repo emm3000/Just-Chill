@@ -15,6 +15,7 @@ sealed interface AddEditRecurringMovementIntent : UiIntent {
     data class OnDescriptionChange(val value: String) : AddEditRecurringMovementIntent
     data class OnAccountSelected(val account: Account) : AddEditRecurringMovementIntent
     data class OnCategorySelected(val category: SelectableCategory?) : AddEditRecurringMovementIntent
+    data class OnNewValueFromOthers(val category: SelectableCategory) : AddEditRecurringMovementIntent
     data class OnSheetRequested(val sheet: RecurringSheet) : AddEditRecurringMovementIntent
     data object OnSheetDismissed : AddEditRecurringMovementIntent
     data object Save : AddEditRecurringMovementIntent

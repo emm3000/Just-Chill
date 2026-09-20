@@ -175,6 +175,22 @@ class AppNavigatorTest {
     }
 
     @Test
+    fun `popToCapture returns to the nearest marked form, not to one buried under a list`() {
+        navigator.push(CaptureDetailRoute("buried"))
+        navigator.push(ListRoute)
+        navigator.push(CaptureFormRoute())
+        navigator.push(PickerRoute(propagates = true))
+
+        navigator.popToCapture()
+
+        assertEquals(
+            listOf<NavKey>(rootTab, CaptureDetailRoute("buried"), ListRoute, CaptureFormRoute()),
+            backStack.toList(),
+            "an unmarked form would have let the picker's return walk down to the buried capture",
+        )
+    }
+
+    @Test
     fun `popToCapture leaves the stack untouched when no capture screen is on it`() {
         navigator.push(ListRoute)
         navigator.push(PickerRoute())

@@ -12,5 +12,9 @@ interface AppRoute : NavKey
 
 interface BottomBarRoute : AppRoute
 
-/** The capture screens [AppNavigator.popToCapture] returns to, marked by the feature that owns them. */
+/**
+ * The movement forms [AppNavigator.popToCapture] returns to, marked by the feature that owns them.
+ * A form that offers "+ Nueva categoría" must carry the marker, or the picker's return leg walks
+ * past it down to whichever marked form is buried below.
+ */
 interface CaptureRoute : AppRoute

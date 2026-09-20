@@ -1,6 +1,7 @@
 package com.emm.justchill.feature.recurring
 
 import com.emm.justchill.core.ui.navigation.AppRoute
+import com.emm.justchill.core.ui.navigation.CaptureRoute
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 
@@ -8,7 +9,7 @@ import kotlin.reflect.KClass
 data object RecurringMovementsRoute : AppRoute
 
 @Serializable
-data class AddEditRecurringMovementRoute(val id: String? = null) : AppRoute
+data class AddEditRecurringMovementRoute(val id: String? = null) : CaptureRoute
 
 val recurringRoutes: List<KClass<out AppRoute>> = listOf(
     RecurringMovementsRoute::class,

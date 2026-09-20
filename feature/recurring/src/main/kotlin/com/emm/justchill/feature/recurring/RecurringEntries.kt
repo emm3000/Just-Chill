@@ -7,12 +7,20 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
-fun EntryProviderScope<NavKey>.recurringEntries(bindings: NavHostBindings) {
+fun EntryProviderScope<NavKey>.recurringEntries(
+    bindings: NavHostBindings,
+    pendingCategory: () -> SelectableCategory?,
+    onPendingCategoryConsumed: () -> Unit,
+    onAddNewCategory: (AppNavigator, CategoryType) -> Unit,
+) {
     entry<RecurringMovementsRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
         RecurringMovementsEntry(
@@ -23,10 +31,21 @@ fun EntryProviderScope<NavKey>.recurringEntries(bindings: NavHostBindings) {
 
     entry<AddEditRecurringMovementRoute> { key ->
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val vm: AddEditRecurringMovementViewModel = koinViewModel(parameters = { parametersOf(key.id) })
+
+        LaunchedEffect(pendingCategory()) {
+            pendingCategory()?.let { selectableCategory ->
+                vm.onIntent(AddEditRecurringMovementIntent.OnNewValueFromOthers(selectableCategory))
+                onPendingCategoryConsumed()
+            }
+        }
+
         AddEditRecurringMovementScreen(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
+            onAddNewCategory = { categoryType -> onAddNewCategory(nav, categoryType) },
             id = key.id,
+            vm = vm,
         )
     }
 }
