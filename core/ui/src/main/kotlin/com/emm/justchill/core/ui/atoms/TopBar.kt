@@ -50,6 +50,7 @@ fun JcTopBar(
     val type: EmmType = LocalEmmType.current
     val barPadding: Dp = spacing.s3
     val contentColumnGap: Dp = spacing.s4 - barPadding
+    val titleGap: Dp = spacing.s2
 
     Layout(
         modifier = modifier
@@ -85,7 +86,7 @@ fun JcTopBar(
             }
         },
         measurePolicy = { measurables: List<Measurable>, constraints: Constraints ->
-            measureTopBar(measurables, constraints, contentColumnGap)
+            measureTopBar(measurables, constraints, contentColumnGap, titleGap)
         },
     )
 }
@@ -94,6 +95,7 @@ private fun MeasureScope.measureTopBar(
     measurables: List<Measurable>,
     constraints: Constraints,
     contentColumnGap: Dp,
+    titleGap: Dp,
 ): MeasureResult {
     val barWidth: Int = constraints.maxWidth
     val barHeight: Int = constraints.maxHeight
@@ -112,7 +114,9 @@ private fun MeasureScope.measureTopBar(
         .firstOrNull { it.layoutId == RIGHT_SLOT_ID }
         ?.measure(slotConstraints)
 
-    val titleStart: Int = leftPlaceable?.width ?: contentColumnGap.roundToPx()
+    val titleStart: Int = leftPlaceable
+        ?.let { it.width + titleGap.roundToPx() }
+        ?: contentColumnGap.roundToPx()
     val titleWidth: Int = (barWidth - titleStart - (rightPlaceable?.width ?: 0)).coerceAtLeast(0)
     val titlePlaceable: Placeable = measurables
         .first { it.layoutId == TITLE_SLOT_ID }
