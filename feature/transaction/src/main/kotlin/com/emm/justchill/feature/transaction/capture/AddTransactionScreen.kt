@@ -49,6 +49,7 @@ import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
@@ -63,7 +64,11 @@ import com.emm.justchill.feature.transaction.capture.components.ACCOUNT_CHIP_WEI
 import com.emm.justchill.feature.transaction.capture.components.CATEGORY_CHIP_WEIGHT
 import com.emm.justchill.feature.transaction.capture.components.FormMetaRow
 import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
+import com.emm.justchill.feature.transaction.capture.components.SaveMotion
+import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 
@@ -109,23 +114,33 @@ fun AddTransactionScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val currentPopBackStack by rememberUpdatedState(popBackStack)
+    val motion: SaveMotion = rememberSaveMotion()
 
     LaunchedEffect(vm) {
+        var flight: Job? = null
         vm.effect.collect { effect ->
             when (effect) {
-                AddTransactionEffect.TransactionSaved -> currentPopBackStack()
+                is AddTransactionEffect.TransactionSaved -> {
+                    currentPopBackStack()
+                    flight?.cancel()
+                    flight = launch { motion.fly(effect.amount) }
+                }
 
-                is AddTransactionEffect.ShowError -> snackbarHostState.showEmmSnackbar(
-                    message = effect.message,
-                    tone = EmmSnackbarTone.Error,
-                )
+                is AddTransactionEffect.ShowError -> {
+                    motion.releaseTotal()
+                    snackbarHostState.showEmmSnackbar(message = effect.message, tone = EmmSnackbarTone.Error)
+                }
             }
         }
     }
 
     AddTransactionScreenContent(
         state = state,
-        onIntent = vm::onIntent,
+        onIntent = { intent ->
+            if (intent == AddTransactionIntent.OnSave) motion.holdTotal(state.monthSpendAmount)
+            vm.onIntent(intent)
+        },
+        motion = motion,
         onOpenMenu = onOpenMenu,
         onOpenTransactions = onOpenTransactions,
         onAddNewCategory = onAddNewCategory,
@@ -139,6 +154,7 @@ internal fun AddTransactionScreenContent(
     onIntent: (AddTransactionIntent) -> Unit,
     onOpenMenu: () -> Unit,
     onOpenTransactions: () -> Unit,
+    motion: SaveMotion = rememberSaveMotion(),
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -164,8 +180,9 @@ internal fun AddTransactionScreenContent(
 
         MonthSpendLine(
             label = state.monthSpendLabel,
-            amount = state.monthSpendAmount,
+            amount = motion.displayedTotal(state.monthSpendAmount),
             onClick = onOpenTransactions,
+            modifier = with(motion) { Modifier.monthLineTarget() },
         )
 
         Box(
@@ -174,7 +191,8 @@ internal fun AddTransactionScreenContent(
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s6)
                 .padding(top = spacing.s8, bottom = spacing.s6)
-                .clearAndSetSemantics { contentDescription = amountDescription },
+                .clearAndSetSemantics { contentDescription = amountDescription }
+                .then(with(motion) { Modifier.heroOrigin() }),
         ) {
             AmountHero(
                 value = centsToSoles(state.amount),
@@ -183,6 +201,15 @@ internal fun AddTransactionScreenContent(
                 showCaret = true,
                 signed = true,
             )
+            motion.flyingAmount?.let { saved ->
+                AmountHero(
+                    value = centsToSoles(moneyCentsString(saved)),
+                    size = type.amountHero.fontSize,
+                    tone = kind.amountTone,
+                    signed = true,
+                    modifier = with(motion) { Modifier.inFlight() },
+                )
+            }
         }
 
         Row(
