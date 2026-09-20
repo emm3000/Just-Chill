@@ -171,7 +171,7 @@ class AddTransactionViewModel(
             val insert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
             createTransaction(insert)
             updateState { emptiedForTheNextMovement() }
-            sendEffect(AddTransactionEffect.TransactionSaved)
+            sendEffect(AddTransactionEffect.TransactionSaved(insert.amount))
         }
     }
 }

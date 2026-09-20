@@ -27,9 +27,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -343,6 +345,30 @@ class AddTransactionViewModelTest {
         assertFalse(
             vm.state.value.isSaving,
             "nothing pops the home pad any more, so a saving flag left raised freezes it for good",
+        )
+    }
+
+    @Test
+    fun `each save emits exactly one Saved effect carrying the amount it wrote`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        val effects: MutableList<AddTransactionEffect> = mutableListOf()
+        val collector: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("1200"))
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertEquals(
+            listOf<AddTransactionEffect>(
+                AddTransactionEffect.TransactionSaved(Money(8540L)),
+                AddTransactionEffect.TransactionSaved(Money(1200L)),
+            ),
+            effects,
         )
     }
 
