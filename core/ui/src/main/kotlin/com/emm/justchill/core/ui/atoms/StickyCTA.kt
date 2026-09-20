@@ -24,12 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
-import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
-import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 val CtaHeight = 52.dp
 
@@ -124,7 +122,6 @@ private fun CtaLabel(text: String, color: Color, withLetterSpacing: Boolean = tr
 private fun StickyCTAPreview() {
     EmmTheme {
         val colors: EmmColors = LocalEmmColors.current
-        val spacing: EmmSpacing = LocalEmmSpacing.current
         Column(modifier = Modifier.background(colors.bg)) {
             StickyCTA(label = "Guardar", onClick = {}, sublabel = "S/ 120.00")
             StickyCTA(label = "Guardar", onClick = {}, interaction = CtaInteraction.Disabled)
