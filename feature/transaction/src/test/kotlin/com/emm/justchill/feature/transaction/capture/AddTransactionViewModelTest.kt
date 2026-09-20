@@ -29,6 +29,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -858,49 +859,79 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `typing more digits inside one amount band issues a single ranking query`() = runTest(testDispatcher) {
-        val queried = mutableListOf<Money?>()
-        coEvery {
-            getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any())
-        } coAnswers {
-            queried += arg<Money?>(3)
-            emptyList()
-        }
+    fun `the first digit typed reaches the ranking use case`() = runTest(testDispatcher) {
+        val queried = recordedComboQueries()
 
         val vm = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
         advanceUntilIdle()
-        vm.onIntent(AddTransactionIntent.OnAmountChange("12"))
-        advanceUntilIdle()
-        vm.onIntent(AddTransactionIntent.OnAmountChange("123"))
-        advanceUntilIdle()
 
-        assertEquals(listOf<Money?>(null), queried, "1, 12 and 123 share one band, so one query answers all three")
+        assertEquals(listOf(null, Money(1L)), queried)
     }
 
     @Test
-    fun `crossing into another amount band issues a second ranking query`() = runTest(testDispatcher) {
-        val queried = mutableListOf<Money?>()
+    fun `an empty pad ranks without waiting out the debounce`() = runTest(testDispatcher) {
+        val queried = recordedComboQueries()
+
+        buildViewModel()
+        runCurrent()
+
+        assertEquals(listOf<Money?>(null), queried, "the screen opens on an answer, not on a timer")
+    }
+
+    @Test
+    fun `digits typed inside the debounce window issue one query, for the last amount`() = runTest(testDispatcher) {
+        val queried = recordedComboQueries()
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("5"))
+        advanceTimeBy(RERANK_DEBOUNCE_MILLIS / 3)
+        vm.onIntent(AddTransactionIntent.OnAmountChange("50"))
+        advanceTimeBy(RERANK_DEBOUNCE_MILLIS / 3)
+        vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, Money(500L)), queried, "three digits typed in one burst rank once, on the last one")
+    }
+
+    @Test
+    fun `a pause between digits issues the next query`() = runTest(testDispatcher) {
+        val queried = recordedComboQueries()
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("5"))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("50"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, Money(5L), Money(50L)), queried)
+    }
+
+    @Test
+    fun `a type switch re-ranks without waiting for the amount's debounce`() = runTest(testDispatcher) {
+        val queried = mutableListOf<Pair<TransactionType, Money?>>()
         coEvery {
             getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any())
         } coAnswers {
-            queried += arg<Money?>(3)
+            queried += arg<TransactionType>(0) to arg<Money?>(3)
             emptyList()
         }
 
         val vm = buildViewModel()
         advanceUntilIdle()
-        vm.onIntent(AddTransactionIntent.OnAmountChange("12"))
+        vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
         advanceUntilIdle()
-        vm.onIntent(AddTransactionIntent.OnAmountChange("12000"))
-        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
+        runCurrent()
 
-        assertEquals(listOf(null, Money(12000L)), queried)
+        assertEquals(TransactionType.Income to Money(500L), queried.last())
     }
 
     @Test
-    fun `the chip row never shows the previous amount's combos while the re-rank is in flight`() =
+    fun `the chip row keeps the settled combos while the next amount's ranking is in flight`() =
         runTest(testDispatcher) {
             val typeOnlyCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
             val rankedCombo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
@@ -922,15 +953,18 @@ class AddTransactionViewModelTest {
             vm.onIntent(AddTransactionIntent.OnAmountChange("50000"))
             advanceUntilIdle()
 
-            assertTrue(
-                vm.state.value.frequentCombos.isEmpty(),
-                "the previous amount's combos may not survive into the new amount's frame",
+            assertEquals(
+                listOf("Yape · Comida"),
+                vm.state.value.frequentCombos.map { it.label },
+                "the row answers with the last ranking it has until the next one lands, never with a blank",
             )
+            assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
 
             rankedReads.complete(Unit)
             advanceUntilIdle()
 
             assertEquals(listOf("BCP · Comida"), vm.state.value.frequentCombos.map { it.label })
+            assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
         }
 
     @Test
@@ -955,5 +989,16 @@ class AddTransactionViewModelTest {
 
         assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
         assertTrue(vm.state.value.preselectConsumed)
+    }
+
+    private fun recordedComboQueries(): MutableList<Money?> {
+        val queried = mutableListOf<Money?>()
+        coEvery {
+            getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any())
+        } coAnswers {
+            queried += arg<Money?>(3)
+            emptyList()
+        }
+        return queried
     }
 }

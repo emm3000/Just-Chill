@@ -6,9 +6,7 @@ import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.domain.transaction.amountBandKey
 import com.emm.justchill.core.ui.category.SelectableCategory
-import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.relativeDayLabel
 import com.emm.justchill.core.ui.mvi.UiState
@@ -20,7 +18,6 @@ data class FrequentUsage(
     val loadedFor: TransactionType,
     val categoryIds: List<String>,
     val combos: List<FrequentCombo> = emptyList(),
-    val loadedForAmountBand: Long = 0L,
 )
 
 data class AddTransactionUiState(
@@ -82,14 +79,11 @@ data class AddTransactionUiState(
         else -> null
     }
 
-    // The chip row may never render the previous type's or the previous amount band's suggestions,
-    // not even for the frame between the change and the reads that answer it.
-    private val usageForCurrentType: FrequentUsage?
-        get() = frequentUsage?.takeIf {
-            it.loadedFor == transactionType && it.loadedForAmountBand == currentAmountBand
-        }
-
-    private val currentAmountBand: Long get() = amountBandKey(centsToMoney(amount))
+    // The chip row may never render the previous type's suggestions, not even for the frame between
+    // a type switch and the reads that answer it. The amount is not part of this filter: a re-rank
+    // the typed amount triggers replaces the answer when it lands, and blanking the row for the
+    // round trip would cost the movement a tap.
+    private val usageForCurrentType: FrequentUsage? get() = frequentUsage?.takeIf { it.loadedFor == transactionType }
 
     private val rankedCombo: FrequentComboUi? get() = frequentCombos.firstOrNull()
 

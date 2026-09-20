@@ -8,12 +8,12 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
+import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
 import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionInsert
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.domain.transaction.amountBandKey
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.toSelectable
 import com.emm.justchill.core.ui.error.toUserMessage
@@ -22,7 +22,8 @@ import com.emm.justchill.core.ui.mvi.MviViewModel
 import com.emm.justchill.core.ui.transaction.Catalog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -33,6 +34,8 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+
+internal const val RERANK_DEBOUNCE_MILLIS: Long = 300L
 
 @Suppress("LongParameterList")
 class AddTransactionViewModel(
@@ -67,8 +70,11 @@ class AddTransactionViewModel(
                 .launchSafeIn(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) })
         }
 
-        state.map(::comboQueryOf)
-            .distinctUntilChangedBy { query -> query.type to query.amountBand }
+        combine(
+            flow = state.map { it.transactionType }.distinctUntilChanged(),
+            flow2 = typedAmounts(),
+        ) { type, amount -> ComboQuery(type, amount) }
+            .distinctUntilChanged()
             .flatMapLatest(::loadFrequentUsage)
             .onEach { usage -> updateState { copy(frequentUsage = usage) } }
             .launchSafeIn(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) })
@@ -121,34 +127,29 @@ class AddTransactionViewModel(
         }
     }
 
-    // The band, not the amount, keys the query: every amount inside one band ranks the same, so the
-    // chips stay still while the digits that cannot move them are typed.
-    private fun comboQueryOf(state: AddTransactionUiState): ComboQuery {
-        val typed: Money = centsToMoney(state.amount)
-        return ComboQuery(
-            type = state.transactionType,
-            amount = typed.takeIf { it != Money.Zero },
-            amountBand = amountBandKey(typed),
-        )
-    }
+    // An empty pad ranks at once; a typed amount waits out the burst of digits, so a movement is
+    // never ranked against an amount the user was still in the middle of writing.
+    private fun typedAmounts(): Flow<Money?> = state
+        .map { centsToMoney(it.amount).takeIf { typed -> typed != Money.Zero } }
+        .distinctUntilChanged()
+        .debounce { amount -> if (amount == null) 0L else RERANK_DEBOUNCE_MILLIS }
 
     private fun loadFrequentUsage(query: ComboQuery): Flow<FrequentUsage> = flow {
         val type: TransactionType = query.type
-        val categoryIds = loadOrNull { getTopUsedCategoryIds(type) }.orEmpty().map { it.value }
-        emit(FrequentUsage(loadedFor = type, categoryIds = categoryIds, loadedForAmountBand = query.amountBand))
+        val categoryIds: List<String> = loadOrNull { getTopUsedCategoryIds(type) }.orEmpty().map { it.value }
+        // A re-rank of the same type answers over the combos already on screen; only a type switch
+        // empties the row, and it must.
+        val settled: List<FrequentCombo> = currentState.frequentUsage
+            ?.takeIf { it.loadedFor == type }
+            ?.combos
+            .orEmpty()
+        emit(FrequentUsage(loadedFor = type, categoryIds = categoryIds, combos = settled))
 
-        val combos = loadOrNull { getFrequentCombos(type, amount = query.amount) }.orEmpty()
-        emit(
-            FrequentUsage(
-                loadedFor = type,
-                categoryIds = categoryIds,
-                combos = combos,
-                loadedForAmountBand = query.amountBand,
-            ),
-        )
+        val combos: List<FrequentCombo> = loadOrNull { getFrequentCombos(type, amount = query.amount) }.orEmpty()
+        emit(FrequentUsage(loadedFor = type, categoryIds = categoryIds, combos = combos))
     }
 
-    private data class ComboQuery(val type: TransactionType, val amount: Money?, val amountBand: Long)
+    private data class ComboQuery(val type: TransactionType, val amount: Money?)
 
     private fun addTransaction() {
         if (currentState.isSaving) return
