@@ -3,7 +3,6 @@ package com.emm.justchill.feature.report.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,7 +16,6 @@ import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,7 +32,6 @@ fun ShareReportButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     val shape = RoundedCornerShape(6.dp)
-    val interactionSource = remember { MutableInteractionSource() }
 
     Row(
         modifier = modifier
@@ -43,11 +40,7 @@ fun ShareReportButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .clip(shape)
             .background(colors.surface1)
             .border(width = 1.dp, color = colors.border, shape = shape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
+            .clickable(onClick = onClick)
             .padding(horizontal = spacing.s5),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
