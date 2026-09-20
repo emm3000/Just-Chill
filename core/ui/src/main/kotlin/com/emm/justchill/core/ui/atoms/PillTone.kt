@@ -4,5 +4,4 @@ enum class PillTone {
     Neutral,
     Pos,
     Neg,
-    Accent,
 }

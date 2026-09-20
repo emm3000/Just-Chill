@@ -40,10 +40,10 @@ fun ManifestoScreen(isRevisit: Boolean, onStart: () -> Unit, modifier: Modifier 
     val spacing = LocalEmmSpacing.current
 
     val subheroAnnotated = buildAnnotatedString {
-        withStyle(SpanStyle(color = colors.textPrimary)) {
+        withStyle(SpanStyle(color = colors.textSecondary)) {
             append("Necesita tu atención,\n")
         }
-        withStyle(SpanStyle(color = colors.accent)) {
+        withStyle(SpanStyle(color = colors.textPrimary)) {
             append("30 segundos al día.")
         }
     }

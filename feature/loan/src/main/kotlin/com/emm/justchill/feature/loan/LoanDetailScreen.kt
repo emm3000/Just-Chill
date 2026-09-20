@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.atoms.CtaInteraction
-import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -95,7 +94,6 @@ fun LoanDetailScreen(
 
             StickyCTA(
                 label = "Registrar abono",
-                tone = CtaTone.Accent,
                 interaction = if (summary.isSettled) CtaInteraction.Disabled else CtaInteraction.Enabled,
                 onClick = { onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick) },
             )

@@ -33,8 +33,8 @@ fun FilledCta(
 
     val interactive = interaction == CtaInteraction.Enabled
 
-    val bgColor = if (interactive) colors.accent else colors.surface1
-    val fgColor = if (interactive) colors.textOnAccent else colors.textTertiary
+    val bgColor = if (interactive) colors.textPrimary else colors.surface1
+    val fgColor = if (interactive) colors.bg else colors.textTertiary
 
     Box(
         modifier = modifier

@@ -38,12 +38,12 @@ fun IconBtn(
 
     val borderColor = when (tone) {
         IconBtnTone.Neutral -> colors.border
-        IconBtnTone.Accent -> colors.accent
+        IconBtnTone.Primary -> colors.textPrimary
         IconBtnTone.Danger -> colors.danger
     }
     val iconColor = when (tone) {
         IconBtnTone.Neutral -> colors.textSecondary
-        IconBtnTone.Accent -> colors.accent
+        IconBtnTone.Primary -> colors.textPrimary
         IconBtnTone.Danger -> colors.danger
     }
     val shape = RoundedCornerShape(12.dp)

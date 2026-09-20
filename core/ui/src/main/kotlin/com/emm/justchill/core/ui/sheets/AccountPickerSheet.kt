@@ -248,12 +248,12 @@ private fun AccountRow(account: Account, isActive: Boolean, swatchColor: Color, 
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
-                    .background(colors.accent),
+                    .background(colors.surface3),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.AccountBalanceWallet,
                     contentDescription = null,
-                    tint = colors.textOnAccent,
+                    tint = colors.textPrimary,
                     modifier = Modifier.size(12.dp),
                 )
             }

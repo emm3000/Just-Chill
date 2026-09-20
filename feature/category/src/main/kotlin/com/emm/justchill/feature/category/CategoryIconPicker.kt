@@ -27,7 +27,7 @@ import com.emm.justchill.core.ui.category.IconCatalog
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 
 @Composable
-internal fun IconGrid(selected: IconCatalog, accent: Color, onSelect: (IconCatalog) -> Unit) {
+internal fun IconGrid(selected: IconCatalog, swatch: Color, onSelect: (IconCatalog) -> Unit) {
     LazyHorizontalGrid(
         rows = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -41,7 +41,7 @@ internal fun IconGrid(selected: IconCatalog, accent: Color, onSelect: (IconCatal
             IconCell(
                 icon = icon,
                 selected = icon == selected,
-                accent = accent,
+                swatch = swatch,
                 onClick = { onSelect(icon) },
             )
         }
@@ -49,12 +49,12 @@ internal fun IconGrid(selected: IconCatalog, accent: Color, onSelect: (IconCatal
 }
 
 @Composable
-private fun IconCell(icon: IconCatalog, selected: Boolean, accent: Color, onClick: () -> Unit) {
+private fun IconCell(icon: IconCatalog, selected: Boolean, swatch: Color, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val shape = RoundedCornerShape(12.dp)
-    val border = if (selected) accent else colors.border
-    val bg = if (selected) accent.copy(alpha = 0.14f) else colors.surface1
-    val tint = if (selected) accent else colors.textSecondary
+    val border = if (selected) swatch else colors.border
+    val bg = if (selected) swatch.copy(alpha = 0.14f) else colors.surface1
+    val tint = if (selected) swatch else colors.textSecondary
 
     Box(
         contentAlignment = Alignment.Center,

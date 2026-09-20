@@ -158,8 +158,8 @@ private fun AmountInputSheetContent(
         Spacer(Modifier.height(spacing.s3))
 
         val confirmEnabled = draftDigits.isNotEmpty() && draftDigits.toLongOrNull() != 0L
-        val ctaBg = if (confirmEnabled) colors.accent else colors.surface1
-        val ctaFg = if (confirmEnabled) colors.textOnAccent else colors.textTertiary
+        val ctaBg = if (confirmEnabled) colors.textPrimary else colors.surface1
+        val ctaFg = if (confirmEnabled) colors.bg else colors.textTertiary
 
         Box(
             modifier = Modifier

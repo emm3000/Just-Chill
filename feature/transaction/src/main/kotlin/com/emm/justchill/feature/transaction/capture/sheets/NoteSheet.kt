@@ -133,7 +133,7 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
                         fontFamily = InterFontFamily,
                         lineHeight = 20.sp,
                     ),
-                    cursorBrush = SolidColor(colors.accent),
+                    cursorBrush = SolidColor(colors.borderFocus),
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 64.dp, max = 140.dp)

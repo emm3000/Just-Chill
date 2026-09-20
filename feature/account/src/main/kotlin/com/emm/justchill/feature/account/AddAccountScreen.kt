@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.ui.atoms.CtaInteraction
-import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -159,7 +158,6 @@ private fun AddAccountContent(
 
         StickyCTA(
             label = "Crear cuenta",
-            tone = CtaTone.Accent,
             interaction = if (state.isEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = { onIntent(AddAccountIntent.OnSave) },
         )
@@ -266,7 +264,7 @@ private fun NameInput(value: String, onValueChange: (String) -> Unit) {
             fontFamily = InterFontFamily,
             letterSpacing = (-0.18).sp,
         ),
-        cursorBrush = SolidColor(colors.accent),
+        cursorBrush = SolidColor(colors.borderFocus),
         singleLine = true,
         modifier = Modifier
             .fillMaxWidth()

@@ -31,7 +31,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
-import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.FrequentComboChip
@@ -176,7 +175,6 @@ private fun AddEditLoanContent(
         val ctaLabel = if (state.isEdit) "Guardar cambios" else "Crear préstamo"
         StickyCTA(
             label = ctaLabel,
-            tone = CtaTone.Accent,
             interaction = when {
                 state.isSaving -> CtaInteraction.Loading
                 state.isSaveEnabled -> CtaInteraction.Enabled

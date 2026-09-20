@@ -142,7 +142,7 @@ internal fun EmptyFilteredNoResults(
         when {
             activeCategoryName != null -> withStyle(
                 SpanStyle(
-                    color = colors.accent,
+                    color = colors.textPrimary,
                     fontFamily = type.labelM.fontFamily,
                     fontWeight = FontWeight.W600,
                     fontSize = 15.sp,
@@ -152,7 +152,7 @@ internal fun EmptyFilteredNoResults(
 
             query.isNotEmpty() -> withStyle(
                 SpanStyle(
-                    color = colors.accent,
+                    color = colors.textPrimary,
                     fontFamily = type.labelM.fontFamily,
                     fontWeight = FontWeight.W600,
                     fontSize = 15.sp,

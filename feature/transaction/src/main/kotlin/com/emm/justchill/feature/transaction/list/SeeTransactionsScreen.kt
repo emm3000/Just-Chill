@@ -306,14 +306,14 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
             .padding(bottom = 12.dp)
             .height(spacing.s12)
             .clip(shape)
-            .background(colors.accentMuted)
-            .border(1.dp, colors.accent.copy(alpha = 0.2f), shape)
+            .background(colors.surface1)
+            .border(1.dp, colors.border, shape)
             .padding(start = 12.dp),
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.List,
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.textSecondary,
             modifier = Modifier.size(13.dp),
         )
         Spacer(Modifier.width(8.dp))
@@ -324,7 +324,7 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
                 letterSpacing = 0.sp,
                 fontWeight = FontWeight.W500,
             ),
-            color = colors.accent,
+            color = colors.textPrimary,
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -345,13 +345,13 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
                     letterSpacing = 0.sp,
                     fontWeight = FontWeight.W500,
                 ),
-                color = colors.accent,
+                color = colors.textSecondary,
             )
             Spacer(Modifier.width(4.dp))
             Icon(
                 imageVector = Icons.Outlined.Close,
                 contentDescription = "Limpiar filtro",
-                tint = colors.accent,
+                tint = colors.textSecondary,
                 modifier = Modifier.size(11.dp),
             )
         }
