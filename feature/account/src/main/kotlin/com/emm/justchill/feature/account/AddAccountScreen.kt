@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
@@ -38,12 +37,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,6 +51,7 @@ import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.core.ui.atoms.UnderlineTextField
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -133,9 +129,10 @@ private fun AddAccountContent(
             }
 
             Section(eyebrow = "NOMBRE") {
-                NameInput(
+                UnderlineTextField(
                     value = state.name,
                     onValueChange = { onIntent(AddAccountIntent.OnNameChange(it)) },
+                    placeholder = "ejm. Yape",
                 )
             }
 
@@ -241,51 +238,6 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
             )
         }
     }
-}
-
-@Composable
-private fun NameInput(value: String, onValueChange: (String) -> Unit) {
-    val colors = LocalEmmColors.current
-
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        textStyle = TextStyle(
-            color = colors.textPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            letterSpacing = (-0.18).sp,
-        ),
-        cursorBrush = SolidColor(colors.borderFocus),
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .drawBehind {
-                val strokeY = size.height
-                drawLine(
-                    color = colors.border,
-                    start = Offset(0f, strokeY),
-                    end = Offset(size.width, strokeY),
-                    strokeWidth = 1f,
-                )
-            }
-            .padding(vertical = 8.dp),
-        decorationBox = { inner ->
-            Box {
-                if (value.isEmpty()) {
-                    Text(
-                        text = "ejm. Yape",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.W400,
-                        fontFamily = InterFontFamily,
-                        color = colors.textTertiary,
-                    )
-                }
-                inner()
-            }
-        },
-    )
 }
 
 private data class TypeOption(val label: String, val type: AccountType, val icon: ImageVector)
