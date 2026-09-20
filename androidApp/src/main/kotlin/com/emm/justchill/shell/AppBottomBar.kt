@@ -185,19 +185,19 @@ private fun AddBottomBarItem(label: String, onClick: () -> Unit, modifier: Modif
             modifier = Modifier
                 .size(28.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(colors.accent),
+                .background(colors.textPrimary),
         ) {
             Icon(
                 imageVector = Icons.Outlined.Add,
                 contentDescription = label,
-                tint = colors.textOnAccent,
+                tint = colors.bg,
                 modifier = Modifier.size(14.dp),
             )
         }
         Spacer(Modifier.size(3.dp))
         Text(
             text = label,
-            color = colors.accent,
+            color = colors.textPrimary,
             fontSize = 10.sp,
             fontWeight = FontWeight.W600,
             fontFamily = InterFontFamily,

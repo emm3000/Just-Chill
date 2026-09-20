@@ -181,7 +181,7 @@ internal fun HeaderAction(
                     .background(colors.surface1)
                     .padding(1.5.dp)
                     .clip(CircleShape)
-                    .background(colors.accent),
+                    .background(colors.textPrimary),
             )
         }
     }

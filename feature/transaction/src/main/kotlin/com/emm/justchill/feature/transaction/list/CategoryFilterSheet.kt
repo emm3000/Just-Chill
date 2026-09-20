@@ -180,7 +180,7 @@ internal fun CategoryFilterSheet(
                         value = query,
                         onValueChange = { query = it },
                         singleLine = true,
-                        cursorBrush = SolidColor(colors.accentFocus),
+                        cursorBrush = SolidColor(colors.borderFocus),
                         textStyle = TextStyle(
                             fontSize = 13.sp,
                             fontFamily = InterFontFamily,
@@ -377,12 +377,12 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(22.dp)
                     .clip(CircleShape)
-                    .background(colors.accent),
+                    .background(colors.surface3),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Check,
                     contentDescription = null,
-                    tint = colors.textOnAccent,
+                    tint = colors.textPrimary,
                     modifier = Modifier.size(12.dp),
                 )
             }

@@ -316,7 +316,7 @@ private fun DayCell(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) colors.accent else Color.Transparent)
+                    .background(if (isSelected) colors.surface3 else Color.Transparent)
                     .indication(interactionSource, ripple()),
                 contentAlignment = Alignment.Center,
             ) {
@@ -326,7 +326,7 @@ private fun DayCell(
                     fontWeight = FontWeight.W500,
                     fontFamily = InterFontFamily,
                     color = when {
-                        isSelected -> colors.textOnAccent
+                        isSelected -> colors.textPrimary
                         isFuture -> colors.textTertiary
                         else -> colors.textPrimary
                     },

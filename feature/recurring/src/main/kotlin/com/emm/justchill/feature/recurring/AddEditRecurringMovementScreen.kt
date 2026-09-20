@@ -45,7 +45,6 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
-import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -186,7 +185,6 @@ private fun AddEditRecurringMovementContent(
         val ctaLabel = if (state.isEdit) "Guardar cambios" else "Crear recurrente"
         StickyCTA(
             label = ctaLabel,
-            tone = CtaTone.Accent,
             interaction = if (state.isSaveEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = { onIntent(AddEditRecurringMovementIntent.Save) },
         )
@@ -246,7 +244,7 @@ private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholde
             fontFamily = InterFontFamily,
             letterSpacing = (-0.18).sp,
         ),
-        cursorBrush = SolidColor(colors.accent),
+        cursorBrush = SolidColor(colors.borderFocus),
         singleLine = true,
         modifier = Modifier
             .fillMaxWidth()
@@ -420,7 +418,7 @@ private fun AmountCardSection(
                 Switch(
                     checked = isVariable,
                     onCheckedChange = onVariableToggle,
-                    colors = emmSwitchColors(checkedColor = colors.accent),
+                    colors = emmSwitchColors(checkedColor = colors.textPrimary),
                 )
             }
         }

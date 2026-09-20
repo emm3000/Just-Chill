@@ -46,7 +46,7 @@ fun EmmDialog(
     onDismissRequest: () -> Unit = onDismiss,
     properties: DialogProperties = DialogProperties(),
     actionsEnabled: Boolean = true,
-    confirmTone: IconBtnTone = IconBtnTone.Accent,
+    confirmTone: IconBtnTone = IconBtnTone.Primary,
     destructiveAction: (@Composable () -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
@@ -117,7 +117,7 @@ fun DialogAction(
 
     val toneColor: Color = when (tone) {
         IconBtnTone.Neutral -> colors.textSecondary
-        IconBtnTone.Accent -> colors.accent
+        IconBtnTone.Primary -> colors.textPrimary
         IconBtnTone.Danger -> colors.danger
     }
     val textColor: Color = if (enabled) toneColor else colors.textDisabled

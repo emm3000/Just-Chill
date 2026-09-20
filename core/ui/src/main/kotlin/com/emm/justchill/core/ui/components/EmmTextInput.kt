@@ -65,7 +65,7 @@ fun EmmTextInput(
 
     val underlineTarget = when {
         isError -> UnderlineStyle(colors.danger, 2.dp)
-        isFocused -> UnderlineStyle(colors.accentFocus, 2.dp)
+        isFocused -> UnderlineStyle(colors.borderFocus, 2.dp)
         else -> UnderlineStyle(colors.border, 1.dp)
     }
     val underlineColor by animateColorAsState(
@@ -108,7 +108,7 @@ fun EmmTextInput(
                     enabled = enabled,
                     singleLine = singleLine,
                     textStyle = type.bodyL.copy(color = colors.textPrimary),
-                    cursorBrush = SolidColor(colors.accentFocus),
+                    cursorBrush = SolidColor(colors.borderFocus),
                     interactionSource = interactionSource,
                     keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
                     keyboardActions = keyboardActions,

@@ -23,7 +23,6 @@ enum class IconTileSize(val tileSize: Dp, val iconSize: Dp, val radius: Dp) {
 
 enum class IconTileTone {
     Neutral,
-    Accent,
     Swatch,
 }
 
@@ -39,12 +38,10 @@ fun IconTile(
 
     val bgColor: Color = when (tone) {
         IconTileTone.Neutral -> colors.surface2
-        IconTileTone.Accent -> colors.accentMuted
         IconTileTone.Swatch -> swatch?.copy(alpha = 0.14f) ?: colors.surface2
     }
     val iconColor: Color = when (tone) {
         IconTileTone.Neutral -> colors.textTertiary
-        IconTileTone.Accent -> colors.accent
         IconTileTone.Swatch -> swatch ?: colors.textTertiary
     }
 

@@ -54,10 +54,10 @@ data class EmmType(
 internal val emmType: EmmType = EmmType(
     amountHero = TextStyle(
         fontFamily = PlexMonoFontFamily,
-        fontSize = 48.sp,
-        lineHeight = 48.sp,
+        fontSize = 64.sp,
+        lineHeight = 64.sp,
         fontWeight = FontWeight.W500,
-        letterSpacing = (-1.9).sp,
+        letterSpacing = (-2.56).sp,
         fontFeatureSettings = TABULAR,
     ),
     amountL = TextStyle(
@@ -68,7 +68,7 @@ internal val emmType: EmmType = EmmType(
         letterSpacing = (-2.08).sp,
         fontFeatureSettings = TABULAR,
     ),
-    // A card's content width cannot hold amountHero: eleven mono digits at 48sp overrun it.
+    // A card's content width cannot hold amountHero: eleven mono digits at 64sp overrun it.
     amountCard = TextStyle(
         fontFamily = PlexMonoFontFamily,
         fontSize = 32.sp,

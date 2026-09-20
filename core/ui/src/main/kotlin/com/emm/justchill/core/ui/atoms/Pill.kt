@@ -34,7 +34,6 @@ fun Pill(
         PillTone.Neutral -> colors.surface2 to colors.textSecondary
         PillTone.Pos -> colors.posMuted to colors.success
         PillTone.Neg -> colors.negMuted to colors.danger
-        PillTone.Accent -> colors.accentMuted to colors.accent
     }
     val (bgColor, fgColor) = pillColors
 

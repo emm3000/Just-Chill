@@ -51,11 +51,11 @@ fun UnderlineTextField(
         value = value,
         onValueChange = onValueChange,
         textStyle = UnderlineFieldTextStyle.copy(color = colors.textPrimary),
-        cursorBrush = SolidColor(colors.accent),
+        cursorBrush = SolidColor(colors.borderFocus),
         singleLine = true,
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
-        modifier = modifier.underline(if (isFocused) colors.accentFocus else colors.border),
+        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border),
         decorationBox = { inner -> UnderlineDecoration(placeholder, value.isEmpty(), inner) },
     )
 }
@@ -81,11 +81,11 @@ fun UnderlineTextField(
         value = value,
         onValueChange = onValueChange,
         textStyle = UnderlineFieldTextStyle.copy(color = colors.textPrimary),
-        cursorBrush = SolidColor(colors.accent),
+        cursorBrush = SolidColor(colors.borderFocus),
         singleLine = true,
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
-        modifier = modifier.underline(if (isFocused) colors.accentFocus else colors.border),
+        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border),
         decorationBox = { inner -> UnderlineDecoration(placeholder, value.text.isEmpty(), inner) },
     )
 }

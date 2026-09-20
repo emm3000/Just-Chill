@@ -49,7 +49,7 @@ fun EmmButton(
     val style = when {
         !enabled -> EmmButtonStyle(colors.surface1, colors.textDisabled, border = null)
 
-        variant == EmmButtonVariant.Primary -> EmmButtonStyle(colors.accent, colors.textOnAccent, border = null)
+        variant == EmmButtonVariant.Primary -> EmmButtonStyle(colors.textPrimary, colors.bg, border = null)
 
         variant == EmmButtonVariant.Secondary ->
             EmmButtonStyle(colors.surface1, colors.textPrimary, BorderStroke(1.dp, colors.border))

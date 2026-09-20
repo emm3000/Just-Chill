@@ -180,7 +180,7 @@ fun CategoryPickerSheet(
                     value = query,
                     onValueChange = { query = it },
                     singleLine = true,
-                    cursorBrush = SolidColor(colors.accentFocus),
+                    cursorBrush = SolidColor(colors.borderFocus),
                     textStyle = TextStyle(
                         fontSize = 13.sp,
                         fontFamily = InterFontFamily,
@@ -332,12 +332,12 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
                 modifier = Modifier
                     .size(22.dp)
                     .clip(CircleShape)
-                    .background(colors.accent),
+                    .background(colors.surface3),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Close,
                     contentDescription = null,
-                    tint = colors.textOnAccent,
+                    tint = colors.textPrimary,
                     modifier = Modifier.size(10.dp),
                 )
             }

@@ -171,7 +171,7 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
                         .clip(tileShape)
                         .border(
                             width = 1.dp,
-                            color = if (isActive) colors.accent else colors.border,
+                            color = if (isActive) colors.textPrimary else colors.border,
                             shape = tileShape,
                         )
                         .clickable {

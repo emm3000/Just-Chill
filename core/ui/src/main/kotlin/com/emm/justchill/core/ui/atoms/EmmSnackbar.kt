@@ -130,7 +130,7 @@ private fun EmmSnackbarBody(data: SnackbarData) {
                 text = actionLabel,
                 fontSize = 13.sp,
                 fontFamily = InterFontFamily,
-                color = colors.accent,
+                color = colors.textPrimary,
                 fontWeight = FontWeight.W600,
                 maxLines = 1,
                 modifier = Modifier

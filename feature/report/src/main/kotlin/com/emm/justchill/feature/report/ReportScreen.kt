@@ -402,14 +402,14 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
             Box(
                 modifier = Modifier
                     .clip(ctaShape)
-                    .background(colors.accent)
+                    .background(colors.textPrimary)
                     .indication(interactionSource, ripple())
                     .padding(horizontal = spacing.s5, vertical = spacing.s3),
             ) {
                 Text(
                     text = cta,
                     style = typeTokens.labelL,
-                    color = colors.textOnAccent,
+                    color = colors.bg,
                 )
             }
         }

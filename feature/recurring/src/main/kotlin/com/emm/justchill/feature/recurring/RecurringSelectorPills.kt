@@ -103,7 +103,7 @@ internal fun SelectorPillsRow(
     onOpenDay: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val categoryDotColor = state.selectedCategory?.resolvedColor?.primary ?: colors.accent
+    val categoryDotColor = state.selectedCategory?.resolvedColor?.primary ?: colors.catGraphite
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -113,7 +113,7 @@ internal fun SelectorPillsRow(
             SelectorPill(
                 eyebrow = "CUENTA",
                 value = state.selectedAccount?.name ?: "Seleccionar",
-                dotColor = colors.accent,
+                dotColor = colors.catGraphite,
                 onClick = onOpenAccount,
             )
         }

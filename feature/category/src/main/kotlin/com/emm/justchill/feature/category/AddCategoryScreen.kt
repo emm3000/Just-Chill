@@ -48,7 +48,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.atoms.CtaInteraction
-import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconBtn
@@ -181,7 +180,7 @@ private fun AddCategoryContent(
             Section(eyebrow = "ÍCONO") {
                 IconGrid(
                     selected = selectedIcon,
-                    accent = selectedColor.primary,
+                    swatch = selectedColor.primary,
                     onSelect = { onIntent(AddCategoryIntent.OnIconChange(it.id)) },
                 )
             }
@@ -198,7 +197,6 @@ private fun AddCategoryContent(
 
         StickyCTA(
             label = saveButtonLabel(state),
-            tone = CtaTone.Accent,
             interaction = if (state.isAllFieldValidated) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = attemptSave,
         )
@@ -237,7 +235,7 @@ private fun NameInput(
             fontFamily = InterFontFamily,
             letterSpacing = (-0.18).sp,
         ),
-        cursorBrush = SolidColor(colors.accent),
+        cursorBrush = SolidColor(colors.borderFocus),
         singleLine = true,
         keyboardActions = KeyboardActions(onDone = { onImeAction() }),
         modifier = Modifier

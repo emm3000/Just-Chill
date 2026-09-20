@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.format.NumberFormatEs
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -50,7 +51,7 @@ import kotlin.math.roundToLong
 fun AmountHero(
     value: Double,
     modifier: Modifier = Modifier,
-    size: TextUnit = 56.sp,
+    size: TextUnit = LocalEmmType.current.amountHero.fontSize,
     tone: AmountTone = AmountTone.Neutral,
     withDecimals: Boolean = true,
     prefix: String = "S/",

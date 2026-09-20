@@ -32,7 +32,6 @@ import com.emm.justchill.core.ui.account.accountDotColor
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
-import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.FrequentComboChip
@@ -244,7 +243,6 @@ private fun AddTransactionScreenContent(
             label = cta.label,
             sublabel = cta.sublabel,
             inlineSublabel = cta.sublabel != null,
-            tone = CtaTone.Accent,
             interaction = ctaInteraction(state),
             onClick = { onIntent(AddTransactionIntent.OnSave) },
         )

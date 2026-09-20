@@ -42,7 +42,7 @@ fun StickyCTA(
     modifier: Modifier = Modifier,
     sublabel: String? = null,
     inlineSublabel: Boolean = false,
-    tone: CtaTone = CtaTone.Accent,
+    tone: CtaTone = CtaTone.Neutral,
     interaction: CtaInteraction = CtaInteraction.Enabled,
 ) {
     val colors = LocalEmmColors.current
@@ -52,8 +52,7 @@ fun StickyCTA(
 
     val (bgColor, fgColor) = when {
         !interactive -> colors.surface1 to colors.textTertiary
-        tone == CtaTone.Accent -> colors.accent to colors.textOnAccent
-        tone == CtaTone.Pos -> colors.success to colors.textOnAccent
+        tone == CtaTone.Pos -> colors.success to colors.bg
         else -> colors.textPrimary to colors.bg
     }
 

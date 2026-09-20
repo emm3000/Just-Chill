@@ -17,11 +17,6 @@ data class EmmColors(
     val textSecondary: Color,
     val textTertiary: Color,
     val textDisabled: Color,
-    val textOnAccent: Color,
-
-    val accent: Color,
-    val accentMuted: Color,
-    val accentFocus: Color,
 
     val success: Color,
     val warning: Color,
@@ -40,7 +35,7 @@ data class EmmColors(
 )
 
 val emmDarkColors: EmmColors = EmmColors(
-    bg = Color(0xFF191919),
+    bg = Color(0xFF000000),
     surface1 = Color(0xFF202020),
     surface2 = Color(0xFF262626),
     surface3 = Color(0xFF2D2D2D),
@@ -49,13 +44,8 @@ val emmDarkColors: EmmColors = EmmColors(
 
     textPrimary = Color(0xFFE6E6E6),
     textSecondary = Color(0xFFA8A8A8),
-    textTertiary = Color(0xFF6E6E6E),
+    textTertiary = Color(0xFF767676),
     textDisabled = Color(0xFF4A4A4A),
-    textOnAccent = Color(0xFF191919),
-
-    accent = Color(0xFFE07856),
-    accentMuted = Color(0x24E07856),
-    accentFocus = Color(0xFFEA8E70),
 
     success = Color(0xFF6FA876),
     warning = Color(0xFFB3935A),

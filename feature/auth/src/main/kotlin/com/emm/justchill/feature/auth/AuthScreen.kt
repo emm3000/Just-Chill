@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.ui.atoms.CtaInteraction
-import com.emm.justchill.core.ui.atoms.CtaTone
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -276,7 +275,7 @@ private fun AuthFormStep(
                 Text(
                     text = toggleLabel,
                     style = type.bodyM,
-                    color = colors.accent,
+                    color = colors.textPrimary,
                 )
             }
 
@@ -285,7 +284,6 @@ private fun AuthFormStep(
 
         StickyCTA(
             label = submitLabel,
-            tone = CtaTone.Accent,
             interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Email),
             onClick = { onIntent(AuthIntent.Submit) },
         )
@@ -322,13 +320,13 @@ private fun CheckEmailStep(
             modifier = Modifier
                 .size(56.dp)
                 .clip(radii.rM)
-                .background(colors.accentMuted),
+                .background(colors.surface2),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Outlined.MailOutline,
                 contentDescription = null,
-                tint = colors.accent,
+                tint = colors.textSecondary,
                 modifier = Modifier.size(24.dp),
             )
         }
@@ -398,7 +396,7 @@ private fun CheckEmailStep(
                 Text(
                     text = if (state.isResending) "Reenviando…" else "Reenviar enlace",
                     style = type.bodyM,
-                    color = if (resendActive) colors.accent else colors.textTertiary,
+                    color = if (resendActive) colors.textPrimary else colors.textTertiary,
                 )
             }
         }
@@ -422,7 +420,7 @@ private fun AuthFieldInput(
 
     var focused by remember { mutableStateOf(false) }
 
-    val labelColor = if (focused) colors.accent else colors.textTertiary
+    val labelColor = if (focused) colors.textPrimary else colors.textTertiary
     val underlineColor = if (focused) colors.borderFocus else colors.border
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -444,7 +442,7 @@ private fun AuthFieldInput(
                 fontWeight = FontWeight.W500,
                 fontFamily = InterFontFamily,
             ),
-            cursorBrush = SolidColor(colors.accent),
+            cursorBrush = SolidColor(colors.borderFocus),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             visualTransformation = if (isPassword && !passwordVisible) {

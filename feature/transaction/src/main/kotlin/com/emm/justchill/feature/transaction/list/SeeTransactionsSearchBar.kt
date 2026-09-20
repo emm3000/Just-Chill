@@ -105,7 +105,7 @@ private fun SearchInput(
                 fontSize = 13.sp,
                 letterSpacing = 0.sp,
             ),
-            cursorBrush = SolidColor(colors.accent),
+            cursorBrush = SolidColor(colors.borderFocus),
             decorationBox = { inner ->
                 if (query.isEmpty()) {
                     Text(

@@ -146,7 +146,7 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
                 .padding(bottom = 16.dp)
                 .height(52.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(colors.accent)
+                .background(colors.textPrimary)
                 .clickable {
                     onConfirm(selected)
                     onDismiss()
@@ -162,7 +162,7 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
                     fontSize = 15.sp,
                     fontWeight = FontWeight.W600,
                     fontFamily = InterFontFamily,
-                    color = colors.textOnAccent,
+                    color = colors.bg,
                     letterSpacing = (-0.15).sp,
                 )
                 Text(
@@ -170,14 +170,14 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
                     fontSize = 15.sp,
                     fontWeight = FontWeight.W600,
                     fontFamily = InterFontFamily,
-                    color = colors.textOnAccent.copy(alpha = 0.6f),
+                    color = colors.bg.copy(alpha = 0.6f),
                 )
                 Text(
                     text = "Día $selected",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.W600,
                     fontFamily = InterFontFamily,
-                    color = colors.textOnAccent.copy(alpha = 0.9f),
+                    color = colors.bg.copy(alpha = 0.9f),
                     letterSpacing = (-0.15).sp,
                 )
             }
@@ -204,9 +204,9 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
                 rowDays.forEach { day ->
                     val isSelected = day == selected
                     val cellShape = RoundedCornerShape(8.dp)
-                    val cellBg = if (isSelected) colors.accent else Color.Transparent
-                    val cellBorder = if (isSelected) colors.accent else colors.border
-                    val textColor = if (isSelected) colors.textOnAccent else colors.textSecondary
+                    val cellBg = if (isSelected) colors.surface3 else Color.Transparent
+                    val cellBorder = if (isSelected) colors.textPrimary else colors.border
+                    val textColor = if (isSelected) colors.textPrimary else colors.textSecondary
 
                     Box(
                         contentAlignment = Alignment.Center,
