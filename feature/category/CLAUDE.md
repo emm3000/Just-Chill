@@ -20,3 +20,5 @@ The Categories screen family, ViewModels and Compose together: the list with its
 ## Testing
 
 `./gradlew :feature:category:testDebugUnitTest`. `DeleteCategoryCopyTest` pins the Spanish delete copy, including the zero-movement branch that stops a harmless cleanup from reading as a history wipe. `MainDispatcherRule` comes from `:core:testing` when a ViewModel test here touches `viewModelScope`; the Koin graph and route serialization suites stay in `:androidApp`.
+
+`CategoriesScreenTest` is this module's composition-test suite, copied from `feature/loan/CLAUDE.md` "## Composition tests" (the three dependency lines, `robolectric.properties`, nothing else). It renders `CategoriesScreen` inside `EmmTheme` and pins the empty-state `FilledCta` the #267 swap produced: "Crear categoría" exists with a click action, announces `Role.Button`, invokes `onAddCategory` exactly once, and spans the root width less twice `spacing.s5` — `371.dp` at the module's fixed `w411dp` viewport, since `FilledCta.fillMaxWidth()` fills `EmptyState`'s own `spacing.s5` horizontal padding. With one category, the CTA is gone and the top-bar `IconBtn` ("Nueva categoría") still renders.
