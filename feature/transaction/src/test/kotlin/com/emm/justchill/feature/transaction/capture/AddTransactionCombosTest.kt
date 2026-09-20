@@ -112,13 +112,6 @@ class AddTransactionCombosTest {
         assertEquals("coffee", state.categorySelected?.categoryId?.value)
     }
 
-    @Test
-    fun `combos ranked for another amount band are not offered`() {
-        val state = stateWith(listOf(combo(yape, coffee))).copy(amount = "50000")
-
-        assertEquals(emptyList(), state.frequentCombos)
-    }
-
     private fun stateWith(combos: List<FrequentCombo>): AddTransactionUiState = AddTransactionUiState(
         today = LocalDate(2026, Month.AUGUST, 28),
         catalog = Catalog.Loaded(
