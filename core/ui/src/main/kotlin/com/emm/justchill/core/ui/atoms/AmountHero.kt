@@ -99,7 +99,7 @@ fun AmountHero(
         fontWeight = FontWeight.W500,
         fontFeatureSettings = "tnum",
         fontSize = size,
-        letterSpacing = TightTracking,
+        letterSpacing = TIGHT_TRACKING,
     )
 
     val numberText: AnnotatedString = buildAnnotatedString {
@@ -145,7 +145,7 @@ fun AmountHero(
             autoSize = TextAutoSize.StepBased(
                 minFontSize = size / 2,
                 maxFontSize = size,
-                stepSize = AutoSizeStep,
+                stepSize = AUTO_SIZE_STEP,
             ),
             inlineContent = inlineContent,
             maxLines = 1,
@@ -158,9 +158,9 @@ fun AmountHero(
 
 private const val CARET_ID = "caret"
 
-private val TightTracking: TextUnit = (-0.04).em
+private val TIGHT_TRACKING: TextUnit = (-0.04).em
 
-private val AutoSizeStep: TextUnit = 2.sp
+private val AUTO_SIZE_STEP: TextUnit = 2.sp
 
 @Composable
 private fun BlinkingCaret(color: Color) {
