@@ -29,15 +29,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.format.monthLabel
-import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
+import com.emm.justchill.core.ui.theme.edgeGiveback
 
 /**
  * The browsed month IS the screen title. A filtered list crosses months, so [month] arrives `null`
@@ -57,8 +56,8 @@ internal fun ScreenHeader(
             .fillMaxWidth()
             .padding(
                 top = spacing.s3,
-                start = spacing.s6 - spacing.headerEdgeGiveback,
-                end = spacing.s6 - spacing.headerEdgeGiveback,
+                start = spacing.s6 - spacing.edgeGiveback(spacing.s5),
+                end = spacing.s6 - spacing.edgeGiveback(spacing.s5),
             ),
     ) {
         if (month != null) {
@@ -186,7 +185,3 @@ internal fun HeaderAction(
         }
     }
 }
-
-// Same 48dp touch-target giveback as AccountRow.kt's RowMenuEdgeGiveback.
-internal val EmmSpacing.headerEdgeGiveback: Dp
-    get() = (s12 - s5) / 2
