@@ -35,6 +35,20 @@ fun CategoryDot(color: Color) {
     )
 }
 
+// A row whose lines take the dot one at a time keeps the slot on every line: a text column that
+// starts 8dp further right on the lines without one is the ragged column the rules forbid.
+@Composable
+fun CategoryDotSlot(color: Color?) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(CategoryDotSize),
+    ) {
+        if (color != null) {
+            CategoryDot(color = color)
+        }
+    }
+}
+
 @Preview
 @PreviewRedmi15CWidth
 @Composable

@@ -11,6 +11,8 @@ import com.emm.justchill.core.domain.transaction.TransactionWithCategory
 import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 // The two lines of a transaction row are decided here, never in the composable: the title is what
 // the user wrote, and the row falls back to what the app knows rather than to a placeholder.
@@ -55,6 +57,12 @@ class TransactionUiTest {
     fun `a movement whose category is gone is named Sin categoria`() {
         assertEquals("Sin categoría", row("", category = null).categoryName)
         assertEquals("Sin categoría", row("", category = null).title)
+    }
+
+    @Test
+    fun `the category dot rides the title only when the title is the category name`() {
+        assertTrue(row("").categoryLeadsTitle)
+        assertFalse(row("Compra de la semana").categoryLeadsTitle)
     }
 
     @Test

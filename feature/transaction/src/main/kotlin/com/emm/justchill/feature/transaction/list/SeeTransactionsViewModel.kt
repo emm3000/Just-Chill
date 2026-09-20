@@ -274,7 +274,6 @@ class SeeTransactionsViewModel(
                     id = cat.categoryId.value,
                     name = cat.name,
                     iconId = cat.icon,
-                    colorId = cat.color,
                     type = cat.categoryType,
                     isActive = cat.categoryId == activeId,
                 )
