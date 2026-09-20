@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,7 +87,6 @@ fun AmountHero(
     }
 
     val prefixSize = (size.value * 0.40f).sp
-    val tightLetterSpacing = (-0.04 * size.value).sp
 
     val prefixStyle = TextStyle(
         fontFamily = PlexMonoFontFamily,
@@ -99,7 +99,7 @@ fun AmountHero(
         fontWeight = FontWeight.W500,
         fontFeatureSettings = "tnum",
         fontSize = size,
-        letterSpacing = tightLetterSpacing,
+        letterSpacing = TightTracking,
     )
 
     val numberText: AnnotatedString = buildAnnotatedString {
@@ -142,13 +142,25 @@ fun AmountHero(
             text = numberText,
             style = numberStyle,
             color = mainColor,
+            autoSize = TextAutoSize.StepBased(
+                minFontSize = size / 2,
+                maxFontSize = size,
+                stepSize = AutoSizeStep,
+            ),
             inlineContent = inlineContent,
-            modifier = Modifier.alignByBaseline(),
+            maxLines = 1,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .alignByBaseline(),
         )
     }
 }
 
 private const val CARET_ID = "caret"
+
+private val TightTracking: TextUnit = (-0.04).em
+
+private val AutoSizeStep: TextUnit = 2.sp
 
 @Composable
 private fun BlinkingCaret(color: Color) {
