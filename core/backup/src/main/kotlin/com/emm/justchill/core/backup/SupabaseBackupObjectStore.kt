@@ -17,6 +17,9 @@ private const val SESSION_RESOLVE_TIMEOUT_MS = 10_000L
 
 internal class SupabaseBackupObjectStore(private val client: SupabaseClient) : BackupObjectStore {
 
+    // The await is load-bearing, not defensive: the Storage calls that follow this prefix resolve
+    // their JWT synchronously from auth.sessionStatus.value, which loads asynchronously. Reading the
+    // id before that settles attaches no token and the request is downgraded to the anon key (403 under RLS).
     override suspend fun ownedPrefix(): String {
         val uid = try {
             withTimeout(SESSION_RESOLVE_TIMEOUT_MS) {
