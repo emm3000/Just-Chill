@@ -43,7 +43,7 @@ core:testing -> core:domain
 The domain declares the contract; the infrastructure obeys it. The domain never imports an implementation.
 
 - Repository interfaces (`{Entity}Repository`) live in `:core:domain`. Implementations (`Default{Entity}Repository` over a `{Entity}LocalDataSource`) live in `:core:database`.
-- A platform capability a feature needs (`GoogleSignInLauncher`, `DispatchersProvider`) is an interface in that feature or in `:core:domain`, implemented in `:androidApp` and bound in `androidPlatformModule`.
+- A platform capability a feature needs (`GoogleSignInLauncher`) is an interface in that feature or in `:core:domain`, implemented in `:androidApp` and bound in `androidPlatformModule`.
 
 ## A use case only where there is domain logic
 
