@@ -22,6 +22,8 @@ import com.emm.justchill.core.domain.shared.Money
 
 internal const val SAVE_MOTION_MILLIS: Int = 400
 
+private const val RESTING_HERO_FADE_IN_FROM: Float = 0.5f
+
 @Stable
 internal class SaveMotion(private val animatorDurationScale: Float) {
 
@@ -63,7 +65,8 @@ internal class SaveMotion(private val animatorDurationScale: Float) {
     fun Modifier.restingHero(): Modifier = onGloballyPositioned { coordinates ->
         heroCenterY = coordinates.boundsInRoot().center.y
     }.graphicsLayer {
-        alpha = if (flyingAmount == null) 1f else progress.value
+        val fadeIn: Float = (progress.value - RESTING_HERO_FADE_IN_FROM) / (1f - RESTING_HERO_FADE_IN_FROM)
+        alpha = if (flyingAmount == null) 1f else fadeIn.coerceAtLeast(0f)
     }
 
     fun Modifier.inFlight(): Modifier = graphicsLayer {
