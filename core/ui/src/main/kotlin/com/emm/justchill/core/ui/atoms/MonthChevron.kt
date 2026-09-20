@@ -27,6 +27,7 @@ fun MonthChevron(
     direction: MonthChevronDirection,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    contentDescription: String = direction.contentDescription,
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val radii: EmmRadii = LocalEmmRadii.current
@@ -41,7 +42,7 @@ fun MonthChevron(
     ) {
         Icon(
             imageVector = direction.icon,
-            contentDescription = direction.contentDescription,
+            contentDescription = contentDescription,
             tint = colors.textSecondary,
             modifier = Modifier.size(spacing.s5),
         )

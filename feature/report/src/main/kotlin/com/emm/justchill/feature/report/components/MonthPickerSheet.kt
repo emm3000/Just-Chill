@@ -20,8 +20,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
@@ -41,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.ui.atoms.MonthChevron
+import com.emm.justchill.core.ui.atoms.MonthChevronDirection
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.monthAbbrevLabel
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -118,39 +118,21 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(spacing.s12)
-                    .clip(CircleShape)
-                    .clickable { displayYear-- },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.ChevronLeft,
-                    contentDescription = "Año anterior",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            MonthChevron(
+                direction = MonthChevronDirection.Previous,
+                onClick = { displayYear-- },
+                contentDescription = "Año anterior",
+            )
             Text(
                 text = displayYear.toString(),
                 style = type.labelL,
                 color = colors.textPrimary,
             )
-            Box(
-                modifier = Modifier
-                    .size(spacing.s12)
-                    .clip(CircleShape)
-                    .clickable { displayYear++ },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.ChevronRight,
-                    contentDescription = "Año siguiente",
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            MonthChevron(
+                direction = MonthChevronDirection.Next,
+                onClick = { displayYear++ },
+                contentDescription = "Año siguiente",
+            )
         }
 
         LazyVerticalGrid(
