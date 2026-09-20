@@ -79,6 +79,46 @@ class AddTransactionCombosTest {
         assertEquals(listOf("BCP · Supermercado"), state.frequentCombos.map { it.label })
     }
 
+    @Test
+    fun `a ranked combo naming a deleted account leaves the normal defaults in place`() {
+        val closed = Account(AccountId("closed"), "Cuenta cerrada")
+        val state = stateWith(listOf(FrequentCombo(closed.accountId, taxi.categoryId, TransactionType.Spend)))
+
+        assertEquals(emptyList(), state.frequentCombos)
+        assertEquals("bcp", state.accountSelected?.accountId?.value)
+        assertEquals("market", state.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `a ranked combo naming a deleted category leaves the normal defaults in place`() {
+        val state = stateWith(listOf(FrequentCombo(yape.accountId, CategoryId("gone"), TransactionType.Spend)))
+
+        assertEquals(emptyList(), state.frequentCombos)
+        assertEquals("bcp", state.accountSelected?.accountId?.value)
+        assertEquals("market", state.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `the surviving ranked combo supplies the defaults when the first one was pruned`() {
+        val closed = Account(AccountId("closed"), "Cuenta cerrada")
+        val state = stateWith(
+            listOf(
+                FrequentCombo(closed.accountId, taxi.categoryId, TransactionType.Spend),
+                combo(yape, coffee),
+            ),
+        )
+
+        assertEquals("yape", state.accountSelected?.accountId?.value)
+        assertEquals("coffee", state.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `combos ranked for another amount band are not offered`() {
+        val state = stateWith(listOf(combo(yape, coffee))).copy(amount = "50000")
+
+        assertEquals(emptyList(), state.frequentCombos)
+    }
+
     private fun stateWith(combos: List<FrequentCombo>): AddTransactionUiState = AddTransactionUiState(
         today = LocalDate(2026, Month.AUGUST, 28),
         catalog = Catalog.Loaded(

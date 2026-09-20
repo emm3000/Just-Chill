@@ -8,6 +8,7 @@ import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
@@ -125,6 +126,9 @@ class AddTransactionViewModelTest {
     fun setupDefaults() {
         coEvery { getTopUsedCategoryIds.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
         coEvery { getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
+        coEvery {
+            getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any<Money>())
+        } returns emptyList()
         coEvery { transactionStatsRepository.lastUsedAccountId() } returns null
     }
 
@@ -769,5 +773,187 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnSheetDismissed)
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
+    }
+
+    @Test
+    fun `the typed amount reaches the ranking use case`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnAmountChange("5000"))
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(5000L))
+        }
+    }
+
+    @Test
+    fun `the ranked first combo supplies the account and the category defaults`() = runTest(testDispatcher) {
+        coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("yape")
+        val ranked = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
+        coEvery {
+            getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(5000L))
+        } returns listOf(ranked)
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("5000"))
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals("bcp", state.accountSelected?.accountId?.value, "the ranking outranks the last-used account")
+        assertEquals("food", state.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `a re-rank never overwrites the account the user picked`() = runTest(testDispatcher) {
+        val smallAmountCombo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
+        val largeAmountCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery {
+            getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(500L))
+        } returns listOf(smallAmountCombo)
+        coEvery {
+            getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(50000L))
+        } returns listOf(largeAmountCombo)
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAccountSelected(account2))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("50000"))
+        advanceUntilIdle()
+
+        assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
+    }
+
+    @Test
+    fun `a re-rank never overwrites the category the user picked`() = runTest(testDispatcher) {
+        val transport = Category(
+            categoryId = CategoryId("transport"),
+            name = "Transporte",
+            icon = "bus",
+            color = "red",
+            categoryType = CategoryType.Spend,
+        )
+        every { categoryRepository.all() } returns flowOf(listOf(category1, transport, category3, category2))
+        val largeAmountCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery {
+            getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(50000L))
+        } returns listOf(largeAmountCombo)
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
+        advanceUntilIdle()
+        val picked = vm.state.value.categories.first { it.categoryId == transport.categoryId }
+        vm.onIntent(AddTransactionIntent.OnCategorySelected(picked))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("50000"))
+        advanceUntilIdle()
+
+        assertEquals("transport", vm.state.value.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `typing more digits inside one amount band issues a single ranking query`() = runTest(testDispatcher) {
+        val queried = mutableListOf<Money?>()
+        coEvery {
+            getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any())
+        } coAnswers {
+            queried += arg<Money?>(3)
+            emptyList()
+        }
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("12"))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("123"))
+        advanceUntilIdle()
+
+        assertEquals(listOf<Money?>(null), queried, "1, 12 and 123 share one band, so one query answers all three")
+    }
+
+    @Test
+    fun `crossing into another amount band issues a second ranking query`() = runTest(testDispatcher) {
+        val queried = mutableListOf<Money?>()
+        coEvery {
+            getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any())
+        } coAnswers {
+            queried += arg<Money?>(3)
+            emptyList()
+        }
+
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("12"))
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnAmountChange("12000"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, Money(12000L)), queried)
+    }
+
+    @Test
+    fun `the chip row never shows the previous amount's combos while the re-rank is in flight`() =
+        runTest(testDispatcher) {
+            val typeOnlyCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+            val rankedCombo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
+            coEvery {
+                getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>())
+            } returns listOf(typeOnlyCombo)
+            val rankedReads = CompletableDeferred<Unit>()
+            coEvery {
+                getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(50000L))
+            } coAnswers {
+                rankedReads.await()
+                listOf(rankedCombo)
+            }
+
+            val vm = buildViewModel()
+            advanceUntilIdle()
+            assertEquals(listOf("Yape · Comida"), vm.state.value.frequentCombos.map { it.label })
+
+            vm.onIntent(AddTransactionIntent.OnAmountChange("50000"))
+            advanceUntilIdle()
+
+            assertTrue(
+                vm.state.value.frequentCombos.isEmpty(),
+                "the previous amount's combos may not survive into the new amount's frame",
+            )
+
+            rankedReads.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(listOf("BCP · Comida"), vm.state.value.frequentCombos.map { it.label })
+        }
+
+    @Test
+    fun `a preselected combo survives the re-rank a typed amount triggers`() = runTest(testDispatcher) {
+        val ranked = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+        coEvery {
+            getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(50000L))
+        } returns listOf(ranked)
+
+        val vm = buildViewModel()
+        vm.onIntent(
+            AddTransactionIntent.OnPreselectCombo(
+                accountId = "bcp",
+                categoryId = "food",
+                type = TransactionType.Spend,
+            ),
+        )
+        advanceUntilIdle()
+
+        vm.onIntent(AddTransactionIntent.OnAmountChange("50000"))
+        advanceUntilIdle()
+
+        assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
+        assertTrue(vm.state.value.preselectConsumed)
     }
 }

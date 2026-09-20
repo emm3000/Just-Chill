@@ -6,7 +6,9 @@ import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.amountBandKey
 import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.relativeDayLabel
 import com.emm.justchill.core.ui.mvi.UiState
@@ -18,6 +20,7 @@ data class FrequentUsage(
     val loadedFor: TransactionType,
     val categoryIds: List<String>,
     val combos: List<FrequentCombo> = emptyList(),
+    val loadedForAmountBand: Long = 0L,
 )
 
 data class AddTransactionUiState(
@@ -54,11 +57,14 @@ data class AddTransactionUiState(
 
     val accountSelected: Account?
         get() = accounts.find { it.accountId == accountId }
+            ?: rankedCombo?.let { ranked -> accounts.find { it.accountId.value == ranked.accountId } }
             ?: accounts.find { it.accountId == lastUsedAccountId }
             ?: accounts.firstOrNull()
 
     val categorySelected: SelectableCategory?
-        get() = categories.find { it.categoryId == categoryId } ?: categories.firstOrNull()
+        get() = categories.find { it.categoryId == categoryId }
+            ?: rankedCombo?.let { ranked -> categories.find { it.categoryId.value == ranked.categoryId } }
+            ?: categories.firstOrNull()
 
     val frequentCategoryIds: List<String> get() = usageForCurrentType?.categoryIds.orEmpty()
 
@@ -76,9 +82,16 @@ data class AddTransactionUiState(
         else -> null
     }
 
-    // The chip row may never render the previous type's suggestions, not even for the frame between
-    // a type switch and the reads that answer it.
-    private val usageForCurrentType: FrequentUsage? get() = frequentUsage?.takeIf { it.loadedFor == transactionType }
+    // The chip row may never render the previous type's or the previous amount band's suggestions,
+    // not even for the frame between the change and the reads that answer it.
+    private val usageForCurrentType: FrequentUsage?
+        get() = frequentUsage?.takeIf {
+            it.loadedFor == transactionType && it.loadedForAmountBand == currentAmountBand
+        }
+
+    private val currentAmountBand: Long get() = amountBandKey(centsToMoney(amount))
+
+    private val rankedCombo: FrequentComboUi? get() = frequentCombos.firstOrNull()
 
     private fun categoriesOf(type: CategoryType): List<SelectableCategory> {
         val known = catalog.loaded?.categories?.get(type).orEmpty()
