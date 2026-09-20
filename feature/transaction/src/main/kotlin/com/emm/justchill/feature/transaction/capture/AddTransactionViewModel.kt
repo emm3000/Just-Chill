@@ -167,8 +167,7 @@ class AddTransactionViewModel(
     }
 }
 
-// The pad is the home screen and nothing pops it, so the movement has to leave the state instead:
-// what the user typed goes, what the ranking and the user's picks resolved stays for the next one.
+// The pad is the home screen and nothing pops it, so the movement has to leave the state instead.
 private fun AddTransactionUiState.emptiedForTheNextMovement(): AddTransactionUiState = copy(
     amount = "",
     description = "",
