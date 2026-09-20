@@ -28,6 +28,12 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.transaction.Catalog
 
+// Three chips share this row and not its width: the category name is the long one, an account is a
+// bank's four letters and the day is two words. Equal weights ellipsise "Sin categoría" to "Sin ca".
+private const val ACCOUNT_CHIP_WEIGHT: Float = 1f
+private const val CATEGORY_CHIP_WEIGHT: Float = 1.6f
+private const val DAY_CHIP_WEIGHT: Float = 1f
+
 @Composable
 internal fun SelectorChipsRow(
     state: AddEditRecurringMovementUiState,
@@ -43,7 +49,7 @@ internal fun SelectorChipsRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        FormSection(eyebrow = "CUENTA", modifier = Modifier.weight(1f)) {
+        FormSection(eyebrow = "CUENTA", modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT)) {
             SelectorChip(
                 label = state.selectedAccount?.name ?: "Seleccionar",
                 dotColor = null,
@@ -51,7 +57,7 @@ internal fun SelectorChipsRow(
                 onClick = onOpenAccount,
             )
         }
-        FormSection(eyebrow = "CATEGORÍA", modifier = Modifier.weight(1f)) {
+        FormSection(eyebrow = "CATEGORÍA", modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT)) {
             SelectorChip(
                 label = state.selectedCategory?.name ?: "Sin categoría",
                 dotColor = categoryDotColor,
@@ -59,7 +65,7 @@ internal fun SelectorChipsRow(
                 onClick = onOpenCategory,
             )
         }
-        FormSection(eyebrow = "DÍA", modifier = Modifier.weight(1f)) {
+        FormSection(eyebrow = "DÍA", modifier = Modifier.weight(DAY_CHIP_WEIGHT)) {
             SelectorChip(
                 label = "Día ${state.dayOfMonth}",
                 dotColor = null,
