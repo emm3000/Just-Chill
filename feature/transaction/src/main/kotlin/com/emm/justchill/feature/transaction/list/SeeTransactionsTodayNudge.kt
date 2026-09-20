@@ -8,16 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -48,11 +45,6 @@ internal fun TodayNudgeCard(onClick: () -> Unit, modifier: Modifier = Modifier) 
             Text(text = "Hoy no anotaste nada", style = type.labelL, color = colors.textPrimary)
             Text(text = "30 segundos y listo", style = type.caption, color = colors.textTertiary)
         }
-        Icon(
-            imageVector = Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(spacing.s5),
-        )
+        ChevronTrailing()
     }
 }

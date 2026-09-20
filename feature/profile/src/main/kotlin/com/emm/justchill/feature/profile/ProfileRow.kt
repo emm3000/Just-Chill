@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
@@ -73,17 +72,6 @@ internal fun ProfileRow(icon: ImageVector, label: String, meta: String, metaIsPr
         metaIsPrimary = metaIsPrimary,
         onClick = onClick,
         trailing = { ChevronTrailing(enabled = true) },
-    )
-}
-
-@Composable
-internal fun ChevronTrailing(enabled: Boolean) {
-    val colors = LocalEmmColors.current
-    Icon(
-        imageVector = Icons.Outlined.ChevronRight,
-        contentDescription = null,
-        tint = if (enabled) colors.textTertiary else colors.textDisabled,
-        modifier = Modifier.size(16.dp),
     )
 }
 

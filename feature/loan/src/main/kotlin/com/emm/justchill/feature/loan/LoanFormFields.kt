@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -16,16 +17,22 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.format.centsToSoles
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -35,18 +42,21 @@ private val MIN_TOUCH_TARGET = 48.dp
 
 @Composable
 fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
+    val ground: Color = if (isPressed) colors.surface2 else colors.surface1
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(radii.rM)
-            .background(colors.surface1)
+            .background(ground)
             .border(1.dp, colors.border, radii.rM)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClickLabel = "Cambiar monto",
                 onClick = onClick,
@@ -67,10 +77,13 @@ fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = M
 
 @Composable
 fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
+    val ground: Color = if (isPressed) colors.surface2 else colors.surface1
 
     Row(
         modifier = modifier
@@ -78,10 +91,10 @@ fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
             // The padded label alone measures under the 48dp touch floor at a small font scale.
             .heightIn(min = MIN_TOUCH_TARGET)
             .clip(radii.rM)
-            .background(colors.surface1)
+            .background(ground)
             .border(1.dp, colors.border, radii.rM)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClickLabel = "Cambiar fecha",
                 onClick = onClick,
