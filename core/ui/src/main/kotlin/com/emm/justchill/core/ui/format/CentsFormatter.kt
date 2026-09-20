@@ -2,7 +2,7 @@ package com.emm.justchill.core.ui.format
 
 import com.emm.justchill.core.domain.shared.Money
 
-const val MAX_AMOUNT_DIGITS: Int = 13
+const val MAX_AMOUNT_DIGITS: Int = 9
 
 private const val CENTS_PER_UNIT = 100.0
 

@@ -35,6 +35,7 @@ import com.emm.justchill.core.ui.atoms.SelectorChip
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.resolvedColor
+import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
@@ -187,11 +188,11 @@ private fun EditTransactionContent(
 
         Numpad(
             onDigit = { digit ->
-                val newAmount = (state.amount + digit).take(9)
+                val newAmount = (state.amount + digit).take(MAX_AMOUNT_DIGITS)
                 onIntent(EditTransactionIntent.OnAmountChange(newAmount))
             },
             onDoubleZero = {
-                val newAmount = (state.amount + "00").take(9)
+                val newAmount = (state.amount + "00").take(MAX_AMOUNT_DIGITS)
                 onIntent(EditTransactionIntent.OnAmountChange(newAmount))
             },
             onBackspace = {

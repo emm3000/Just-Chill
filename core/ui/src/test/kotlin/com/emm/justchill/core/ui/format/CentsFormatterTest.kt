@@ -16,7 +16,7 @@ class CentsFormatterTest {
 
     @Test fun sanitize_caps_at_MAX_AMOUNT_DIGITS() {
         val twentyDigits = "1".repeat(20)
-        assertEquals(13, sanitizeCentsInput(twentyDigits).length)
+        assertEquals(9, sanitizeCentsInput(twentyDigits).length)
     }
 
     @Test fun sanitize_empty_input() {
@@ -48,9 +48,9 @@ class CentsFormatterTest {
     }
 
     @Test fun format_at_max_digits_does_not_crash() {
-        val maxDigits = "9".repeat(13)
+        val maxDigits = "9".repeat(9)
         val result = formatCentsForDisplay(maxDigits)
-        assertEquals("99,999,999,999.99", result)
+        assertEquals("9,999,999.99", result)
     }
 
     @Test fun a_positive_count_of_cents_is_savable() {

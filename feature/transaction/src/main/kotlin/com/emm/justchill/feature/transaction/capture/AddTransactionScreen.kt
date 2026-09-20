@@ -46,6 +46,7 @@ import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.allColors
 import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.category.resolvedColor
+import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.centsToSoles
@@ -236,11 +237,11 @@ private fun AddTransactionScreenContent(
 
         Numpad(
             onDigit = { digit ->
-                val newAmount = (state.amount + digit).take(9)
+                val newAmount = (state.amount + digit).take(MAX_AMOUNT_DIGITS)
                 onIntent(AddTransactionIntent.OnAmountChange(newAmount))
             },
             onDoubleZero = {
-                val newAmount = (state.amount + "00").take(9)
+                val newAmount = (state.amount + "00").take(MAX_AMOUNT_DIGITS)
                 onIntent(AddTransactionIntent.OnAmountChange(newAmount))
             },
             onBackspace = {
