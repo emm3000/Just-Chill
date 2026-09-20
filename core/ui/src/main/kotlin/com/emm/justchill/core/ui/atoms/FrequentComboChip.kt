@@ -3,6 +3,7 @@ package com.emm.justchill.core.ui.atoms
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,13 +42,14 @@ fun FrequentComboChip(
     val radii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .height(spacing.s12)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
             ),
@@ -56,6 +59,7 @@ fun FrequentComboChip(
                 .height(spacing.s8)
                 .clip(radii.rFull)
                 .border(1.dp, if (active) colors.borderFocus else colors.border, radii.rFull)
+                .indication(interactionSource, ripple())
                 .padding(horizontal = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.s2),
