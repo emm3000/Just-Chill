@@ -9,6 +9,7 @@ import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.MonthRange
+import com.emm.justchill.core.domain.transaction.ComboOccurrence
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
@@ -65,6 +66,23 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
                     accountId = AccountId(row.accountId),
                     categoryId = CategoryId(row.categoryId),
                     type = parsedType,
+                )
+            }
+    }
+
+    override suspend fun comboOccurrences(
+        type: TransactionType,
+        startInclusive: String,
+    ): List<ComboOccurrence> = safeDbCall {
+        localDataSource.comboOccurrences(type, startInclusive)
+            .mapNotNull { row ->
+                val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
+                ComboOccurrence(
+                    accountId = AccountId(row.accountId),
+                    categoryId = CategoryId(row.categoryId),
+                    type = parsedType,
+                    amount = Money(row.amount),
+                    occurredAt = row.occurredAt,
                 )
             }
     }

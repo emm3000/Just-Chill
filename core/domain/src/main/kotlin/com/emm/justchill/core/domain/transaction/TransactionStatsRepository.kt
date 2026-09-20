@@ -24,5 +24,7 @@ interface TransactionStatsRepository {
 
     suspend fun topUsedCombos(type: TransactionType, startInclusive: String, limit: Int): List<FrequentCombo>
 
+    suspend fun comboOccurrences(type: TransactionType, startInclusive: String): List<ComboOccurrence>
+
     suspend fun lastUsedAccountId(): AccountId?
 }

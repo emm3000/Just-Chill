@@ -281,6 +281,14 @@ GROUP BY accountId, categoryId, type
 ORDER BY COUNT(*) DESC, MAX(occurredAt) DESC
 LIMIT :limit;
 
+comboOccurrences:
+SELECT accountId, categoryId, type, amount, occurredAt
+FROM transactions
+WHERE categoryId IS NOT NULL
+  AND type = :type
+  AND occurredAt >= :startInclusive
+  AND deletedAt IS NULL;
+
 lastUsedAccountId:
 SELECT accountId
 FROM transactions
