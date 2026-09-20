@@ -100,7 +100,7 @@ fun AddTransactionScreen(
     vm: AddTransactionViewModel,
     popBackStack: () -> Unit,
     snackbarHostState: SnackbarHostState,
-    onOpenMenu: () -> Unit = {},
+    onOpenMenu: () -> Unit,
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -133,7 +133,7 @@ fun AddTransactionScreen(
 private fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
-    onOpenMenu: () -> Unit = {},
+    onOpenMenu: () -> Unit,
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -376,6 +376,7 @@ private fun AddTransactionPreview() {
                 transactionType = TransactionType.Spend,
             ),
             onIntent = {},
+            onOpenMenu = {},
         )
     }
 }
