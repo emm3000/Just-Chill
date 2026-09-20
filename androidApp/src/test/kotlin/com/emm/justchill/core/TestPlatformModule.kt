@@ -20,8 +20,8 @@ import org.koin.dsl.module
 import org.koin.dsl.onClose
 
 // JVM stand-in for androidPlatformModule. Construction is REAL wherever cheap, because the point is
-// proving the production graph actually wires up, not that mocks do. DispatchersProvider and
-// CommitHash are absent: neither is part of appModules(), both guarded by AndroidPlatformModuleTest.
+// proving the production graph actually wires up, not that mocks do. CommitHash is absent: it is not
+// part of appModules(), and AndroidPlatformModuleTest guards it.
 val testPlatformModule: Module = module {
 
     // The Android driver seeds default categories from its onCreate callback; that is not

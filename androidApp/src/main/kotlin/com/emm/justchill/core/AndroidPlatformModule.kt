@@ -37,7 +37,6 @@ val androidPlatformModule = module {
     single { provideSqlDriver(androidContext()) }
     single { provideDb(get()) }
 
-    single<DispatchersProvider> { DefaultDispatcher() }
     single<Settings> { SharedPreferencesSettings(provideSharedPreferences(androidContext())) }
 
     // A file of its own so the extraction rules can exclude the refresh token under a name no
