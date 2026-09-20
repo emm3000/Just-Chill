@@ -3,6 +3,7 @@ package com.emm.justchill.feature.account
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -69,13 +71,14 @@ private fun NewAccountButton(onClick: () -> Unit) {
     val spacing = LocalEmmSpacing.current
     val radii = LocalEmmRadii.current
     val type = LocalEmmType.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .heightIn(min = spacing.s12)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClickLabel = "Crear cuenta",
                 onClick = onClick,
@@ -87,6 +90,7 @@ private fun NewAccountButton(onClick: () -> Unit) {
                 .clip(radii.rFull)
                 .background(colors.surface1)
                 .border(1.dp, colors.border, radii.rFull)
+                .indication(interactionSource, ripple())
                 .padding(horizontal = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.s1),

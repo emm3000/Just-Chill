@@ -1,7 +1,6 @@
 package com.emm.justchill.feature.profile
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,15 +62,10 @@ private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
-    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .clip(radii.rXS)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onCopyClick,
-            )
+            .clickable(onClick = onCopyClick)
             .semantics { role = Role.Button }
             .heightIn(min = 48.dp)
             .padding(horizontal = spacing.s4),

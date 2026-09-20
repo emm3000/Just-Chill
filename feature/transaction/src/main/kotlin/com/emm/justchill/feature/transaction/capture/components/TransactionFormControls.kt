@@ -3,6 +3,7 @@ package com.emm.justchill.feature.transaction.capture.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -66,6 +68,7 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
     val radii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     // The target is the whole segment; the fill sits inset inside it, so a tap on the pill's edge
     // still selects. Selection is a surface step and a weight — neither reaches TalkBack, so it
@@ -76,7 +79,7 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
             .fillMaxHeight()
             .semantics { this.selected = selected }
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick,
             ),
@@ -87,7 +90,8 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
                 .fillMaxSize()
                 .padding(spacing.s1)
                 .clip(radii.rFull)
-                .background(if (selected) colors.surface2 else Color.Transparent),
+                .background(if (selected) colors.surface2 else Color.Transparent)
+                .indication(interactionSource, ripple()),
         ) {
             Text(
                 text = label,

@@ -3,7 +3,6 @@ package com.emm.justchill.feature.recurring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -304,11 +302,7 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
                     .clip(shape)
                     .background(bgColor)
                     .border(1.dp, borderColor, shape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { onSelect(type) },
-                    ),
+                    .clickable(onClick = { onSelect(type) }),
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -347,7 +341,6 @@ private fun AmountCardSection(
     val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neutral
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        val cardInteraction = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -356,11 +349,7 @@ private fun AmountCardSection(
                 .border(1.dp, colors.border, radii.rM)
                 .then(
                     if (!isVariable) {
-                        Modifier.clickable(
-                            interactionSource = cardInteraction,
-                            indication = null,
-                            onClick = onOpenSheet,
-                        )
+                        Modifier.clickable(onClick = onOpenSheet)
                     } else {
                         Modifier
                     },

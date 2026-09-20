@@ -2,7 +2,6 @@ package com.emm.justchill.feature.transaction.capture.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,14 +16,16 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
@@ -59,6 +60,7 @@ internal fun FormMetaRow(
 @Composable
 private fun DateAction(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
 
@@ -68,9 +70,8 @@ private fun DateAction(label: String, onClick: () -> Unit, modifier: Modifier = 
         modifier = modifier
             .fillMaxHeight()
             .widthIn(min = spacing.s12)
+            .clip(radii.rXS)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
                 onClickLabel = "Cambiar la fecha",
                 onClick = onClick,
             ),
@@ -90,6 +91,7 @@ private fun DateAction(label: String, onClick: () -> Unit, modifier: Modifier = 
 @Composable
 private fun NoteAction(note: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
 
@@ -98,9 +100,8 @@ private fun NoteAction(note: String, onClick: () -> Unit, modifier: Modifier = M
     Row(
         modifier = modifier
             .fillMaxHeight()
+            .clip(radii.rXS)
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
                 onClickLabel = if (empty) "Agregar una nota" else "Editar la nota",
                 onClick = onClick,
             ),

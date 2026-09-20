@@ -3,7 +3,6 @@ package com.emm.justchill.feature.recurring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +16,6 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,11 +55,7 @@ private fun SelectorPill(
             .clip(radii.rM)
             .background(colors.surface1)
             .border(1.dp, colors.border, radii.rM)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
+            .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
