@@ -14,10 +14,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
@@ -27,13 +33,16 @@ fun OutlinedCta(
     modifier: Modifier = Modifier,
     interaction: CtaInteraction = CtaInteraction.Enabled,
     leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    val enabled = interaction == CtaInteraction.Enabled
-    val textColor = if (enabled) colors.textPrimary else colors.textDisabled
+    val enabled: Boolean = interaction == CtaInteraction.Enabled
+    val loading: Boolean = interaction == CtaInteraction.Loading
+    val textColor: Color = if (enabled) colors.textPrimary else colors.textDisabled
 
     Box(
         modifier = modifier
@@ -46,11 +55,11 @@ fun OutlinedCta(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
-            if (interaction == CtaInteraction.Loading) {
+            if (loading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(spacing.s4),
                     color = textColor,
                     strokeWidth = 2.dp,
                 )
@@ -62,6 +71,9 @@ fun OutlinedCta(
                 style = type.titleM,
                 color = textColor,
             )
+            if (!loading && trailing != null) {
+                trailing()
+            }
         }
     }
 }
