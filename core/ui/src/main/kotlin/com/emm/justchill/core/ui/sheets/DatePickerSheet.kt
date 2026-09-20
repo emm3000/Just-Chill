@@ -255,7 +255,7 @@ private fun ShortcutPill(label: String, isActive: Boolean, onClick: () -> Unit) 
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val pillShape = RoundedCornerShape(999.dp)
     val pillBg: Color = if (isActive) colors.textPrimary else Color.Transparent
-    val pillBorder: Color = if (isActive) colors.textPrimary else colors.border
+    val pillBorder: Color = if (isActive) colors.borderFocus else colors.border
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(

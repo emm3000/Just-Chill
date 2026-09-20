@@ -207,7 +207,7 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
     val shape = RoundedCornerShape(999.dp)
 
     val bgColor = if (selected) colors.surface3 else colors.surface1
-    val borderColor = if (selected) colors.textPrimary else colors.border
+    val borderColor: Color = if (selected) colors.borderFocus else colors.border
     val textColor = if (selected) colors.textPrimary else colors.textSecondary
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -334,7 +334,7 @@ private fun TypeCell(
     val colors = LocalEmmColors.current
     val shape = RoundedCornerShape(12.dp)
 
-    val borderColor = if (selected) colors.textPrimary else colors.border
+    val borderColor: Color = if (selected) colors.borderFocus else colors.border
     val bgColor = if (selected) colors.surface3 else colors.surface1
     val tint = if (selected) colors.textPrimary else colors.textSecondary
 

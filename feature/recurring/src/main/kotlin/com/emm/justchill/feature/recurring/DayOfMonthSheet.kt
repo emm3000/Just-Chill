@@ -205,7 +205,7 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
                     val isSelected = day == selected
                     val cellShape = RoundedCornerShape(8.dp)
                     val cellBg = if (isSelected) colors.surface3 else Color.Transparent
-                    val cellBorder = if (isSelected) colors.textPrimary else colors.border
+                    val cellBorder: Color = if (isSelected) colors.borderFocus else colors.border
                     val textColor = if (isSelected) colors.textPrimary else colors.textSecondary
 
                     Box(
