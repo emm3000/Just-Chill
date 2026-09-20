@@ -19,7 +19,6 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.category.AppIconCatalog
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme
@@ -28,7 +27,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.feature.report.TopCategoryItem
-import com.emm.justchill.feature.report.domainColorToUi
 
 @Composable
 fun TopExpensesCard(items: List<TopCategoryItem>, modifier: Modifier = Modifier) {
@@ -79,12 +77,7 @@ private fun TopCategoryRow(item: TopCategoryItem) {
         horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconTile(
-            icon = icon,
-            size = IconTileSize.Md,
-            tone = IconTileTone.Swatch,
-            swatch = domainColorToUi(item.colorKey),
-        )
+        IconTile(icon = icon, size = IconTileSize.Md)
 
         Column(
             modifier = Modifier.weight(1f),

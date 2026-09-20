@@ -13,7 +13,7 @@ Accounts: the month list, create, edit, delete, and the Loan balance row that si
 ## Feature gotchas
 
 - No screen shows an account balance. Accounts have no opening balance, so `AccountMonthUi.net` is a month-scoped net and the row says so.
-- The account tint comes from `:core:ui`'s `account/AccountPalette.kt`, shared with the transaction sheets. Only the type icon and label maps are local.
+- An account carries no colour: its row shows the type icon in grey (ADR 017). `AccountPalette.kt` here holds the type icon and label maps and nothing else.
 - Delete refuses while the account still has transactions or recurring movements (`AccountHasTransactions`, `AccountHasRecurringMovements`). The confirm dialog warns about movements only; the recurring refusal reaches the user as the snackbar message the use case returns.
 - `AccountsViewModel` takes six constructor parameters, the ceiling review holds it to: a new datum needs a join through the query or an existing flow, never a seventh parameter.
 - The month comes from the injected `TodayFlow`, never a hand-written `today()`.

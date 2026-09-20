@@ -46,10 +46,8 @@ import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.components.EmmTextInput
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme
@@ -174,7 +172,6 @@ private fun SectionHeader(label: String, count: Int) {
 private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
-    val swatch = remember(category.color) { findById(category.color).primary }
     val icon = remember(category.icon) { AppIconCatalog.findById(category.icon).icon }
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -194,12 +191,7 @@ private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> U
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        IconTile(
-            icon = icon,
-            size = IconTileSize.Md,
-            tone = IconTileTone.Swatch,
-            swatch = swatch,
-        )
+        IconTile(icon = icon, size = IconTileSize.Md)
         Text(
             text = category.name,
             fontSize = 15.sp,
@@ -227,11 +219,7 @@ private fun UncategorizedRow(count: Int) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        IconTile(
-            icon = Icons.AutoMirrored.Outlined.HelpOutline,
-            size = IconTileSize.Md,
-            tone = IconTileTone.Neutral,
-        )
+        IconTile(icon = Icons.AutoMirrored.Outlined.HelpOutline, size = IconTileSize.Md)
         Text(
             text = "Sin categoría",
             fontSize = 15.sp,

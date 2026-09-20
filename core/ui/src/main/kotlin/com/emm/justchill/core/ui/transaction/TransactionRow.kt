@@ -16,9 +16,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
 import com.emm.justchill.core.ui.theme.InterFontFamily
@@ -42,34 +42,45 @@ fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        IconTile(
-            icon = tx.category.resolvedIcon,
-            size = IconTileSize.Lg,
-            tone = IconTileTone.Swatch,
-            swatch = tx.category.resolvedColor.primary,
-        )
+        IconTile(icon = tx.category.resolvedIcon, size = IconTileSize.Lg)
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = tx.title,
-                style = TextStyle(
-                    fontFamily = InterFontFamily,
-                    fontSize = 15.sp,
-                    lineHeight = 20.sp,
-                    fontWeight = FontWeight.W500,
-                    letterSpacing = (-0.15).sp,
-                ),
-                color = colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = tx.subtitle,
-                style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
-                color = colors.textTertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (tx.categoryLeadsTitle) {
+                    CategoryDot(color = tx.category.resolvedColor.primary)
+                }
+                Text(
+                    text = tx.title,
+                    style = TextStyle(
+                        fontFamily = InterFontFamily,
+                        fontSize = 15.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.W500,
+                        letterSpacing = (-0.15).sp,
+                    ),
+                    color = colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (!tx.categoryLeadsTitle) {
+                    CategoryDot(color = tx.category.resolvedColor.primary)
+                }
+                Text(
+                    text = tx.subtitle,
+                    style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+                    color = colors.textTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
 
         Text(

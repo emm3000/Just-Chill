@@ -23,6 +23,8 @@ data class TransactionUi(
 
     val title: String get() = description.ifBlank { categoryName }
 
+    val categoryLeadsTitle: Boolean get() = description.isBlank()
+
     val subtitle: String
         get() = listOfNotNull(
             categoryName.takeIf { description.isNotBlank() },

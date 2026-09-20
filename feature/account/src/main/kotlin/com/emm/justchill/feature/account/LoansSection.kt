@@ -21,7 +21,6 @@ import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.color
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -58,12 +57,7 @@ internal fun LoansSection(totalOwed: String, totalOwedIsPositive: Boolean, peopl
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
-            IconTile(
-                icon = Icons.Outlined.People,
-                size = IconTileSize.Lg,
-                tone = IconTileTone.Swatch,
-                swatch = colors.success,
-            )
+            IconTile(icon = Icons.Outlined.People, size = IconTileSize.Lg)
 
             Column(
                 modifier = Modifier.weight(1f),

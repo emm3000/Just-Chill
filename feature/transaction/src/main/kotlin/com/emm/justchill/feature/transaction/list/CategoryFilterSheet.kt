@@ -52,10 +52,8 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.atoms.IconTileTone
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.format.stripSpanishAccents
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.InterFontFamily
@@ -343,7 +341,6 @@ private fun SegmentCell(
 private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val icon = remember(item.iconId) { AppIconCatalog.findById(item.iconId) }
-    val color = remember(item.colorId) { findById(item.colorId) }
 
     Row(
         modifier = Modifier
@@ -354,12 +351,7 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        IconTile(
-            icon = icon.icon,
-            size = IconTileSize.Sm,
-            tone = IconTileTone.Swatch,
-            swatch = color.primary,
-        )
+        IconTile(icon = icon.icon, size = IconTileSize.Sm)
 
         Text(
             text = item.name,

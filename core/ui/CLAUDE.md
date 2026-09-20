@@ -25,7 +25,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the na
 - `category/` holds the two catalogs the domain's semantic ids resolve against — `AppIconCatalog` (`IconsAll.kt`) and `allColors` (`ColorsAll.kt`) — plus `CategoryUi`, `SelectableCategory` and the `resolvedIcon` / `resolvedColor` getters in `CategoryResolve.kt` that turn an `iconId` / `colorId` into an `ImageVector` and a `CategoryColor`. A stored `ImageVector` or `Color` is the bug this package exists to prevent.
 - `transaction/` holds `TransactionUi` with its `toUi` mapper, the `Catalog` a capture form cuts its lists out of, and `TransactionRow`. `Catalog.Loading` is not an empty `Loaded`; only `loaded` tells the two apart.
 - `sheets/` holds `AccountPickerSheet`, `CategoryPickerSheet` and `DatePickerSheet`, shared by the transaction, recurring and loan forms. A sheet used by one feature stays in that feature's own module — `NoteSheet` is the example.
-- `SelectorChip`, `FrequentComboChip` and the `ChipDot` they draw are atoms like any other, under `atoms/`.
+- `SelectorChip`, `FrequentComboChip` and the `CategoryDot` they draw are atoms like any other, under `atoms/`.
 
 ## MVI base
 

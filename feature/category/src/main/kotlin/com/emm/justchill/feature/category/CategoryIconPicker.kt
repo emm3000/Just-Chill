@@ -1,6 +1,5 @@
 package com.emm.justchill.feature.category
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,13 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.category.AppIconCatalog
 import com.emm.justchill.core.ui.category.IconCatalog
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 
 @Composable
-internal fun IconGrid(selected: IconCatalog, swatch: Color, onSelect: (IconCatalog) -> Unit) {
+internal fun IconGrid(selected: IconCatalog, onSelect: (IconCatalog) -> Unit) {
     LazyHorizontalGrid(
         rows = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -41,7 +42,6 @@ internal fun IconGrid(selected: IconCatalog, swatch: Color, onSelect: (IconCatal
             IconCell(
                 icon = icon,
                 selected = icon == selected,
-                swatch = swatch,
                 onClick = { onSelect(icon) },
             )
         }
@@ -49,19 +49,17 @@ internal fun IconGrid(selected: IconCatalog, swatch: Color, onSelect: (IconCatal
 }
 
 @Composable
-private fun IconCell(icon: IconCatalog, selected: Boolean, swatch: Color, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(12.dp)
-    val border = if (selected) swatch else colors.border
-    val bg = if (selected) swatch.copy(alpha = 0.14f) else colors.surface1
-    val tint = if (selected) swatch else colors.textSecondary
+private fun IconCell(icon: IconCatalog, selected: Boolean, onClick: () -> Unit) {
+    val colors: EmmColors = LocalEmmColors.current
+    val shape: Shape = RoundedCornerShape(12.dp)
+    val border: Color = if (selected) colors.borderFocus else colors.border
+    val tint: Color = if (selected) colors.textPrimary else colors.textSecondary
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(52.dp)
             .clip(shape)
-            .background(bg)
             .border(1.dp, border, shape)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
