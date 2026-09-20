@@ -17,6 +17,7 @@ data class EmmSpacing(
     val s8: Dp = 32.dp,
     val s10: Dp = 40.dp,
     val s12: Dp = 48.dp,
+    val s16: Dp = 64.dp,
 )
 
 internal val emmSpacing: EmmSpacing = EmmSpacing()

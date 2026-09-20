@@ -5,21 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.ui.atoms.BackBtn
+import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
-import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun ProfileScreen(
@@ -27,6 +25,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     appVersion: String = "",
     commitHash: String = "",
+    onBack: () -> Unit = {},
     onTransactionsClick: () -> Unit = {},
     onReportClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},
@@ -49,7 +48,6 @@ fun ProfileScreen(
     onAcknowledgeBackupDestinationClick: () -> Unit = {},
 ) {
     val colors: EmmColors = LocalEmmColors.current
-    val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
@@ -58,16 +56,9 @@ fun ProfileScreen(
             .background(colors.bg)
             .verticalScroll(rememberScrollState()),
     ) {
-        Text(
-            text = "Más",
-            style = type.headlineL,
-            color = colors.textPrimary,
-            modifier = Modifier.padding(
-                start = spacing.s6,
-                end = spacing.s6,
-                top = spacing.s6,
-                bottom = spacing.s1,
-            ),
+        JcTopBar(
+            title = "Más",
+            left = { BackBtn(onClick = onBack) },
         )
 
         (state.session as? SessionUiState.SignedIn)?.let { signedIn ->

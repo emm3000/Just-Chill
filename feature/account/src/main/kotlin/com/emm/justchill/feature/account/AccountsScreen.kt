@@ -42,13 +42,14 @@ fun AccountsScreen(
     onIntent: (AccountsIntent) -> Unit,
     addAccount: () -> Unit,
     navigateToLoans: () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
 
     Column(modifier = modifier.background(colors.bg)) {
-        AccountsHeader(state = state, addAccount = addAccount)
+        AccountsHeader(state = state, addAccount = addAccount, onBack = onBack)
 
         LazyColumn(contentPadding = PaddingValues(bottom = spacing.s3)) {
             if (state.accounts.isEmpty()) {
@@ -209,6 +210,7 @@ private fun AccountsScreenPreview() {
             onIntent = {},
             addAccount = {},
             navigateToLoans = {},
+            onBack = {},
             modifier = Modifier.fillMaxSize(),
         )
     }
@@ -223,6 +225,7 @@ private fun AccountsScreenZeroTotalsPreview() {
             onIntent = {},
             addAccount = {},
             navigateToLoans = {},
+            onBack = {},
             modifier = Modifier.fillMaxSize(),
         )
     }
@@ -237,6 +240,7 @@ private fun AccountsScreenEmptyPreview() {
             onIntent = {},
             addAccount = {},
             navigateToLoans = {},
+            onBack = {},
             modifier = Modifier.fillMaxSize(),
         )
     }

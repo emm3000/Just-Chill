@@ -3,19 +3,13 @@ package com.emm.justchill.feature.transaction.list
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
@@ -24,123 +18,49 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.ui.format.monthLabel
+import com.emm.justchill.core.ui.atoms.BackBtn
+import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.format.monthYearLabel
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
-import com.emm.justchill.core.ui.theme.LocalEmmType
-import com.emm.justchill.core.ui.theme.edgeGiveback
 
-/**
- * The browsed month IS the screen title. A filtered list crosses months, so [month] arrives `null`
- * there and the title steps aside rather than heading rows it no longer governs.
- */
 @Composable
 internal fun ScreenHeader(
     month: YearMonth?,
     isCategoryFilterActive: Boolean,
+    onBack: () -> Unit,
     onIntent: (SeeTransactionsIntent) -> Unit,
 ) {
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                top = spacing.s3,
-                start = spacing.s6 - spacing.edgeGiveback(spacing.s5),
-                end = spacing.s6 - spacing.edgeGiveback(spacing.s5),
-            ),
-    ) {
-        if (month != null) {
-            MonthTitle(month = month, onIntent = onIntent, modifier = Modifier.weight(1f))
-        } else {
-            Spacer(Modifier.weight(1f))
-        }
-        HeaderAction(
-            icon = Icons.Outlined.Search,
-            contentDescription = "Buscar transacciones",
-            onClick = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested) },
-        )
-        Spacer(Modifier.width(spacing.s2))
-        HeaderAction(
-            icon = Icons.Outlined.FilterList,
-            contentDescription = if (isCategoryFilterActive) {
-                "Filtrar por categoría, filtro activo"
-            } else {
-                "Filtrar por categoría"
-            },
-            onClick = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested) },
-            showBadge = isCategoryFilterActive,
-        )
-    }
-}
-
-@Composable
-private fun MonthTitle(month: YearMonth, onIntent: (SeeTransactionsIntent) -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        MonthChevron(
-            icon = Icons.Outlined.ChevronLeft,
-            contentDescription = "Mes anterior",
-            onClick = { onIntent(SeeTransactionsIntent.OnPreviousMonth) },
-        )
-        // "Septiembre 2026" at headlineL does not fit beside both header actions on a phone;
-        // the step down keeps the month whole rather than ellipsising the year off it.
-        BasicText(
-            text = buildAnnotatedString {
-                append(month.monthLabel())
-                withStyle(SpanStyle(color = colors.textTertiary, fontWeight = FontWeight.W500)) {
-                    append(" ${month.year}")
-                }
-            },
-            style = type.headlineL.copy(color = colors.textPrimary),
-            maxLines = 1,
-            softWrap = false,
-            overflow = TextOverflow.Ellipsis,
-            autoSize = TextAutoSize.StepBased(
-                minFontSize = type.titleL.fontSize,
-                maxFontSize = type.headlineL.fontSize,
-            ),
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        MonthChevron(
-            icon = Icons.Outlined.ChevronRight,
-            contentDescription = "Mes siguiente",
-            onClick = { onIntent(SeeTransactionsIntent.OnNextMonth) },
-        )
-    }
-}
-
-@Composable
-private fun MonthChevron(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(spacing.s12)
-            .clip(CircleShape)
-            .clickable(onClick = onClick),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = colors.textSecondary,
-            modifier = Modifier.size(spacing.s5),
-        )
-    }
+    JcTopBar(
+        title = month?.monthYearLabel() ?: "Movimientos",
+        left = { BackBtn(onClick = onBack) },
+        right = {
+            Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
+                HeaderAction(
+                    icon = Icons.Outlined.Search,
+                    contentDescription = "Buscar transacciones",
+                    onClick = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested) },
+                )
+                HeaderAction(
+                    icon = Icons.Outlined.FilterList,
+                    contentDescription = if (isCategoryFilterActive) {
+                        "Filtrar por categoría, filtro activo"
+                    } else {
+                        "Filtrar por categoría"
+                    },
+                    onClick = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested) },
+                    showBadge = isCategoryFilterActive,
+                )
+            }
+        },
+        rightArtwork = spacing.s12,
+    )
 }
 
 @Composable
@@ -170,7 +90,6 @@ internal fun HeaderAction(
             modifier = Modifier.size(spacing.s5),
         )
         if (showBadge) {
-            // Same ring-behind-badge rule as HhBottomBar's dot.
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
