@@ -849,7 +849,7 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
         advanceUntilIdle()
-        val picked = vm.state.value.categories.first { it.categoryId == transport.categoryId }
+        val picked: SelectableCategory = vm.state.value.categories.first { it.categoryId == transport.categoryId }
         vm.onIntent(AddTransactionIntent.OnCategorySelected(picked))
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("50000"))
@@ -860,7 +860,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `the first digit typed reaches the ranking use case`() = runTest(testDispatcher) {
-        val queried = recordedComboQueries()
+        val queried: MutableList<Money?> = recordedComboQueries()
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -872,7 +872,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `an empty pad ranks without waiting out the debounce`() = runTest(testDispatcher) {
-        val queried = recordedComboQueries()
+        val queried: MutableList<Money?> = recordedComboQueries()
 
         buildViewModel()
         runCurrent()
@@ -882,7 +882,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `digits typed inside the debounce window issue one query, for the last amount`() = runTest(testDispatcher) {
-        val queried = recordedComboQueries()
+        val queried: MutableList<Money?> = recordedComboQueries()
 
         val vm = buildViewModel()
         advanceUntilIdle()
@@ -898,7 +898,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a pause between digits issues the next query`() = runTest(testDispatcher) {
-        val queried = recordedComboQueries()
+        val queried: MutableList<Money?> = recordedComboQueries()
 
         val vm = buildViewModel()
         advanceUntilIdle()
