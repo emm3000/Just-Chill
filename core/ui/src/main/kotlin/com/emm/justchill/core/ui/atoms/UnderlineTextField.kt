@@ -22,11 +22,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+
+private val UnderlineStrokeWidth: Dp = 1.dp
 
 private val UnderlineFieldTextStyle = TextStyle(
     fontSize = 18.sp,
@@ -93,11 +96,13 @@ fun UnderlineTextField(
 private fun Modifier.underline(color: Color): Modifier = this
     .fillMaxWidth()
     .drawBehind {
+        val strokeWidth: Float = UnderlineStrokeWidth.toPx()
+        val centerY: Float = size.height - strokeWidth / 2
         drawLine(
             color = color,
-            start = Offset(0f, size.height),
-            end = Offset(size.width, size.height),
-            strokeWidth = 1f,
+            start = Offset(0f, centerY),
+            end = Offset(size.width, centerY),
+            strokeWidth = strokeWidth,
         )
     }
     .padding(vertical = 8.dp)
