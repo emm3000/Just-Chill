@@ -12,10 +12,7 @@ class GetMonthSpendUseCase(private val transactionRepository: TransactionReposit
         .map(List<Transaction>::spendTotal)
 }
 
-private fun List<Transaction>.spendTotal(): Money {
-    var cents = 0L
-    forEach { transaction ->
-        if (transaction.type == TransactionType.Spend) cents += transaction.amount.cents
-    }
-    return Money(cents)
-}
+private fun List<Transaction>.spendTotal(): Money = Money(
+    filter { transaction -> transaction.type == TransactionType.Spend }
+        .sumOf { transaction -> transaction.amount.cents },
+)

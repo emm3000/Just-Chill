@@ -57,8 +57,14 @@ internal fun MonthSpendLine(label: String, amount: String, onClick: () -> Unit, 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        Eyebrow(text = label)
-        Text(text = amount, style = type.amountM, color = colors.textSecondary, maxLines = 1)
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+        ) {
+            Eyebrow(text = label, modifier = Modifier.weight(1f, fill = false))
+            Text(text = amount, style = type.amountM, color = colors.textSecondary, maxLines = 1)
+        }
         ChevronTrailing()
     }
 }

@@ -81,9 +81,6 @@ class AddTransactionViewModel(
             .onEach { usage -> updateState { copy(frequentUsage = usage) } }
             .launchSafeIn(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) })
 
-        // flatMapLatest on the day, not on a single read: a pad left open across midnight re-queries
-        // the month it lands in, and a save inside the browsed month re-emits through the same
-        // repository flow.
         todayFlow()
             .map(YearMonth::of)
             .distinctUntilChanged()
