@@ -39,6 +39,7 @@ import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.formatCentsForDisplay
+import com.emm.justchill.core.ui.format.sanitizeCentsInput
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
@@ -101,7 +102,7 @@ private fun AmountInputSheetContent(
     val type = LocalEmmType.current
     // Seeded once per opening: every caller renders the sheet inside an `if (show…)`, so leaving
     // the composition drops the draft and the next opening reads the owner's amount again.
-    var draftDigits: String by rememberSaveable { mutableStateOf(amountDigits) }
+    var draftDigits: String by rememberSaveable { mutableStateOf(sanitizeCentsInput(amountDigits)) }
     val draftValue: Double = remember(draftDigits) { centsToSoles(draftDigits) }
     val formattedDraft: String = remember(draftDigits) {
         if (draftDigits.isEmpty()) "0.00" else formatCentsForDisplay(draftDigits)
