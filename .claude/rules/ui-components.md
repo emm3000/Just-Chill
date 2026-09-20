@@ -65,6 +65,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 
 - There is no card. Rows sit directly on `bg`; a group is separated by space or a hairline and named by a header above it.
 - Text inputs are underline-only (`UnderlineTextField`): `border` at rest, `borderFocus` on focus, `danger` on error with the helper text matching.
+- `borderFocus` is the **only** selected or focused boundary, for a pill, chip, tile or day cell as much as for an input underline: a selected control keeps its 1dp ring and brightens it, never `textPrimary` (#282). A hand-rolled `if (selected) textPrimary else border` is the bug this rule closes — a white ring is a second high-contrast element beside the CTA. A control whose selected state is a white *fill* draws no ring against it.
 - A screen's primary action is one full-width white button, the only high-contrast element on it. A destructive action never takes it: `danger` text and a `danger` hairline on a transparent ground.
 - Bars and charts have no track; the bar decorates and the row carries the meaning (`contentDescription` on the row, the graphic hidden from TalkBack).
 - A transaction row is titled by what the user wrote, then by the category, never by a placeholder; `TransactionUi.title` / `subtitle` derive it in `:core:ui`.
