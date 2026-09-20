@@ -71,7 +71,7 @@ private val EmptyStateTileSize: Dp = 44.dp
 fun ReportScreen(
     modifier: Modifier = Modifier,
     onAddTransaction: () -> Unit = {},
-    onBack: () -> Unit = {},
+    onBack: () -> Unit,
     vm: ReportViewModel = koinViewModel(),
 ) {
     val state: ReportUiState by vm.state.collectAsStateWithLifecycle()
@@ -90,7 +90,7 @@ internal fun ReportScreen(
     state: ReportUiState,
     onAddTransaction: () -> Unit,
     onIntent: (ReportIntent) -> Unit,
-    onBack: () -> Unit = {},
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -440,6 +440,7 @@ private fun ReportScreenMonthPreview() {
             ),
             onAddTransaction = {},
             onIntent = {},
+            onBack = {},
         )
     }
 }
@@ -474,6 +475,7 @@ private fun ReportScreenMonthSpendPreview() {
             ),
             onAddTransaction = {},
             onIntent = {},
+            onBack = {},
         )
     }
 }
@@ -493,6 +495,7 @@ private fun ReportScreenEmptyPreview() {
             ),
             onAddTransaction = {},
             onIntent = {},
+            onBack = {},
         )
     }
 }

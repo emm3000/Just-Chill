@@ -49,6 +49,7 @@ class ReportTopBarTest {
                     ),
                     onAddTransaction = {},
                     onIntent = {},
+                    onBack = {},
                 )
             }
         }

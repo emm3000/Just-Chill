@@ -25,7 +25,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     appVersion: String = "",
     commitHash: String = "",
-    onBack: () -> Unit = {},
+    onBack: () -> Unit,
     onTransactionsClick: () -> Unit = {},
     onReportClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},
@@ -127,6 +127,7 @@ private fun ProfileScreenPreview() {
                 lastExport = LastExportUi.DaysAgo(3),
                 session = SessionUiState.SignedOut,
             ),
+            onBack = {},
             appVersion = "1.0.0",
             commitHash = "4e47828d1f2a3b4c5d6e7f8091a2b3c4d5e6f708",
         )

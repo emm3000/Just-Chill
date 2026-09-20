@@ -90,12 +90,12 @@ fun SeeTransactionsScreen(
 }
 
 @Composable
-private fun SeeTransactionsContent(
+internal fun SeeTransactionsContent(
     state: SeeTransactionsUiState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
     navigateToAdd: () -> Unit,
-    onBack: () -> Unit = {},
+    onBack: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
 
@@ -127,9 +127,10 @@ private fun SeeTransactionsContent(
 
         val summary: MonthSummaryUi? = state.summary
             ?.takeIf { state.listDisplayState == ListDisplayState.Content }
-        if (state.isMonthSelectorVisible || summary != null) {
+        val isMonthNavigationVisible: Boolean = state.isMonthSelectorVisible && !state.isSearchOpen
+        if (isMonthNavigationVisible || summary != null) {
             MonthStrip(
-                isMonthNavigationVisible = state.isMonthSelectorVisible,
+                isMonthNavigationVisible = isMonthNavigationVisible,
                 summary = summary,
                 onIntent = onIntent,
             )
@@ -414,6 +415,7 @@ private fun SeeTransactionsEmptyPreview() {
             onIntent = {},
             navigateToEdit = {},
             navigateToAdd = {},
+            onBack = {},
         )
     }
 }
@@ -466,6 +468,7 @@ private fun SeeTransactionsMonthPreview() {
             onIntent = {},
             navigateToEdit = {},
             navigateToAdd = {},
+            onBack = {},
         )
     }
 }
@@ -498,6 +501,7 @@ private fun SeeTransactionsPopulatedPreview() {
             onIntent = {},
             navigateToEdit = {},
             navigateToAdd = {},
+            onBack = {},
         )
     }
 }
@@ -550,6 +554,7 @@ private fun SeeTransactionsWithPendingPreview() {
             onIntent = {},
             navigateToEdit = {},
             navigateToAdd = {},
+            onBack = {},
         )
     }
 }
@@ -595,6 +600,7 @@ private fun SeeTransactionsPendingWithEmptyMonthPreview() {
             onIntent = {},
             navigateToEdit = {},
             navigateToAdd = {},
+            onBack = {},
         )
     }
 }
@@ -614,6 +620,7 @@ private fun SeeTransactionsNoResultsPreview() {
             onIntent = {},
             navigateToEdit = {},
             navigateToAdd = {},
+            onBack = {},
         )
     }
 }
@@ -631,6 +638,7 @@ private fun SeeTransactionsLongMonthPreview() {
             onIntent = {},
             navigateToEdit = {},
             navigateToAdd = {},
+            onBack = {},
         )
     }
 }
