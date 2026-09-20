@@ -1,7 +1,10 @@
 package com.emm.justchill.core.domain.transaction
 
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.startOfDayDaysAgo
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.math.abs
 import kotlin.time.Clock
 
 class GetFrequentCombosUseCase(
@@ -13,13 +16,72 @@ class GetFrequentCombosUseCase(
         type: TransactionType,
         windowDays: Int = WINDOW_DAYS,
         limit: Int = DEFAULT_LIMIT,
+        amount: Money? = null,
     ): List<FrequentCombo> {
         val startInclusive = startOfDayDaysAgo(windowDays, clock, zone)
-        return transactionStatsRepository.topUsedCombos(type, startInclusive, limit)
+        if (amount == null) {
+            return transactionStatsRepository.topUsedCombos(type, startInclusive, limit)
+        }
+        val occurrences = transactionStatsRepository.comboOccurrences(type, startInclusive)
+        if (occurrences.isEmpty()) return emptyList()
+
+        val currentHour = clock.now().toLocalDateTime(zone).hour
+        val amountBandRadiusCents = amountBandRadiusCents(amount)
+
+        return occurrences
+            .groupBy { FrequentCombo(it.accountId, it.categoryId, it.type) }
+            .map { (combo, rows) ->
+                RankedCombo(
+                    combo = combo,
+                    count = rows.size,
+                    matchesContext = rows.any { matchesContext(it, amount, amountBandRadiusCents, currentHour) },
+                    lastOccurredAt = rows.maxOf { it.occurredAt },
+                )
+            }
+            .sortedWith(
+                compareByDescending<RankedCombo> { it.matchesContext }
+                    .thenByDescending { it.count }
+                    .thenByDescending { it.lastOccurredAt },
+            )
+            .take(limit)
+            .map { it.combo }
     }
+
+    private fun matchesContext(
+        occurrence: ComboOccurrence,
+        typedAmount: Money,
+        amountBandRadiusCents: Long,
+        currentHour: Int,
+    ): Boolean {
+        val withinAmountBand: Boolean = abs(occurrence.amount.cents - typedAmount.cents) <= amountBandRadiusCents
+        val withinHourWindow: Boolean = circularHourDistance(occurrenceHour(occurrence.occurredAt), currentHour) <= HOUR_WINDOW_RADIUS
+        return withinAmountBand && withinHourWindow
+    }
+
+    private fun amountBandRadiusCents(amount: Money): Long =
+        (amount.cents * AMOUNT_BAND_FRACTION).toLong().coerceAtLeast(AMOUNT_BAND_MIN_CENTS)
+
+    private fun occurrenceHour(occurredAt: String): Int = occurredAt.substring(OCCURRED_AT_HOUR_RANGE).toInt()
+
+    private fun circularHourDistance(a: Int, b: Int): Int {
+        val diff: Int = abs(a - b)
+        return minOf(diff, HOURS_IN_DAY - diff)
+    }
+
+    private data class RankedCombo(
+        val combo: FrequentCombo,
+        val count: Int,
+        val matchesContext: Boolean,
+        val lastOccurredAt: String,
+    )
 
     private companion object {
         const val WINDOW_DAYS = 90
         const val DEFAULT_LIMIT = 5
+        const val AMOUNT_BAND_FRACTION = 0.2
+        const val AMOUNT_BAND_MIN_CENTS = 200L
+        const val HOUR_WINDOW_RADIUS = 2
+        const val HOURS_IN_DAY = 24
+        val OCCURRED_AT_HOUR_RANGE = 11..12
     }
 }

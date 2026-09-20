@@ -1,5 +1,6 @@
 package com.emm.justchill.core.database.transaction
 
+import com.emm.justchill.core.database.ComboOccurrences
 import com.emm.justchill.core.database.TransactionsQueries
 import com.emm.justchill.core.database.shared.ioDispatcher
 import com.emm.justchill.core.domain.shared.MonthRange
@@ -67,5 +68,15 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
 
     suspend fun lastUsedAccountId(): String? = withContext(ioDispatcher) {
         tq.lastUsedAccountId().executeAsOneOrNull()
+    }
+
+    suspend fun comboOccurrences(
+        type: TransactionType,
+        startInclusive: String,
+    ): List<ComboOccurrences> = withContext(ioDispatcher) {
+        tq.comboOccurrences(
+            type = type.name,
+            startInclusive = startInclusive,
+        ).executeAsList()
     }
 }
