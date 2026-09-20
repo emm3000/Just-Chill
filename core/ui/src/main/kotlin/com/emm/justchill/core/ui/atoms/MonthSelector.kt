@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ChevronLeft
-import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -23,14 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
-import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
@@ -69,7 +64,6 @@ private fun PlainMonthSelector(
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -79,20 +73,7 @@ private fun PlainMonthSelector(
             .border(BorderStroke(1.dp, colors.border), radii.rFull)
             .padding(horizontal = 4.dp),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(spacing.s12)
-                .clip(radii.rFull)
-                .clickable(onClick = onPrevious),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ChevronLeft,
-                contentDescription = "Mes anterior",
-                tint = colors.textSecondary,
-                modifier = Modifier.size(20.dp),
-            )
-        }
+        MonthChevron(direction = MonthChevronDirection.Previous, onClick = onPrevious)
 
         Text(
             text = label,
@@ -102,20 +83,7 @@ private fun PlainMonthSelector(
             color = colors.textPrimary,
         )
 
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(spacing.s12)
-                .clip(radii.rFull)
-                .clickable(onClick = onNext),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = "Mes siguiente",
-                tint = colors.textSecondary,
-                modifier = Modifier.size(20.dp),
-            )
-        }
+        MonthChevron(direction = MonthChevronDirection.Next, onClick = onNext)
     }
 }
 
@@ -141,11 +109,7 @@ private fun PickerMonthSelector(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
-        ChevronButton(
-            icon = Icons.Outlined.ChevronLeft,
-            contentDescription = "Mes anterior",
-            onClick = onPrevious,
-        )
+        MonthChevron(direction = MonthChevronDirection.Previous, onClick = onPrevious)
         Row(
             modifier = Modifier
                 .fillMaxHeight()
@@ -167,33 +131,7 @@ private fun PickerMonthSelector(
                 modifier = Modifier.size(14.dp),
             )
         }
-        ChevronButton(
-            icon = Icons.Outlined.ChevronRight,
-            contentDescription = "Mes siguiente",
-            onClick = onNext,
-        )
-    }
-}
-
-@Composable
-private fun ChevronButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
-    val colors: EmmColors = LocalEmmColors.current
-    val radii: EmmRadii = LocalEmmRadii.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-
-    Box(
-        modifier = Modifier
-            .size(spacing.s12)
-            .clip(radii.rFull)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = colors.textSecondary,
-            modifier = Modifier.size(20.dp),
-        )
+        MonthChevron(direction = MonthChevronDirection.Next, onClick = onNext)
     }
 }
 
