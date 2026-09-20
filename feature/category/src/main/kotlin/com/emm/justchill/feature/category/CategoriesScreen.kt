@@ -37,6 +37,7 @@ import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.ui.atoms.BackBtn
+import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.DialogAction
 import com.emm.justchill.core.ui.atoms.EmmDialog
@@ -48,6 +49,7 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.components.EmmTextInput
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme
@@ -186,15 +188,21 @@ private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> U
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         IconTile(icon = icon, size = IconTileSize.Md)
-        Text(
-            text = category.name,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textPrimary,
-            letterSpacing = (-0.15).sp,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             modifier = Modifier.weight(1f),
-        )
+        ) {
+            CategoryDot(color = colors.resolvedColor(category.color))
+            Text(
+                text = category.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = colors.textPrimary,
+                letterSpacing = (-0.15).sp,
+            )
+        }
         MovementMeta(count = movementCount, muted = false)
         Spacer(Modifier.size(6.dp))
         ChevronTrailing()
@@ -214,15 +222,21 @@ private fun UncategorizedRow(count: Int) {
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         IconTile(icon = Icons.AutoMirrored.Outlined.HelpOutline, size = IconTileSize.Md)
-        Text(
-            text = "Sin categoría",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            color = colors.textTertiary,
-            letterSpacing = (-0.15).sp,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             modifier = Modifier.weight(1f),
-        )
+        ) {
+            CategoryDot(color = colors.catGraphite)
+            Text(
+                text = "Sin categoría",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.W500,
+                fontFamily = InterFontFamily,
+                color = colors.textTertiary,
+                letterSpacing = (-0.15).sp,
+            )
+        }
         MovementMeta(count = count, muted = true)
         Spacer(Modifier.size(6.dp))
         ChevronTrailing(enabled = false)

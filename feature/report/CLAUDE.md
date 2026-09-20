@@ -8,7 +8,6 @@ The month Report (ADR 015, wave 7): `ReportViewModel` with its `UiState` / `Inte
 
 - The screen owns income, spend and savings rate for a month; the transaction list is another feature's number. Before adding a section, find the owner.
 - `danger` on `SavingsRateBlock`'s deficit rate is deliberate: a deficit is a broken state, not an amount. The trend pill beside the rate is a comparison and stays `PillTone.Neutral`.
-- `ReportFormat.kt` maps the domain's colour *name* to a `:core:ui` token, so the palette can be retuned without a migration.
 - `compose_stability.conf` declares `com.emm.justchill.**` stable, so a `Money` or a `YearMonth` crossing from `:core:domain` still skips recomposition.
 
 ## State

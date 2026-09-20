@@ -22,17 +22,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.feature.report.CategoryShare
-import com.emm.justchill.feature.report.domainColorToUi
 import kotlinx.coroutines.delay
 
 @Composable
@@ -68,7 +69,9 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
         )
     }
 
-    val description = "${share.name}: ${share.amountFormatted}, ${share.percentage} por ciento del total"
+    val dotColor: Color = colors.resolvedColor(share.colorKey)
+
+    val description = ": ${share.amountFormatted}, ${share.percentage} por ciento del total"
 
     Column(
         modifier = Modifier
@@ -84,7 +87,7 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
                 modifier = Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .background(domainColorToUi(share.colorKey)),
+                    .background(dotColor),
             )
             Spacer(Modifier.width(spacing.s2))
             Text(
@@ -116,7 +119,7 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
                     .fillMaxWidth(animatedFraction.value)
                     .height(2.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(domainColorToUi(share.colorKey)),
+                    .background(dotColor),
             )
         }
     }

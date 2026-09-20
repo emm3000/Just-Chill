@@ -53,7 +53,6 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
@@ -137,7 +136,6 @@ private fun AddCategoryContent(
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             val selectedIcon = AppIconCatalog.findById(state.iconId)
-            val selectedColor = findById(state.colorId)
 
             Spacer(Modifier.height(6.dp))
 
@@ -148,7 +146,7 @@ private fun AddCategoryContent(
                 PreviewChip(
                     name = state.name,
                     icon = selectedIcon,
-                    color = selectedColor,
+                    colorId = state.colorId,
                     type = state.categoryType,
                 )
             }
@@ -178,8 +176,8 @@ private fun AddCategoryContent(
 
             Section(eyebrow = "COLOR") {
                 ColorRow(
-                    selected = selectedColor,
-                    onSelect = { onIntent(AddCategoryIntent.OnColorChange(it.id)) },
+                    selected = state.colorId,
+                    onSelect = { onIntent(AddCategoryIntent.OnColorChange(it)) },
                 )
             }
 

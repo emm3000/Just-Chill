@@ -45,7 +45,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 - **Text** (`textPrimary`, `textSecondary`, `textTertiary`, `textDisabled`): the ladder is the whole hierarchy. The app's one white surface, a screen's primary button, labels itself in `bg`.
 - **Colour is a datum, never a style.** A hue says something the data said, not something a designer chose: `success` for money in, a status token for a system state, the dot for a category. There is no brand hue to spend.
 - **Status** (`success`, `warning`, `danger`, `info`, `posMuted`, `negMuted`): system state, plus `success` for income. The `*Muted` washes are the ground behind an icon or inside a `Pill`; the readable mark on top is the full-strength token.
-- **Category** (`cat*` tints, `catGraphite` the fallback): an 8dp dot beside the category's name, never an icon tint or a surface. The domain stores a colour *name*; `:feature:report`'s `ReportFormat.kt` maps it to a token, so the palette retunes without a migration.
+- **Category** (`cat*` tints, `catGraphite` the fallback): an 8dp dot beside the category's name, never an icon tint or a surface. The domain stores a colour *name*; `:core:ui`'s `CategoryResolve.kt` maps it to a token through `EmmColors.resolvedColor(colorId)` — the one such map in the app — so the palette retunes without a migration. The colour picker offers `selectableColorIds`, one id per token, and never a hue the dot cannot render.
 
 ### Typography
 

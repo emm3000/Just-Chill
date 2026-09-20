@@ -35,7 +35,7 @@ fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier
     val type = LocalEmmType.current
 
     val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
-    val dotColor: Color = tx.category.resolvedColor.primary
+    val dotColor: Color = colors.resolvedColor(tx.category.colorId)
 
     val baseModifier = modifier
         .fillMaxWidth()
