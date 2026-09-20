@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Person
@@ -32,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -64,13 +64,7 @@ fun LoansScreen(
     ) {
         JcTopBar(
             title = "Préstamos",
-            left = {
-                IconBtn(
-                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
-                    onClick = onBack,
-                    contentDescription = "Volver",
-                )
-            },
+            left = { BackBtn(onClick = onBack) },
             right = {
                 IconBtn(
                     icon = Icons.Outlined.Add,

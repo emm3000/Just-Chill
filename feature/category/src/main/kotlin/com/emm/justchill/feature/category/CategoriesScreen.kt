@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Category
@@ -37,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.DialogAction
 import com.emm.justchill.core.ui.atoms.EmmDialog
@@ -74,13 +74,7 @@ fun CategoriesScreen(
     ) {
         JcTopBar(
             title = "Categorías",
-            left = {
-                IconBtn(
-                    icon = Icons.AutoMirrored.Outlined.ArrowBack,
-                    onClick = onBack,
-                    contentDescription = "Volver",
-                )
-            },
+            left = { BackBtn(onClick = onBack) },
             right = {
                 IconBtn(
                     icon = Icons.Outlined.Add,

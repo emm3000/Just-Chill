@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.CircularProgressIndicator
@@ -20,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -50,9 +50,7 @@ fun LoanDetailScreen(
     ) {
         JcTopBar(
             title = summary?.personName.orEmpty(),
-            left = {
-                IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = onBack, contentDescription = "Volver")
-            },
+            left = { BackBtn(onClick = onBack) },
             right = {
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                     IconBtn(

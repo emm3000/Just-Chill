@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Text
@@ -20,18 +19,19 @@ import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 private val MinActionSlotSize: Dp = 48.dp
 private const val LEFT_SLOT_ID: String = "left"
@@ -45,13 +45,17 @@ fun JcTopBar(
     left: @Composable (() -> Unit)? = null,
     right: @Composable (() -> Unit)? = null,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val barPadding: Dp = spacing.s3
+    val contentColumnGap: Dp = spacing.s4 - barPadding
 
     Layout(
         modifier = modifier
             .fillMaxWidth()
             .height(64.dp)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = barPadding),
         content = {
             if (left != null) {
                 Box(
@@ -64,11 +68,8 @@ fun JcTopBar(
 
             Text(
                 text = title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
+                style = type.titleL,
                 color = colors.textPrimary,
-                textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.layoutId(TITLE_SLOT_ID),
@@ -84,7 +85,7 @@ fun JcTopBar(
             }
         },
         measurePolicy = { measurables: List<Measurable>, constraints: Constraints ->
-            measureTopBar(measurables, constraints)
+            measureTopBar(measurables, constraints, contentColumnGap)
         },
     )
 }
@@ -92,6 +93,7 @@ fun JcTopBar(
 private fun MeasureScope.measureTopBar(
     measurables: List<Measurable>,
     constraints: Constraints,
+    contentColumnGap: Dp,
 ): MeasureResult {
     val barWidth: Int = constraints.maxWidth
     val barHeight: Int = constraints.maxHeight
@@ -110,8 +112,8 @@ private fun MeasureScope.measureTopBar(
         .firstOrNull { it.layoutId == RIGHT_SLOT_ID }
         ?.measure(slotConstraints)
 
-    val sideWidth: Int = maxOf(leftPlaceable?.width ?: 0, rightPlaceable?.width ?: 0)
-    val titleWidth: Int = (barWidth - 2 * sideWidth).coerceAtLeast(0)
+    val titleStart: Int = leftPlaceable?.width ?: contentColumnGap.roundToPx()
+    val titleWidth: Int = (barWidth - titleStart - (rightPlaceable?.width ?: 0)).coerceAtLeast(0)
     val titlePlaceable: Placeable = measurables
         .first { it.layoutId == TITLE_SLOT_ID }
         .measure(
@@ -120,10 +122,7 @@ private fun MeasureScope.measureTopBar(
 
     return layout(barWidth, barHeight) {
         leftPlaceable?.placeRelative(0, (barHeight - leftPlaceable.height) / 2)
-        titlePlaceable.placeRelative(
-            (barWidth - titlePlaceable.width) / 2,
-            (barHeight - titlePlaceable.height) / 2,
-        )
+        titlePlaceable.placeRelative(titleStart, (barHeight - titlePlaceable.height) / 2)
         rightPlaceable?.placeRelative(
             barWidth - rightPlaceable.width,
             (barHeight - rightPlaceable.height) / 2,
@@ -138,9 +137,7 @@ private fun JcTopBarOverflowPreview() {
     EmmTheme {
         JcTopBar(
             title = "Cuidado personal y salud",
-            left = {
-                IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = {}, contentDescription = "Volver")
-            },
+            left = { BackBtn(onClick = {}) },
         )
     }
 }
@@ -150,17 +147,25 @@ private fun JcTopBarOverflowPreview() {
 @Composable
 private fun JcTopBarOverflowWithActionsPreview() {
     EmmTheme {
+        val spacing: EmmSpacing = LocalEmmSpacing.current
         JcTopBar(
             title = "Cuidado personal y salud",
-            left = {
-                IconBtn(icon = Icons.AutoMirrored.Outlined.ArrowBack, onClick = {}, contentDescription = "Volver")
-            },
+            left = { BackBtn(onClick = {}) },
             right = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                     IconBtn(icon = Icons.Outlined.Edit, onClick = {}, contentDescription = "Editar")
                     IconBtn(icon = Icons.Outlined.Delete, onClick = {}, contentDescription = "Eliminar")
                 }
             },
         )
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun JcTopBarWithoutLeftPreview() {
+    EmmTheme {
+        JcTopBar(title = "Préstamos")
     }
 }

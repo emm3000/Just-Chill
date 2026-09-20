@@ -13,8 +13,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,11 +28,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.FrequentComboChip
-import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.UnderlineTextField
@@ -101,13 +99,7 @@ private fun AddEditLoanContent(
         val title = if (state.isEdit) "Editar préstamo" else "Nuevo préstamo"
         JcTopBar(
             title = title,
-            left = {
-                IconBtn(
-                    icon = Icons.Outlined.Close,
-                    onClick = onBack,
-                    contentDescription = "Cerrar",
-                )
-            },
+            left = { BackBtn(onClick = onBack) },
         )
 
         Column(
