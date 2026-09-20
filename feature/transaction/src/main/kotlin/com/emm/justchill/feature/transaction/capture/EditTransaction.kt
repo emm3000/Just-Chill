@@ -167,7 +167,7 @@ private fun EditTransactionContent(
 
             SelectorChip(
                 label = state.categorySelected?.name ?: "—",
-                dotColor = state.categorySelected?.resolvedColor?.primary,
+                dotColor = state.categorySelected?.let { colors.resolvedColor(it.colorId) },
                 onClickLabel = "Cambiar la categoría",
                 onClick = { onIntent(EditTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
                 modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT),
@@ -255,7 +255,7 @@ private fun EditTransactionContent(
             amountCents = state.amount,
             accountName = state.accountSelected?.name,
             categoryName = state.categorySelected?.name,
-            categoryColor = state.categorySelected?.resolvedColor?.primary,
+            categoryColor = state.categorySelected?.let { colors.resolvedColor(it.colorId) },
             onConfirm = { onIntent(EditTransactionIntent.OnDeleteConfirm) },
             onDismiss = { onIntent(EditTransactionIntent.OnDeleteDismiss) },
         )

@@ -18,8 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.ui.category.CategoryColor
+import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.category.IconCatalog
+import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 
@@ -27,7 +28,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 internal fun PreviewChip(
     name: String,
     icon: IconCatalog,
-    color: CategoryColor,
+    colorId: String,
     type: CategoryType,
     modifier: Modifier = Modifier,
 ) {
@@ -56,10 +57,11 @@ internal fun PreviewChip(
             Icon(
                 imageVector = icon.icon,
                 contentDescription = null,
-                tint = color.primary,
+                tint = colors.textSecondary,
                 modifier = Modifier.size(18.dp),
             )
         }
+        CategoryDot(color = colors.resolvedColor(colorId))
         Text(
             text = displayName,
             fontSize = 15.sp,

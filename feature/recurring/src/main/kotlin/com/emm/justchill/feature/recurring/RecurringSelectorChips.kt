@@ -43,7 +43,7 @@ internal fun SelectorChipsRow(
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val categoryDotColor: Color = state.selectedCategory?.resolvedColor?.primary ?: colors.catGraphite
+    val categoryDotColor: Color = colors.resolvedColor(state.selectedCategory?.colorId)
 
     Row(
         modifier = Modifier.fillMaxWidth(),

@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.EmmRowMenu
 import com.emm.justchill.core.ui.atoms.Hairline
-import com.emm.justchill.core.ui.category.findById
+import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 
@@ -94,7 +95,7 @@ internal fun RecurringMovementRow(
                 Spacer(Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     item.categoryColor?.let { colorKey ->
-                        val dotColor = remember(colorKey) { findById(colorKey).primary }
+                        val dotColor: Color = colors.resolvedColor(colorKey)
                         Box(
                             modifier = Modifier
                                 .size(6.dp)

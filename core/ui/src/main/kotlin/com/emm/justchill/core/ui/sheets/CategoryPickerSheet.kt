@@ -316,7 +316,7 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
             horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             modifier = Modifier.weight(1f),
         ) {
-            CategoryDot(color = category.resolvedColor.primary)
+            CategoryDot(color = colors.resolvedColor(category.colorId))
             Text(
                 text = category.name,
                 fontSize = 15.sp,

@@ -43,9 +43,8 @@ import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.AppIconCatalog
 import com.emm.justchill.core.ui.category.SelectableCategory
-import com.emm.justchill.core.ui.category.allColors
-import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.category.resolvedColor
+import com.emm.justchill.core.ui.category.selectableColorIds
 import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.centsToMoney
@@ -54,6 +53,7 @@ import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.sheets.DatePickerSheet
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -202,7 +202,7 @@ private fun AddTransactionScreenContent(
 
             SelectorChip(
                 label = state.categorySelected?.name ?: "—",
-                dotColor = state.categorySelected?.resolvedColor?.primary,
+                dotColor = state.categorySelected?.let { colors.resolvedColor(it.colorId) },
                 onClickLabel = "Cambiar la categoría",
                 onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
                 modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT),
@@ -326,6 +326,7 @@ private fun FrequentCombos(
     onSelect: (FrequentComboUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors: EmmColors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
@@ -338,7 +339,7 @@ private fun FrequentCombos(
             combos.forEach { combo ->
                 FrequentComboChip(
                     label = combo.label,
-                    dotColor = combo.colorId?.let { findById(it).primary },
+                    dotColor = combo.colorId?.let(colors::resolvedColor),
                     onClick = { onSelect(combo) },
                     active = combo.accountId == selectedAccountId && combo.categoryId == selectedCategoryId,
                 )
@@ -359,7 +360,7 @@ private fun AddTransactionPreview() {
                             categoryId = CategoryId("$it"),
                             name = "Categoría $it",
                             iconId = AppIconCatalog.catalog[it].id,
-                            colorId = allColors[it].id,
+                            colorId = selectableColorIds[it],
                             categoryType = CategoryType.Income,
                         ),
                     )
