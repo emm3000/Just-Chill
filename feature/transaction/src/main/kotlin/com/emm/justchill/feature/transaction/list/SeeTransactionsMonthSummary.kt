@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -29,7 +31,9 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -73,7 +77,7 @@ private fun MonthNavigationRow(onIntent: (SeeTransactionsIntent) -> Unit) {
             .fillMaxWidth()
             .padding(start = spacing.s6, end = spacing.s6 - spacing.edgeGiveback(spacing.s5)),
     ) {
-        Eyebrow(text = "Gastaste este mes", modifier = Modifier.weight(1f))
+        Spacer(Modifier.weight(1f))
         MonthChevron(
             icon = Icons.Outlined.ChevronLeft,
             contentDescription = "Mes anterior",
@@ -89,7 +93,7 @@ private fun MonthNavigationRow(onIntent: (SeeTransactionsIntent) -> Unit) {
 
 @Composable
 private fun MonthChevron(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Box(
@@ -110,7 +114,7 @@ private fun MonthChevron(icon: ImageVector, contentDescription: String, onClick:
 
 @Composable
 private fun MonthTotals(summary: MonthSummaryUi) {
-    val type = LocalEmmType.current
+    val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
@@ -119,6 +123,7 @@ private fun MonthTotals(summary: MonthSummaryUi) {
             .padding(start = spacing.s6, end = spacing.s6),
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
+        Eyebrow(text = "Gastaste este mes")
         AmountHero(value = summary.spend.cents / CENTS_PER_SOL, size = type.amountHero.fontSize)
         SecondaryLine(summary = summary)
     }
@@ -126,7 +131,7 @@ private fun MonthTotals(summary: MonthSummaryUi) {
 
 @Composable
 private fun SecondaryLine(summary: MonthSummaryUi) {
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Row(
         modifier = Modifier.padding(top = spacing.s1),
@@ -145,9 +150,9 @@ internal fun balanceTone(net: Money): AmountTone = if (net.cents > 0L) AmountTon
 
 @Composable
 private fun SecondaryAmount(label: String, value: String, tone: AmountTone = AmountTone.Neutral) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val valueColor = if (tone == AmountTone.Pos) colors.success else colors.textSecondary
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val valueColor: Color = if (tone == AmountTone.Pos) colors.success else colors.textSecondary
 
     Text(
         text = buildAnnotatedString {
