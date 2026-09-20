@@ -2,6 +2,7 @@ package com.emm.justchill.core.domain.transaction
 
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.startOfDayDaysAgo
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.math.abs
@@ -19,14 +20,14 @@ class GetFrequentCombosUseCase(
         amount: Money? = null,
     ): List<FrequentCombo> {
         val startInclusive = startOfDayDaysAgo(windowDays, clock, zone)
-        if (amount == null) {
+        if (amount == null || amount == Money.Zero) {
             return transactionStatsRepository.topUsedCombos(type, startInclusive, limit)
         }
-        val occurrences = transactionStatsRepository.comboOccurrences(type, startInclusive)
+        val occurrences: List<ComboOccurrence> = transactionStatsRepository.comboOccurrences(type, startInclusive)
         if (occurrences.isEmpty()) return emptyList()
 
-        val currentHour = clock.now().toLocalDateTime(zone).hour
-        val amountBandRadiusCents = amountBandRadiusCents(amount)
+        val currentHour: Int = clock.now().toLocalDateTime(zone).hour
+        val amountBandRadiusCents: Long = amountBandRadiusCents(amount)
 
         return occurrences
             .groupBy { FrequentCombo(it.accountId, it.categoryId, it.type) }
@@ -53,15 +54,19 @@ class GetFrequentCombosUseCase(
         amountBandRadiusCents: Long,
         currentHour: Int,
     ): Boolean {
+        val occurrenceHour: Int = parseHourOrNull(occurrence.occurredAt) ?: return false
         val withinAmountBand: Boolean = abs(occurrence.amount.cents - typedAmount.cents) <= amountBandRadiusCents
-        val withinHourWindow: Boolean = circularHourDistance(occurrenceHour(occurrence.occurredAt), currentHour) <= HOUR_WINDOW_RADIUS
-        return withinAmountBand && withinHourWindow
+        return withinAmountBand && matchesHourWindow(occurrenceHour, currentHour)
     }
 
     private fun amountBandRadiusCents(amount: Money): Long =
         (amount.cents * AMOUNT_BAND_FRACTION).toLong().coerceAtLeast(AMOUNT_BAND_MIN_CENTS)
 
-    private fun occurrenceHour(occurredAt: String): Int = occurredAt.substring(OCCURRED_AT_HOUR_RANGE).toInt()
+    private fun parseHourOrNull(occurredAt: String): Int? =
+        runCatching { LocalDateTime.parse(occurredAt).hour }.getOrNull()
+
+    private fun matchesHourWindow(occurrenceHour: Int, currentHour: Int): Boolean =
+        circularHourDistance(occurrenceHour, currentHour) <= HOUR_WINDOW_RADIUS
 
     private fun circularHourDistance(a: Int, b: Int): Int {
         val diff: Int = abs(a - b)
@@ -82,6 +87,5 @@ class GetFrequentCombosUseCase(
         const val AMOUNT_BAND_MIN_CENTS = 200L
         const val HOUR_WINDOW_RADIUS = 2
         const val HOURS_IN_DAY = 24
-        val OCCURRED_AT_HOUR_RANGE = 11..12
     }
 }

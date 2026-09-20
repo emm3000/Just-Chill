@@ -287,7 +287,8 @@ FROM transactions
 WHERE categoryId IS NOT NULL
   AND type = :type
   AND occurredAt >= :startInclusive
-  AND deletedAt IS NULL;
+  AND deletedAt IS NULL
+ORDER BY occurredAt;
 
 lastUsedAccountId:
 SELECT accountId
