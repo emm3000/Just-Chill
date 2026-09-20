@@ -3,13 +3,17 @@ package com.emm.justchill.feature.category
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,14 +66,19 @@ private fun ColorSwatch(colorId: String, selected: Boolean, onClick: () -> Unit)
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val ring: Color = if (selected) colors.borderFocus else Color.Transparent
     val label: String = colorLabels[colorId] ?: colorId
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(spacing.s12)
-            .clip(CircleShape)
             .border(SwatchRingWidth, ring, CircleShape)
-            .clickable(role = Role.RadioButton, onClick = onClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.RadioButton,
+                onClick = onClick,
+            )
             .semantics {
                 contentDescription = label
                 this.selected = selected
@@ -79,7 +88,8 @@ private fun ColorSwatch(colorId: String, selected: Boolean, onClick: () -> Unit)
             modifier = Modifier
                 .size(spacing.s6)
                 .clip(CircleShape)
-                .background(colors.resolvedColor(colorId)),
+                .background(colors.resolvedColor(colorId))
+                .indication(interactionSource, ripple()),
         )
     }
 }

@@ -71,7 +71,7 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
 
     val dotColor: Color = colors.resolvedColor(share.colorKey)
 
-    val description = ": ${share.amountFormatted}, ${share.percentage} por ciento del total"
+    val description: String = "${share.name}: ${share.amountFormatted}, ${share.percentage} por ciento del total"
 
     Column(
         modifier = Modifier
