@@ -210,6 +210,36 @@ class AppNavigatorTest {
     }
 
     @Test
+    fun `push can never reach the route the stack is rooted at`() {
+        val homeStack: NavBackStack<NavKey> = NavBackStack(CaptureFormRoute())
+        val homeNavigator = AppNavigator(backStack = homeStack, isReady = { ready })
+        homeNavigator.push(ListRoute)
+
+        homeNavigator.push(CaptureFormRoute())
+
+        assertEquals(
+            listOf<NavKey>(CaptureFormRoute(), ListRoute),
+            homeStack.toList(),
+            "the contains guard finds the home pad at index 0, so every push at it is a silent no-op",
+        )
+    }
+
+    @Test
+    fun `pushToTop reaches the route the stack is rooted at`() {
+        val homeStack: NavBackStack<NavKey> = NavBackStack(CaptureFormRoute())
+        val homeNavigator = AppNavigator(backStack = homeStack, isReady = { ready })
+        homeNavigator.push(ListRoute)
+
+        homeNavigator.pushToTop(CaptureFormRoute())
+
+        assertEquals(
+            listOf<NavKey>(CaptureFormRoute()),
+            homeStack.toList(),
+            "a screen sending the user home has to land on the root the app already holds",
+        )
+    }
+
+    @Test
     fun `pushToTop onto a root of the same type replaces it and leaves one entry`() {
         val homeStack: NavBackStack<NavKey> = NavBackStack(CaptureFormRoute())
         val homeNavigator = AppNavigator(backStack = homeStack, isReady = { ready })
