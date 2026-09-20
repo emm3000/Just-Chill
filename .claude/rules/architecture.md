@@ -104,7 +104,7 @@ MockK never leaks into `src/main` either.
 
 ## Routes and the back stack
 
-`AppRoute` and `BottomBarRoute` are plain interfaces in `:core:ui`'s `core/ui/navigation/AppRoute.kt`, alongside `CaptureRoute : AppRoute`, the marker `AddTransactionRoute` and `EditTransactionRoute` implement. A feature declares its own concrete routes and exports them as `val <feature>Routes: List<KClass<out AppRoute>>`; `RouteSerializationTest` concatenates the nine registries.
+`AppRoute` and `BottomBarRoute` are plain interfaces in `:core:ui`'s `core/ui/navigation/AppRoute.kt`, alongside `CaptureRoute : AppRoute`, the marker `AddTransactionRoute`, `EditTransactionRoute` and `AddEditRecurringMovementRoute` implement. A feature declares its own concrete routes and exports them as `val <feature>Routes: List<KClass<out AppRoute>>`; `RouteSerializationTest` concatenates the nine registries.
 
 - **Every route the host can push is `@Serializable`, fields included.** `rememberNavBackStack` stores each entry by class name and re-resolves it through `Class.forName(name).kotlin.serializer()`, so an unserializable route crashes on process-death restore and nowhere else. Routes are no longer a sealed hierarchy a reflection scan can enumerate: `RouteSerializationTest` (`:androidApp`) concatenates the route registries and asserts its hand-written samples cover exactly that union, then round-trips each sample. A route missing from its registry is never round-tripped.
 - **One door is no door.** A destination reachable through exactly one entry point is unreachable the moment that entry is gated. Gate the content of an entry point, never its existence. Before deleting a row that pushes a route, `rg` the route and confirm a second door exists.

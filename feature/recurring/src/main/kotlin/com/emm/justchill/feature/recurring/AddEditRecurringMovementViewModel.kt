@@ -87,8 +87,6 @@ class AddEditRecurringMovementViewModel(
         }
     }
 
-    // The schema refuses a cross-type (categoryId, type) pair; the screen always asks for the
-    // template's own type, so this guard should never fire.
     private fun attachCreatedCategory(category: SelectableCategory) {
         if (category.categoryType != currentState.type.categoryType) return
         updateState {

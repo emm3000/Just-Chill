@@ -44,7 +44,6 @@ fun EntryProviderScope<NavKey>.recurringEntries(
             onBack = { nav.pop() },
             snackbarHostState = bindings.snackbarHostState,
             onAddNewCategory = { categoryType -> onAddNewCategory(nav, categoryType) },
-            id = key.id,
             vm = vm,
         )
     }

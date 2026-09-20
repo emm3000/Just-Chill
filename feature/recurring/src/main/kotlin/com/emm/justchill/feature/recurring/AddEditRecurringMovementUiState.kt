@@ -26,7 +26,7 @@ data class AddEditRecurringMovementUiState(
     // Null is "Sin categoría", which the save writes as such.
     val categoryId: CategoryId? = null,
     // Bridges the frame between creating a category from this form and the repository flow
-    // re-emitting with it. The catalog's row supersedes it by id, so it can never serve a stale copy.
+    // re-emitting with it.
     val extraCategories: List<SelectableCategory> = emptyList(),
     val openSheet: RecurringSheet? = null,
 ) : UiState {
