@@ -105,5 +105,5 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
 
 // The two chips share a row and not its width: a category name ("Supermercado") is the longest
 // label the form carries, an account is a bank's four letters.
-internal const val ACCOUNT_CHIP_WEIGHT = 1f
-internal const val CATEGORY_CHIP_WEIGHT = 1.6f
+internal const val ACCOUNT_CHIP_WEIGHT: Float = 1f
+internal const val CATEGORY_CHIP_WEIGHT: Float = 1.6f
