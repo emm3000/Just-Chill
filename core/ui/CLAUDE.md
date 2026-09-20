@@ -29,7 +29,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the na
 - `transaction/` holds `TransactionUi` with its `toUi` mapper, the `Catalog` a capture form cuts its lists out of, and `TransactionRow`. `Catalog.Loading` is not an empty `Loaded`; only `loaded` tells the two apart.
 - `sheets/` holds `AccountPickerSheet`, `CategoryPickerSheet` and `DatePickerSheet`, shared by the transaction, recurring and loan forms. A sheet used by one feature stays in that feature's own module — `NoteSheet` is the example.
 - `SelectorChip`, `FrequentComboChip` and the `CategoryDot` they draw are atoms like any other, under `atoms/`.
-- `MonthChevron` is the one month-navigation chevron: a 48dp `rFull` target over a 20dp glyph, its icon and its `"Mes anterior"` / `"Mes siguiente"` description carried by `MonthChevronDirection`. `MonthSelector`'s two variants and the Movimientos month strip all draw it; a second copy is the bug #310 closed.
+- `MonthChevron` is the one month-navigation chevron: a 48dp `rFull` target over a 20dp glyph, its icon and its `"Mes anterior"` / `"Mes siguiente"` description carried by `MonthChevronDirection`; `contentDescription` overrides that label where the same target steps a year, as Reporte's month picker sheet does. `MonthSelector` and the Movimientos month strip draw it; a second copy is the bug #310 closed.
 
 ## MVI base
 

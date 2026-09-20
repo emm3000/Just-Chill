@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.CategoryDotSlot
@@ -22,7 +21,9 @@ import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -30,22 +31,22 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
+    val type: EmmType = LocalEmmType.current
 
-    val amountColor = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
+    val amountColor: Color = if (tx.type == TransactionType.Income) colors.success else colors.textPrimary
     val dotColor: Color = colors.resolvedColor(tx.category.colorId)
 
-    val baseModifier = modifier
+    val baseModifier: Modifier = modifier
         .fillMaxWidth()
         .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-        .padding(horizontal = 24.dp, vertical = 8.dp)
+        .padding(horizontal = spacing.s6, vertical = spacing.s2)
 
     Row(
         modifier = baseModifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         IconTile(icon = tx.category.resolvedIcon, size = IconTileSize.Lg)
 
