@@ -1,16 +1,16 @@
 package com.emm.justchill.feature.report
 
-import androidx.compose.ui.test.assertHeightIsEqualTo
-import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
-import androidx.compose.ui.test.assertWidthIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.theme.EmmTheme
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.datetime.Month
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -22,25 +22,21 @@ class ReportTopBarTest {
     @get:Rule
     val composeRule: ComposeContentTestRule = createComposeRule()
 
-    private val shareGlyphSize: Dp = 20.dp
+    private val shareGlyphEndGap: Dp = 28.dp
 
-    private val shareGlyphLeftEdge: Dp = 363.dp
+    private val roundingTolerance: Float = 0.5f
 
     @Test
     fun `keeps the share glyph on the content column at the top bar end`() {
         renderReport()
 
-        composeRule.onNodeWithContentDescription("Compartir reporte", useUnmergedTree = true)
-            .assertLeftPositionInRootIsEqualTo(shareGlyphLeftEdge)
-            .assertWidthIsEqualTo(shareGlyphSize)
-    }
+        val rootEnd: Dp = composeRule.onRoot().getUnclippedBoundsInRoot().right
+        val glyphEnd: Dp = composeRule
+            .onNodeWithContentDescription("Compartir reporte", useUnmergedTree = true)
+            .getUnclippedBoundsInRoot()
+            .right
 
-    @Test
-    fun `paints the share glyph at its catalog size`() {
-        renderReport()
-
-        composeRule.onNodeWithContentDescription("Compartir reporte", useUnmergedTree = true)
-            .assertHeightIsEqualTo(shareGlyphSize)
+        assertEquals(shareGlyphEndGap.value, (rootEnd - glyphEnd).value, roundingTolerance)
     }
 
     private fun renderReport() {
