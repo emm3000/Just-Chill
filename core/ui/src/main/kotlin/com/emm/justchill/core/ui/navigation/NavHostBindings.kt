@@ -8,7 +8,6 @@ import androidx.navigation3.runtime.NavKey
 @Stable
 class NavHostBindings(
     val backStack: NavBackStack<NavKey>,
-    val startTab: BottomBarRoute,
     val snackbarHostState: SnackbarHostState,
     val showMessage: (String) -> Unit,
     val platform: PlatformHostActions,

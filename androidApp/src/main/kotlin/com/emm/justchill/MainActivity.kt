@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Status + nav bars transparent so the Notion-dark bg (#191919) shows through edge-to-edge.
+        // Status + nav bars transparent so the app's black ground shows through edge-to-edge.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),

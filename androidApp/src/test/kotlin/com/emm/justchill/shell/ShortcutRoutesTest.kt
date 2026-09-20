@@ -136,6 +136,22 @@ class ShortcutRoutesTest {
     }
 
     @Test
+    fun `the bare add-transaction shortcut pushes nothing when the home pad is already on top`() {
+        val shortcut = ShortcutIntent(action = ACTION_ADD_TRANSACTION)
+        assertNull(shortcutRouteToPush(shortcut, firstLaunchSeen = true, currentTop = HOME_ROUTE))
+    }
+
+    @Test
+    fun `a combo shortcut still pushes while the bare home pad is on top`() {
+        val shortcut = ShortcutIntent(action = ACTION_ADD_TRANSACTION, accountId = "account-1")
+        assertEquals(
+            AddTransactionRoute(preselectedAccountId = "account-1"),
+            shortcutRouteToPush(shortcut, firstLaunchSeen = true, currentTop = HOME_ROUTE),
+            "the pad on screen carries no preselect, so the combo is a different route and has to replace it",
+        )
+    }
+
+    @Test
     fun `the add-transaction combo pushes nothing when the identical combo is already on top`() {
         val shortcut = ShortcutIntent(action = ACTION_ADD_TRANSACTION, accountId = "account-1")
         val alreadyOnTop = AddTransactionRoute(preselectedAccountId = "account-1")

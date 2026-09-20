@@ -12,7 +12,6 @@ import androidx.navigation3.runtime.NavKey
 @Stable
 class AppNavigator internal constructor(
     private val backStack: NavBackStack<NavKey>,
-    private val startTab: BottomBarRoute,
     private val isReady: () -> Boolean,
 ) {
 
@@ -35,13 +34,6 @@ class AppNavigator internal constructor(
         if (!isReady()) return
         if (backStack.size <= 1) return
         backStack.removeLastOrNull()
-    }
-
-    fun switchTab(tab: BottomBarRoute) {
-        if (!isReady()) return
-        backStack.clear()
-        backStack.add(startTab)
-        if (tab != startTab) backStack.add(tab)
     }
 
     fun replaceAll(route: AppRoute) {
@@ -83,12 +75,11 @@ class AppNavigator internal constructor(
  * Activity's owner, which stays RESUMED, and only [AppNavigator.push]'s duplicate check survives.
  */
 @Composable
-fun rememberAppNavigator(backStack: NavBackStack<NavKey>, startTab: BottomBarRoute): AppNavigator {
+fun rememberAppNavigator(backStack: NavBackStack<NavKey>): AppNavigator {
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
-    return remember(backStack, startTab, lifecycleOwner) {
+    return remember(backStack, lifecycleOwner) {
         AppNavigator(
             backStack = backStack,
-            startTab = startTab,
             isReady = { lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) },
         )
     }

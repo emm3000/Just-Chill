@@ -21,12 +21,12 @@ Copying this into another module: take the three dependency lines, the propertie
 A `<feature>Entries` body needs no `NavDisplay`. `entryProvider { }` is a plain builder returning `(NavKey) -> NavEntry<NavKey>`, `NavEntry.Content()` is public, and `NavBackStack` has a public `vararg` constructor, so the real entry composes against real stack state:
 
 ```kotlin
-val backStack: NavBackStack<NavKey> = NavBackStack(StartTabRoute, DetailRoute, ManifestoRoute())
+val backStack: NavBackStack<NavKey> = NavBackStack(HomeRoute, DetailRoute, ManifestoRoute())
 val resolveEntry: (NavKey) -> NavEntry<NavKey> = entryProvider { onboardingEntries(bindings, onFirstLaunchSeen) }
 composeRule.setContent { EmmTheme { resolveEntry(backStack.last()).Content() } }
 ```
 
-The assertion is then `backStack.toList()` after the click, so seed enough entries that each navigation verb leaves a different shape — a stack where `pop()` and `replaceAll(startTab)` both land on `[startTab]` cannot tell the two branches apart. `:feature:onboarding`'s `OnboardingEntriesTest` is the worked example.
+The assertion is then `backStack.toList()` after the click, so seed enough entries that each navigation verb leaves a different shape — a stack where `pop()` and `replaceAll(root)` both land on `[root]` cannot tell the two branches apart. `:feature:onboarding`'s `OnboardingEntriesTest` is the worked example.
 
 The caveat: outside a `NavDisplay`, `LocalLifecycleOwner` is the Robolectric host activity, which is always RESUMED, so `AppNavigator.kt:88`'s mid-transition guard is inert under this recipe and only `push`'s duplicate check survives. Harmless for the onboarding tests, which assert the verbs and not the guard, but a suite meant to pin that guard needs a real `NavDisplay` instead.
 

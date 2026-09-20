@@ -22,7 +22,7 @@ fun EntryProviderScope<NavKey>.recurringEntries(
     onAddNewCategory: (AppNavigator, CategoryType) -> Unit,
 ) {
     entry<RecurringMovementsRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         RecurringMovementsEntry(
             onNavigateToAddEdit = { id -> nav.push(AddEditRecurringMovementRoute(id)) },
             onShowError = bindings.showMessage,
@@ -30,7 +30,7 @@ fun EntryProviderScope<NavKey>.recurringEntries(
     }
 
     entry<AddEditRecurringMovementRoute> { key ->
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: AddEditRecurringMovementViewModel = koinViewModel(parameters = { parametersOf(key.id) })
 
         LaunchedEffect(pendingCategory()) {

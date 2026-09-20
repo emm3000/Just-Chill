@@ -14,10 +14,10 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
 | `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
-| `:core:ui` | The MVI base, the navigation vocabulary (`AppRoute`, `BottomBarRoute`, `CaptureRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
+| `:core:ui` | The MVI base, the navigation vocabulary (`AppRoute`, `CaptureRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
 | `:core:testing` | `MainDispatcherRule` and `FakeTodayFlow`, the JVM test fixtures on `:core:domain` alone; wired into feature modules, `:core:ui` and `:androidApp` as `testImplementation`. |
 | `:feature:*` | One screen family: its Compose-free ViewModels, its Compose screens and nav entries, its `@Serializable` routes and its Koin module. |
-| `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, bottom bar, shortcut routes, the SAF host actions), the Koin graph with the cross-cutting modules in `core/di/` and one wiring file per feature, the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, flavors, shortcuts, the session keystore. |
+| `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, entry graph, shortcut routes, the SAF host actions), the Koin graph with the cross-cutting modules in `core/di/` and one wiring file per feature, the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, flavors, shortcuts, the session keystore. |
 
 Allowed dependencies, and nothing else:
 
@@ -78,10 +78,10 @@ Naming lives in `naming.md`. This is the flow. The base class is `mvi/MviViewMod
 - **Effects ride a `Channel`, never a `SharedFlow`.** Collectors are `LaunchedEffect(vm)` inside an entry and die when it is buried; the channel buffers until the next one, a replay-0 `SharedFlow` drops. An effect is a navigation or a transient message; anything the UI keeps rendering (a sheet, a dialog, a focus) is state.
 - **A visibility flag lives in `UiState`, never in `remember` / `rememberSaveable`** (ADR 012). One sheet field per screen: an enum when sheets are mutually exclusive, a `Boolean` when there is one.
 - **A ViewModel never switches dispatcher.** No `withContext` or `Dispatchers.` in a ViewModel; `:core:database` owns its threading.
-- **`launchSafeIn` retries a collector three times (200/400/800 ms), then dies for the ViewModel's life.** It heals lock contention, not a persistent failure; tab ViewModels outlive `switchTab`, so a dead collector stays dead. `stateIn` / `shareIn` upstreams bypass the funnel: today all are fed by `todayFlow()` alone, and a data-backed one has no error door.
+- **`launchSafeIn` retries a collector three times (200/400/800 ms), then dies for the ViewModel's life.** It heals lock contention, not a persistent failure; a ViewModel outlives the frames that feed it, so a dead collector stays dead. `stateIn` / `shareIn` upstreams bypass the funnel: today all are fed by `todayFlow()` alone, and a data-backed one has no error door.
 - **A `when` helper split out of `onIntent` takes a nested sealed sub-interface, never the wide intent type with an `else`** (`onPaymentFormIntent`, `onScreenChromeIntent`): the `else` swallows a new intent forgotten in the helper.
 - **The screen is callback-driven.** `<Feature>Screen` collects `state`, hands `vm::onIntent` down to a private stateless content composable, and consumes effects in a `LaunchedEffect(vm)`. It never touches a repository or a use case.
-- **The entry wires navigation.** `<Feature>Entries.kt` registers `entry<Route>` in `AppNavHost`'s `entryProvider`, obtains an `AppNavigator` with `rememberAppNavigator(bindings.backStack, bindings.startTab)`, and passes host state as lambdas.
+- **The entry wires navigation.** `<Feature>Entries.kt` registers `entry<Route>` in `AppNavHost`'s `entryProvider`, obtains an `AppNavigator` with `rememberAppNavigator(bindings.backStack)`, and passes host state as lambdas.
 - **ViewModels never hold literal UI copy.** A ViewModel emits an enum or another typed value (`AuthEffect.Notify(AuthMessage.ConfirmationLinkResent)`), never a Spanish string; the screen resolves it to text.
 - **Intents describe what the user did**, not what the ViewModel should do. Local UI state with no business meaning (an expanded section) may stay as `remember` inside the composable.
 
@@ -104,13 +104,13 @@ MockK never leaks into `src/main` either.
 
 ## Routes and the back stack
 
-`AppRoute` and `BottomBarRoute` are plain interfaces in `:core:ui`'s `core/ui/navigation/AppRoute.kt`, alongside `CaptureRoute : AppRoute`, the marker `AddTransactionRoute`, `EditTransactionRoute` and `AddEditRecurringMovementRoute` implement. A feature declares its own concrete routes and exports them as `val <feature>Routes: List<KClass<out AppRoute>>`; `RouteSerializationTest` concatenates the nine registries.
+`AppRoute` is a plain interface in `:core:ui`'s `core/ui/navigation/AppRoute.kt`, alongside `CaptureRoute : AppRoute`, the marker `AddTransactionRoute`, `EditTransactionRoute` and `AddEditRecurringMovementRoute` implement. A feature declares its own concrete routes and exports them as `val <feature>Routes: List<KClass<out AppRoute>>`; `RouteSerializationTest` concatenates the nine registries.
 
 - **Every route the host can push is `@Serializable`, fields included.** `rememberNavBackStack` stores each entry by class name and re-resolves it through `Class.forName(name).kotlin.serializer()`, so an unserializable route crashes on process-death restore and nowhere else. Routes are no longer a sealed hierarchy a reflection scan can enumerate: `RouteSerializationTest` (`:androidApp`) concatenates the route registries and asserts its hand-written samples cover exactly that union, then round-trips each sample. A route missing from its registry is never round-tripped.
 - **One door is no door.** A destination reachable through exactly one entry point is unreachable the moment that entry is gated. Gate the content of an entry point, never its existence. Before deleting a row that pushes a route, `rg` the route and confirm a second door exists.
 - **Moving to a route that may already be on the stack uses `AppNavigator.pushToTop`, never `push`.** `push` guards with `backStack.contains(route)`, a duplicate guard that silently does nothing once the target is buried. `pushToTop` pops what sits above and reveals or replaces the route.
 - **`NavEntry.content` closures are cached until the back stack changes.** Host state an entry reads arrives as a `() -> T` accessor, never by value; the result channels in `AppNavHost.kt` (`pendingCategory`, `pendingImportJson`) are the pattern.
-- A route promoted to a tab changes supertype to `BottomBarRoute` and loses its back affordance.
+- **The amount pad is the stack's root** (ADR 017): `AppEntryGraph.kt`'s `HOME_ROUTE` sits at index 0, the menu at index 1, and every other destination above them, so back always walks down to the pad and exits from there. Nothing replaces the root but the manifesto's `replaceAll` on first launch. A screen that must not pop into nothing clears its own state instead of asking for a guard: `AppNavigator.pop()` refuses a stack of one.
 
 ## When a new dependency crosses a layer
 

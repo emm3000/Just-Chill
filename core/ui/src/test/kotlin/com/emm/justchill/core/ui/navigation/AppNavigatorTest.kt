@@ -5,11 +5,9 @@ import androidx.navigation3.runtime.NavKey
 import org.junit.Test
 import kotlin.test.assertEquals
 
-private data object HomeTab : BottomBarRoute
+private data object HomeRoute : AppRoute
 
-private data object AccountsTab : BottomBarRoute
-
-private data object ReportTab : BottomBarRoute
+private data object ReportRoute : AppRoute
 
 private data class CaptureFormRoute(val preselection: String? = null) : CaptureRoute
 
@@ -27,12 +25,11 @@ private data class DeepDetailRoute(val key: String) : AppRoute
 
 class AppNavigatorTest {
 
-    private val rootTab: BottomBarRoute = HomeTab
-    private val backStack: NavBackStack<NavKey> = NavBackStack(rootTab)
+    private val root: AppRoute = HomeRoute
+    private val backStack: NavBackStack<NavKey> = NavBackStack(root)
     private var ready: Boolean = true
     private val navigator = AppNavigator(
         backStack = backStack,
-        startTab = rootTab,
         isReady = { ready },
     )
 
@@ -40,7 +37,7 @@ class AppNavigatorTest {
     fun `push puts the route on top`() {
         navigator.push(CaptureFormRoute())
 
-        assertEquals(listOf<NavKey>(rootTab, CaptureFormRoute()), backStack.toList())
+        assertEquals(listOf<NavKey>(root, CaptureFormRoute()), backStack.toList())
     }
 
     @Test
@@ -49,7 +46,7 @@ class AppNavigatorTest {
         navigator.push(CaptureFormRoute())
 
         assertEquals(
-            listOf<NavKey>(rootTab, CaptureFormRoute()),
+            listOf<NavKey>(root, CaptureFormRoute()),
             backStack.toList(),
             "a double-tapped add button pushed the same key twice: nav3 renders one entry, back needs two presses",
         )
@@ -61,7 +58,7 @@ class AppNavigatorTest {
         navigator.push(CaptureDetailRoute("tx-2"))
 
         assertEquals(
-            listOf<NavKey>(rootTab, CaptureDetailRoute("tx-1"), CaptureDetailRoute("tx-2")),
+            listOf<NavKey>(root, CaptureDetailRoute("tx-1"), CaptureDetailRoute("tx-2")),
             backStack.toList(),
             "the duplicate guard is by value: two different transactions are two legitimate entries",
         )
@@ -102,13 +99,11 @@ class AppNavigatorTest {
 
         ready = false
 
-        navigator.push(ReportTab)
+        navigator.push(ReportRoute)
         assertEquals(frozen, backStack.toList(), "push ran mid-transition")
         navigator.pop()
         assertEquals(frozen, backStack.toList(), "pop ran mid-transition")
-        navigator.switchTab(AccountsTab)
-        assertEquals(frozen, backStack.toList(), "switchTab ran mid-transition")
-        navigator.replaceAll(ReportTab)
+        navigator.replaceAll(ReportRoute)
         assertEquals(frozen, backStack.toList(), "replaceAll ran mid-transition")
         navigator.popToCapture()
         assertEquals(frozen, backStack.toList(), "popToCapture ran mid-transition")
@@ -122,7 +117,7 @@ class AppNavigatorTest {
 
         navigator.pop()
 
-        assertEquals(listOf<NavKey>(rootTab), backStack.toList())
+        assertEquals(listOf<NavKey>(root), backStack.toList())
     }
 
     @Test
@@ -130,28 +125,10 @@ class AppNavigatorTest {
         navigator.pop()
 
         assertEquals(
-            listOf<NavKey>(rootTab),
+            listOf<NavKey>(root),
             backStack.toList(),
             "NavDisplay opens with require(backStack.isNotEmpty()); an empty stack is a crash, not an exit",
         )
-    }
-
-    @Test
-    fun `switchTab roots the stack at the start tab and puts the target on top`() {
-        navigator.push(CaptureFormRoute())
-
-        navigator.switchTab(AccountsTab)
-
-        assertEquals(listOf<NavKey>(rootTab, AccountsTab), backStack.toList())
-    }
-
-    @Test
-    fun `switchTab to the start tab leaves a single entry`() {
-        navigator.push(CaptureFormRoute())
-
-        navigator.switchTab(rootTab)
-
-        assertEquals(listOf<NavKey>(rootTab), backStack.toList())
     }
 
     @Test
@@ -159,9 +136,9 @@ class AppNavigatorTest {
         navigator.push(CaptureFormRoute())
         navigator.push(PickerRoute())
 
-        navigator.replaceAll(ReportTab)
+        navigator.replaceAll(ReportRoute)
 
-        assertEquals(listOf<NavKey>(ReportTab), backStack.toList())
+        assertEquals(listOf<NavKey>(ReportRoute), backStack.toList())
     }
 
     @Test
@@ -171,7 +148,7 @@ class AppNavigatorTest {
 
         navigator.popToCapture()
 
-        assertEquals(listOf<NavKey>(rootTab, CaptureFormRoute()), backStack.toList())
+        assertEquals(listOf<NavKey>(root, CaptureFormRoute()), backStack.toList())
     }
 
     @Test
@@ -184,7 +161,7 @@ class AppNavigatorTest {
         navigator.popToCapture()
 
         assertEquals(
-            listOf<NavKey>(rootTab, CaptureDetailRoute("buried"), ListRoute, CaptureFormRoute()),
+            listOf<NavKey>(root, CaptureDetailRoute("buried"), ListRoute, CaptureFormRoute()),
             backStack.toList(),
             "an unmarked form would have let the picker's return walk down to the buried capture",
         )
@@ -209,7 +186,7 @@ class AppNavigatorTest {
         navigator.pushToTop(DeepRoute)
 
         assertEquals(
-            listOf<NavKey>(rootTab, DeepRoute),
+            listOf<NavKey>(root, DeepRoute),
             backStack.toList(),
             "push's contains guard leaves a buried route buried; a shortcut must still land on it",
         )
@@ -229,7 +206,22 @@ class AppNavigatorTest {
     fun `pushToTop pushes the route when it is nowhere in the stack`() {
         navigator.pushToTop(DeepRoute)
 
-        assertEquals(listOf<NavKey>(rootTab, DeepRoute), backStack.toList())
+        assertEquals(listOf<NavKey>(root, DeepRoute), backStack.toList())
+    }
+
+    @Test
+    fun `pushToTop onto a root of the same type replaces it and leaves one entry`() {
+        val homeStack: NavBackStack<NavKey> = NavBackStack(CaptureFormRoute())
+        val homeNavigator = AppNavigator(backStack = homeStack, isReady = { ready })
+        homeNavigator.push(ListRoute)
+
+        homeNavigator.pushToTop(CaptureFormRoute(preselection = "account-1"))
+
+        assertEquals(
+            listOf<NavKey>(CaptureFormRoute(preselection = "account-1")),
+            homeStack.toList(),
+            "a launcher combo has to land on the home pad carrying its preselect, with nothing left to go back to",
+        )
     }
 
     @Test
@@ -240,7 +232,7 @@ class AppNavigatorTest {
         navigator.pushToTop(CaptureFormRoute(preselection = "account-2"))
 
         assertEquals(
-            listOf<NavKey>(rootTab, CaptureFormRoute(preselection = "account-2")),
+            listOf<NavKey>(root, CaptureFormRoute(preselection = "account-2")),
             backStack.toList(),
             "a different combo replaces the stale one instead of stacking a second CaptureFormRoute",
         )

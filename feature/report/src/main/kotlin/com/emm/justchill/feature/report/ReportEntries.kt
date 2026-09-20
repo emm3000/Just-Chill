@@ -19,7 +19,7 @@ fun EntryProviderScope<NavKey>.reportEntries(
     onAddTransaction: (AppNavigator) -> Unit,
 ) {
     entry<ReportRoute> {
-        val nav: AppNavigator = rememberAppNavigator(bindings.backStack, bindings.startTab)
+        val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         ReportEntry(
             onAddTransaction = { onAddTransaction(nav) },
             onShareText = bindings.platform.onShareText,
