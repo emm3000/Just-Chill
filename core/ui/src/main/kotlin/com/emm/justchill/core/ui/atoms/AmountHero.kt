@@ -7,9 +7,11 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
@@ -31,13 +33,19 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.format.INCOME_SIGN
 import com.emm.justchill.core.ui.format.NumberFormatEs
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 import kotlin.math.abs
@@ -168,5 +176,24 @@ private fun BlinkingCaret(color: Color) {
                 .clip(RoundedCornerShape(2.dp))
                 .background(color),
         )
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun AmountHeroPreview() {
+    EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
+        val spacing: EmmSpacing = LocalEmmSpacing.current
+        Column(
+            verticalArrangement = Arrangement.spacedBy(spacing.s4),
+            modifier = Modifier
+                .background(colors.bg)
+                .padding(spacing.s4),
+        ) {
+            AmountHero(value = 1234.5)
+            AmountHero(value = 980.0, tone = AmountTone.Pos, signed = true)
+        }
     }
 }

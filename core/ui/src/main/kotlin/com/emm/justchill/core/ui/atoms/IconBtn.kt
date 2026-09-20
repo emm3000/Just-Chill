@@ -1,11 +1,18 @@
 package com.emm.justchill.core.ui.atoms
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,8 +21,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 private const val DISABLED_ALPHA = 0.35f
 
@@ -64,5 +77,29 @@ fun IconBtn(
             tint = iconColor,
             modifier = Modifier.size(20.dp),
         )
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun IconBtnPreview() {
+    EmmTheme {
+        val colors: EmmColors = LocalEmmColors.current
+        val spacing: EmmSpacing = LocalEmmSpacing.current
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+            modifier = Modifier
+                .background(colors.bg)
+                .padding(spacing.s4),
+        ) {
+            IconBtn(icon = Icons.Outlined.Close, onClick = {}, contentDescription = "Cerrar")
+            IconBtn(
+                icon = Icons.Outlined.Delete,
+                onClick = {},
+                contentDescription = "Eliminar",
+                tone = IconBtnTone.Danger,
+            )
+        }
     }
 }

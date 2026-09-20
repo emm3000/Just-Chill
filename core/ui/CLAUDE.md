@@ -11,6 +11,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the na
 - `compose_stability.conf` declares `com.emm.justchill.**` stable, so an atom taking a `:core:domain` `Money` still skips recomposition.
 - A new or rebuilt dialog is an `EmmDialog`, never a hand-rolled `Dialog` or an `AlertDialog`; recurring, account and transaction still carry raw ones and are the queue, not the precedent. A write in flight passes `inFlightDialogProperties(isInFlight)` and `actionsEnabled = false` together, so the scrim, the back press and both actions stop as one.
 - `OutlinedCta` takes a `leading` and a `trailing` slot, both defaulted to none; `Loading` replaces `leading` with the spinner and drops `trailing`. `CtaHeight` and `titleM` are fixed for every CTA: a caller that wants a taller button or a bigger label is asking for a second CTA identity, which ADR 017 refuses.
+- Every file in `atoms/` that defines a public composable carries a `@Preview` wrapped in `EmmTheme` (#185). The five without one — `AmountTone.kt`, `CtaTone.kt`, `IconBtnTone.kt`, `PillTone.kt` and `FilteredTextCursor.kt` — declare a tone enum or a `TextFieldValue` helper and no composable at all; a new atom file is expected to ship its preview with it.
 - `components/` holds the legacy `EmmButton`, `EmmCard`, `EmmListItem`, `EmmTextInput` widgets. They are not the design system and no new screen reaches for them.
 
 ## Pending recurring movements
