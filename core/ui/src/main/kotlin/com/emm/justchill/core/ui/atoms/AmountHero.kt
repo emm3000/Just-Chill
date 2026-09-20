@@ -51,7 +51,7 @@ import kotlin.math.roundToLong
 fun AmountHero(
     value: Double,
     modifier: Modifier = Modifier,
-    size: TextUnit = LocalEmmType.current.amountHero.fontSize,
+    size: TextUnit = LocalEmmType.current.amountL.fontSize,
     tone: AmountTone = AmountTone.Neutral,
     withDecimals: Boolean = true,
     prefix: String = "S/",
