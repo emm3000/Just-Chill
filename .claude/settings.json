@@ -114,7 +114,6 @@
       "Bash(gh release delete:*)",
       "Bash(gh secret:*)",
       "Bash(gh auth logout:*)",
-      "Bash(gh pr close:*)",
       "Bash(npm publish:*)",
       "Bash(yarn publish:*)",
       "Bash(firebase deploy:*)",
