@@ -33,7 +33,7 @@ fun EntryProviderScope<NavKey>.seeTransactionsEntries(bindings: NavHostBindings)
             onEditTransaction = { id ->
                 nav.push(EditTransactionRoute(id))
             },
-            onAddTransaction = { nav.push(AddTransactionRoute()) },
+            onAddTransaction = { nav.pushToTop(AddTransactionRoute()) },
             vm = vm,
         )
     }

@@ -18,7 +18,8 @@ class AppNavigator internal constructor(
     /**
      * Refuses [route] anywhere in the stack, not only on top: equal keys share a `contentKey`, and
      * both the saveable-state and the view-model decorators key on it — the second entry would open
-     * holding the first one's content, saveable state and `ViewModelStore`.
+     * holding the first one's content, saveable state and `ViewModelStore`. The stack's root is
+     * always in the stack, so anything sending the user home takes [pushToTop] instead.
      */
     fun push(route: AppRoute) {
         if (!isReady()) return
