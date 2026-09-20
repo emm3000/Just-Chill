@@ -12,7 +12,7 @@ import org.koin.dsl.module
 
 val experiencesModule = module {
 
-    single<ExperiencesDataSource> { ExperiencesLocalDataSource(get(), get()) }
+    single<ExperiencesDataSource> { ExperiencesLocalDataSource(get()) }
     single<ExperiencesRepository> { DefaultExperiencesRepository(get()) }
 
     factoryOf(::ExperiencesReader)

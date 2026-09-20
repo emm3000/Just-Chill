@@ -2,10 +2,10 @@ package com.emm.justchill
 
 import android.app.Application
 import android.util.Log
-import com.emm.justchill.core.DispatchersProvider
 import com.emm.justchill.core.androidPlatformModule
 import com.emm.justchill.core.appModules
 import com.emm.justchill.core.bootstrapAppGraph
+import com.emm.justchill.core.ioDispatcher
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.session.KeystoreSessionManager
 import com.emm.justchill.core.shortcuts.ShortcutPublisher
@@ -50,7 +50,7 @@ class EmmApp : Application() {
 
     private fun sweepLegacySession(koin: Koin) {
         startupScope.launch {
-            withContext(koin.get<DispatchersProvider>().ioDispatcher) {
+            withContext(ioDispatcher) {
                 koin.get<KeystoreSessionManager>().sweepLegacySession()
             }
         }
@@ -58,7 +58,7 @@ class EmmApp : Application() {
 
     private fun publishShortcuts(koin: Koin) {
         startupScope.launch {
-            withContext(koin.get<DispatchersProvider>().ioDispatcher) {
+            withContext(ioDispatcher) {
                 koin.get<ShortcutPublisher>().publish()
             }
         }
