@@ -49,6 +49,11 @@ A Transaction carrying no Category. It is a normal state, not an error.
 _Avoid_: other, misc, unfiled
 _UI term_: "Sin categoría"
 
+**Amount pad**:
+Where a Transaction is typed and the app opens: the Amount first, with the type, Account,
+Category and date taking defaults the user can override before saving.
+_Avoid_: calculator, add screen, entry form, capture form
+
 **Frequent combo**:
 An Account, a Category and a Transaction type the user records together often, surfaced as a
 shortcut into the amount pad.
