@@ -137,8 +137,6 @@ class AddTransactionViewModel(
     private fun loadFrequentUsage(query: ComboQuery): Flow<FrequentUsage> = flow {
         val type: TransactionType = query.type
         val categoryIds: List<String> = loadOrNull { getTopUsedCategoryIds(type) }.orEmpty().map { it.value }
-        // A re-rank of the same type answers over the combos already on screen; only a type switch
-        // empties the row, and it must.
         val settled: List<FrequentCombo> = currentState.frequentUsage
             ?.takeIf { it.loadedFor == type }
             ?.combos
