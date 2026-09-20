@@ -1,5 +1,9 @@
 package com.emm.justchill.feature.onboarding
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -60,6 +64,20 @@ class ManifestoScreenTest {
     }
 
     @Test
+    fun `announces the first launch call to action as a button`() {
+        renderManifesto(isRevisit = false)
+
+        composeRule.onNodeWithText("Empezar").assert(isButton())
+    }
+
+    @Test
+    fun `announces the revisit call to action as a button`() {
+        renderManifesto(isRevisit = true)
+
+        composeRule.onNodeWithText("Volver").assert(isButton())
+    }
+
+    @Test
     fun `renders the manifesto copy on the first launch branch`() {
         renderManifesto(isRevisit = false)
 
@@ -72,6 +90,9 @@ class ManifestoScreenTest {
 
         composeRule.onNodeWithText("Solo tú, tu plata,\ny la verdad.").assertExists()
     }
+
+    private fun isButton(): SemanticsMatcher =
+        SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
 
     private fun renderManifesto(isRevisit: Boolean) {
         composeRule.setContent {

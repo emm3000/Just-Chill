@@ -10,6 +10,7 @@ The UI vocabulary every feature shares (ADR 015): the MVI base in `mvi/`, the na
 - The Inter and IBM Plex Mono faces are this module's own resources under `src/main/res/font/`, reached through `com.emm.justchill.core.ui.R`. `EmmType` is the only file that touches `R`.
 - `compose_stability.conf` declares `com.emm.justchill.**` stable, so an atom taking a `:core:domain` `Money` still skips recomposition.
 - A new or rebuilt dialog is an `EmmDialog`, never a hand-rolled `Dialog` or an `AlertDialog`; recurring, account and transaction still carry raw ones and are the queue, not the precedent. A write in flight passes `inFlightDialogProperties(isInFlight)` and `actionsEnabled = false` together, so the scrim, the back press and both actions stop as one.
+- `OutlinedCta` takes a `leading` and a `trailing` slot, both defaulted to none; `Loading` replaces `leading` with the spinner and drops `trailing`. `CtaHeight` and `titleM` are fixed for every CTA: a caller that wants a taller button or a bigger label is asking for a second CTA identity, which ADR 017 refuses.
 - `components/` holds the legacy `EmmButton`, `EmmCard`, `EmmListItem`, `EmmTextInput` widgets. They are not the design system and no new screen reaches for them.
 
 ## Pending recurring movements
