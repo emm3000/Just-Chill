@@ -197,9 +197,9 @@ private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, mo
     val radii = LocalEmmRadii.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    val bg = if (primary) colors.textPrimary else androidx.compose.ui.graphics.Color.Transparent
+    val bg: Color = if (primary) colors.textPrimary else Color.Transparent
     val fg = if (primary) colors.bg else colors.textPrimary
-    val borderColor: Color = if (primary) colors.borderFocus else colors.border
+    val borderColor: Color = if (primary) bg else colors.border
 
     Box(
         contentAlignment = Alignment.Center,
