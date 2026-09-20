@@ -38,13 +38,6 @@ class DefaultAuthRepository(private val client: SupabaseClient) : AuthRepository
             .map { it.toDomain() }
             .flowOn(ioDispatcher)
 
-    // Postgrest resolves the request JWT synchronously from auth.sessionStatus.value, which is
-    // populated asynchronously while the session loads. A call fired before that read settles
-    // attaches no token and is silently downgraded to the anon key (HTTP 403 under RLS).
-    override suspend fun awaitSessionInitialization(): Unit = withContext(ioDispatcher) {
-        client.auth.awaitInitialization()
-    }
-
     override suspend fun signIn(email: String, password: String): AuthUser = authCall {
         client.auth.signInWith(Email) {
             this.email = email
