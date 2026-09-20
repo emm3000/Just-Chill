@@ -43,7 +43,7 @@ fun JcTopBar(
     modifier: Modifier = Modifier,
     left: @Composable (() -> Unit)? = null,
     right: @Composable (() -> Unit)? = null,
-    rightArtwork: Dp = LocalEmmSpacing.current.s5,
+    rightArtwork: Dp = LocalEmmSpacing.current.s12,
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current

@@ -42,14 +42,11 @@ private val SummaryDividerHeight: Dp = 36.dp
 
 @Composable
 internal fun AccountsHeader(state: AccountsUiState, addAccount: () -> Unit, onBack: () -> Unit) {
-    val spacing = LocalEmmSpacing.current
-
     Column(modifier = Modifier.fillMaxWidth()) {
         JcTopBar(
             title = "Cuentas",
             left = { BackBtn(onClick = onBack) },
             right = { NewAccountButton(onClick = addAccount) },
-            rightArtwork = spacing.s12,
         )
 
         MonthSummaryStrip(state = state)
