@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
@@ -22,12 +21,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
+import com.emm.justchill.core.ui.NumpadSign
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
@@ -43,8 +46,10 @@ import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.allColors
 import com.emm.justchill.core.ui.category.findById
 import com.emm.justchill.core.ui.category.resolvedColor
+import com.emm.justchill.core.ui.format.balanceFormatted
+import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.centsToSoles
-import com.emm.justchill.core.ui.format.formatCentsForDisplay
+import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.sheets.DatePickerSheet
@@ -56,7 +61,6 @@ import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.components.ACCOUNT_CHIP_WEIGHT
 import com.emm.justchill.feature.transaction.capture.components.CATEGORY_CHIP_WEIGHT
 import com.emm.justchill.feature.transaction.capture.components.FormMetaRow
-import com.emm.justchill.feature.transaction.capture.components.SignToggle
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -67,8 +71,29 @@ private fun ctaInteraction(state: AddTransactionUiState): CtaInteraction = when 
     else -> CtaInteraction.Disabled
 }
 
-private data class CtaContent(val label: String, val sublabel: String?)
-private data class TransactionKindContent(val amountTone: AmountTone, val ctaLabel: String)
+private data class TransactionKindContent(
+    val amountTone: AmountTone,
+    val ctaLabel: String,
+    val signDescription: String,
+    val toggledType: TransactionType,
+    val describeAmount: (Money) -> String,
+)
+
+private val SpendKind = TransactionKindContent(
+    amountTone = AmountTone.Neutral,
+    ctaLabel = "Anotar gasto",
+    signDescription = "Cambiar a ingreso",
+    toggledType = TransactionType.Income,
+    describeAmount = { money -> "Gasto de ${money.balanceFormatted()}" },
+)
+
+private val IncomeKind = TransactionKindContent(
+    amountTone = AmountTone.Pos,
+    ctaLabel = "Anotar ingreso",
+    signDescription = "Cambiar a gasto",
+    toggledType = TransactionType.Spend,
+    describeAmount = { money -> "Ingreso de ${money.positiveMoneyFormatted()}" },
+)
 
 @Composable
 fun AddTransactionScreen(
@@ -118,18 +143,10 @@ private fun AddTransactionScreenContent(
     val isSpend = state.transactionType == TransactionType.Spend
     val noAccounts = state.hasNoAccounts
 
-    val ctaAmount = remember(state.amount) {
-        "S/ ${formatCentsForDisplay(state.amount)}"
-    }
-    val kind = if (isSpend) {
-        TransactionKindContent(amountTone = AmountTone.Neutral, ctaLabel = "Anotar gasto")
-    } else {
-        TransactionKindContent(amountTone = AmountTone.Pos, ctaLabel = "Anotar ingreso")
-    }
-    val cta = if (noAccounts) {
-        CtaContent(label = "Crea una cuenta primero", sublabel = null)
-    } else {
-        CtaContent(label = kind.ctaLabel, sublabel = ctaAmount)
+    val kind: TransactionKindContent = if (isSpend) SpendKind else IncomeKind
+    val ctaLabel: String = if (noAccounts) "Crea una cuenta primero" else kind.ctaLabel
+    val amountDescription: String = remember(state.amount, kind) {
+        kind.describeAmount(centsToMoney(state.amount))
     }
 
     Column(
@@ -137,25 +154,22 @@ private fun AddTransactionScreenContent(
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        FormHeader(
-            isSpend = isSpend,
-            onClose = popBackStack,
-            onIncomeClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income)) },
-            onSpendClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend)) },
-        )
+        FormHeader(onClose = popBackStack)
 
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s6)
-                .padding(top = spacing.s8, bottom = spacing.s6),
+                .padding(top = spacing.s8, bottom = spacing.s6)
+                .clearAndSetSemantics { contentDescription = amountDescription },
         ) {
             AmountHero(
                 value = centsToSoles(state.amount),
-                size = type.amountL.fontSize,
+                size = type.amountHero.fontSize,
                 tone = kind.amountTone,
                 showCaret = true,
+                signed = true,
             )
         }
 
@@ -232,6 +246,11 @@ private fun AddTransactionScreenContent(
                 val newAmount = state.amount.dropLast(1)
                 onIntent(AddTransactionIntent.OnAmountChange(newAmount))
             },
+            sign = NumpadSign(
+                tone = kind.amountTone,
+                contentDescription = kind.signDescription,
+                onClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(kind.toggledType)) },
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s4)
@@ -239,9 +258,7 @@ private fun AddTransactionScreenContent(
         )
 
         StickyCTA(
-            label = cta.label,
-            sublabel = cta.sublabel,
-            inlineSublabel = cta.sublabel != null,
+            label = ctaLabel,
             interaction = ctaInteraction(state),
             onClick = { onIntent(AddTransactionIntent.OnSave) },
         )
@@ -286,7 +303,7 @@ private fun AddTransactionScreenContent(
 }
 
 @Composable
-private fun FormHeader(isSpend: Boolean, onClose: () -> Unit, onIncomeClick: () -> Unit, onSpendClick: () -> Unit) {
+private fun FormHeader(onClose: () -> Unit) {
     val spacing = LocalEmmSpacing.current
 
     Row(
@@ -294,12 +311,8 @@ private fun FormHeader(isSpend: Boolean, onClose: () -> Unit, onIncomeClick: () 
             .fillMaxWidth()
             .padding(horizontal = spacing.s4, vertical = spacing.s2),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         IconBtn(icon = Icons.Outlined.Close, onClick = onClose, contentDescription = "Cerrar")
-        SignToggle(isSpend = isSpend, onIncomeClick = onIncomeClick, onSpendClick = onSpendClick)
-        // The pill is centred by what balances the close button, so the empty side keeps its width.
-        Spacer(Modifier.size(spacing.s12))
     }
 }
 

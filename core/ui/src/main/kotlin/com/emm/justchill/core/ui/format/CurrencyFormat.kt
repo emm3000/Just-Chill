@@ -4,7 +4,9 @@ import com.emm.justchill.core.domain.shared.Money
 
 private const val CURRENCY_SYMBOL = "S/"
 
-fun formatIncome(value: String): String = "+$CURRENCY_SYMBOL $value"
+internal const val INCOME_SIGN = "+"
+
+fun formatIncome(value: String): String = "$INCOME_SIGN$CURRENCY_SYMBOL $value"
 
 fun formatExpense(value: String): String = "−$CURRENCY_SYMBOL $value"
 

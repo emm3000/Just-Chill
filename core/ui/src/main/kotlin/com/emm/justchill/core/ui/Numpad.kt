@@ -20,23 +20,42 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.color
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 
+data class NumpadSign(val tone: AmountTone, val contentDescription: String, val onClick: () -> Unit)
+
 @Composable
-fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () -> Unit, modifier: Modifier = Modifier) {
+fun Numpad(
+    onDigit: (Char) -> Unit,
+    onDoubleZero: () -> Unit,
+    onBackspace: () -> Unit,
+    modifier: Modifier = Modifier,
+    sign: NumpadSign? = null,
+) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
 
-    val rows = listOf(
+    val bottomRow: List<NumKey> = buildList {
+        if (sign != null) add(NumKey.Sign(sign))
+        add(NumKey.DoubleZero)
+        add(NumKey.Digit('0'))
+        add(NumKey.Backspace)
+    }
+
+    val rows: List<List<NumKey>> = listOf(
         listOf(NumKey.Digit('1'), NumKey.Digit('2'), NumKey.Digit('3')),
         listOf(NumKey.Digit('4'), NumKey.Digit('5'), NumKey.Digit('6')),
         listOf(NumKey.Digit('7'), NumKey.Digit('8'), NumKey.Digit('9')),
-        listOf(NumKey.DoubleZero, NumKey.Digit('0'), NumKey.Backspace),
+        bottomRow,
     )
 
     Column(
@@ -51,7 +70,7 @@ fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () ->
                 row.forEach { key ->
                     // A digit is the default action and reads as the ground; the keys that edit
                     // what is already typed step forward off it.
-                    val isEditingKey = key is NumKey.DoubleZero || key is NumKey.Backspace
+                    val isEditingKey = key !is NumKey.Digit
                     val bgColor = if (isEditingKey) colors.surface1 else Color.Transparent
 
                     Box(
@@ -67,31 +86,14 @@ fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () ->
                                     is NumKey.Digit -> onDigit(key.ch)
                                     NumKey.DoubleZero -> onDoubleZero()
                                     NumKey.Backspace -> onBackspace()
+                                    is NumKey.Sign -> key.sign.onClick()
                                 }
                             },
                     ) {
                         when (key) {
-                            is NumKey.Digit -> {
-                                Text(
-                                    text = key.ch.toString(),
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.W500,
-                                    fontFamily = PlexMonoFontFamily,
-                                    color = colors.textPrimary,
-                                    letterSpacing = (-0.44).sp,
-                                )
-                            }
+                            is NumKey.Digit -> KeyGlyph(text = key.ch.toString(), color = colors.textPrimary)
 
-                            NumKey.DoubleZero -> {
-                                Text(
-                                    text = "00",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.W500,
-                                    fontFamily = PlexMonoFontFamily,
-                                    color = colors.textPrimary,
-                                    letterSpacing = (-0.44).sp,
-                                )
-                            }
+                            NumKey.DoubleZero -> KeyGlyph(text = "00", color = colors.textPrimary)
 
                             NumKey.Backspace -> {
                                 Icon(
@@ -99,6 +101,16 @@ fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () ->
                                     contentDescription = "Borrar",
                                     tint = colors.textSecondary,
                                     modifier = Modifier.size(18.dp),
+                                )
+                            }
+
+                            is NumKey.Sign -> {
+                                KeyGlyph(
+                                    text = SIGN_KEY_GLYPH,
+                                    color = key.sign.tone.color(colors),
+                                    modifier = Modifier.clearAndSetSemantics {
+                                        contentDescription = key.sign.contentDescription
+                                    },
                                 )
                             }
                         }
@@ -109,8 +121,24 @@ fun Numpad(onDigit: (Char) -> Unit, onDoubleZero: () -> Unit, onBackspace: () ->
     }
 }
 
+@Composable
+private fun KeyGlyph(text: String, color: Color, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.W500,
+        fontFamily = PlexMonoFontFamily,
+        color = color,
+        letterSpacing = (-0.44).sp,
+        modifier = modifier,
+    )
+}
+
+private const val SIGN_KEY_GLYPH = "±"
+
 private sealed interface NumKey {
     data class Digit(val ch: Char) : NumKey
     data object DoubleZero : NumKey
     data object Backspace : NumKey
+    data class Sign(val sign: NumpadSign) : NumKey
 }
