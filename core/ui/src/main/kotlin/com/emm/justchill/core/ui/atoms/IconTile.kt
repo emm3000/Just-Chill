@@ -31,7 +31,12 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 enum class IconTileSize { Sm, Md, Lg }
 
 @Composable
-fun IconTile(icon: ImageVector, modifier: Modifier = Modifier, size: IconTileSize = IconTileSize.Md) {
+fun IconTile(
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    size: IconTileSize = IconTileSize.Md,
+    enabled: Boolean = true,
+) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val geometry: IconTileGeometry = when (size) {
@@ -50,7 +55,7 @@ fun IconTile(icon: ImageVector, modifier: Modifier = Modifier, size: IconTileSiz
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = colors.textSecondary,
+            tint = if (enabled) colors.textSecondary else colors.textTertiary,
             modifier = Modifier.size(geometry.glyphSize),
         )
     }
@@ -83,6 +88,7 @@ private fun IconTilePreview() {
             IconTile(icon = Icons.Outlined.ShoppingCart, size = IconTileSize.Sm)
             IconTile(icon = Icons.Outlined.ShoppingCart, size = IconTileSize.Md)
             IconTile(icon = Icons.Outlined.ShoppingCart, size = IconTileSize.Lg)
+            IconTile(icon = Icons.Outlined.ShoppingCart, size = IconTileSize.Lg, enabled = false)
         }
     }
 }

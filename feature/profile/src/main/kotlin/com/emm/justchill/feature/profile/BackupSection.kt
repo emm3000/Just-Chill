@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.CloudSync
@@ -13,26 +12,21 @@ import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.shared.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.FilledCta
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-
-// A progress stroke is not a hairline; 2dp keeps the 16dp spinner legible and no EmmSpacing step
-// is 2dp (same constant as core/ui's StickyCTA.kt CtaSpinnerStroke).
-private val BackupSpinnerStroke: Dp = 2.dp
 
 @Composable
 internal fun BackupSection(
@@ -137,10 +131,10 @@ private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
 
 @Composable
 private fun BackupLocalOnlyNote() {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
+    val radii: EmmRadii = LocalEmmRadii.current
     Text(
         text = BACKUP_LOCAL_ONLY_WARNING,
         style = type.bodyM,
@@ -155,7 +149,7 @@ private fun BackupLocalOnlyNote() {
 
 @Composable
 private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     Column(
@@ -175,8 +169,7 @@ private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
 
 @Composable
 private fun LastBackupRow(row: BackupRowUi) {
-    val colors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
     val metaColor: Color? = when (row.severity()) {
         BackupRowSeverity.Normal -> null
         BackupRowSeverity.Warning -> colors.warning
@@ -189,14 +182,6 @@ private fun LastBackupRow(row: BackupRowUi) {
         metaIsPrimary = true,
         metaColor = metaColor,
         onClick = null,
-        trailing = {
-            if (row is BackupRowUi.BackingUp) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(spacing.s4),
-                    strokeWidth = BackupSpinnerStroke,
-                    color = colors.textTertiary,
-                )
-            }
-        },
+        trailing = {},
     )
 }
