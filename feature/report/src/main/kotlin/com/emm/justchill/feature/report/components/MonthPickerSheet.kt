@@ -34,7 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.atoms.MonthChevron
 import com.emm.justchill.core.ui.atoms.MonthChevronDirection
@@ -56,7 +55,6 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
     val type: EmmType = LocalEmmType.current
     val radii: EmmRadii = LocalEmmRadii.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val hairline: Dp = spacing.s1 / 4
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var displayYear by rememberSaveable { mutableIntStateOf(current.year) }
@@ -97,7 +95,7 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
                         .size(spacing.s8)
                         .clip(CircleShape)
                         .background(colors.surface1)
-                        .border(hairline, colors.border, CircleShape)
+                        .border(spacing.hairline, colors.border, CircleShape)
                         .indication(closeInteraction, ripple()),
                 ) {
                     Icon(
@@ -150,7 +148,7 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
                         .height(spacing.s12)
                         .clip(radii.rM)
                         .border(
-                            width = hairline,
+                            width = spacing.hairline,
                             color = if (isActive) colors.borderFocus else colors.border,
                             shape = radii.rM,
                         )

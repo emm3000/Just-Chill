@@ -37,7 +37,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 2. **Negative space is a component.** Whitespace has a name (`EmmSpacing`), a size and a reason. Crowding is a design failure.
 3. **Hierarchy through type and tone, never through hue.** Emphasis is a step down the text ladder (`textPrimary` → `textSecondary` → `textTertiary`) or a change of size and weight. Hue is never decoration: `success`, the status tokens, the category dot, nothing else.
 4. **Positive is tinted; negative stays monochrome.** An income amount takes `success`; an expense stays `textPrimary`, never red. `danger` means destructive or broken, not "money leaving". A signed net or balance aggregate (a month net, a total owed) follows the same rule: positive takes `+` and `success`, zero or negative stays monochrome. A magnitude under its own label ("Por cobrar", "Entran") is not a net and keeps the unsigned income/expense semantics. A new net or balance routes its sign and tint through `Money.positiveMoneyFormatted()` (`:core:ui`) and `AmountTone.color()` (`:core:ui`'s `core/ui/atoms/AmountTone.kt`); an inline `if` there reopens the monochrome-positive bug.
-5. **Hairline over surface.** Rows sit on `bg` and separate with space or a 1dp `border` hairline, never by being lifted onto a lighter ground. No card, no elevation shadow; keep it that way.
+5. **Hairline over surface.** Rows sit on `bg` and separate with space or a `border` hairline at `spacing.hairline`, never by being lifted onto a lighter ground. No card, no elevation shadow; keep it that way.
 
 ### Colour
 
@@ -56,16 +56,16 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 
 ### Spacing, radii, elevation, icons
 
-- Base unit 4dp: `EmmSpacing` `s0`…`s12`. Screen horizontal padding `s4`, never less; `s6` between sections of distinct purpose.
+- Base unit 4dp: `EmmSpacing` `s0`…`s16`, plus `hairline`, the one sub-unit value, for every border, rule and selected ring. Screen horizontal padding `s4`, never less; `s6` between sections of distinct purpose.
 - Touch targets are 48×48dp, non-negotiable. A child of a fixed-height row is not 48dp by inheritance: `Alignment.CenterVertically` measures at intrinsic height, so a clickable inside a 48dp band carries `fillMaxHeight()` itself. A 48dp header target keeps its glyph on the rows' column by giving the padding back at the edge, never by shrinking the target; the giveback is `EmmSpacing.edgeGiveback(artwork)` in `core/ui/theme/EdgeGiveback.kt`, never a per-module copy of `(s12 - artwork) / 2`.
 - `EmmRadii` `r0`…`rXXL`, `rLTop` for sheet tops, `rFull` for circles. Default to the smallest radius that reads right. No shadows: a modal that must read as "above" gets `surface1`, a hairline and rounded top corners.
 - `Icons.Outlined.*`; filled only when the icon represents a state. 24dp standard, 20dp inline with body text, 32dp rare. An icon is `textSecondary` or `textTertiary`, never tinted: an account shows its type's icon in grey. Never a brand logo or a bank's registered colours. The icon and label maps stay in `:feature:account`'s `AccountPalette.kt`.
 
 ### Component invariants
 
-- There is no card. Rows sit directly on `bg`; a group is separated by space or a hairline and named by a header above it.
+- There is no card. Rows sit directly on `bg`; a group is separated by space or a `spacing.hairline` rule and named by a header above it.
 - Text inputs are underline-only (`UnderlineTextField`): `border` at rest, `borderFocus` on focus, `danger` on error with the helper text matching.
-- `borderFocus` is the **only** selected or focused boundary, for a pill, chip, tile or day cell as much as for an input underline: a selected control keeps its 1dp ring and brightens it, never `textPrimary` (#282). A hand-rolled `if (selected) textPrimary else border` is the bug this rule closes — a white ring is a second high-contrast element beside the CTA. A control whose selected state is a white *fill* draws no ring against it.
+- `borderFocus` is the **only** selected or focused boundary, for a pill, chip, tile or day cell as much as for an input underline: a selected control keeps its `spacing.hairline` ring and brightens it, never `textPrimary` (#282). A hand-rolled `if (selected) textPrimary else border` is the bug this rule closes — a white ring is a second high-contrast element beside the CTA. A control whose selected state is a white *fill* draws no ring against it.
 - A screen's primary action is one full-width white button, the only high-contrast element on it. A destructive action never takes it: `danger` text and a `danger` hairline on a transparent ground.
 - Bars and charts have no track; the bar decorates and the row carries the meaning (`contentDescription` on the row, the graphic hidden from TalkBack).
 - A transaction row is titled by what the user wrote, then by the category, never by a placeholder; `TransactionUi.title` / `subtitle` derive it in `:core:ui`.
