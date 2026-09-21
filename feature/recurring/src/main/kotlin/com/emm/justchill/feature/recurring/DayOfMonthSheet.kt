@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
@@ -127,8 +128,8 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
                 contentDescription = null,
                 tint = colors.textTertiary,
                 modifier = Modifier
-                    .size(spacing.s3)
-                    .padding(top = spacing.s1),
+                    .padding(top = spacing.s1)
+                    .size(spacing.s3),
             )
             Text(
                 text = "Si eliges 29–31 y el mes no llega a ese día, se usa el último día del mes.",
@@ -195,7 +196,7 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
             ) {
                 rowDays.forEach { day ->
                     val isSelected = day == selected
-                    val cellShape = radii.rXS
+                    val cellShape: RoundedCornerShape = radii.rXS
                     val cellBg = if (isSelected) colors.surface3 else Color.Transparent
                     val cellBorder: Color = if (isSelected) colors.borderFocus else colors.border
                     val textColor = if (isSelected) colors.textPrimary else colors.textSecondary
