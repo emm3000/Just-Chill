@@ -20,7 +20,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -67,7 +66,7 @@ private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
             .clip(radii.rXS)
             .clickable(onClick = onCopyClick)
             .semantics { role = Role.Button }
-            .heightIn(min = 48.dp)
+            .heightIn(min = spacing.s12)
             .padding(horizontal = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s2),
@@ -81,7 +80,7 @@ private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
             imageVector = Icons.Outlined.ContentCopy,
             contentDescription = "Copiar el hash completo del commit",
             tint = colors.textTertiary,
-            modifier = Modifier.size(14.dp),
+            modifier = Modifier.size(spacing.s3),
         )
     }
 }

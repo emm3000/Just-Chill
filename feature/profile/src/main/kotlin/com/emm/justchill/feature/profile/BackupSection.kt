@@ -18,16 +18,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.shared.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.FilledCta
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
+
+// A progress stroke is not a hairline; 2dp keeps the 16dp spinner legible and no EmmSpacing step
+// is 2dp (same constant as core/ui's StickyCTA.kt CtaSpinnerStroke).
+private val BackupSpinnerStroke: Dp = 2.dp
 
 @Composable
 internal fun BackupSection(
@@ -133,19 +136,17 @@ private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
 @Composable
 private fun BackupLocalOnlyNote() {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     val radii = LocalEmmRadii.current
     Text(
         text = BACKUP_LOCAL_ONLY_WARNING,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.W400,
+        style = type.bodyM,
         color = colors.textSecondary,
         modifier = Modifier
             .padding(start = spacing.s6, end = spacing.s6, top = spacing.s2)
             .fillMaxWidth()
-            .border(width = 1.dp, color = colors.border, shape = radii.rM)
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rM)
             .padding(horizontal = spacing.s4, vertical = spacing.s3),
     )
 }
@@ -153,6 +154,7 @@ private fun BackupLocalOnlyNote() {
 @Composable
 private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
     val colors = LocalEmmColors.current
+    val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     Column(
         modifier = Modifier
@@ -162,10 +164,7 @@ private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
     ) {
         Text(
             text = BACKUP_DESTINATION_DISCLOSURE,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
-            fontFamily = InterFontFamily,
-            fontWeight = FontWeight.W400,
+            style = type.bodyM,
             color = colors.textSecondary,
         )
         FilledCta(label = BACKUP_DESTINATION_DISCLOSURE_ACTION, onClick = onAcknowledge)
@@ -175,6 +174,7 @@ private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
 @Composable
 private fun LastBackupRow(row: BackupRowUi) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val metaColor: Color? = when (row.severity()) {
         BackupRowSeverity.Normal -> null
         BackupRowSeverity.Warning -> colors.warning
@@ -190,8 +190,8 @@ private fun LastBackupRow(row: BackupRowUi) {
         trailing = {
             if (row is BackupRowUi.BackingUp) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(spacing.s4),
+                    strokeWidth = BackupSpinnerStroke,
                     color = colors.textTertiary,
                 )
             }
