@@ -49,7 +49,10 @@ import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.AmountInputSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -99,7 +102,7 @@ private fun AddEditRecurringMovementContent(
     onAddNewCategory: (CategoryType) -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
         modifier = Modifier
@@ -222,8 +225,8 @@ private fun AddEditRecurringMovementContent(
 @Composable
 private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholder: String = "Ej. Netflix") {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val typeTokens = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val typeTokens: EmmType = LocalEmmType.current
 
     BasicTextField(
         value = value,
@@ -270,9 +273,9 @@ private fun typeGlyph(type: TransactionType): String = when (type) {
 @Composable
 private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) -> Unit) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
-    val typeTokens = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val typeTokens: EmmType = LocalEmmType.current
 
     Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
         TYPE_OPTIONS.forEach { type ->
@@ -323,9 +326,9 @@ private fun AmountCardSection(
     onOpenSheet: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val spacing = LocalEmmSpacing.current
-    val typeTokens = LocalEmmType.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val typeTokens: EmmType = LocalEmmType.current
     val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neutral
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s3)) {
@@ -398,9 +401,9 @@ private fun AmountCardSection(
 @Composable
 private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
     val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val spacing = LocalEmmSpacing.current
-    val typeTokens = LocalEmmType.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val typeTokens: EmmType = LocalEmmType.current
 
     Box(
         modifier = Modifier
