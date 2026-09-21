@@ -27,8 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
@@ -39,8 +37,12 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 private const val MAX_CENTS_DIGITS = 9
@@ -58,6 +60,7 @@ fun ConfirmRecurringSheet(
     onDismiss: () -> Unit,
 ) {
     val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
     val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -81,67 +84,67 @@ fun ConfirmRecurringSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 4.dp),
+                    .padding(horizontal = spacing.s6, vertical = spacing.s1),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = item.name,
-                    style = type.titleM.copy(letterSpacing = (-0.2).sp),
+                    style = type.titleM,
                     color = colors.textPrimary,
                 )
                 TypeBadge(type = item.type)
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.s2))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = spacing.s6),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s4),
             ) {
                 Column {
                     Eyebrow(text = "Día")
-                    Spacer(Modifier.height(2.dp))
+                    Spacer(Modifier.height(spacing.s1))
                     Text(
                         text = item.dayOfMonth.toString(),
-                        style = type.labelL.copy(letterSpacing = 0.sp),
+                        style = type.labelL,
                         color = colors.textPrimary,
                     )
                 }
 
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(spacing.s2))
                 Column {
                     Eyebrow(text = if (item.isCatchUp) "Mes atrasado" else "Mes")
-                    Spacer(Modifier.height(2.dp))
+                    Spacer(Modifier.height(spacing.s1))
                     Text(
                         text = item.periodLabel,
-                        style = type.labelL.copy(letterSpacing = 0.sp),
+                        style = type.labelL,
                         color = if (item.isCatchUp) colors.danger else colors.textPrimary,
                     )
                 }
 
                 if (item.description.isNotBlank()) {
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(spacing.s2))
                     Column {
                         Eyebrow(text = "Nota")
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(spacing.s1))
                         Text(
                             text = item.description,
-                            style = type.bodyM.copy(letterSpacing = 0.sp),
+                            style = type.bodyM,
                             color = colors.textSecondary,
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(spacing.s5))
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = spacing.s6),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 AmountHero(
@@ -151,11 +154,11 @@ fun ConfirmRecurringSheet(
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.s3))
 
             if (item.isVariableAmount) {
                 Numpad(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.s3),
                     onDigit = { ch ->
                         val digit: Long = ch.digitToInt().toLong()
                         val shifted: Long = amountCents * DIGIT_SHIFT + digit
@@ -167,9 +170,9 @@ fun ConfirmRecurringSheet(
                     },
                     onBackspace = { amountCents = amountCents / DIGIT_SHIFT },
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(spacing.s1))
             } else {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(spacing.s3))
             }
 
             val confirmEnabled: Boolean = amountCents > 0L
@@ -192,15 +195,16 @@ fun ConfirmRecurringSheet(
 @Composable
 private fun SkipPeriodAction(periodLabel: String, onSkip: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val emmType: EmmType = LocalEmmType.current
     Text(
         text = "No lo pagué en $periodLabel",
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onSkip)
-            .padding(vertical = 16.dp),
+            .padding(vertical = spacing.s4),
         textAlign = TextAlign.Center,
-        style = emmType.labelM.copy(fontSize = 13.sp, letterSpacing = 0.sp),
+        style = emmType.labelL,
         color = colors.textSecondary,
     )
 }
@@ -208,7 +212,10 @@ private fun SkipPeriodAction(periodLabel: String, onSkip: () -> Unit) {
 @Composable
 private fun TypeBadge(type: TransactionType) {
     val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
     val emmType: EmmType = LocalEmmType.current
+    val badgeShape: RoundedCornerShape = radii.rXS
     val label: String = type.label
     val bgColor: Color = when (type) {
         TransactionType.Income -> colors.posMuted
@@ -221,9 +228,9 @@ private fun TypeBadge(type: TransactionType) {
     Text(
         text = label,
         modifier = Modifier
-            .background(bgColor, RoundedCornerShape(6.dp))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        style = emmType.caption.copy(fontWeight = FontWeight.W600, letterSpacing = 0.2.sp),
+            .background(bgColor, badgeShape)
+            .padding(horizontal = spacing.s2, vertical = spacing.s1),
+        style = emmType.caption.copy(fontWeight = FontWeight.W600),
         color = textColor,
     )
 }
