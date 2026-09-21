@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -40,10 +41,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -52,10 +53,14 @@ import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 private const val LIST_MAX_HEIGHT_FRACTION = 0.55f
 
@@ -68,34 +73,36 @@ fun CategoryPickerSheet(
     onDismiss: () -> Unit,
     frequentCategoryIds: List<String> = emptyList(),
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val windowInfo = LocalWindowInfo.current
-    val density = LocalDensity.current
-    val screenHeightDp = with(density) { windowInfo.containerSize.height.toDp() }
-    val maxListHeight = screenHeightDp * LIST_MAX_HEIGHT_FRACTION
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
+    val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val windowInfo: WindowInfo = LocalWindowInfo.current
+    val density: Density = LocalDensity.current
+    val screenHeightDp: Dp = with(density) { windowInfo.containerSize.height.toDp() }
+    val maxListHeight: Dp = screenHeightDp * LIST_MAX_HEIGHT_FRACTION
 
-    var query by rememberSaveable { mutableStateOf("") }
-    val filtered = remember(categories, query) {
+    var query: String by rememberSaveable { mutableStateOf("") }
+    val filtered: List<SelectableCategory> = remember(categories, query) {
         if (query.isBlank()) {
             categories
         } else {
             categories.filter { it.name.contains(query.trim(), ignoreCase = true) }
         }
     }
-    val sections = remember(categories, frequentCategoryIds, query) {
+    val sections: Pair<List<SelectableCategory>, List<SelectableCategory>>? = remember(categories, frequentCategoryIds, query) {
         if (query.isNotBlank()) {
             null
         } else {
-            val frequent = frequentCategoryIds.mapNotNull { id ->
+            val frequent: List<SelectableCategory> = frequentCategoryIds.mapNotNull { id ->
                 categories.firstOrNull { it.categoryId.value == id }
             }
             if (frequent.size < 2) {
                 null
             } else {
-                val frequentIdSet = frequentCategoryIds.toSet()
-                val rest = categories.filter { it.categoryId.value !in frequentIdSet }
+                val frequentIdSet: Set<String> = frequentCategoryIds.toSet()
+                val rest: List<SelectableCategory> = categories.filter { it.categoryId.value !in frequentIdSet }
                 Pair(frequent, rest)
             }
         }
@@ -111,17 +118,14 @@ fun CategoryPickerSheet(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, end = 8.dp, bottom = 14.dp),
+                .padding(start = spacing.s6, end = spacing.s2, bottom = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "Selecciona categoría",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
+                style = type.titleM,
                 color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
             )
             Box(
                 contentAlignment = Alignment.Center,
@@ -133,46 +137,45 @@ fun CategoryPickerSheet(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(spacing.s8)
                         .clip(CircleShape)
                         .background(colors.surface1)
-                        .border(1.dp, colors.border, CircleShape),
+                        .border(spacing.hairline, colors.border, CircleShape),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
                         contentDescription = "Cerrar",
                         tint = colors.textSecondary,
-                        modifier = Modifier.size(13.dp),
+                        modifier = Modifier.size(spacing.s3),
                     )
                 }
             }
         }
 
-        val searchShape = RoundedCornerShape(12.dp)
+        val searchShape: RoundedCornerShape = radii.rM
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 14.dp)
+                .padding(horizontal = spacing.s5)
+                .padding(bottom = spacing.s4)
                 .clip(searchShape)
                 .background(colors.surface1)
-                .border(1.dp, colors.border, searchShape)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .border(spacing.hairline, colors.border, searchShape)
+                .padding(horizontal = spacing.s3, vertical = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         ) {
             Icon(
                 imageVector = Icons.Outlined.Search,
                 contentDescription = null,
                 tint = colors.textTertiary,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(spacing.s4),
             )
             Box(modifier = Modifier.weight(1f)) {
                 if (query.isEmpty()) {
                     Text(
                         text = "Buscar o crear",
-                        fontSize = 13.sp,
-                        fontFamily = InterFontFamily,
+                        style = type.bodyM,
                         color = colors.textTertiary,
                     )
                 }
@@ -181,11 +184,7 @@ fun CategoryPickerSheet(
                     onValueChange = { query = it },
                     singleLine = true,
                     cursorBrush = SolidColor(colors.borderFocus),
-                    textStyle = TextStyle(
-                        fontSize = 13.sp,
-                        fontFamily = InterFontFamily,
-                        color = colors.textPrimary,
-                    ),
+                    textStyle = type.bodyM.copy(color = colors.textPrimary),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -195,14 +194,13 @@ fun CategoryPickerSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(spacing.s6),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Sin categorías. Crea una primero.",
-                    fontSize = 13.sp,
+                    style = type.bodyM,
                     color = colors.textTertiary,
-                    fontFamily = InterFontFamily,
                 )
             }
         } else {
@@ -215,7 +213,7 @@ fun CategoryPickerSheet(
                     val (frequent, rest) = sections
                     item("header_frequent") { SectionHeader("Frecuentes") }
                     items(frequent, key = { "freq_" + it.categoryId.value }) { category ->
-                        val isActive = category.categoryId.value == selectedCategoryId
+                        val isActive: Boolean = category.categoryId.value == selectedCategoryId
                         CategoryRow(
                             category = category,
                             isActive = isActive,
@@ -227,7 +225,7 @@ fun CategoryPickerSheet(
                     }
                     item("header_all") { SectionHeader("Todas") }
                     items(rest, key = { "rest_" + it.categoryId.value }) { category ->
-                        val isActive = category.categoryId.value == selectedCategoryId
+                        val isActive: Boolean = category.categoryId.value == selectedCategoryId
                         CategoryRow(
                             category = category,
                             isActive = isActive,
@@ -239,7 +237,7 @@ fun CategoryPickerSheet(
                     }
                 } else {
                     items(filtered, key = { it.categoryId.value }) { category ->
-                        val isActive = category.categoryId.value == selectedCategoryId
+                        val isActive: Boolean = category.categoryId.value == selectedCategoryId
                         CategoryRow(
                             category = category,
                             isActive = isActive,
@@ -253,14 +251,14 @@ fun CategoryPickerSheet(
             }
         }
 
-        val addButtonShape = RoundedCornerShape(12.dp)
+        val addButtonShape: RoundedCornerShape = radii.rM
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
+                .padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4)
                 .height(spacing.s12)
                 .clip(addButtonShape)
-                .border(1.dp, colors.borderFocus, addButtonShape)
+                .border(spacing.hairline, colors.borderFocus, addButtonShape)
                 .clickable {
                     onAddNew()
                     onDismiss()
@@ -272,14 +270,12 @@ fun CategoryPickerSheet(
                 imageVector = Icons.Outlined.Add,
                 contentDescription = null,
                 tint = colors.textPrimary,
-                modifier = Modifier.size(13.dp),
+                modifier = Modifier.size(spacing.s3),
             )
-            Spacer(Modifier.size(8.dp))
+            Spacer(Modifier.size(spacing.s2))
             Text(
                 text = "Nueva categoría",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
+                style = type.labelL.copy(fontWeight = FontWeight.W600),
                 color = colors.textPrimary,
             )
         }
@@ -288,26 +284,28 @@ fun CategoryPickerSheet(
 
 @Composable
 private fun SectionHeader(text: String) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Eyebrow(
         text = text,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 6.dp),
+            .padding(start = spacing.s6, end = spacing.s6, top = spacing.s3, bottom = spacing.s2),
     )
 }
 
 @Composable
 private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(if (isActive) colors.surface1 else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = spacing.s3),
+            .padding(horizontal = spacing.s6, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
         IconTile(icon = category.resolvedIcon, size = IconTileSize.Sm)
 
@@ -319,11 +317,8 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
             CategoryDot(color = colors.resolvedColor(category.colorId))
             Text(
                 text = category.name,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
+                style = type.titleM.copy(fontWeight = FontWeight.W500),
                 color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
             )
         }
 
@@ -331,7 +326,7 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(22.dp)
+                    .size(spacing.s6)
                     .clip(CircleShape)
                     .background(colors.surface3),
             ) {
@@ -339,7 +334,7 @@ private fun CategoryRow(category: SelectableCategory, isActive: Boolean, onClick
                     imageVector = Icons.Outlined.Close,
                     contentDescription = null,
                     tint = colors.textPrimary,
-                    modifier = Modifier.size(10.dp),
+                    modifier = Modifier.size(spacing.s3),
                 )
             }
         }

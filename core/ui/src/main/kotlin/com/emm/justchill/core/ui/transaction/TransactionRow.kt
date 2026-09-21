@@ -11,10 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.CategoryDotSlot
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -24,7 +22,6 @@ import com.emm.justchill.core.ui.category.resolvedIcon
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -58,13 +55,7 @@ fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier
                 CategoryDotSlot(color = dotColor.takeIf { tx.categoryLeadsTitle })
                 Text(
                     text = tx.title,
-                    style = TextStyle(
-                        fontFamily = InterFontFamily,
-                        fontSize = 15.sp,
-                        lineHeight = 20.sp,
-                        fontWeight = FontWeight.W500,
-                        letterSpacing = (-0.15).sp,
-                    ),
+                    style = type.bodyM.copy(fontWeight = FontWeight.W500),
                     color = colors.textPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -77,7 +68,7 @@ fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier
                 CategoryDotSlot(color = dotColor.takeIf { !tx.categoryLeadsTitle })
                 Text(
                     text = tx.subtitle,
-                    style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+                    style = type.caption,
                     color = colors.textTertiary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -87,14 +78,7 @@ fun TransactionRow(tx: TransactionUi, onClick: (() -> Unit)?, modifier: Modifier
 
         Text(
             text = tx.amount,
-            style = TextStyle(
-                fontFamily = InterFontFamily,
-                fontSize = 15.sp,
-                lineHeight = 20.sp,
-                fontWeight = FontWeight.W600,
-                letterSpacing = (-0.15).sp,
-                fontFeatureSettings = "tnum",
-            ),
+            style = type.amountM.copy(fontWeight = FontWeight.W600),
             color = amountColor,
         )
     }
