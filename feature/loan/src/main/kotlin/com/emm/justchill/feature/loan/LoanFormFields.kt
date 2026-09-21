@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.format.centsToSoles
@@ -37,8 +36,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-
-private val MIN_TOUCH_TARGET = 48.dp
 
 @Composable
 fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -54,7 +51,7 @@ fun AmountCard(amountDigits: String, onClick: () -> Unit, modifier: Modifier = M
             .fillMaxWidth()
             .clip(radii.rM)
             .background(ground)
-            .border(1.dp, colors.border, radii.rM)
+            .border(spacing.hairline, colors.border, radii.rM)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -89,10 +86,10 @@ fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             // The padded label alone measures under the 48dp touch floor at a small font scale.
-            .heightIn(min = MIN_TOUCH_TARGET)
+            .heightIn(min = spacing.s12)
             .clip(radii.rM)
             .background(ground)
-            .border(1.dp, colors.border, radii.rM)
+            .border(spacing.hairline, colors.border, radii.rM)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -107,7 +104,7 @@ fun DateRow(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.CalendarMonth,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(spacing.s4),
         )
         Text(text = label, style = type.labelL, color = colors.textPrimary)
     }
@@ -121,7 +118,7 @@ private fun AmountCardEmptyPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             AmountCard(amountDigits = "", onClick = {})
         }
@@ -136,7 +133,7 @@ private fun AmountCardFilledPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             AmountCard(amountDigits = "120000", onClick = {})
         }
@@ -151,7 +148,7 @@ private fun DateRowPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             DateRow(label = "22 de agosto de 2026", onClick = {})
         }

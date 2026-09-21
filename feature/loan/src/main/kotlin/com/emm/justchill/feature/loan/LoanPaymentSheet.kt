@@ -36,6 +36,10 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.LocalDate
 
+// No token: the body is weighted, so an unbounded preview measures it against zero and renders
+// empty; this bounds the frame instead.
+private val PREVIEW_FRAME_HEIGHT = 560.dp
+
 @Composable
 fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Unit) {
     val colors = LocalEmmColors.current
@@ -186,8 +190,7 @@ private fun LoanPaymentSheetContentPreviewFrame(form: LoanPaymentFormUi) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                // The body is weighted; an unbounded preview measures it against zero and renders empty.
-                .height(560.dp)
+                .height(PREVIEW_FRAME_HEIGHT)
                 .background(LocalEmmColors.current.bg),
         ) {
             LoanPaymentSheetContent(
