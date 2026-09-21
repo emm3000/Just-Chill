@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
@@ -36,13 +35,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.atoms.CtaHeight
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 private const val DAY_GRID_COLUMNS = 6
 private const val MIN_DAY = 1
@@ -52,6 +53,8 @@ private const val MAX_DAY = 31
 fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val radii: EmmRadii = LocalEmmRadii.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selected by remember { mutableIntStateOf(current) }
 
@@ -65,17 +68,14 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, end = 16.dp, bottom = 14.dp),
+                .padding(start = spacing.s6, end = spacing.s4, bottom = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "¿Qué día del mes?",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
+                style = type.titleM,
                 color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
             )
             val closeInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
             Box(
@@ -91,17 +91,17 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(spacing.s8)
                         .clip(CircleShape)
                         .background(colors.surface1)
-                        .border(1.dp, colors.border, CircleShape)
+                        .border(spacing.hairline, colors.border, CircleShape)
                         .indication(closeInteraction, ripple()),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
                         contentDescription = "Cerrar",
                         tint = colors.textSecondary,
-                        modifier = Modifier.size(13.dp),
+                        modifier = Modifier.size(spacing.s3),
                     )
                 }
             }
@@ -112,29 +112,27 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
             onSelect = { selected = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = spacing.s4),
         )
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = spacing.s4, vertical = spacing.s3),
             verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
             Icon(
                 imageVector = Icons.Outlined.Info,
                 contentDescription = null,
                 tint = colors.textTertiary,
                 modifier = Modifier
-                    .size(13.dp)
-                    .padding(top = 2.dp),
+                    .size(spacing.s3)
+                    .padding(top = spacing.s1),
             )
             Text(
                 text = "Si eliges 29–31 y el mes no llega a ese día, se usa el último día del mes.",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.W400,
-                fontFamily = InterFontFamily,
+                style = type.caption,
                 color = colors.textTertiary,
             )
         }
@@ -142,10 +140,10 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp)
-                .height(52.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .padding(horizontal = spacing.s4)
+                .padding(bottom = spacing.s4)
+                .height(CtaHeight)
+                .clip(radii.rL)
                 .background(colors.textPrimary)
                 .clickable {
                     onConfirm(selected)
@@ -155,30 +153,22 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
                 Text(
                     text = "Listo",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.titleM,
                     color = colors.bg,
-                    letterSpacing = (-0.15).sp,
                 )
                 Text(
                     text = "·",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.titleM,
                     color = colors.bg.copy(alpha = 0.6f),
                 )
                 Text(
                     text = "Día $selected",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.titleM,
                     color = colors.bg.copy(alpha = 0.9f),
-                    letterSpacing = (-0.15).sp,
                 )
             }
         }
@@ -189,21 +179,23 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
 private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val radii: EmmRadii = LocalEmmRadii.current
     val days = (MIN_DAY..MAX_DAY).toList()
     val rows = days.chunked(DAY_GRID_COLUMNS)
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         rows.forEach { rowDays ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
                 rowDays.forEach { day ->
                     val isSelected = day == selected
-                    val cellShape = RoundedCornerShape(8.dp)
+                    val cellShape = radii.rXS
                     val cellBg = if (isSelected) colors.surface3 else Color.Transparent
                     val cellBorder: Color = if (isSelected) colors.borderFocus else colors.border
                     val textColor = if (isSelected) colors.textPrimary else colors.textSecondary
@@ -215,14 +207,14 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
                             .height(spacing.s12)
                             .clip(cellShape)
                             .background(cellBg)
-                            .border(1.dp, cellBorder, cellShape)
+                            .border(spacing.hairline, cellBorder, cellShape)
                             .clickable { onSelect(day) },
                     ) {
                         Text(
                             text = day.toString(),
-                            fontSize = 13.sp,
-                            fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W400,
-                            fontFamily = InterFontFamily,
+                            style = type.labelL.copy(
+                                fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W400,
+                            ),
                             color = textColor,
                         )
                     }
