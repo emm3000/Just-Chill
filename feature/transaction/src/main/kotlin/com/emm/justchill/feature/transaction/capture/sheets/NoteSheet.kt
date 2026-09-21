@@ -34,26 +34,31 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.theme.EmmSpacing
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 private const val NOTE_MAX_CHARS = 120
 
 private const val FOCUS_DELAY_AFTER_SHEET_SLIDE_IN_MS = 150L
 
+// The multiline field's growth ceiling; no EmmSpacing step sits near 140dp.
+private val NoteFieldMaxHeight: Dp = 140.dp
+
 @Composable
 fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var draft by remember {
@@ -77,8 +82,8 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 16.dp)
+                .padding(horizontal = spacing.s5)
+                .padding(bottom = spacing.s4)
                 .imePadding(),
         ) {
             Row(
@@ -87,38 +92,31 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
             ) {
                 Text(
                     text = "Nota",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.titleM,
                     color = colors.textPrimary,
-                    letterSpacing = (-0.08).sp,
                 )
                 Spacer(Modifier.weight(1f))
                 Text(
                     text = "Opcional",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.W500,
-                    fontFamily = InterFontFamily,
+                    style = type.labelM,
                     color = colors.textTertiary,
                 )
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(spacing.s4))
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(radii.rM)
                     .background(colors.surface1)
-                    .border(1.dp, colors.border, radii.rM)
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                    .border(spacing.hairline, colors.border, radii.rM)
+                    .padding(horizontal = spacing.s4, vertical = spacing.s3),
             ) {
                 if (draft.text.isEmpty()) {
                     Text(
                         text = "Mercado Vea — pollo y verduras",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W400,
-                        fontFamily = InterFontFamily,
+                        style = type.bodyM,
                         color = colors.textTertiary,
                     )
                 }
@@ -127,17 +125,11 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
                     onValueChange = { newValue ->
                         if (newValue.text.length <= NOTE_MAX_CHARS) draft = newValue
                     },
-                    textStyle = LocalTextStyle.current.copy(
-                        color = colors.textPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W400,
-                        fontFamily = InterFontFamily,
-                        lineHeight = 20.sp,
-                    ),
+                    textStyle = LocalTextStyle.current.merge(type.bodyM).copy(color = colors.textPrimary),
                     cursorBrush = SolidColor(colors.borderFocus),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 64.dp, max = 140.dp)
+                        .heightIn(min = spacing.s16, max = NoteFieldMaxHeight)
                         .focusRequester(focusRequester),
                 )
             }
@@ -145,31 +137,27 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = spacing.s2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Se guarda al confirmar el movimiento",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.W400,
-                    fontFamily = InterFontFamily,
+                    style = type.caption,
                     color = colors.textTertiary,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
                     text = "${draft.text.length} / $NOTE_MAX_CHARS",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.W500,
-                    fontFamily = InterFontFamily,
+                    style = type.caption,
                     color = if (draft.text.length >= NOTE_MAX_CHARS) colors.danger else colors.textTertiary,
                 )
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(spacing.s5))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s3),
             ) {
                 SheetButton(
                     label = "Cancelar",
@@ -196,6 +184,7 @@ private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, mo
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     val bg: Color = if (primary) colors.textPrimary else Color.Transparent
     val fg = if (primary) colors.bg else colors.textPrimary
@@ -207,16 +196,13 @@ private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, mo
             .height(spacing.s12)
             .clip(radii.rM)
             .background(bg)
-            .border(1.dp, borderColor, radii.rM)
+            .border(spacing.hairline, borderColor, radii.rM)
             .clickable(onClick = onClick),
     ) {
         Text(
             text = label,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
+            style = type.titleM,
             color = fg,
-            letterSpacing = (-0.15).sp,
             textAlign = TextAlign.Center,
         )
     }

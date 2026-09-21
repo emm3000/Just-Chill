@@ -19,7 +19,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.EmmDialog
@@ -102,7 +101,7 @@ private fun TransactionSummaryRow(
             .fillMaxWidth()
             .clip(radii.rL)
             .background(colors.surface2)
-            .border(width = 1.dp, color = colors.border, shape = radii.rL)
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rL)
             .padding(horizontal = spacing.s3, vertical = spacing.s3),
     ) {
         if (categoryColor != null) {

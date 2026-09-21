@@ -21,16 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-
-// A glyph that trails 14sp text, not a gap: it tracks the label's size, never the spacing scale.
-private val MetaIconSize: Dp = 12.dp
 
 /**
  * Date and note are inline links, not rows: neither is a decision the user has to make — the day
@@ -83,7 +78,7 @@ private fun DateAction(label: String, onClick: () -> Unit, modifier: Modifier = 
             imageVector = Icons.Outlined.KeyboardArrowDown,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(MetaIconSize),
+            modifier = Modifier.size(spacing.s3),
         )
     }
 }
@@ -113,7 +108,7 @@ private fun NoteAction(note: String, onClick: () -> Unit, modifier: Modifier = M
                 imageVector = Icons.Outlined.Add,
                 contentDescription = null,
                 tint = colors.textSecondary,
-                modifier = Modifier.size(MetaIconSize),
+                modifier = Modifier.size(spacing.s3),
             )
         }
         Text(
@@ -134,7 +129,7 @@ private fun MetaDivider() {
 
     Box(
         modifier = Modifier
-            .width(1.dp)
+            .width(spacing.hairline)
             .height(spacing.s3)
             .background(colors.border),
     )
