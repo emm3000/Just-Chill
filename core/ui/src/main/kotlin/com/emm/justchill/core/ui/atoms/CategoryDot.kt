@@ -13,8 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -22,14 +20,11 @@ import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
-// Marks, not gaps — the spacing scale governs the distance between them, never their own size.
-private val CategoryDotSize: Dp = 8.dp
-
 @Composable
 fun CategoryDot(color: Color) {
     Box(
         modifier = Modifier
-            .size(CategoryDotSize)
+            .size(LocalEmmSpacing.current.s2)
             .clip(CircleShape)
             .background(color),
     )
@@ -41,7 +36,7 @@ fun CategoryDot(color: Color) {
 fun CategoryDotSlot(color: Color?) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.size(CategoryDotSize),
+        modifier = Modifier.size(LocalEmmSpacing.current.s2),
     ) {
         if (color != null) {
             CategoryDot(color = color)

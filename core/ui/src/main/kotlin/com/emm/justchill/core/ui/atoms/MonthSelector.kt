@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -48,7 +47,7 @@ fun MonthSelector(
         modifier = modifier
             .height(spacing.s12)
             .clip(radii.rFull)
-            .border(width = 1.dp, color = colors.border, shape = radii.rFull)
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rFull)
             .padding(horizontal = spacing.s1),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s1),
@@ -72,7 +71,7 @@ fun MonthSelector(
                 imageVector = Icons.Outlined.ExpandMore,
                 contentDescription = null,
                 tint = colors.textTertiary,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(spacing.s4),
             )
         }
         MonthChevron(direction = MonthChevronDirection.Next, onClick = onNext)

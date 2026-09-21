@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -38,6 +37,7 @@ fun FilledCta(
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val type = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     val interactive = interaction == CtaInteraction.Enabled
 
@@ -56,12 +56,12 @@ fun FilledCta(
         if (interaction == CtaInteraction.Loading) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(spacing.s4),
                     color = fgColor,
-                    strokeWidth = 2.dp,
+                    strokeWidth = CtaSpinnerStroke,
                 )
                 Text(
                     text = label,

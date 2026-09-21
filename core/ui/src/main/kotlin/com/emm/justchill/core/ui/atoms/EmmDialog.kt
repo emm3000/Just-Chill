@@ -20,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
@@ -62,7 +61,7 @@ fun EmmDialog(
                 .wrapContentHeight()
                 .clip(radii.rXL)
                 .background(colors.bg)
-                .border(width = 1.dp, color = colors.border, shape = radii.rXL)
+                .border(width = spacing.hairline, color = colors.border, shape = radii.rXL)
                 .padding(spacing.s5),
         ) {
             Text(text = title, style = type.titleM, color = colors.textPrimary)
@@ -125,7 +124,7 @@ fun DialogAction(
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+            .defaultMinSize(minWidth = spacing.s12, minHeight = spacing.s12)
             .clip(radii.rS)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = spacing.s2),

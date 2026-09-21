@@ -20,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -55,7 +54,7 @@ fun OutlinedCta(
             .fillMaxWidth()
             .height(CtaHeight)
             .clip(radii.rL)
-            .border(width = 1.dp, color = colors.border, shape = radii.rL)
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rL)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -67,7 +66,7 @@ fun OutlinedCta(
                 CircularProgressIndicator(
                     modifier = Modifier.size(spacing.s4),
                     color = textColor,
-                    strokeWidth = 2.dp,
+                    strokeWidth = CtaSpinnerStroke,
                 )
             } else if (leading != null) {
                 leading()

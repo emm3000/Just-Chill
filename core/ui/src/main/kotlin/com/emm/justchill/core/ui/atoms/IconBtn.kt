@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
@@ -19,16 +18,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 private const val DISABLED_ALPHA = 0.35f
@@ -50,6 +51,8 @@ fun IconBtn(
     glyphSize: Dp = LocalEmmSpacing.current.s5,
 ) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     val borderColor = when (tone) {
         IconBtnTone.Neutral -> colors.border
@@ -61,16 +64,16 @@ fun IconBtn(
         IconBtnTone.Primary -> colors.textPrimary
         IconBtnTone.Danger -> colors.danger
     }
-    val shape = RoundedCornerShape(12.dp)
+    val shape: Shape = radii.rM
     val alpha = if (enabled) 1f else DISABLED_ALPHA
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(48.dp)
+            .size(spacing.s12)
             .alpha(alpha)
             .clip(shape)
-            .border(BorderStroke(1.dp, borderColor), shape)
+            .border(BorderStroke(spacing.hairline, borderColor), shape)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     ) {
         Icon(

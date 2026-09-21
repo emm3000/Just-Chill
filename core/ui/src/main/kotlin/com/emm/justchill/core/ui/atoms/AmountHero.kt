@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.appendInlineContent
@@ -36,16 +35,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.format.INCOME_SIGN
 import com.emm.justchill.core.ui.format.NumberFormatEs
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
@@ -69,6 +69,7 @@ fun AmountHero(
     signed: Boolean = false,
 ) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     val mainColor: Color = tone.color(colors)
     val signedPrefix: String = if (signed && tone == AmountTone.Pos) "$INCOME_SIGN$prefix" else prefix
@@ -131,7 +132,7 @@ fun AmountHero(
         emptyMap()
     }
 
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
         Text(
             text = signedPrefix,
             style = prefixStyle,
@@ -162,10 +163,13 @@ private val TIGHT_TRACKING: TextUnit = (-0.04).em
 
 private const val AUTO_SIZE_MIN_DIVISOR: Int = 4
 
+// The TextAutoSize search step (#293), not a type role: no EmmType token is a step.
 private val AUTO_SIZE_STEP: TextUnit = 2.sp
 
 @Composable
 private fun BlinkingCaret(color: Color) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
     val transition = rememberInfiniteTransition(label = "caret")
     val alpha by transition.animateFloat(
         initialValue = 1f,
@@ -184,10 +188,10 @@ private fun BlinkingCaret(color: Color) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
-                .width(2.5.dp)
+                .width(spacing.s1)
                 .fillMaxHeight()
                 .graphicsLayer { this.alpha = alpha }
-                .clip(RoundedCornerShape(2.dp))
+                .clip(radii.rFull)
                 .background(color),
         )
     }

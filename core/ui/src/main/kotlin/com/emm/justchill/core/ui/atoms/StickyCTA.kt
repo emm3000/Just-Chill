@@ -35,7 +35,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 val CtaHeight: Dp = 52.dp
 
 // A progress stroke is not a hairline; 2dp keeps the 16dp spinner legible and no EmmSpacing step is 2dp.
-private val CtaSpinnerStroke: Dp = 2.dp
+internal val CtaSpinnerStroke: Dp = 2.dp
 
 enum class CtaInteraction {
     Enabled,

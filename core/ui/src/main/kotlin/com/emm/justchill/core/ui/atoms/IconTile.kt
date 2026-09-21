@@ -25,34 +25,50 @@ import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
-enum class IconTileSize(val tileSize: Dp, val iconSize: Dp, val radius: Dp) {
-    Sm(24.dp, 12.dp, 7.dp),
-    Md(32.dp, 15.dp, 9.dp),
-    Lg(40.dp, 18.dp, 12.dp),
-}
+enum class IconTileSize { Sm, Md, Lg }
 
 @Composable
 fun IconTile(icon: ImageVector, modifier: Modifier = Modifier, size: IconTileSize = IconTileSize.Md) {
     val colors: EmmColors = LocalEmmColors.current
-    val shape: Shape = RoundedCornerShape(size.radius)
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val geometry: IconTileGeometry = when (size) {
+        IconTileSize.Sm -> IconTileGeometry(spacing.s6, spacing.s3, RoundedCornerShape(SM_TILE_RADIUS))
+        IconTileSize.Md -> IconTileGeometry(spacing.s8, MD_GLYPH_SIZE, RoundedCornerShape(MD_TILE_RADIUS))
+        IconTileSize.Lg -> IconTileGeometry(spacing.s10, LG_GLYPH_SIZE, LocalEmmRadii.current.rM)
+    }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(size.tileSize)
-            .clip(shape)
-            .border(1.dp, colors.border, shape),
+            .size(geometry.tileSize)
+            .clip(geometry.shape)
+            .border(spacing.hairline, colors.border, geometry.shape),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = colors.textSecondary,
-            modifier = Modifier.size(size.iconSize),
+            modifier = Modifier.size(geometry.glyphSize),
         )
     }
 }
+
+private data class IconTileGeometry(val tileSize: Dp, val glyphSize: Dp, val shape: Shape)
+
+// Each tile rounds at about 0.3 of its side, as Lg's rM does on 40dp; no EmmRadii step is 7dp.
+private val SM_TILE_RADIUS: Dp = 7.dp
+
+// Each tile rounds at about 0.3 of its side, as Lg's rM does on 40dp; no EmmRadii step is 9dp.
+private val MD_TILE_RADIUS: Dp = 9.dp
+
+// Each glyph is about half its tile, as Sm's s3 is on 24dp; no EmmSpacing step is 15dp.
+private val MD_GLYPH_SIZE: Dp = 15.dp
+
+// Each glyph is about half its tile, as Sm's s3 is on 24dp; no EmmSpacing step is 18dp.
+private val LG_GLYPH_SIZE: Dp = 18.dp
 
 @Preview
 @PreviewRedmi15CWidth
