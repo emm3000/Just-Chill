@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ripple
@@ -36,8 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import com.emm.justchill.core.ui.atoms.CtaHeight
+import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType
@@ -52,12 +54,11 @@ private const val MAX_DAY = 31
 
 @Composable
 fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
-    val radii: EmmRadii = LocalEmmRadii.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selected by remember { mutableIntStateOf(current) }
+    val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var selected: Int by remember { mutableIntStateOf(current) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -138,52 +139,27 @@ fun DayOfMonthSheet(current: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Uni
             )
         }
 
-        Box(
+        FilledCta(
+            label = "Listo · Día $selected",
+            onClick = {
+                onConfirm(selected)
+                onDismiss()
+            },
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(horizontal = spacing.s4)
-                .padding(bottom = spacing.s4)
-                .height(CtaHeight)
-                .clip(radii.rL)
-                .background(colors.textPrimary)
-                .clickable {
-                    onConfirm(selected)
-                    onDismiss()
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            ) {
-                Text(
-                    text = "Listo",
-                    style = type.titleM,
-                    color = colors.bg,
-                )
-                Text(
-                    text = "·",
-                    style = type.titleM,
-                    color = colors.bg.copy(alpha = 0.6f),
-                )
-                Text(
-                    text = "Día $selected",
-                    style = type.titleM,
-                    color = colors.bg.copy(alpha = 0.9f),
-                )
-            }
-        }
+                .padding(bottom = spacing.s4),
+        )
     }
 }
 
 @Composable
 private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
     val radii: EmmRadii = LocalEmmRadii.current
-    val days = (MIN_DAY..MAX_DAY).toList()
-    val rows = days.chunked(DAY_GRID_COLUMNS)
+    val days: List<Int> = (MIN_DAY..MAX_DAY).toList()
+    val rows: List<List<Int>> = days.chunked(DAY_GRID_COLUMNS)
 
     Column(
         modifier = modifier,
@@ -195,11 +171,11 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
                 horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
                 rowDays.forEach { day ->
-                    val isSelected = day == selected
+                    val isSelected: Boolean = day == selected
                     val cellShape: RoundedCornerShape = radii.rXS
-                    val cellBg = if (isSelected) colors.surface3 else Color.Transparent
+                    val cellBg: Color = if (isSelected) colors.surface3 else Color.Transparent
                     val cellBorder: Color = if (isSelected) colors.borderFocus else colors.border
-                    val textColor = if (isSelected) colors.textPrimary else colors.textSecondary
+                    val textColor: Color = if (isSelected) colors.textPrimary else colors.textSecondary
 
                     Box(
                         contentAlignment = Alignment.Center,
@@ -220,7 +196,7 @@ private fun DayGrid(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier =
                         )
                     }
                 }
-                val remainder = DAY_GRID_COLUMNS - rowDays.size
+                val remainder: Int = DAY_GRID_COLUMNS - rowDays.size
                 if (remainder > 0) {
                     repeat(remainder) {
                         Spacer(modifier = Modifier.weight(1f))

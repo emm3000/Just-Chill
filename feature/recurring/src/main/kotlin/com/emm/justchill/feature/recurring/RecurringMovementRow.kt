@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontStyle
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.EmmRowMenu
@@ -46,7 +48,8 @@ private fun DayBadge(dayOfMonth: Int) {
             .size(spacing.s8)
             .clip(shape)
             .background(colors.surface2)
-            .border(spacing.hairline, colors.border, shape),
+            .border(spacing.hairline, colors.border, shape)
+            .clearAndSetSemantics { contentDescription = "Día $dayOfMonth" },
     ) {
         Text(
             text = dayOfMonth.toString().padStart(2, '0'),
