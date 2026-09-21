@@ -48,7 +48,7 @@ fun OutlinedCta(
 
     val enabled: Boolean = interaction == CtaInteraction.Enabled
     val loading: Boolean = interaction == CtaInteraction.Loading
-    val textColor: Color = if (enabled) colors.textPrimary else colors.textDisabled
+    val textColor: Color = if (enabled) colors.textPrimary else colors.textTertiary
 
     Box(
         modifier = modifier

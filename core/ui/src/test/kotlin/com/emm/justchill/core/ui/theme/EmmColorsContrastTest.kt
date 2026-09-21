@@ -29,6 +29,15 @@ class EmmColorsContrastTest {
         }
     }
 
+    @Test
+    fun `the disabled action label token clears the 4 dot 5 to 1 ratio against the background`() {
+        val disabledActionLabel: Color = emmDarkColors.textTertiary
+
+        val ratio: Double = contrastRatio(disabledActionLabel, emmDarkColors.bg)
+
+        assertTrue(ratio >= TEXT_MINIMUM_RATIO, "the disabled action label vs bg is $ratio, below $TEXT_MINIMUM_RATIO")
+    }
+
     private fun contrastRatio(foreground: Color, background: Color): Double {
         val lighter: Double = maxOf(relativeLuminance(foreground), relativeLuminance(background))
         val darker: Double = minOf(relativeLuminance(foreground), relativeLuminance(background))
