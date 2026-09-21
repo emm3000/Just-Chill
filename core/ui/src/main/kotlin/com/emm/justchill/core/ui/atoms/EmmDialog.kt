@@ -120,7 +120,7 @@ fun DialogAction(
         IconBtnTone.Primary -> colors.textPrimary
         IconBtnTone.Danger -> colors.danger
     }
-    val textColor: Color = if (enabled) toneColor else colors.textDisabled
+    val textColor: Color = if (enabled) toneColor else colors.textTertiary
 
     Box(
         contentAlignment = Alignment.Center,
