@@ -18,6 +18,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.loan.PaymentMethod
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -38,7 +39,7 @@ import kotlinx.datetime.LocalDate
 
 // No token: the body is weighted, so an unbounded preview measures it against zero and renders
 // empty; this bounds the frame instead.
-private val PREVIEW_FRAME_HEIGHT = 560.dp
+private val PREVIEW_FRAME_HEIGHT: Dp = 560.dp
 
 @Composable
 fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Unit) {

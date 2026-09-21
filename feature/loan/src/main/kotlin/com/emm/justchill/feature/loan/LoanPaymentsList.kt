@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.EmmRowMenu
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -138,7 +139,7 @@ private fun LoanPaymentsEmptyState(modifier: Modifier = Modifier) {
 }
 
 // No token: an arbitrary preview-frame height with no relation to any measured screen element.
-private val PREVIEW_FRAME_HEIGHT = 240.dp
+private val PREVIEW_FRAME_HEIGHT: Dp = 240.dp
 
 private val previewLoanPayments = listOf(
     LoanPaymentRowUi(
