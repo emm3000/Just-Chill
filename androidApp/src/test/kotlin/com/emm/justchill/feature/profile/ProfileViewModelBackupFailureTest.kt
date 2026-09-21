@@ -1,5 +1,6 @@
 package com.emm.justchill.feature.profile
 
+import androidx.lifecycle.ViewModelStore
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
@@ -34,6 +35,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -203,23 +205,30 @@ class ProfileViewModelBackupFailureTest {
     }
 
     private suspend fun TestScope.backUpNow(): String {
-        val orchestrator = buildOrchestrator()
-        val vm = buildViewModel(orchestrator)
-        orchestrator.start()
-        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com")))
-        advanceUntilIdle()
+        val orchestrator: BackupOrchestrator = buildOrchestrator()
+        val store = ViewModelStore()
+        val vm: ProfileViewModel = buildViewModel(orchestrator)
+        store.put(PROFILE_VIEW_MODEL_KEY, vm)
+        try {
+            orchestrator.start()
+            sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = USER_ID, email = "a@b.com")))
+            advanceUntilIdle()
 
-        val messages = mutableListOf<ProfileMessage>()
-        val job = launch {
-            vm.effect.collect { effect -> if (effect is ProfileEffect.Notify) messages.add(effect.message) }
+            val messages: MutableList<ProfileMessage> = mutableListOf()
+            val job: Job = launch {
+                vm.effect.collect { effect -> if (effect is ProfileEffect.Notify) messages.add(effect.message) }
+            }
+            advanceUntilIdle()
+
+            vm.onIntent(ProfileIntent.BackUpNow)
+            advanceUntilIdle()
+            job.cancel()
+
+            return messages.single().toText()
+        } finally {
+            store.clear()
+            advanceUntilIdle()
         }
-        advanceUntilIdle()
-
-        vm.onIntent(ProfileIntent.BackUpNow)
-        advanceUntilIdle()
-        job.cancel()
-
-        return messages.single().toText()
     }
 
     private fun TestScope.buildOrchestrator(): BackupOrchestrator = BackupOrchestrator(
@@ -262,6 +271,7 @@ class ProfileViewModelBackupFailureTest {
 }
 
 private const val USER_ID = "user-1"
+private const val PROFILE_VIEW_MODEL_KEY = "profile"
 private const val APP_VERSION = "2.4.0"
 private const val PAYLOAD = """{"schemaVersion":3}"""
 private const val DISCLOSED_AT = 1_755_000_000_000L
