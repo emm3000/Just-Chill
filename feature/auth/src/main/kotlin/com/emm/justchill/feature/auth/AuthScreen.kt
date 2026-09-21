@@ -58,7 +58,9 @@ import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.error.toUserMessage
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -406,8 +408,8 @@ private fun AuthFieldInput(
     onTogglePasswordVisibility: (() -> Unit)? = null,
 ) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     var focused by remember { mutableStateOf(false) }
 
