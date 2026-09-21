@@ -38,6 +38,16 @@ class EmmColorsContrastTest {
         assertTrue(ratio >= TEXT_MINIMUM_RATIO, "the disabled action label vs bg is $ratio, below $TEXT_MINIMUM_RATIO")
     }
 
+    @Test
+    fun `the EmmButton disabled ground and label pair clears the 4 dot 5 to 1 ratio`() {
+        val ground: Color = emmDarkColors.bg
+        val label: Color = emmDarkColors.textTertiary
+
+        val ratio: Double = contrastRatio(label, ground)
+
+        assertTrue(ratio >= TEXT_MINIMUM_RATIO, "the EmmButton disabled pair is $ratio, below $TEXT_MINIMUM_RATIO")
+    }
+
     private fun contrastRatio(foreground: Color, background: Color): Double {
         val lighter: Double = maxOf(relativeLuminance(foreground), relativeLuminance(background))
         val darker: Double = minOf(relativeLuminance(foreground), relativeLuminance(background))

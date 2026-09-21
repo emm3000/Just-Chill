@@ -113,12 +113,12 @@ internal fun ProfileRowWithTrailing(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(RowGap),
     ) {
-        IconTile(icon = icon, tint = if (enabled) colors.textSecondary else colors.textDisabled)
+        IconTile(icon = icon, tint = if (enabled) colors.textSecondary else colors.textTertiary)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
                 style = type.bodyL.copy(fontWeight = FontWeight.W500),
-                color = if (enabled) colors.textPrimary else colors.textDisabled,
+                color = if (enabled) colors.textPrimary else colors.textTertiary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
