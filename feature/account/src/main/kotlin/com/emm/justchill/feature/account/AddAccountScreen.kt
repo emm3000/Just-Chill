@@ -41,8 +41,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.ui.atoms.BackBtn
@@ -54,12 +54,36 @@ import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.UnderlineTextField
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import org.koin.compose.viewmodel.koinViewModel
+
+// Every account-type tile shares this one height and no EmmSpacing step is 52dp, so it cannot become a token.
+private val TypeTileHeight: Dp = 52.dp
+
+// The type tile's own horizontal padding; 14dp sits evenly between s3 (12dp) and s4 (16dp), so no step fits.
+private val TypeTileHorizontalPadding: Dp = 14.dp
+
+// Icon-to-label gap inside a type tile; 10dp sits evenly between s2 (8dp) and s3 (12dp), so no step fits.
+private val TypeTileContentGap: Dp = 10.dp
+
+// The type tile's icon; 18dp sits evenly between s4 (16dp) and s5 (20dp), so no step fits.
+private val TypeTileIconSize: Dp = 18.dp
+
+// Eyebrow-to-content gap inside a form section; 10dp sits evenly between s2 (8dp) and s3 (12dp), so no step fits.
+private val SectionContentGap: Dp = 10.dp
+
+// Dot-to-label gap inside a shortcut chip; 6dp sits evenly between s1 (4dp) and s2 (8dp), so no step fits.
+private val ShortcutChipContentGap: Dp = 6.dp
+
+// The shortcut's colour dot; 6dp sits evenly between s1 (4dp) and s2 (8dp), so no step fits.
+private val ShortcutDotSize: Dp = 6.dp
 
 @Composable
 fun AddAccountScreen(
@@ -97,6 +121,7 @@ private fun AddAccountContent(
     onBack: () -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
         modifier = Modifier
@@ -113,10 +138,10 @@ private fun AddAccountContent(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = spacing.s4),
+            verticalArrangement = Arrangement.spacedBy(spacing.s5),
         ) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(spacing.s1))
 
             Section(eyebrow = "ATAJOS PERUANOS") {
                 ShortcutsRow(
@@ -143,7 +168,7 @@ private fun AddAccountContent(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.s2))
         }
 
         StickyCTA(
@@ -156,7 +181,7 @@ private fun AddAccountContent(
 
 @Composable
 private fun Section(eyebrow: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(SectionContentGap)) {
         Eyebrow(text = eyebrow)
         content()
     }
@@ -176,8 +201,10 @@ private val PERUVIAN_SHORTCUTS = listOf(
 
 @Composable
 private fun ShortcutsRow(selectedName: String, onSelect: (Shortcut) -> Unit) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         items(PERUVIAN_SHORTCUTS.size) { idx ->
             val s = PERUVIAN_SHORTCUTS[idx]
@@ -194,12 +221,14 @@ private fun ShortcutsRow(selectedName: String, onSelect: (Shortcut) -> Unit) {
 @Composable
 private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(999.dp)
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
+    val shape: RoundedCornerShape = radii.rFull
 
     val bgColor = if (selected) colors.surface3 else colors.surface1
     val borderColor: Color = if (selected) colors.borderFocus else colors.border
     val textColor = if (selected) colors.textPrimary else colors.textSecondary
-    val spacing: EmmSpacing = LocalEmmSpacing.current
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -216,25 +245,22 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
             modifier = Modifier
                 .clip(shape)
                 .background(bgColor)
-                .border(1.dp, borderColor, shape)
+                .border(spacing.hairline, borderColor, shape)
                 .indication(interactionSource, ripple())
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = spacing.s3, vertical = spacing.s2),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(ShortcutChipContentGap),
         ) {
             Box(
                 modifier = Modifier
-                    .size(6.dp)
+                    .size(ShortcutDotSize)
                     .clip(CircleShape)
                     .background(dotColor),
             )
             Text(
                 text = label,
-                fontSize = 13.sp,
-                fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
-                fontFamily = InterFontFamily,
+                style = type.labelL.copy(fontWeight = if (selected) FontWeight.W600 else FontWeight.W500),
                 color = textColor,
-                letterSpacing = (-0.06).sp,
             )
         }
     }
@@ -251,9 +277,11 @@ private val TYPE_OPTIONS = listOf(
 
 @Composable
 private fun TypeGrid(selected: AccountType, onSelect: (AccountType) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
         TYPE_OPTIONS.chunked(2).forEach { pair ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                 pair.forEach { option ->
                     TypeCell(
                         label = option.label,
@@ -277,7 +305,10 @@ private fun TypeCell(
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(12.dp)
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
+    val shape: RoundedCornerShape = radii.rM
 
     val borderColor: Color = if (selected) colors.borderFocus else colors.border
     val bgColor = if (selected) colors.surface3 else colors.surface1
@@ -285,28 +316,25 @@ private fun TypeCell(
 
     Row(
         modifier = modifier
-            .height(52.dp)
+            .height(TypeTileHeight)
             .clip(shape)
             .background(bgColor)
-            .border(1.dp, borderColor, shape)
+            .border(spacing.hairline, borderColor, shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = TypeTileHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(TypeTileContentGap),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(TypeTileIconSize),
         )
         Text(
             text = label,
-            fontSize = 15.sp,
-            fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
-            fontFamily = InterFontFamily,
+            style = type.titleM.copy(fontWeight = if (selected) FontWeight.W600 else FontWeight.W500),
             color = tint,
-            letterSpacing = (-0.15).sp,
         )
     }
 }
