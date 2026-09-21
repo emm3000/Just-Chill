@@ -1,7 +1,6 @@
 package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.domain.account.Account
-import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
@@ -15,6 +14,7 @@ import com.emm.justchill.core.ui.format.monthLabel
 import com.emm.justchill.core.ui.format.relativeDayLabel
 import com.emm.justchill.core.ui.mvi.UiState
 import com.emm.justchill.core.ui.transaction.Catalog
+import com.emm.justchill.core.ui.transaction.categoriesOf
 import com.emm.justchill.feature.transaction.capture.comboLabel
 import kotlinx.datetime.LocalDate
 
@@ -62,7 +62,8 @@ data class AddTransactionUiState(
 
     val hasNoAccounts: Boolean get() = catalog.loaded?.accounts?.isEmpty() == true
 
-    val categories: List<SelectableCategory> get() = categoriesOf(transactionType.categoryType)
+    val categories: List<SelectableCategory>
+        get() = catalog.categoriesOf(transactionType.categoryType, extras = extraCategories)
 
     val accountSelected: Account?
         get() = accounts.find { it.accountId == accountId }
@@ -98,14 +99,6 @@ data class AddTransactionUiState(
     private val usageForCurrentType: FrequentUsage? get() = frequentUsage?.takeIf { it.loadedFor == transactionType }
 
     private val rankedCombo: FrequentComboUi? get() = frequentCombos.firstOrNull()
-
-    private fun categoriesOf(type: CategoryType): List<SelectableCategory> {
-        val known = catalog.loaded?.categories?.get(type).orEmpty()
-        val pending = extraCategories.filter { extra ->
-            extra.categoryType == type && known.none { it.categoryId == extra.categoryId }
-        }
-        return if (pending.isEmpty()) known else pending + known
-    }
 
     private fun toComboUi(combo: FrequentCombo, candidates: List<SelectableCategory>): FrequentComboUi? {
         val account = accounts.find { it.accountId == combo.accountId }

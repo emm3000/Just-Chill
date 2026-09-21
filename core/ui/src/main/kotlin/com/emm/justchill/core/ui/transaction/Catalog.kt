@@ -29,3 +29,11 @@ sealed interface Catalog {
         override val loaded: Loaded get() = this
     }
 }
+
+fun Catalog.categoriesOf(type: CategoryType, extras: List<SelectableCategory>): List<SelectableCategory> {
+    val known: List<SelectableCategory> = loaded?.categories?.get(type).orEmpty()
+    val pending: List<SelectableCategory> = extras.filter { extra ->
+        extra.categoryType == type && known.none { it.categoryId == extra.categoryId }
+    }
+    return if (pending.isEmpty()) known else pending + known
+}
