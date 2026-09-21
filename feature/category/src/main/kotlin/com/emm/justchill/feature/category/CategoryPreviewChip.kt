@@ -7,22 +7,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.category.IconCatalog
 import com.emm.justchill.core.ui.category.resolvedColor
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 internal fun PreviewChip(
@@ -32,43 +37,43 @@ internal fun PreviewChip(
     type: CategoryType,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val emmType: EmmType = LocalEmmType.current
 
-    val displayName = name.trim().ifBlank { "Tu categoría" }
-    val nameColor = if (name.isBlank()) colors.textTertiary else colors.textPrimary
-    val shape = RoundedCornerShape(999.dp)
+    val displayName: String = name.trim().ifBlank { "Tu categoría" }
+    val nameColor: Color = if (name.isBlank()) colors.textTertiary else colors.textPrimary
+    val shape: Shape = radii.rFull
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         modifier = modifier
             .clip(shape)
             .background(colors.surface1)
-            .border(1.dp, colors.border, shape)
-            .padding(start = 10.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+            .border(spacing.hairline, colors.border, shape)
+            .padding(start = spacing.s2, end = spacing.s3, top = spacing.s2, bottom = spacing.s2),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(34.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .size(spacing.s8)
+                .clip(radii.rS)
                 .background(colors.surface3),
         ) {
             Icon(
                 imageVector = icon.icon,
                 contentDescription = null,
                 tint = colors.textSecondary,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(spacing.s4),
             )
         }
         CategoryDot(color = colors.resolvedColor(colorId))
         Text(
             text = displayName,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
+            style = emmType.titleM,
             color = nameColor,
-            letterSpacing = (-0.15).sp,
         )
         TypeBadge(type = type)
     }
@@ -76,25 +81,26 @@ internal fun PreviewChip(
 
 @Composable
 private fun TypeBadge(type: CategoryType) {
-    val colors = LocalEmmColors.current
-    val isIncome = type == CategoryType.Income
-    val bg = if (isIncome) colors.posMuted else colors.negMuted
-    val fg = if (isIncome) colors.success else colors.danger
-    val label = if (isIncome) "Ingreso" else "Gasto"
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val emmType: EmmType = LocalEmmType.current
+    val isIncome: Boolean = type == CategoryType.Income
+    val bg: Color = if (isIncome) colors.posMuted else colors.negMuted
+    val fg: Color = if (isIncome) colors.success else colors.danger
+    val label: String = if (isIncome) "Ingreso" else "Gasto"
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
+            .clip(radii.rFull)
             .background(bg)
-            .padding(horizontal = 9.dp, vertical = 3.dp),
+            .padding(horizontal = spacing.s2, vertical = spacing.s1),
     ) {
         Text(
             text = label,
-            fontSize = 11.sp,
+            style = emmType.caption,
             fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
             color = fg,
-            letterSpacing = 0.sp,
         )
     }
 }

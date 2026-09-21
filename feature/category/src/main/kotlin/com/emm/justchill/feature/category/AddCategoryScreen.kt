@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
@@ -30,18 +29,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
@@ -53,9 +52,16 @@ import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.IconCatalog
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -65,10 +71,10 @@ fun AddCategoryScreen(
     onCategorySave: (Category) -> Unit = {},
     vm: AddCategoryViewModel = koinViewModel(),
 ) {
-    val state by vm.state.collectAsStateWithLifecycle()
-    val keyboard = LocalSoftwareKeyboardController.current
-    val currentOnCategorySave by rememberUpdatedState(onCategorySave)
-    val dismissAndBack = {
+    val state: AddCategoryUiState by vm.state.collectAsStateWithLifecycle()
+    val keyboard: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current
+    val currentOnCategorySave: (Category) -> Unit by rememberUpdatedState(onCategorySave)
+    val dismissAndBack: () -> Unit = {
         keyboard?.hide()
         onBack()
     }
@@ -102,15 +108,16 @@ private fun AddCategoryContent(
     onIntent: (AddCategoryIntent) -> Unit,
     onBack: () -> Unit = {},
 ) {
-    val colors = LocalEmmColors.current
-    val focusManager = LocalFocusManager.current
-    val nameFocus = remember { FocusRequester() }
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val focusManager: FocusManager = LocalFocusManager.current
+    val nameFocus: FocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         if (state.name.isBlank()) nameFocus.requestFocus()
     }
 
-    val attemptSave = {
+    val attemptSave: () -> Unit = {
         if (state.isAllFieldValidated) {
             focusManager.clearFocus()
             onIntent(AddCategoryIntent.OnSave)
@@ -132,12 +139,12 @@ private fun AddCategoryContent(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = spacing.s4),
+            verticalArrangement = Arrangement.spacedBy(spacing.s5),
         ) {
-            val selectedIcon = AppIconCatalog.findById(state.iconId)
+            val selectedIcon: IconCatalog = AppIconCatalog.findById(state.iconId)
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(spacing.s1))
 
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -181,7 +188,7 @@ private fun AddCategoryContent(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.s2))
         }
 
         StickyCTA(
@@ -193,13 +200,15 @@ private fun AddCategoryContent(
 }
 
 private fun saveButtonLabel(state: AddCategoryUiState): String {
-    val trimmed = state.name.trim()
+    val trimmed: String = state.name.trim()
     return if (trimmed.isBlank()) "Escribe un nombre" else "Crear «$trimmed»"
 }
 
 @Composable
 private fun Section(eyebrow: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
         Eyebrow(text = eyebrow)
         content()
     }
@@ -212,18 +221,14 @@ private fun NameInput(
     focusRequester: FocusRequester,
     onImeAction: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        textStyle = TextStyle(
-            color = colors.textPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            letterSpacing = (-0.18).sp,
-        ),
+        textStyle = type.titleL.copy(color = colors.textPrimary, fontWeight = FontWeight.W500),
         cursorBrush = SolidColor(colors.borderFocus),
         singleLine = true,
         keyboardActions = KeyboardActions(onDone = { onImeAction() }),
@@ -238,15 +243,14 @@ private fun NameInput(
                     strokeWidth = 1f,
                 )
             }
-            .padding(vertical = 8.dp),
+            .padding(vertical = spacing.s2),
         decorationBox = { inner ->
             Box {
                 if (value.isEmpty()) {
                     Text(
                         text = "ej. Comida",
-                        fontSize = 18.sp,
+                        style = type.titleL,
                         fontWeight = FontWeight.W400,
-                        fontFamily = InterFontFamily,
                         color = colors.textTertiary,
                     )
                 }
@@ -258,17 +262,19 @@ private fun NameInput(
 
 @Composable
 private fun TypeSegmented(selected: CategoryType, onSelect: (CategoryType) -> Unit) {
-    val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(12.dp)
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val shape: Shape = radii.rM
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
             .background(colors.surface1)
-            .border(1.dp, colors.border, shape)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .border(spacing.hairline, colors.border, shape)
+            .padding(spacing.s1),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
         TypeSegCell(
             label = "Ingreso",
@@ -287,10 +293,13 @@ private fun TypeSegmented(selected: CategoryType, onSelect: (CategoryType) -> Un
 
 @Composable
 private fun TypeSegCell(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(9.dp)
-    val bg = if (selected) colors.surface3 else Color.Transparent
-    val fg = if (selected) colors.textPrimary else colors.textSecondary
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
+    val shape: Shape = radii.rXS
+    val bg: Color = if (selected) colors.surface3 else Color.Transparent
+    val fg: Color = if (selected) colors.textPrimary else colors.textSecondary
 
     Box(
         contentAlignment = Alignment.Center,
@@ -298,12 +307,11 @@ private fun TypeSegCell(label: String, selected: Boolean, onClick: () -> Unit, m
             .clip(shape)
             .background(bg)
             .clickable(onClick = onClick)
-            .padding(vertical = 11.dp),
+            .padding(vertical = spacing.s3),
     ) {
         Text(
             text = label,
-            fontSize = 13.sp,
-            fontFamily = InterFontFamily,
+            style = type.labelM,
             fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
             color = fg,
         )

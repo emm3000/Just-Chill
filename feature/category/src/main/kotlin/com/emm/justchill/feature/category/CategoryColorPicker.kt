@@ -23,8 +23,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.selectableColorIds
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
@@ -33,8 +31,6 @@ import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
-
-private val SwatchRingWidth: Dp = 1.dp
 
 private val colorLabels: Map<String, String> = mapOf(
     "blue" to "Pizarra",
@@ -72,7 +68,7 @@ private fun ColorSwatch(colorId: String, selected: Boolean, onClick: () -> Unit)
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(spacing.s12)
-            .border(SwatchRingWidth, ring, CircleShape)
+            .border(spacing.hairline, ring, CircleShape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,

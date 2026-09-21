@@ -29,10 +29,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
@@ -52,8 +51,10 @@ import com.emm.justchill.core.ui.category.AppIconCatalog
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.components.EmmTextInput
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -66,8 +67,8 @@ fun CategoriesScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
         modifier = modifier
@@ -91,10 +92,10 @@ fun CategoriesScreen(
             return@Column
         }
 
-        val incomes = state.categories
+        val incomes: List<Category> = state.categories
             .filter { it.categoryType == CategoryType.Income }
             .sortedBy { it.name.lowercase() }
-        val spends = state.categories
+        val spends: List<Category> = state.categories
             .filter { it.categoryType == CategoryType.Spend }
             .sortedBy { it.name.lowercase() }
 
@@ -152,7 +153,7 @@ fun CategoriesScreen(
 
 @Composable
 private fun SectionHeader(label: String, count: Int) {
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Eyebrow(
         text = "$label · $count",
         modifier = Modifier.padding(
@@ -166,12 +167,13 @@ private fun SectionHeader(label: String, count: Int) {
 
 @Composable
 private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val icon = remember(category.icon) { AppIconCatalog.findById(category.icon).icon }
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val icon: ImageVector = remember(category.icon) { AppIconCatalog.findById(category.icon).icon }
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val bg: Color = if (isPressed) colors.surface1 else Color.Transparent
 
     Row(
@@ -183,9 +185,9 @@ private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> U
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = spacing.s5, vertical = 12.dp),
+            .padding(horizontal = spacing.s5, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         IconTile(icon = icon, size = IconTileSize.Md)
         Row(
@@ -196,30 +198,29 @@ private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> U
             CategoryDot(color = colors.resolvedColor(category.color))
             Text(
                 text = category.name,
-                fontSize = 15.sp,
+                style = type.titleM,
                 fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
                 color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
             )
         }
         MovementMeta(count = movementCount, muted = false)
-        Spacer(Modifier.size(6.dp))
+        Spacer(Modifier.size(spacing.s1))
         ChevronTrailing()
     }
 }
 
 @Composable
 private fun UncategorizedRow(count: Int) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.s5, vertical = 12.dp),
+            .padding(horizontal = spacing.s5, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         IconTile(icon = Icons.AutoMirrored.Outlined.HelpOutline, size = IconTileSize.Md)
         Row(
@@ -230,27 +231,24 @@ private fun UncategorizedRow(count: Int) {
             CategoryDot(color = colors.catGraphite)
             Text(
                 text = "Sin categoría",
-                fontSize = 15.sp,
+                style = type.titleM,
                 fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
                 color = colors.textTertiary,
-                letterSpacing = (-0.15).sp,
             )
         }
         MovementMeta(count = count, muted = true)
-        Spacer(Modifier.size(6.dp))
+        Spacer(Modifier.size(spacing.s1))
         ChevronTrailing(enabled = false)
     }
 }
 
 @Composable
 private fun MovementMeta(count: Int, muted: Boolean) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
     Text(
         text = "$count mov.",
-        fontSize = 13.sp,
-        fontFamily = InterFontFamily,
-        fontWeight = FontWeight.W500,
+        style = type.labelM,
         color = if (muted) colors.textDisabled else colors.textTertiary,
     )
 }
@@ -263,7 +261,7 @@ private fun EditCategoryDialog(
     onDismiss: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     EmmDialog(
         title = "Editar categoría",
@@ -294,8 +292,8 @@ private fun DeleteCategoryDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
 
     EmmDialog(
         title = "¿Borrar «$categoryName»?",
@@ -311,9 +309,9 @@ private fun DeleteCategoryDialog(
 
 @Composable
 private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
         modifier = modifier.padding(horizontal = spacing.s5),
@@ -324,7 +322,7 @@ private fun EmptyState(onCreate: () -> Unit, modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.Category,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(spacing.s10),
         )
         Spacer(Modifier.height(spacing.s4))
         Text(
