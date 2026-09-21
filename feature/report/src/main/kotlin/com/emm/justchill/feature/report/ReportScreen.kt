@@ -67,7 +67,8 @@ import org.koin.compose.viewmodel.koinViewModel
 // ReportTopBarTest pins the share glyph 28dp from the edge as s4 + (44dp - 20dp) / 2; no EmmSpacing step is 44dp.
 private val TopBarTileSize: Dp = 44.dp
 
-private val EmptyStateTileSize: Dp = TopBarTileSize
+// Drawn at the top-bar tile's 44dp so the two tiles read as one; no EmmSpacing step is 44dp.
+private val EmptyStateTileSize: Dp = 44.dp
 
 @Composable
 fun ReportScreen(
