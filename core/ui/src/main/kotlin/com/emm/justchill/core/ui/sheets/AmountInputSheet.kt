@@ -29,7 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -41,7 +40,6 @@ import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.formatCentsForDisplay
 import com.emm.justchill.core.ui.format.sanitizeCentsInput
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -176,34 +174,16 @@ private fun AmountInputSheetContent(
                 },
             contentAlignment = Alignment.Center,
         ) {
-            // These three mirror StickyCTA's own inline label — no role holds 15sp Inter W600, and
-            // restyling this side alone would split the two CTAs apart.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
-                Text(
-                    text = "Listo",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                    color = ctaFg,
-                    letterSpacing = (-0.15).sp,
-                )
-                Text(
-                    text = "·",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                    color = ctaFg.copy(alpha = 0.6f),
-                )
+                Text(text = "Listo", style = type.titleM, color = ctaFg)
+                Text(text = "·", style = type.titleM, color = ctaFg.copy(alpha = 0.6f))
                 Text(
                     text = "S/ $formattedDraft",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.amountM.copy(fontWeight = FontWeight.W600),
                     color = ctaFg.copy(alpha = 0.9f),
-                    letterSpacing = (-0.15).sp,
                 )
             }
         }
