@@ -1,5 +1,7 @@
 package com.emm.justchill.feature.transaction.capture
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.justchill.core.database.JustChillDatabase
 import com.emm.justchill.core.database.transaction.DefaultTransactionRepository
@@ -23,10 +25,14 @@ import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.job
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -57,6 +63,8 @@ class TransactionDateEndToEndTest {
     private lateinit var driver: JdbcSqliteDriver
     private lateinit var db: JustChillDatabase
     private lateinit var transactionRepository: TransactionRepository
+
+    private val liveViewModels: MutableList<ViewModel> = mutableListOf()
 
     private val lima = TimeZone.of("America/Lima")
 
@@ -100,11 +108,25 @@ class TransactionDateEndToEndTest {
 
     @After
     fun tearDown() {
+        check(liveViewModels.isEmpty()) { "A ViewModel outlived its test" }
         driver.close()
     }
 
+    // Ordering, not housekeeping: the ViewModels collect SQLDelight flows on Dispatchers.IO, threads
+    // the test scheduler never drives. One resuming after MainDispatcherRule's resetMain or after
+    // tearDown's driver.close() throws outside the test, and the next runTest reports it.
+    private fun endToEndTest(body: suspend TestScope.() -> Unit): TestResult = runTest(testDispatcher) {
+        try {
+            body()
+        } finally {
+            liveViewModels.forEach { viewModel -> viewModel.viewModelScope.cancel() }
+            liveViewModels.forEach { viewModel -> viewModel.viewModelScope.coroutineContext.job.join() }
+            liveViewModels.clear()
+        }
+    }
+
     @Test
-    fun `the day the user picked is the day the column holds`() = runTest(testDispatcher) {
+    fun `the day the user picked is the day the column holds`() = endToEndTest {
         val vm = addViewModel().awaitReady()
 
         vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
@@ -116,7 +138,7 @@ class TransactionDateEndToEndTest {
     }
 
     @Test
-    fun `a transaction saved just after midnight is booked on the new day`() = runTest(testDispatcher) {
+    fun `a transaction saved just after midnight is booked on the new day`() = endToEndTest {
         val vm = addViewModel().awaitReady()
 
         // Screen opened at 23:59 on the 10th, saved at 00:05 on the 11th. This booked the movement
@@ -130,7 +152,7 @@ class TransactionDateEndToEndTest {
     }
 
     @Test
-    fun `editing only the amount leaves the stored date byte-for-byte identical`() = runTest(testDispatcher) {
+    fun `editing only the amount leaves the stored date byte-for-byte identical`() = endToEndTest {
         val stored = seedTransaction("2026-03-04T09:15:33")
 
         val vm = editViewModel().awaitLoaded()
@@ -143,7 +165,7 @@ class TransactionDateEndToEndTest {
     }
 
     @Test
-    fun `an evening transaction survives an amount-only edit without moving a day`() = runTest(testDispatcher) {
+    fun `an evening transaction survives an amount-only edit without moving a day`() = endToEndTest {
         // 23:30 local is past midnight UTC, the case a naive instant conversion shifts a day forward.
         val stored = seedTransaction("2026-03-04T23:30:00")
 
@@ -156,7 +178,7 @@ class TransactionDateEndToEndTest {
     }
 
     @Test
-    fun `moving a transaction to another day keeps the hour it was recorded at`() = runTest(testDispatcher) {
+    fun `moving a transaction to another day keeps the hour it was recorded at`() = endToEndTest {
         seedTransaction("2026-03-04T09:15:33")
 
         val vm = editViewModel().awaitLoaded()
@@ -168,7 +190,7 @@ class TransactionDateEndToEndTest {
     }
 
     @Test
-    fun `re-saving the same transaction never drifts`() = runTest(testDispatcher) {
+    fun `re-saving the same transaction never drifts`() = endToEndTest {
         seedTransaction("2026-03-04T23:30:00")
 
         repeat(5) {
@@ -182,7 +204,7 @@ class TransactionDateEndToEndTest {
     }
 
     @Test
-    fun `the stored date reaches the edit screen unchanged, wherever the device is`() = runTest(testDispatcher) {
+    fun `the stored date reaches the edit screen unchanged, wherever the device is`() = endToEndTest {
         seedTransaction("2026-03-04T23:30:00")
 
         val karachi = editViewModel(zone = TimeZone.of("Asia/Karachi")).awaitLoaded()
@@ -212,7 +234,7 @@ class TransactionDateEndToEndTest {
         todayFlow = todayFlowIn(lima),
         clock = clock,
         zone = lima,
-    )
+    ).also { viewModel -> liveViewModels += viewModel }
 
     private fun editViewModel(zone: TimeZone = lima): EditTransactionViewModel = EditTransactionViewModel(
         transactionId = "tx-edit",
@@ -223,7 +245,7 @@ class TransactionDateEndToEndTest {
         deleteTransaction = mockk<DeleteTransactionUseCase>(relaxed = true),
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         todayFlow = todayFlowIn(zone),
-    )
+    ).also { viewModel -> liveViewModels += viewModel }
 
     // Reads the same movable clock the rest of this test drives, so "today" can never disagree
     // with the instant being stored.
