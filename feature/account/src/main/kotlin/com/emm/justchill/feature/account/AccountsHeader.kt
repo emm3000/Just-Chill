@@ -39,6 +39,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
+// The summary strip's divider; 36dp sits evenly between s8 (32dp) and s10 (40dp), so no step fits.
 private val SummaryDividerHeight: Dp = 36.dp
 
 @Composable
@@ -82,7 +83,7 @@ private fun NewAccountButton(onClick: () -> Unit) {
                 .height(spacing.s10)
                 .clip(radii.rFull)
                 .background(colors.surface1)
-                .border(1.dp, colors.border, radii.rFull)
+                .border(spacing.hairline, colors.border, radii.rFull)
                 .indication(interactionSource, ripple())
                 .padding(horizontal = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
@@ -121,7 +122,7 @@ private fun MonthSummaryStrip(state: AccountsUiState) {
         )
         Box(
             modifier = Modifier
-                .width(1.dp)
+                .width(spacing.hairline)
                 .height(SummaryDividerHeight)
                 .background(colors.border),
         )
