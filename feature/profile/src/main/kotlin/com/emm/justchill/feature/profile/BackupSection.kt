@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.shared.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.FilledCta
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -136,8 +138,8 @@ private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
 @Composable
 private fun BackupLocalOnlyNote() {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii = LocalEmmRadii.current
     Text(
         text = BACKUP_LOCAL_ONLY_WARNING,
@@ -154,8 +156,8 @@ private fun BackupLocalOnlyNote() {
 @Composable
 private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
     val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,7 +176,7 @@ private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
 @Composable
 private fun LastBackupRow(row: BackupRowUi) {
     val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val metaColor: Color? = when (row.severity()) {
         BackupRowSeverity.Normal -> null
         BackupRowSeverity.Warning -> colors.warning

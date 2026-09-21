@@ -80,7 +80,7 @@ private fun CopyableCommitRow(label: String, onCopyClick: () -> Unit) {
             imageVector = Icons.Outlined.ContentCopy,
             contentDescription = "Copiar el hash completo del commit",
             tint = colors.textTertiary,
-            modifier = Modifier.size(spacing.s3),
+            modifier = Modifier.size(spacing.s4),
         )
     }
 }
