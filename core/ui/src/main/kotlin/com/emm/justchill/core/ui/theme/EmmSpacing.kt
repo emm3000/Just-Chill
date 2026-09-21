@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 @Immutable
 data class EmmSpacing(
     val s0: Dp = 0.dp,
+    val hairline: Dp = 1.dp,
     val s1: Dp = 4.dp,
     val s2: Dp = 8.dp,
     val s3: Dp = 12.dp,

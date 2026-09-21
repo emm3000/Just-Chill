@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -21,14 +20,20 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
-fun Hairline(modifier: Modifier = Modifier, insetStart: Dp = 0.dp, insetEnd: Dp = 0.dp, color: Color? = null) {
-    val colors = LocalEmmColors.current
+fun Hairline(
+    modifier: Modifier = Modifier,
+    insetStart: Dp = LocalEmmSpacing.current.s0,
+    insetEnd: Dp = LocalEmmSpacing.current.s0,
+    color: Color? = null,
+) {
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(start = insetStart, end = insetEnd)
-            .height(1.dp)
+            .height(spacing.hairline)
             .background(color ?: colors.border),
     )
 }
