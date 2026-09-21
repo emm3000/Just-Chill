@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -49,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.atoms.SegmentOption
+import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.AppIconCatalog
 import com.emm.justchill.core.ui.category.IconCatalog
@@ -184,14 +185,14 @@ internal fun CategoryFilterSheet(
                 }
             }
 
-            SegmentedRow(
-                segment = segment,
-                onSegmentChange = { segment = it },
-                incomeCount = incomeCount,
-                spendCount = spendCount,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.s5, vertical = spacing.s1),
+            Segmented(
+                options = listOf(
+                    SegmentOption(value = CategoryType.Income, label = "Ingresos · $incomeCount"),
+                    SegmentOption(value = CategoryType.Spend, label = "Gastos · $spendCount"),
+                ),
+                selected = segment,
+                onSelect = { segment = it },
+                modifier = Modifier.padding(horizontal = spacing.s5, vertical = spacing.s1),
             )
 
             Spacer(Modifier.height(spacing.s2))
@@ -245,89 +246,6 @@ internal fun CategoryFilterSheet(
             } else {
                 Spacer(Modifier.height(spacing.s4))
             }
-        }
-    }
-}
-
-@Composable
-private fun SegmentedRow(
-    segment: CategoryType,
-    onSegmentChange: (CategoryType) -> Unit,
-    incomeCount: Int,
-    spendCount: Int,
-    modifier: Modifier = Modifier,
-) {
-    val colors: EmmColors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-    val radii: EmmRadii = LocalEmmRadii.current
-
-    Row(
-        modifier = modifier
-            .height(spacing.s12)
-            .clip(radii.rM)
-            .background(colors.surface1)
-            .border(spacing.hairline, colors.border, radii.rM)
-            .padding(horizontal = spacing.s1),
-        horizontalArrangement = Arrangement.spacedBy(spacing.s1),
-    ) {
-        SegmentCell(
-            label = "Ingresos",
-            count = incomeCount,
-            selected = segment == CategoryType.Income,
-            onClick = { onSegmentChange(CategoryType.Income) },
-            modifier = Modifier.weight(1f),
-        )
-        SegmentCell(
-            label = "Gastos",
-            count = spendCount,
-            selected = segment == CategoryType.Spend,
-            onClick = { onSegmentChange(CategoryType.Spend) },
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun SegmentCell(
-    label: String,
-    count: Int,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors: EmmColors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-    val radii: EmmRadii = LocalEmmRadii.current
-    val type: EmmType = LocalEmmType.current
-    val bg: Color = if (selected) colors.surface3 else Color.Transparent
-    val textColor: Color = if (selected) colors.textPrimary else colors.textSecondary
-    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .fillMaxHeight()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(vertical = spacing.s1),
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(radii.rXS)
-                .background(bg)
-                .indication(interactionSource, ripple()),
-        ) {
-            Text(
-                text = "$label · $count",
-                style = type.labelM,
-                fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
-                color = textColor,
-            )
         }
     }
 }
