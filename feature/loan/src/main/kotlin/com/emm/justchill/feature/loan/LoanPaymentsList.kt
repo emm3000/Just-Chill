@@ -120,7 +120,7 @@ private fun LoanPaymentsEmptyState(modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.Payments,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(spacing.s10),
         )
         Spacer(Modifier.height(spacing.s3))
         Text(
@@ -136,6 +136,9 @@ private fun LoanPaymentsEmptyState(modifier: Modifier = Modifier) {
         )
     }
 }
+
+// No token: an arbitrary preview-frame height with no relation to any measured screen element.
+private val PREVIEW_FRAME_HEIGHT = 240.dp
 
 private val previewLoanPayments = listOf(
     LoanPaymentRowUi(
@@ -162,7 +165,7 @@ private fun LoanPaymentItemsPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .height(PREVIEW_FRAME_HEIGHT)
                 .background(LocalEmmColors.current.bg),
         ) {
             LazyColumn { loanPaymentItems(payments = previewLoanPayments, onEditClick = {}, onDeleteClick = {}) }
@@ -178,7 +181,7 @@ private fun LoanPaymentItemsEmptyPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .height(PREVIEW_FRAME_HEIGHT)
                 .background(LocalEmmColors.current.bg),
         ) {
             LazyColumn { loanPaymentItems(payments = emptyList(), onEditClick = {}, onDeleteClick = {}) }

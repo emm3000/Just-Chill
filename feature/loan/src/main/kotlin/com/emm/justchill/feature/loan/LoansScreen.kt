@@ -29,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -168,7 +167,7 @@ private fun LoansEmptyState(modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.People,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(spacing.s12),
         )
         Spacer(Modifier.height(spacing.s4))
         Text(

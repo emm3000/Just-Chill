@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
@@ -40,7 +39,7 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
+            .border(spacing.hairline, colors.border, radii.rM)
             .padding(spacing.s4),
     ) {
         Row(
@@ -119,7 +118,7 @@ private fun LoanSummaryCardPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             LoanSummaryCard(summary = activeLoanSummary)
         }
@@ -134,7 +133,7 @@ private fun LoanSummaryCardSettledPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             LoanSummaryCard(
                 summary = activeLoanSummary.copy(
@@ -155,7 +154,7 @@ private fun LoanSummaryCardLongNotePreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             LoanSummaryCard(
                 summary = activeLoanSummary.copy(
