@@ -1,51 +1,46 @@
 package com.emm.justchill.feature.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.Eyebrow
+import com.emm.justchill.core.ui.atoms.IconTile
+import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-
-// No EmmSpacing step sits at 18dp; the glyph is about half the 40dp tile, same ladder as
-// core/ui's IconTile.Lg (IconTile.kt's LG_GLYPH_SIZE).
-private val TileGlyphSize: Dp = 18.dp
 
 // No EmmSpacing step sits at 2dp; s1 doubles the label-to-meta gap, s0 removes it.
 private val LabelMetaGap: Dp = 2.dp
 
 @Composable
 internal fun SectionHeader(text: String) {
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Eyebrow(
         text = text,
         modifier = Modifier.padding(
@@ -87,34 +82,31 @@ internal fun ProfileRowWithTrailing(
     metaColor: Color? = null,
     enabled: Boolean = true,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val bg: Color = if (onClick != null && isPressed) colors.surface1 else Color.Transparent
+    val clickAction: () -> Unit = remember(onClick) { onClick ?: {} }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(bg)
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
-                        onClick = onClick,
-                    )
-                } else {
-                    Modifier
-                },
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = onClick != null,
+                role = Role.Button,
+                onClick = clickAction,
             )
             .padding(horizontal = spacing.s6, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
-        IconTile(icon = icon, tint = if (enabled) colors.textSecondary else colors.textTertiary)
+        IconTile(icon = icon, size = IconTileSize.Lg, enabled = enabled)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
@@ -140,24 +132,3 @@ internal fun ProfileRowWithTrailing(
     }
 }
 
-@Composable
-private fun IconTile(icon: ImageVector, tint: Color) {
-    val colors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(spacing.s10)
-            .clip(radii.rM)
-            .background(colors.surface1)
-            .border(width = spacing.hairline, color = colors.border, shape = radii.rM),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(TileGlyphSize),
-        )
-    }
-}
