@@ -19,9 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Close
@@ -34,14 +34,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
@@ -55,10 +54,14 @@ import com.emm.justchill.core.ui.pending.ConfirmRecurringSheet
 import com.emm.justchill.core.ui.pending.PendingRecurringHeader
 import com.emm.justchill.core.ui.pending.PendingRecurringRow
 import com.emm.justchill.core.ui.pending.PendingRecurringUi
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.transaction.TransactionRow
@@ -196,7 +199,8 @@ private fun TransactionListColumn(
     navigateToEdit: (String) -> Unit,
     onPendingClick: (PendingRecurringUi) -> Unit,
 ) {
-    val listState = rememberLazyListState()
+    val listState: LazyListState = rememberLazyListState()
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     LaunchedEffect(state.days.size) {
         listState.scrollToItem(0)
@@ -205,14 +209,14 @@ private fun TransactionListColumn(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
-        contentPadding = PaddingValues(bottom = 16.dp),
+        contentPadding = PaddingValues(bottom = spacing.s4),
     ) {
         if (state.isPendingSectionVisible) {
             item {
                 PendingRecurringHeader(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 24.dp, end = 24.dp, top = 14.dp, bottom = 8.dp),
+                        .padding(start = spacing.s6, end = spacing.s6, top = spacing.s4, bottom = spacing.s2),
                 )
             }
             items(state.pendingRecurringMovements, PendingRecurringUi::id) { pendingItem ->
@@ -290,12 +294,12 @@ private fun PendingConfirmSheetHost(
 
 @Composable
 private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val shape = RoundedCornerShape(10.dp)
+    val radii: EmmRadii = LocalEmmRadii.current
 
-    val displayText = buildAnnotatedString {
+    val displayText: AnnotatedString = buildAnnotatedString {
         append("Filtrando por «")
         withStyle(SpanStyle(fontWeight = FontWeight.W600)) {
             append(categoryName)
@@ -312,57 +316,49 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .padding(bottom = 12.dp)
+            .padding(horizontal = spacing.s6)
+            .padding(bottom = spacing.s3)
             .height(spacing.s12)
-            .clip(shape)
+            .clip(radii.rS)
             .background(colors.surface1)
-            .border(1.dp, colors.border, shape)
-            .padding(start = 12.dp),
+            .border(spacing.hairline, colors.border, radii.rS)
+            .padding(start = spacing.s3),
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.List,
             contentDescription = null,
             tint = colors.textSecondary,
-            modifier = Modifier.size(13.dp),
+            modifier = Modifier.size(spacing.s3),
         )
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(spacing.s2))
         Text(
             text = displayText,
-            style = type.labelM.copy(
-                fontSize = 12.sp,
-                letterSpacing = 0.sp,
-                fontWeight = FontWeight.W500,
-            ),
+            style = type.labelM,
             color = colors.textPrimary,
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(spacing.s2))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(radii.rXS)
                 .clickable(onClick = onClear)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = spacing.s3),
         ) {
             Text(
                 text = "Limpiar",
-                style = type.labelM.copy(
-                    fontSize = 12.sp,
-                    letterSpacing = 0.sp,
-                    fontWeight = FontWeight.W500,
-                ),
+                style = type.labelM,
                 color = colors.textSecondary,
             )
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(spacing.s1))
             Icon(
                 imageVector = Icons.Outlined.Close,
                 contentDescription = "Limpiar filtro",
                 tint = colors.textSecondary,
-                modifier = Modifier.size(11.dp),
+                modifier = Modifier.size(spacing.s3),
             )
         }
     }
@@ -375,21 +371,22 @@ private fun LazyListScope.dayGroupedItems(
 ) {
     days.forEach { dayGroup ->
         stickyHeader(key = "header-${dayGroup.date}", contentType = "day-header") {
-            val colors = LocalEmmColors.current
-            val type = LocalEmmType.current
+            val colors: EmmColors = LocalEmmColors.current
+            val type: EmmType = LocalEmmType.current
+            val spacing: EmmSpacing = LocalEmmSpacing.current
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(colors.bg)
-                    .padding(top = 14.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
+                    .padding(top = spacing.s4, start = spacing.s6, end = spacing.s6, bottom = spacing.s2),
             ) {
                 Eyebrow(text = dayGroup.primaryLabel)
                 if (showMonthYearCaption) {
                     Text(
                         text = dayGroup.monthYearCaption,
-                        style = type.eyebrow.copy(fontSize = 11.sp, letterSpacing = 1.0.sp),
+                        style = type.caption,
                         color = colors.textDisabled,
                     )
                 }
