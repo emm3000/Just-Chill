@@ -34,10 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.EmmDialog
@@ -51,11 +48,12 @@ import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.EmmType
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
@@ -65,8 +63,10 @@ fun RecurringMovementsScreen(
     onIntent: (RecurringMovementsIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val hasItems = state.activeItems.isNotEmpty() || state.pausedItems.isNotEmpty()
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val hasItems: Boolean = state.activeItems.isNotEmpty() || state.pausedItems.isNotEmpty()
 
     Column(
         modifier = modifier
@@ -75,16 +75,13 @@ fun RecurringMovementsScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 14.dp),
+                .padding(start = spacing.s5, end = spacing.s4, top = spacing.s4, bottom = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Recurrentes",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.W700,
-                fontFamily = InterFontFamily,
+                style = type.headlineL,
                 color = colors.textPrimary,
-                letterSpacing = (-0.4).sp,
                 modifier = Modifier.weight(1f),
             )
             AddRecurringButton(onClick = { onIntent(RecurringMovementsIntent.NavigateToAdd) })
@@ -102,7 +99,7 @@ fun RecurringMovementsScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
+                contentPadding = PaddingValues(top = spacing.s1, bottom = spacing.s3),
             ) {
                 item {
                     RecurringSummaryCard(
@@ -111,7 +108,7 @@ fun RecurringMovementsScreen(
                         variableCount = state.variableCount,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                            .padding(horizontal = spacing.s4, vertical = spacing.s2),
                     )
                 }
 
@@ -129,7 +126,7 @@ fun RecurringMovementsScreen(
                             text = "Pausados",
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+                                .padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s1),
                         )
                     }
                     items(state.pausedItems, key = { it.id }) { item ->
@@ -148,7 +145,7 @@ fun RecurringMovementsScreen(
     }
 
     state.pendingDelete?.let { id ->
-        val item = remember(id, state.activeItems, state.pausedItems) {
+        val item: RecurringMovementUi? = remember(id, state.activeItems, state.pausedItems) {
             state.activeItems.find { it.id == id } ?: state.pausedItems.find { it.id == id }
         }
         DeleteRecurringDialog(
@@ -166,59 +163,54 @@ private fun RecurringSummaryCard(
     variableCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     EmmCard(modifier = modifier) {
         Column {
             Eyebrow(text = "Cada mes se repiten")
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.s2))
 
             Row(verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) {
                     Eyebrow(text = "Entran", color = colors.textDisabled)
-                    Spacer(Modifier.height(2.dp))
+                    Spacer(Modifier.height(spacing.s1))
                     Text(
                         text = entranFormatted,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
+                        style = type.amountM,
                         color = colors.success,
-                        letterSpacing = (-0.15).sp,
                     )
                 }
 
                 Box(
                     modifier = Modifier
-                        .width(1.dp)
-                        .height(28.dp)
+                        .width(spacing.hairline)
+                        .height(spacing.s8)
                         .background(colors.border),
                 )
 
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 12.dp),
+                        .padding(start = spacing.s3),
                 ) {
                     Eyebrow(text = "Salen", color = colors.textDisabled)
-                    Spacer(Modifier.height(2.dp))
+                    Spacer(Modifier.height(spacing.s1))
                     Text(
                         text = salenFormatted,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
+                        style = type.amountM,
                         color = colors.textPrimary,
-                        letterSpacing = (-0.15).sp,
                     )
                 }
             }
 
             if (variableCount >= 1) {
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(spacing.s2))
                 Text(
                     text = "$variableCount recurrente(s) de monto variable — no se suma hasta confirmarlo",
-                    fontSize = 11.sp,
-                    fontFamily = InterFontFamily,
+                    style = type.caption,
                     color = colors.textTertiary,
                 )
             }
@@ -228,7 +220,7 @@ private fun RecurringSummaryCard(
 
 @Composable
 private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
 
     EmmDialog(
@@ -249,9 +241,10 @@ private fun DeleteRecurringDialog(name: String, onConfirm: () -> Unit, onDismiss
 
 @Composable
 private fun AddRecurringButton(onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val shape = RoundedCornerShape(999.dp)
+    val type: EmmType = LocalEmmType.current
+    val shape: RoundedCornerShape = LocalEmmRadii.current.rFull
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -268,23 +261,21 @@ private fun AddRecurringButton(onClick: () -> Unit) {
             modifier = Modifier
                 .clip(shape)
                 .background(colors.surface3)
-                .border(1.dp, colors.borderFocus, shape)
+                .border(spacing.hairline, colors.borderFocus, shape)
                 .indication(interactionSource, ripple())
-                .padding(horizontal = 12.dp, vertical = 7.dp),
+                .padding(horizontal = spacing.s3, vertical = spacing.s2),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s1),
         ) {
             Icon(
                 imageVector = Icons.Outlined.Add,
                 contentDescription = null,
                 tint = colors.textPrimary,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(spacing.s4),
             )
             Text(
                 text = "Nueva",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
+                style = type.labelL,
                 color = colors.textPrimary,
             )
         }
@@ -293,10 +284,12 @@ private fun AddRecurringButton(onClick: () -> Unit) {
 
 @Composable
 private fun RecurringEmptyState(onAdd: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     Column(
-        modifier = modifier.padding(horizontal = 24.dp),
+        modifier = modifier.padding(horizontal = spacing.s6),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -304,25 +297,22 @@ private fun RecurringEmptyState(onAdd: () -> Unit, modifier: Modifier = Modifier
             imageVector = Icons.Outlined.CalendarMonth,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(spacing.s12),
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(spacing.s4))
         Text(
             text = "Aún no tienes recurrentes",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W600,
-            fontFamily = InterFontFamily,
+            style = type.titleL,
             color = colors.textPrimary,
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(spacing.s2))
         Text(
             text = "Define un pago o cobro que se repite cada mes y confírmalo" +
                 " con un toque cuando toque, en vez de re-escribirlo.",
-            fontSize = 13.sp,
-            fontFamily = InterFontFamily,
+            style = type.bodyM,
             color = colors.textSecondary,
         )
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(spacing.s5))
         AddRecurringButton(onClick = onAdd)
     }
 }
