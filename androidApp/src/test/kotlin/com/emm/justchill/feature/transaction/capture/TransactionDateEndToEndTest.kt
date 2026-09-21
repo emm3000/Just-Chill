@@ -108,13 +108,15 @@ class TransactionDateEndToEndTest {
 
     @After
     fun tearDown() {
-        check(liveViewModels.isEmpty()) { "A ViewModel outlived its test" }
-        driver.close()
+        try {
+            check(liveViewModels.isEmpty()) { "A ViewModel outlived its test" }
+        } finally {
+            driver.close()
+        }
     }
 
-    // Ordering, not housekeeping: the ViewModels collect SQLDelight flows on Dispatchers.IO, threads
-    // the test scheduler never drives. One resuming after MainDispatcherRule's resetMain or after
-    // tearDown's driver.close() throws outside the test, and the next runTest reports it.
+    // A collector resuming after MainDispatcherRule's resetMain, or after tearDown's driver.close(),
+    // throws off-test, and the next runTest reports it as UncaughtExceptionsBeforeTest.
     private fun endToEndTest(body: suspend TestScope.() -> Unit): TestResult = runTest(testDispatcher) {
         try {
             body()
