@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
@@ -31,6 +30,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ripple
@@ -45,20 +45,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.IconCatalog
 import com.emm.justchill.core.ui.format.stripSpanishAccents
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 internal fun CategoryFilterSheet(
@@ -71,17 +73,19 @@ internal fun CategoryFilterSheet(
     onClear: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
+    val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var segment by rememberSaveable { mutableStateOf(initialSegment) }
     var query by rememberSaveable { mutableStateOf("") }
 
-    val totalCount = items.size
+    val totalCount: Int = items.size
 
-    val filtered = remember(items, segment, query) {
-        val normalizedQuery = query.normalizeForSearch()
+    val filtered: List<CategorySheetItem> = remember(items, segment, query) {
+        val normalizedQuery: String = query.normalizeForSearch()
         items
             .asSequence()
             .filter { it.type == segment }
@@ -104,17 +108,14 @@ internal fun CategoryFilterSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 16.dp, bottom = 14.dp),
+                    .padding(start = spacing.s6, end = spacing.s4, bottom = spacing.s4),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = "Filtrar por categoría",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.titleM,
                     color = colors.textPrimary,
-                    letterSpacing = (-0.15).sp,
                 )
                 val closeInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
                 Box(
@@ -130,47 +131,45 @@ internal fun CategoryFilterSheet(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(spacing.s8)
                             .clip(CircleShape)
                             .background(colors.surface1)
-                            .border(1.dp, colors.border, CircleShape)
+                            .border(spacing.hairline, colors.border, CircleShape)
                             .indication(closeInteraction, ripple()),
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
                             contentDescription = "Cerrar",
                             tint = colors.textSecondary,
-                            modifier = Modifier.size(13.dp),
+                            modifier = Modifier.size(spacing.s3),
                         )
                     }
                 }
             }
 
-            val searchShape = RoundedCornerShape(12.dp)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 12.dp)
-                    .clip(searchShape)
+                    .padding(horizontal = spacing.s5)
+                    .padding(bottom = spacing.s3)
+                    .clip(radii.rM)
                     .background(colors.surface1)
-                    .border(1.dp, colors.border, searchShape)
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                    .border(spacing.hairline, colors.border, radii.rM)
+                    .padding(horizontal = spacing.s3, vertical = spacing.s3),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s3),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Search,
                     contentDescription = null,
                     tint = colors.textTertiary,
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(spacing.s4),
                 )
                 Box(modifier = Modifier.weight(1f)) {
                     if (query.isEmpty()) {
                         Text(
                             text = "Buscar entre $totalCount categorías",
-                            fontSize = 13.sp,
-                            fontFamily = InterFontFamily,
+                            style = type.bodyM,
                             color = colors.textTertiary,
                         )
                     }
@@ -179,11 +178,7 @@ internal fun CategoryFilterSheet(
                         onValueChange = { query = it },
                         singleLine = true,
                         cursorBrush = SolidColor(colors.borderFocus),
-                        textStyle = TextStyle(
-                            fontSize = 13.sp,
-                            fontFamily = InterFontFamily,
-                            color = colors.textPrimary,
-                        ),
+                        textStyle = type.bodyM.copy(color = colors.textPrimary),
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -196,10 +191,10 @@ internal fun CategoryFilterSheet(
                 spendCount = spendCount,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                    .padding(horizontal = spacing.s5, vertical = spacing.s1),
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(spacing.s2))
 
             LazyColumn(
                 modifier = Modifier
@@ -221,15 +216,15 @@ internal fun CategoryFilterSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 16.dp)
-                        .heightIn(min = 48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.dp, colors.border, RoundedCornerShape(12.dp))
+                        .padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4)
+                        .heightIn(min = spacing.s12)
+                        .clip(radii.rM)
+                        .border(spacing.hairline, colors.border, radii.rM)
                         .clickable {
                             onClear()
                             onDismiss()
                         }
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = spacing.s4, vertical = spacing.s3),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {
@@ -237,19 +232,18 @@ internal fun CategoryFilterSheet(
                         imageVector = Icons.Outlined.Close,
                         contentDescription = null,
                         tint = colors.textPrimary,
-                        modifier = Modifier.size(12.dp),
+                        modifier = Modifier.size(spacing.s3),
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(spacing.s2))
                     Text(
                         text = "Limpiar filtro",
-                        fontSize = 13.sp,
+                        style = type.labelL,
                         fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
                         color = colors.textPrimary,
                     )
                 }
             } else {
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(spacing.s4))
             }
         }
     }
@@ -263,18 +257,18 @@ private fun SegmentedRow(
     spendCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val outerShape = RoundedCornerShape(12.dp)
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Row(
         modifier = modifier
             .height(spacing.s12)
-            .clip(outerShape)
+            .clip(radii.rM)
             .background(colors.surface1)
-            .border(1.dp, colors.border, outerShape)
-            .padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .border(spacing.hairline, colors.border, radii.rM)
+            .padding(horizontal = spacing.s1),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
         SegmentCell(
             label = "Ingresos",
@@ -301,10 +295,12 @@ private fun SegmentCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val shape = RoundedCornerShape(9.dp)
-    val bg = if (selected) colors.surface3 else Color.Transparent
-    val textColor = if (selected) colors.textPrimary else colors.textSecondary
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
+    val bg: Color = if (selected) colors.surface3 else Color.Transparent
+    val textColor: Color = if (selected) colors.textPrimary else colors.textSecondary
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -316,20 +312,19 @@ private fun SegmentCell(
                 indication = null,
                 onClick = onClick,
             )
-            .padding(vertical = 4.dp),
+            .padding(vertical = spacing.s1),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .clip(shape)
+                .clip(radii.rXS)
                 .background(bg)
                 .indication(interactionSource, ripple()),
         ) {
             Text(
                 text = "$label · $count",
-                fontSize = 12.sp,
-                fontFamily = InterFontFamily,
+                style = type.labelM,
                 fontWeight = if (selected) FontWeight.W600 else FontWeight.W500,
                 color = textColor,
             )
@@ -339,27 +334,27 @@ private fun SegmentCell(
 
 @Composable
 private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val icon = remember(item.iconId) { AppIconCatalog.findById(item.iconId) }
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val icon: IconCatalog = remember(item.iconId) { AppIconCatalog.findById(item.iconId) }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(if (item.isActive) colors.surface1 else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = spacing.s6, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
         IconTile(icon = icon.icon, size = IconTileSize.Sm)
 
         Text(
             text = item.name,
-            fontSize = 15.sp,
+            style = type.titleM,
             fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
             color = colors.textPrimary,
-            letterSpacing = (-0.15).sp,
             modifier = Modifier.weight(1f),
         )
 
@@ -367,7 +362,7 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(22.dp)
+                    .size(spacing.s6)
                     .clip(CircleShape)
                     .background(colors.surface3),
             ) {
@@ -375,7 +370,7 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
                     imageVector = Icons.Outlined.Check,
                     contentDescription = null,
                     tint = colors.textPrimary,
-                    modifier = Modifier.size(12.dp),
+                    modifier = Modifier.size(spacing.s3),
                 )
             }
         }
