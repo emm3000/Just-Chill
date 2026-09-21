@@ -41,18 +41,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.SpanishDateFormat
 import com.emm.justchill.core.ui.format.titlecaseFirstChar
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -67,8 +67,10 @@ private data class Shortcut(val label: String, val date: LocalDate)
 
 @Composable
 fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDismiss: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val zone = TimeZone.currentSystemDefault()
@@ -101,17 +103,11 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = ICON_ROW_EDGE_PADDING, bottom = 14.dp),
+                    .padding(start = spacing.s5, end = spacing.s4, bottom = spacing.s4),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "Selecciona fecha",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                    color = colors.textPrimary,
-                )
+                Text(text = "Selecciona fecha", style = type.titleM, color = colors.textPrimary)
                 IconBtn(
                     icon = Icons.Outlined.Close,
                     onClick = onDismiss,
@@ -122,8 +118,8 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(start = spacing.s5, end = spacing.s5, bottom = spacing.s4),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
                 items(shortcuts) { shortcut ->
                     ShortcutPill(
@@ -140,7 +136,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = ICON_ROW_EDGE_PADDING, vertical = 12.dp),
+                    .padding(horizontal = spacing.s4, vertical = spacing.s3),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -152,14 +148,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 val monthLabel = remember(displayedMonth) {
                     SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
                 }
-                Text(
-                    text = monthLabel,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
-                    color = colors.textPrimary,
-                    letterSpacing = (-0.15).sp,
-                )
+                Text(text = monthLabel, style = type.titleM, color = colors.textPrimary)
                 // A transaction records money that already moved, so there is no month after this one
                 // to browse. The domain rejects a future date outright (TransactionDateRules); this
                 // chevron and the day cells' own enabled gate keep the user away from that error.
@@ -176,8 +165,8 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 8.dp),
+                    .padding(horizontal = spacing.s5)
+                    .padding(bottom = spacing.s2),
             ) {
                 weekdayLabels.forEach { label ->
                     Box(
@@ -186,9 +175,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                     ) {
                         Text(
                             text = label,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.W500,
-                            fontFamily = InterFontFamily,
+                            style = type.caption.copy(fontWeight = FontWeight.W500),
                             color = colors.textTertiary,
                         )
                     }
@@ -199,7 +186,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = spacing.s5),
             ) {
                 for (week in 0 until 6) {
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -218,7 +205,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             }
         }
 
-        val confirmShape = RoundedCornerShape(12.dp)
+        val confirmShape: RoundedCornerShape = radii.rM
         val confirmLabel = remember(selectedDate) {
             SpanishDateFormat.dayFullMonth(selectedDate)
         }
@@ -226,7 +213,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 8.dp)
+                .padding(start = spacing.s4, end = spacing.s4, bottom = spacing.s4, top = spacing.s2)
                 .height(spacing.s12)
                 .clip(confirmShape)
                 .background(colors.textPrimary)
@@ -237,14 +224,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(
-                text = "Confirmar · $confirmLabel",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = colors.bg,
-                letterSpacing = (-0.15).sp,
-            )
+            Text(text = "Confirmar · $confirmLabel", style = type.titleM, color = colors.bg)
         }
     }
 }
@@ -253,7 +233,8 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
 private fun ShortcutPill(label: String, isActive: Boolean, onClick: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val pillShape = RoundedCornerShape(999.dp)
+    val type: EmmType = LocalEmmType.current
+    val pillShape: RoundedCornerShape = LocalEmmRadii.current.rFull
     val pillBg: Color = if (isActive) colors.textPrimary else Color.Transparent
     val pillBorder: Color = if (isActive) pillBg else colors.border
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -268,15 +249,13 @@ private fun ShortcutPill(label: String, isActive: Boolean, onClick: () -> Unit) 
             modifier = Modifier
                 .clip(pillShape)
                 .background(pillBg)
-                .border(BorderStroke(1.dp, pillBorder), pillShape)
+                .border(BorderStroke(spacing.hairline, pillBorder), pillShape)
                 .indication(interactionSource, ripple())
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = spacing.s4, vertical = spacing.s2),
         ) {
             Text(
                 text = label,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
+                style = type.labelM,
                 color = if (isActive) colors.bg else colors.textSecondary,
             )
         }
@@ -293,6 +272,7 @@ private fun DayCell(
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     // Seven columns share the grid's 20dp gutters, so under ~376dp of width the slot cannot also be 48dp wide.
@@ -314,7 +294,7 @@ private fun DayCell(
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(spacing.s10)
                     .clip(CircleShape)
                     .background(if (isSelected) colors.surface3 else Color.Transparent)
                     .indication(interactionSource, ripple()),
@@ -322,9 +302,7 @@ private fun DayCell(
             ) {
                 Text(
                     text = date.dayOfMonth.toString(),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.W500,
-                    fontFamily = InterFontFamily,
+                    style = type.labelL,
                     color = when {
                         isSelected -> colors.textPrimary
                         isFuture -> colors.textTertiary
@@ -335,8 +313,6 @@ private fun DayCell(
         }
     }
 }
-
-private val ICON_ROW_EDGE_PADDING: Dp = 14.dp
 
 private const val CALENDAR_GRID_CELLS = 42
 

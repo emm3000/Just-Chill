@@ -37,17 +37,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,8 +60,10 @@ fun AccountPickerSheet(
     onDismiss: () -> Unit,
     onAddNew: (() -> Unit)? = null,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
@@ -73,18 +77,11 @@ fun AccountPickerSheet(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 24.dp, end = 8.dp, bottom = 14.dp),
+                .padding(start = spacing.s6, end = spacing.s2, bottom = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                text = "Selecciona cuenta",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W600,
-                fontFamily = InterFontFamily,
-                color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
-            )
+            Text(text = "Selecciona cuenta", style = type.titleM, color = colors.textPrimary)
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -95,16 +92,16 @@ fun AccountPickerSheet(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(spacing.s8)
                         .clip(CircleShape)
                         .background(colors.surface1)
-                        .border(1.dp, colors.border, CircleShape),
+                        .border(spacing.hairline, colors.border, CircleShape),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
                         contentDescription = "Cerrar",
                         tint = colors.textSecondary,
-                        modifier = Modifier.size(13.dp),
+                        modifier = Modifier.size(spacing.s3),
                     )
                 }
             }
@@ -114,14 +111,13 @@ fun AccountPickerSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(spacing.s6),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Sin cuentas. Cierra y crea una primero.",
-                    fontSize = 13.sp,
+                    style = type.bodyM,
                     color = colors.textTertiary,
-                    fontFamily = InterFontFamily,
                 )
             }
         } else {
@@ -142,14 +138,14 @@ fun AccountPickerSheet(
 
         if (onAddNew != null) {
             val onAdd: () -> Unit = onAddNew
-            val addButtonShape = RoundedCornerShape(12.dp)
+            val addButtonShape: RoundedCornerShape = radii.rM
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)
+                    .padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4)
                     .height(spacing.s12)
                     .clip(addButtonShape)
-                    .border(1.dp, colors.borderFocus, addButtonShape)
+                    .border(spacing.hairline, colors.borderFocus, addButtonShape)
                     // hide() does not fire onDismissRequest, so the caller's "sheet is open" flag
                     // stays set and the picker is back on screen when the user returns.
                     .clickable {
@@ -165,26 +161,26 @@ fun AccountPickerSheet(
                     imageVector = Icons.Outlined.Add,
                     contentDescription = null,
                     tint = colors.textPrimary,
-                    modifier = Modifier.size(13.dp),
+                    modifier = Modifier.size(spacing.s3),
                 )
-                Spacer(Modifier.size(8.dp))
+                Spacer(Modifier.size(spacing.s2))
                 Text(
                     text = "Nueva cuenta",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.W600,
-                    fontFamily = InterFontFamily,
+                    style = type.labelL.copy(fontWeight = FontWeight.W600),
                     color = colors.textPrimary,
                 )
             }
         } else {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(spacing.s4))
         }
     }
 }
 
 @Composable
 private fun AccountRow(account: Account, isActive: Boolean, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
     val icon: ImageVector = when (account.type) {
         AccountType.Bank -> Icons.Outlined.AccountBalance
         AccountType.Cash -> Icons.Outlined.AttachMoney
@@ -206,26 +202,21 @@ private fun AccountRow(account: Account, isActive: Boolean, onClick: () -> Unit)
             .fillMaxWidth()
             .background(if (isActive) colors.surface1 else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = spacing.s6, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
         IconTile(icon = icon, size = IconTileSize.Md)
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = account.name,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
+                style = type.titleM.copy(fontWeight = FontWeight.W500),
                 color = colors.textPrimary,
-                letterSpacing = (-0.15).sp,
             )
             Text(
                 text = typeLabel,
-                fontSize = 11.sp,
-                fontFamily = InterFontFamily,
-                fontWeight = FontWeight.W500,
+                style = type.caption.copy(fontWeight = FontWeight.W500),
                 color = colors.textTertiary,
             )
         }
@@ -234,7 +225,7 @@ private fun AccountRow(account: Account, isActive: Boolean, onClick: () -> Unit)
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(spacing.s6)
                     .clip(CircleShape)
                     .background(colors.surface3),
             ) {
@@ -242,7 +233,7 @@ private fun AccountRow(account: Account, isActive: Boolean, onClick: () -> Unit)
                     imageVector = Icons.Outlined.AccountBalanceWallet,
                     contentDescription = null,
                     tint = colors.textPrimary,
-                    modifier = Modifier.size(12.dp),
+                    modifier = Modifier.size(spacing.s3),
                 )
             }
         }
