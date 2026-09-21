@@ -1,7 +1,6 @@
 package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.domain.account.Account
-import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.Transaction
@@ -12,6 +11,7 @@ import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.format.relativeDayLabel
 import com.emm.justchill.core.ui.mvi.UiState
 import com.emm.justchill.core.ui.transaction.Catalog
+import com.emm.justchill.core.ui.transaction.categoriesOf
 import kotlinx.datetime.LocalDate
 
 data class EditTransactionUiState(
@@ -36,7 +36,8 @@ data class EditTransactionUiState(
 
     val accounts: List<Account> get() = catalog.accounts
 
-    val categories: List<SelectableCategory> get() = categoriesOf(transactionType.categoryType)
+    val categories: List<SelectableCategory>
+        get() = catalog.categoriesOf(transactionType.categoryType, extras = extraCategories)
 
     val accountSelected: Account? get() = accounts.find { it.accountId == accountId }
 
@@ -66,14 +67,6 @@ data class EditTransactionUiState(
                 accountSelected?.accountId != stored.accountId ||
                 categoryEdited(stored.categoryId)
         }
-
-    private fun categoriesOf(type: CategoryType): List<SelectableCategory> {
-        val known: List<SelectableCategory> = catalog.loaded?.categories?.get(type).orEmpty()
-        val pending: List<SelectableCategory> = extraCategories.filter { extra ->
-            extra.categoryType == type && known.none { it.categoryId == extra.categoryId }
-        }
-        return if (pending.isEmpty()) known else pending + known
-    }
 
     // Compares the RESOLVED selection: a stored category the catalog can no longer offer is not an
     // edit the user made, or the CTA would be armed the moment such a screen opens.
