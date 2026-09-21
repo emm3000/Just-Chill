@@ -67,24 +67,6 @@ import org.koin.compose.viewmodel.koinViewModel
 // Every account-type tile shares this one height and no EmmSpacing step is 52dp, so it cannot become a token.
 private val TypeTileHeight: Dp = 52.dp
 
-// The type tile's own horizontal padding; 14dp sits evenly between s3 (12dp) and s4 (16dp), so no step fits.
-private val TypeTileHorizontalPadding: Dp = 14.dp
-
-// Icon-to-label gap inside a type tile; 10dp sits evenly between s2 (8dp) and s3 (12dp), so no step fits.
-private val TypeTileContentGap: Dp = 10.dp
-
-// The type tile's icon; 18dp sits evenly between s4 (16dp) and s5 (20dp), so no step fits.
-private val TypeTileIconSize: Dp = 18.dp
-
-// Eyebrow-to-content gap inside a form section; 10dp sits evenly between s2 (8dp) and s3 (12dp), so no step fits.
-private val SectionContentGap: Dp = 10.dp
-
-// Dot-to-label gap inside a shortcut chip; 6dp sits evenly between s1 (4dp) and s2 (8dp), so no step fits.
-private val ShortcutChipContentGap: Dp = 6.dp
-
-// The shortcut's colour dot; 6dp sits evenly between s1 (4dp) and s2 (8dp), so no step fits.
-private val ShortcutDotSize: Dp = 6.dp
-
 @Composable
 fun AddAccountScreen(
     onBack: () -> Unit,
@@ -181,7 +163,9 @@ private fun AddAccountContent(
 
 @Composable
 private fun Section(eyebrow: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(SectionContentGap)) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.s3)) {
         Eyebrow(text = eyebrow)
         content()
     }
@@ -249,11 +233,11 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
                 .indication(interactionSource, ripple())
                 .padding(horizontal = spacing.s3, vertical = spacing.s2),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ShortcutChipContentGap),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
         ) {
             Box(
                 modifier = Modifier
-                    .size(ShortcutDotSize)
+                    .size(spacing.s2)
                     .clip(CircleShape)
                     .background(dotColor),
             )
@@ -321,15 +305,15 @@ private fun TypeCell(
             .background(bgColor)
             .border(spacing.hairline, borderColor, shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = TypeTileHorizontalPadding),
+            .padding(horizontal = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TypeTileContentGap),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(TypeTileIconSize),
+            modifier = Modifier.size(spacing.s5),
         )
         Text(
             text = label,
