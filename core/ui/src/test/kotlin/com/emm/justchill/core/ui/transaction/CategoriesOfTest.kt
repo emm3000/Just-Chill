@@ -78,9 +78,11 @@ class CategoriesOfTest {
     }
 
     @Test
-    fun `Catalog Loading yields an empty list`() {
-        val result: List<SelectableCategory> = Catalog.Loading.categoriesOf(CategoryType.Spend, extras = emptyList())
+    fun `Loading carries extras until the catalog arrives`() {
+        val extra: SelectableCategory = selectable("extra-1")
 
-        assertEquals(emptyList(), result)
+        val result: List<SelectableCategory> = Catalog.Loading.categoriesOf(CategoryType.Spend, extras = listOf(extra))
+
+        assertEquals(listOf(extra), result)
     }
 }
