@@ -2,7 +2,6 @@ package com.emm.justchill.feature.transaction.capture.sheets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,13 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.atoms.FilledCta
+import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType
@@ -50,7 +49,7 @@ private const val NOTE_MAX_CHARS = 120
 
 private const val FOCUS_DELAY_AFTER_SHEET_SLIDE_IN_MS = 150L
 
-// The multiline field's growth ceiling; no EmmSpacing step sits near 140dp.
+// No EmmSpacing step sits near 140dp.
 private val NoteFieldMaxHeight: Dp = 140.dp
 
 @Composable
@@ -159,15 +158,13 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(spacing.s3),
             ) {
-                SheetButton(
+                OutlinedCta(
                     label = "Cancelar",
-                    primary = false,
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f),
                 )
-                SheetButton(
+                FilledCta(
                     label = "Guardar nota",
-                    primary = true,
                     onClick = {
                         onSave(draft.text)
                         onDismiss()
@@ -176,34 +173,5 @@ fun NoteSheet(initialNote: String, onSave: (String) -> Unit, onDismiss: () -> Un
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SheetButton(label: String, primary: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-    val type: EmmType = LocalEmmType.current
-
-    val bg: Color = if (primary) colors.textPrimary else Color.Transparent
-    val fg = if (primary) colors.bg else colors.textPrimary
-    val borderColor: Color = if (primary) bg else colors.border
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .height(spacing.s12)
-            .clip(radii.rM)
-            .background(bg)
-            .border(spacing.hairline, borderColor, radii.rM)
-            .clickable(onClick = onClick),
-    ) {
-        Text(
-            text = label,
-            style = type.titleM,
-            color = fg,
-            textAlign = TextAlign.Center,
-        )
     }
 }
