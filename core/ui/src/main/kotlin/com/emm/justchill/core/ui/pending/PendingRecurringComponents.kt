@@ -20,8 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
@@ -61,8 +59,8 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
                 indication = null,
                 onClick = dropUnlessResumed(block = onClick),
             )
-            .padding(horizontal = 24.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = spacing.s6, vertical = spacing.s2),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconTile(icon = Icons.Outlined.Repeat, size = IconTileSize.Lg)
@@ -75,7 +73,7 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
                 CategoryDotSlot(color = null)
                 Text(
                     text = item.name,
-                    style = type.labelL.copy(fontSize = 15.sp, letterSpacing = (-0.15).sp),
+                    style = type.bodyM.copy(fontWeight = FontWeight.W500),
                     color = colors.textPrimary,
                 )
             }
@@ -86,14 +84,14 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
                 CategoryDotSlot(color = null)
                 Text(
                     text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
-                    style = type.caption.copy(fontSize = 12.sp, letterSpacing = 0.sp),
+                    style = type.caption,
                     color = if (item.isCatchUp) colors.danger else colors.textTertiary,
                 )
             }
         }
         Text(
             text = item.formattedAmount,
-            style = type.labelL.copy(fontWeight = FontWeight.W600, letterSpacing = (-0.1).sp),
+            style = type.amountM.copy(fontWeight = FontWeight.W600),
             color = if (item.type == TransactionType.Income) colors.success else colors.textPrimary,
         )
     }
@@ -103,8 +101,16 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
 @Composable
 private fun PendingRecurringComponentsPreview() {
     EmmTheme {
+        val spacing: EmmSpacing = LocalEmmSpacing.current
         Column {
-            PendingRecurringHeader(modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp))
+            PendingRecurringHeader(
+                modifier = Modifier.padding(
+                    start = spacing.s6,
+                    end = spacing.s6,
+                    top = spacing.s6,
+                    bottom = spacing.s2,
+                ),
+            )
             PendingRecurringRow(item = PREVIEW_FIXED_ITEM, onClick = {})
             PendingRecurringRow(item = PREVIEW_CATCH_UP_ITEM, onClick = {})
         }
