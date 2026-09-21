@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -36,10 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -52,12 +47,16 @@ import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.FilledCta
+import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.StickyCTA
+import com.emm.justchill.core.ui.atoms.UnderlineTextField
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.error.toUserMessage
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.EmmType
@@ -75,9 +74,9 @@ fun AuthScreen(
     showGoogleSignIn: Boolean = true,
     vm: AuthViewModel = koinViewModel(),
 ) {
-    val state by vm.state.collectAsStateWithLifecycle()
-    val currentOnBack by rememberUpdatedState(onBack)
-    val currentOnOpenEmailApp by rememberUpdatedState(onOpenEmailApp)
+    val state: AuthUiState by vm.state.collectAsStateWithLifecycle()
+    val currentOnBack: () -> Unit by rememberUpdatedState(onBack)
+    val currentOnOpenEmailApp: () -> Unit by rememberUpdatedState(onOpenEmailApp)
 
     BackHandler(enabled = state is AuthUiState.CheckEmail) { vm.onIntent(AuthIntent.Back) }
 
@@ -122,7 +121,7 @@ private fun AuthMessage.toText(): String = when (this) {
 
 @Composable
 private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit, showGoogleSignIn: Boolean = true) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
 
     Column(
         modifier = Modifier
@@ -158,24 +157,24 @@ private fun AuthFormStep(
     modifier: Modifier = Modifier,
     showGoogleSignIn: Boolean = true,
 ) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
-    val headingText = if (state.mode == AuthMode.SignIn) "Inicia sesión" else "Crea tu cuenta"
-    val submitLabel = if (state.mode == AuthMode.SignIn) {
+    val headingText: String = if (state.mode == AuthMode.SignIn) "Inicia sesión" else "Crea tu cuenta"
+    val submitLabel: String = if (state.mode == AuthMode.SignIn) {
         if (state.submitting == Submitting.Email) "Entrando…" else "Iniciar sesión"
     } else {
         if (state.submitting == Submitting.Email) "Creando…" else "Crear cuenta"
     }
-    val toggleLabel = if (state.mode == AuthMode.SignIn) {
+    val toggleLabel: String = if (state.mode == AuthMode.SignIn) {
         "¿No tienes cuenta? Créala"
     } else {
         "¿Ya tienes cuenta? Inicia sesión"
     }
 
     // Deliberately not rememberSaveable: a config change re-masks the password.
-    var passwordVisible by remember { mutableStateOf(false) }
+    var passwordVisible: Boolean by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Column(
@@ -194,7 +193,7 @@ private fun AuthFormStep(
             )
             Spacer(Modifier.height(spacing.s2))
             Text(
-                text = "Tu data ya vive en tu celu. Una cuenta solo la sincroniza entre tus dispositivos.",
+                text = "Tu data vive en tu celular. Con una cuenta, que es opcional, guardas una copia de respaldo y tú decides cuándo restaurarla.",
                 style = type.bodyM,
                 color = colors.textSecondary,
             )
@@ -249,9 +248,17 @@ private fun AuthFormStep(
                 onValueChange = { onIntent(AuthIntent.PasswordChanged(it)) },
                 placeholder = "Mínimo 8 caracteres",
                 keyboardType = KeyboardType.Password,
-                isPassword = true,
-                passwordVisible = passwordVisible,
-                onTogglePasswordVisibility = { passwordVisible = !passwordVisible },
+                visualTransformation = if (passwordVisible) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                trailing = {
+                    PasswordVisibilityToggle(
+                        passwordVisible = passwordVisible,
+                        onToggle = { passwordVisible = !passwordVisible },
+                    )
+                },
             )
 
             Spacer(Modifier.height(spacing.s8))
@@ -293,10 +300,10 @@ private fun CheckEmailStep(
     onIntent: (AuthIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
-    val radii = LocalEmmRadii.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Column(
         modifier = modifier
@@ -373,7 +380,7 @@ private fun CheckEmailStep(
                 style = type.bodyM,
                 color = colors.textTertiary,
             )
-            val resendActive = !state.isResending && state.canResend
+            val resendActive: Boolean = !state.isResending && state.canResend
             Box(
                 contentAlignment = Alignment.Center,
                 // The height sits outside the branch so the row keeps it when the link
@@ -403,95 +410,37 @@ private fun AuthFieldInput(
     onValueChange: (String) -> Unit,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
-    isPassword: Boolean = false,
-    passwordVisible: Boolean = false,
-    onTogglePasswordVisibility: (() -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
-    val colors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-    val type: EmmType = LocalEmmType.current
-
-    var focused by remember { mutableStateOf(false) }
-
-    val labelColor = if (focused) colors.textPrimary else colors.textTertiary
-    val underlineColor = if (focused) colors.borderFocus else colors.border
-
-    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        Text(
-            text = label,
-            style = type.labelM,
-            color = labelColor,
-        )
-
-        BasicTextField(
+    FormSection(eyebrow = label) {
+        UnderlineTextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = type.bodyL.copy(
-                color = colors.textPrimary,
-                fontWeight = FontWeight.W500,
-            ),
-            cursorBrush = SolidColor(colors.borderFocus),
-            singleLine = true,
+            placeholder = placeholder,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            visualTransformation = if (isPassword && !passwordVisible) {
-                PasswordVisualTransformation()
-            } else {
-                VisualTransformation.None
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged { focused = it.isFocused }
-                .drawBehind {
-                    drawLine(
-                        color = underlineColor,
-                        start = Offset(0f, size.height),
-                        end = Offset(size.width, size.height),
-                        strokeWidth = spacing.hairline.toPx(),
-                    )
-                }
-                .padding(vertical = spacing.s2),
-            decorationBox = { inner ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                style = type.bodyL,
-                                color = colors.textTertiary,
-                            )
-                        }
-                        inner()
-                    }
-                    if (isPassword && onTogglePasswordVisibility != null) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(spacing.s12)
-                                .clickable(
-                                    role = Role.Button,
-                                    onClick = onTogglePasswordVisibility,
-                                ),
-                        ) {
-                            Icon(
-                                imageVector = if (passwordVisible) {
-                                    Icons.Outlined.Visibility
-                                } else {
-                                    Icons.Outlined.VisibilityOff
-                                },
-                                contentDescription = if (passwordVisible) {
-                                    "Ocultar contraseña"
-                                } else {
-                                    "Mostrar contraseña"
-                                },
-                                tint = colors.textTertiary,
-                                modifier = Modifier.size(spacing.s5),
-                            )
-                        }
-                    }
-                }
-            },
+            visualTransformation = visualTransformation,
+            trailing = trailing,
+        )
+    }
+}
+
+@Composable
+private fun PasswordVisibilityToggle(passwordVisible: Boolean, onToggle: () -> Unit) {
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(spacing.s12)
+            .clickable(role = Role.Button, onClick = onToggle),
+    ) {
+        Icon(
+            imageVector = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+            contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+            tint = colors.textTertiary,
+            modifier = Modifier.size(spacing.s5),
         )
     }
 }

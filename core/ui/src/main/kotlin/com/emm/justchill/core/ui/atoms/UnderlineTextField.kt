@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
@@ -12,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -20,15 +22,19 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 // No EmmType role is Inter 18sp; the input and its placeholder share this size until the field takes a role.
 private val UnderlineFieldFontSize: TextUnit = 18.sp
@@ -47,10 +53,12 @@ fun UnderlineTextField(
     modifier: Modifier = Modifier,
     placeholder: String = "",
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
-    val colors = LocalEmmColors.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
+    val colors: EmmColors = LocalEmmColors.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isFocused: Boolean by interactionSource.collectIsFocusedAsState()
 
     BasicTextField(
         value = value,
@@ -60,8 +68,9 @@ fun UnderlineTextField(
         singleLine = true,
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
+        visualTransformation = visualTransformation,
         modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
-        decorationBox = { inner -> UnderlineDecoration(placeholder, value.isEmpty(), inner) },
+        decorationBox = { inner -> UnderlineDecoration(placeholder, value.isEmpty(), inner, trailing) },
     )
 }
 
@@ -78,9 +87,9 @@ fun UnderlineTextField(
     placeholder: String = "",
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
-    val colors = LocalEmmColors.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
+    val colors: EmmColors = LocalEmmColors.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isFocused: Boolean by interactionSource.collectIsFocusedAsState()
 
     BasicTextField(
         value = value,
@@ -91,7 +100,7 @@ fun UnderlineTextField(
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
         modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
-        decorationBox = { inner -> UnderlineDecoration(placeholder, value.text.isEmpty(), inner) },
+        decorationBox = { inner -> UnderlineDecoration(placeholder, value.text.isEmpty(), inner, trailing = null) },
     )
 }
 
@@ -110,18 +119,26 @@ private fun Modifier.underline(color: Color, spacing: EmmSpacing): Modifier = th
     .padding(vertical = spacing.s2)
 
 @Composable
-private fun UnderlineDecoration(placeholder: String, isEmpty: Boolean, innerTextField: @Composable () -> Unit) {
-    Box {
-        if (isEmpty) {
-            Text(
-                text = placeholder,
-                fontSize = UnderlineFieldFontSize,
-                fontWeight = FontWeight.W400,
-                fontFamily = InterFontFamily,
-                color = LocalEmmColors.current.textTertiary,
-            )
+private fun UnderlineDecoration(
+    placeholder: String,
+    isEmpty: Boolean,
+    innerTextField: @Composable () -> Unit,
+    trailing: (@Composable () -> Unit)?,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.weight(1f)) {
+            if (isEmpty) {
+                Text(
+                    text = placeholder,
+                    fontSize = UnderlineFieldFontSize,
+                    fontWeight = FontWeight.W400,
+                    fontFamily = InterFontFamily,
+                    color = LocalEmmColors.current.textTertiary,
+                )
+            }
+            innerTextField()
         }
-        innerTextField()
+        trailing?.invoke()
     }
 }
 
@@ -169,6 +186,33 @@ private fun UnderlineTextFieldCaretPreview() {
                 value = TextFieldValue("12.50", TextRange(2)),
                 onValueChange = {},
                 placeholder = "0",
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun UnderlineTextFieldMaskedPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(LocalEmmSpacing.current.s4),
+        ) {
+            UnderlineTextField(
+                value = "password123",
+                onValueChange = {},
+                placeholder = "Mínimo 8 caracteres",
+                visualTransformation = PasswordVisualTransformation(),
+                trailing = {
+                    Text(
+                        text = "Ver",
+                        style = LocalEmmType.current.labelM,
+                        color = LocalEmmColors.current.textTertiary,
+                    )
+                },
             )
         }
     }
