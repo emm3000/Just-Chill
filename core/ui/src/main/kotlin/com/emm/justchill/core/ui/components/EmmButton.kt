@@ -47,7 +47,7 @@ fun EmmButton(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val style = when {
-        !enabled -> EmmButtonStyle(colors.surface1, colors.textDisabled, border = null)
+        !enabled -> EmmButtonStyle(colors.bg, colors.textTertiary, BorderStroke(1.dp, colors.border))
 
         variant == EmmButtonVariant.Primary -> EmmButtonStyle(colors.textPrimary, colors.bg, border = null)
 
