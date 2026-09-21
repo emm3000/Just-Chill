@@ -58,16 +58,12 @@ fun IconTile(icon: ImageVector, modifier: Modifier = Modifier, size: IconTileSiz
 
 private data class IconTileGeometry(val tileSize: Dp, val glyphSize: Dp, val shape: Shape)
 
-// Each tile rounds at about 0.3 of its side, as Lg's rM does on 40dp; no EmmRadii step is 7dp.
+// Every tile rounds at about 0.3 of its side, as Lg's rM does on 40dp; no EmmRadii step is 7dp or 9dp.
 private val SM_TILE_RADIUS: Dp = 7.dp
-
-// Each tile rounds at about 0.3 of its side, as Lg's rM does on 40dp; no EmmRadii step is 9dp.
 private val MD_TILE_RADIUS: Dp = 9.dp
 
-// Each glyph is about half its tile, as Sm's s3 is on 24dp; no EmmSpacing step is 15dp.
+// Every glyph is about half its tile, as Sm's s3 is on 24dp; no EmmSpacing step is 15dp or 18dp.
 private val MD_GLYPH_SIZE: Dp = 15.dp
-
-// Each glyph is about half its tile, as Sm's s3 is on 24dp; no EmmSpacing step is 18dp.
 private val LG_GLYPH_SIZE: Dp = 18.dp
 
 @Preview
