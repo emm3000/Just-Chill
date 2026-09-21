@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
 fun ToggleIncomeExpense(
@@ -40,7 +40,7 @@ private fun ToggleIncomeExpensePreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             ToggleIncomeExpense(
                 selected = TransactionType.Income,

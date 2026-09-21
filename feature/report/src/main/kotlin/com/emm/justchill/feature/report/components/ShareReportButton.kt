@@ -20,9 +20,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
@@ -31,15 +31,15 @@ fun ShareReportButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
-    val shape = RoundedCornerShape(6.dp)
+    val shape: RoundedCornerShape = LocalEmmRadii.current.rXS
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(spacing.s12)
             .clip(shape)
             .background(colors.surface1)
-            .border(width = 1.dp, color = colors.border, shape = shape)
+            .border(width = spacing.hairline, color = colors.border, shape = shape)
             .clickable(onClick = onClick)
             .padding(horizontal = spacing.s5),
         horizontalArrangement = Arrangement.Center,
@@ -49,7 +49,7 @@ fun ShareReportButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.IosShare,
             contentDescription = null,
             tint = colors.textPrimary,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(spacing.s5),
         )
         Box(modifier = Modifier.size(spacing.s2))
         Text(
@@ -68,7 +68,7 @@ private fun ShareReportButtonPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             ShareReportButton(onClick = {})
         }

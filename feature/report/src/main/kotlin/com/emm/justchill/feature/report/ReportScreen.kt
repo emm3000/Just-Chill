@@ -50,6 +50,7 @@ import com.emm.justchill.core.ui.format.monthYearLabel
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.feature.report.components.CategoryBarsCard
@@ -63,9 +64,10 @@ import com.emm.justchill.feature.report.components.TrendsContent
 import kotlinx.datetime.Month
 import org.koin.compose.viewmodel.koinViewModel
 
+// ReportTopBarTest pins the share glyph 28dp from the edge as s4 + (44dp - 20dp) / 2; no EmmSpacing step is 44dp.
 private val TopBarTileSize: Dp = 44.dp
 
-private val EmptyStateTileSize: Dp = 44.dp
+private val EmptyStateTileSize: Dp = TopBarTileSize
 
 @Composable
 fun ReportScreen(
@@ -267,7 +269,7 @@ private fun ReportTopBar(onShare: () -> Unit, onBack: () -> Unit) {
 private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val shape = RoundedCornerShape(12.dp)
+    val shape: RoundedCornerShape = LocalEmmRadii.current.rM
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -285,7 +287,7 @@ private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: (
                 .size(TopBarTileSize)
                 .clip(shape)
                 .background(colors.surface1)
-                .border(width = 1.dp, color = colors.border, shape = shape)
+                .border(width = spacing.hairline, color = colors.border, shape = shape)
                 .indication(interactionSource, ripple()),
             contentAlignment = Alignment.Center,
         ) {
@@ -293,7 +295,7 @@ private fun TopBarTile(icon: ImageVector, contentDescription: String, onClick: (
                 imageVector = icon,
                 contentDescription = contentDescription,
                 tint = colors.textPrimary,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(spacing.s5),
             )
         }
     }
@@ -304,7 +306,7 @@ private fun MonthEmptyState(month: String) {
     val colors = LocalEmmColors.current
     val typeTokens = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
-    val tileShape = RoundedCornerShape(12.dp)
+    val tileShape: RoundedCornerShape = LocalEmmRadii.current.rM
 
     Column(
         modifier = Modifier
@@ -318,14 +320,14 @@ private fun MonthEmptyState(month: String) {
                 .size(EmptyStateTileSize)
                 .clip(tileShape)
                 .background(colors.surface1)
-                .border(width = 1.dp, color = colors.border, shape = tileShape),
+                .border(width = spacing.hairline, color = colors.border, shape = tileShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Outlined.CalendarMonth,
                 contentDescription = null,
                 tint = colors.textSecondary,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(spacing.s5),
             )
         }
         Text(
@@ -370,7 +372,7 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
             imageVector = Icons.Outlined.Receipt,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(spacing.s12),
         )
         Text(
             text = title,
@@ -383,7 +385,7 @@ private fun EmptyState(type: TransactionType, onAddTransaction: () -> Unit) {
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(spacing.s4))
-        val ctaShape = RoundedCornerShape(6.dp)
+        val ctaShape: RoundedCornerShape = LocalEmmRadii.current.rXS
         val interactionSource = remember { MutableInteractionSource() }
         Box(
             contentAlignment = Alignment.Center,

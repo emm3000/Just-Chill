@@ -14,11 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
@@ -51,10 +51,10 @@ private fun ComparisonPillPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(LocalEmmSpacing.current.s2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ComparisonPill(

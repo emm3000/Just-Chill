@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -73,7 +72,7 @@ private fun TrendsEarlyState(modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.TrendingUp,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(spacing.s12),
         )
         Spacer(Modifier.height(spacing.s2))
         Text(
@@ -97,7 +96,7 @@ private fun TrendsEarlyStatePreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             TrendsContent(trends = TrendsUiData(isEarlyState = true))
         }

@@ -19,10 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
@@ -31,7 +31,7 @@ fun TodayPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
-    val shape = RoundedCornerShape(999.dp)
+    val shape: RoundedCornerShape = LocalEmmRadii.current.rFull
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -46,10 +46,10 @@ fun TodayPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .height(44.dp)
+                .height(spacing.s12)
                 .clip(shape)
                 .background(colors.surface1)
-                .border(width = 1.dp, color = colors.border, shape = shape)
+                .border(width = spacing.hairline, color = colors.border, shape = shape)
                 .indication(interactionSource, ripple())
                 .padding(horizontal = spacing.s4),
             contentAlignment = Alignment.Center,
@@ -70,9 +70,9 @@ private fun MonthSelectorWithTodayPreview() {
         Box(
             modifier = Modifier
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalEmmSpacing.current.s2)) {
                 MonthSelector(label = "Marzo 2026", onPrevious = {}, onNext = {}, onLabelClick = {})
                 TodayPill(onClick = {})
             }
