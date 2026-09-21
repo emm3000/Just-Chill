@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -40,7 +39,7 @@ fun TopExpensesCard(items: List<TopCategoryItem>, modifier: Modifier = Modifier)
             .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(width = 1.dp, color = colors.border, shape = radii.rM)
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rM)
             .padding(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
@@ -81,7 +80,7 @@ private fun TopCategoryRow(item: TopCategoryItem) {
 
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(spacing.s1),
         ) {
             Text(
                 text = item.name,
@@ -112,7 +111,7 @@ private fun TopExpensesCardPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             TopExpensesCard(
                 items = listOf(
@@ -153,7 +152,7 @@ private fun TopCategoryRowOverflowPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             TopCategoryRow(
                 item = TopCategoryItem(

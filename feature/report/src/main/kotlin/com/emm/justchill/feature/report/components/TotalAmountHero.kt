@@ -13,11 +13,11 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
@@ -71,8 +71,8 @@ private fun TotalAmountHeroIncomeAndSpendPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
+            verticalArrangement = Arrangement.spacedBy(LocalEmmSpacing.current.s4),
         ) {
             TotalAmountHero(totalFormatted = "S/ 6,200.00", type = TransactionType.Income)
             TotalAmountHero(totalFormatted = "S/ 4,580.00", type = TransactionType.Spend)

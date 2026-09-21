@@ -30,25 +30,31 @@ import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.feature.report.MonthlyBarItem
 import kotlinx.coroutines.delay
 
-private val CHART_HEIGHT = 120.dp
-private val BAR_WIDTH = 12.dp
-private val BAR_GAP = 4.dp
-private val BAR_RADIUS = 4.dp
+// A plot height, not a gap: no EmmSpacing step reaches it (s16 is 64dp).
+private val CHART_HEIGHT: Dp = 120.dp
 
 @Composable
 fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val barWidth: Dp = spacing.s3
+    val barGap: Dp = spacing.s1
+    val barRadius: Dp = spacing.s1
 
     val maxAmount = items.maxOfOrNull { maxOf(it.incomeAmount, it.expenseAmount) }?.toFloat() ?: 1f
 
@@ -78,12 +84,12 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
             ) {
                 val chartWidthPx = size.width
                 val chartHeightPx = size.height
-                val barWidthPx = BAR_WIDTH.toPx()
-                val barGapPx = BAR_GAP.toPx()
+                val barWidthPx = barWidth.toPx()
+                val barGapPx = barGap.toPx()
                 val groupWidthPx = barWidthPx * 2 + barGapPx
                 val n = items.size.toFloat()
                 val interGroupGap = if (n > 1) (chartWidthPx - n * groupWidthPx) / (n + 1) else 0f
-                val radiusPx = BAR_RADIUS.toPx()
+                val radiusPx = barRadius.toPx()
 
                 items.forEachIndexed { index, item ->
                     val progress = animatables[index].value
@@ -154,14 +160,14 @@ fun EntroVsSalioCard(
     val colors = LocalEmmColors.current
     val spacing = LocalEmmSpacing.current
     val type = LocalEmmType.current
-    val radii = com.emm.justchill.core.ui.theme.LocalEmmRadii.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(width = 1.dp, color = colors.border, shape = radii.rM)
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rM)
             .padding(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
@@ -207,13 +213,14 @@ fun EntroVsSalioCard(
 private fun LegendDot(color: Color, label: String) {
     val type = LocalEmmType.current
     val colors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s1),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(6.dp)
+                .size(spacing.s2)
                 .clip(CircleShape)
                 .background(color),
         )
@@ -234,7 +241,7 @@ private fun EntroVsSalioCardPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             EntroVsSalioCard(
                 items = listOf(

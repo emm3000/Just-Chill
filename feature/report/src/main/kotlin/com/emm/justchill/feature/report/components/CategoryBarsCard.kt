@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.theme.EmmTheme
@@ -44,7 +43,7 @@ fun CategoryBarsCard(
             .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(width = 1.dp, color = colors.border, shape = radii.rM)
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rM)
             .padding(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s4),
     ) {
@@ -93,7 +92,7 @@ private fun CategoryBarsCardPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             CategoryBarsCard(
                 shares = listOf(

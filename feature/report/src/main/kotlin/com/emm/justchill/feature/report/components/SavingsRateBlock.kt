@@ -19,7 +19,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
@@ -96,7 +95,7 @@ private fun SavingsRateBlockPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             SavingsRateBlock(
                 ratePercent = 26,

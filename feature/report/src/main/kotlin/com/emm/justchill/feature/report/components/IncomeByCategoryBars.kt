@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,11 +25,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.feature.report.CategoryShare
@@ -85,7 +84,7 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
         ) {
             Box(
                 modifier = Modifier
-                    .size(6.dp)
+                    .size(spacing.s2)
                     .clip(CircleShape)
                     .background(dotColor),
             )
@@ -112,13 +111,13 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(2.dp),
+                .height(spacing.s1),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(animatedFraction.value)
-                    .height(2.dp)
-                    .clip(RoundedCornerShape(2.dp))
+                    .height(spacing.s1)
+                    .clip(LocalEmmRadii.current.rFull)
                     .background(dotColor),
             )
         }
@@ -134,7 +133,7 @@ private fun IncomeByCategoryBarsPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             IncomeByCategoryBars(
                 shares = listOf(
@@ -158,7 +157,7 @@ private fun CategoryShareRowOverflowPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             CategoryShareRow(
                 share = CategoryShare(
