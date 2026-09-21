@@ -2,7 +2,7 @@ package com.emm.justchill.core.backup
 
 import com.emm.justchill.core.domain.auth.AuthRepository
 import com.emm.justchill.core.domain.auth.AuthUser
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupHealth
@@ -43,7 +43,7 @@ class BackupDisclosureSignalTest {
     @Test
     fun `the signal fires only while the kill switch lets a cycle run`() = runBlocking {
         val signal = BackupDisclosureSignal(
-            observeSession = ObserveSessionUseCase(
+            getSessionStatus = GetSessionStatusUseCase(
                 mockk<AuthRepository> { every { sessionStatus } returns flowOf(AUTHENTICATED) },
             ),
             backupController = mockk<BackupController> { every { health } returns MutableStateFlow(UNDISCLOSED) },

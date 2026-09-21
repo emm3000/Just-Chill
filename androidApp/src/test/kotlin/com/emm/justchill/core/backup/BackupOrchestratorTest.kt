@@ -1,7 +1,7 @@
 package com.emm.justchill.core.backup
 
 import com.emm.justchill.core.domain.auth.AuthUser
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.shared.RemoteWriteMutex
 import com.emm.justchill.core.domain.shared.backup.BackupEvent
@@ -57,7 +57,7 @@ class BackupOrchestratorTest {
     private val uploader = mockk<BackupUploader>(relaxed = true)
     private val pruner = mockk<BackupPruner>(relaxed = true)
     private val metadata = mockk<BackupMetadataStore>(relaxed = true)
-    private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
+    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true)
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
     private val remoteWriteMutex = RemoteWriteMutex()
 
@@ -71,7 +71,7 @@ class BackupOrchestratorTest {
 
     @Before
     fun setUp() {
-        every { observeSession.invoke() } returns sessionFlow
+        every { getSessionStatus.invoke() } returns sessionFlow
         coEvery { backupRepository.exportToJson(any(), any()) } returns PAYLOAD
         coEvery { pruner.prune() } returns BackupPruneReport(kept = 1, deleted = 0, failedDeletes = emptyList())
         every { metadata.lastSuccessfulBackupAt(any()) } returns null
@@ -91,7 +91,7 @@ class BackupOrchestratorTest {
             pruner = pruner,
             metadata = metadata,
             remoteWriteMutex = remoteWriteMutex,
-            observeSession = observeSession,
+            getSessionStatus = getSessionStatus,
             appVersion = APP_VERSION,
             clock = fixedClock(now),
             timeZone = zone,
@@ -375,7 +375,7 @@ class BackupOrchestratorTest {
     @Test
     fun `a throwing session flow does not kill the trigger and a later backup still runs`() = runTest(testDispatcher) {
         var sessionCollections = 0
-        every { observeSession.invoke() } answers {
+        every { getSessionStatus.invoke() } answers {
             sessionCollections++
             if (sessionCollections == 1) {
                 flow { throw DomainException.DatabaseError(RuntimeException("disk full")) }

@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.profile
 
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.auth.SignOutResult
 import com.emm.justchill.core.domain.auth.SignOutUseCase
@@ -45,7 +45,7 @@ class ProfileViewModel(
     private val todayFlow: TodayFlow,
     categoryRepository: CategoryRepository,
     getRecurringMonthlySummary: GetRecurringMonthlySummaryUseCase,
-    observeSession: ObserveSessionUseCase,
+    getSessionStatus: GetSessionStatusUseCase,
     private val appVersion: String,
     private val clock: Clock,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(
@@ -77,7 +77,7 @@ class ProfileViewModel(
             }
             .launchSafeIn(onError = onDomainError)
 
-        observeSession()
+        getSessionStatus()
             .onEach { status ->
                 val sessionUiState = when (status) {
                     is SessionStatus.Authenticated -> SessionUiState.SignedIn(status.user.email)

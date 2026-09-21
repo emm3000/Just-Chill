@@ -3,7 +3,7 @@ package com.emm.justchill.wiring
 import com.emm.justchill.core.backup.auth.DefaultAuthRepository
 import com.emm.justchill.core.domain.auth.AuthRepository
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.ResendConfirmationEmailUseCase
 import com.emm.justchill.core.domain.auth.SignInUseCase
 import com.emm.justchill.core.domain.auth.SignInWithGoogleUseCase
@@ -21,7 +21,7 @@ val authWiring: Module = module {
     factoryOf(::DefaultAuthRepository) { bind<AuthRepository>() }
 
     factoryOf(::DeleteUserAccountUseCase)
-    factoryOf(::ObserveSessionUseCase)
+    factoryOf(::GetSessionStatusUseCase)
     factoryOf(::ResendConfirmationEmailUseCase)
     factoryOf(::SignInUseCase)
     factoryOf(::SignInWithGoogleUseCase)
