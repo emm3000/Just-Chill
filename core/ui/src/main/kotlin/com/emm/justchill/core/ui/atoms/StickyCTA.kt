@@ -34,6 +34,9 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 // Every CTA shares this one height and no EmmSpacing step is 52dp, so it cannot become a token.
 val CtaHeight: Dp = 52.dp
 
+// A progress stroke is not a hairline; 2dp keeps the 16dp spinner legible and no EmmSpacing step is 2dp.
+private val CtaSpinnerStroke: Dp = 2.dp
+
 enum class CtaInteraction {
     Enabled,
     Disabled,
@@ -84,7 +87,7 @@ fun StickyCTA(
                     CircularProgressIndicator(
                         modifier = Modifier.size(spacing.s4),
                         color = fgColor,
-                        strokeWidth = spacing.hairline,
+                        strokeWidth = CtaSpinnerStroke,
                     )
                     CtaLabel(text = label, color = fgColor)
                 }
