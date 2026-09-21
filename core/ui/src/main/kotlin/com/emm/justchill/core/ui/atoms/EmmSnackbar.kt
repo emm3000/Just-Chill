@@ -40,16 +40,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 enum class EmmSnackbarTone { Success, Error }
 
@@ -76,6 +75,7 @@ private fun EmmSnackbarBody(data: SnackbarData) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
     val shape = radii.rL
 
     val tone = (data.visuals as? EmmSnackbarVisuals)?.tone ?: EmmSnackbarTone.Success
@@ -102,15 +102,15 @@ private fun EmmSnackbarBody(data: SnackbarData) {
             .padding(horizontal = spacing.s4)
             .clip(shape)
             .background(colors.bg)
-            .border(1.dp, colors.border, shape)
-            .padding(horizontal = 14.dp, vertical = spacing.s3),
+            .border(spacing.hairline, colors.border, shape)
+            .padding(horizontal = spacing.s4, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(22.dp)
+                .size(spacing.s6)
                 .clip(CircleShape)
                 .background(visuals.circleBg),
         ) {
@@ -118,15 +118,13 @@ private fun EmmSnackbarBody(data: SnackbarData) {
                 imageVector = visuals.icon,
                 contentDescription = null,
                 tint = visuals.tint,
-                modifier = Modifier.size(13.dp),
+                modifier = Modifier.size(spacing.s3),
             )
         }
         Text(
             text = highlightQuoted(data.visuals.message),
-            fontSize = 13.sp,
-            fontFamily = InterFontFamily,
+            style = type.labelL,
             color = colors.textPrimary,
-            fontWeight = FontWeight.W500,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = if (actionLabel != null) Modifier.weight(1f) else Modifier,
@@ -134,18 +132,17 @@ private fun EmmSnackbarBody(data: SnackbarData) {
         if (actionLabel != null) {
             Text(
                 text = actionLabel,
-                fontSize = 13.sp,
-                fontFamily = InterFontFamily,
+                style = type.labelL,
                 color = colors.textPrimary,
                 fontWeight = FontWeight.W600,
                 maxLines = 1,
                 modifier = Modifier
-                    .padding(start = 4.dp)
-                    .heightIn(min = 48.dp)
-                    .widthIn(min = 48.dp)
+                    .padding(start = spacing.s1)
+                    .heightIn(min = spacing.s12)
+                    .widthIn(min = spacing.s12)
                     .clickable(onClick = data::performAction)
                     .semantics { role = Role.Button }
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    .padding(horizontal = spacing.s1, vertical = spacing.s1),
             )
         }
     }

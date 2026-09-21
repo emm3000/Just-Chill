@@ -9,18 +9,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.format.NumberFormatEs
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun MoneyInline(value: Double, modifier: Modifier = Modifier, color: Color? = null) {
@@ -33,15 +30,8 @@ fun MoneyInline(value: Double, modifier: Modifier = Modifier, color: Color? = nu
 
     Text(
         text = formatted,
-        style = TextStyle(
-            color = color ?: colors.textPrimary,
-            fontFamily = InterFontFamily,
-            fontSize = 15.sp,
-            lineHeight = 20.sp,
-            fontWeight = FontWeight.W600,
-            letterSpacing = (-0.15).sp,
-            fontFeatureSettings = "tnum",
-        ),
+        style = LocalEmmType.current.amountM,
+        color = color ?: colors.textPrimary,
         modifier = modifier,
     )
 }
