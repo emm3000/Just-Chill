@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHostState
@@ -31,11 +30,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
@@ -54,9 +50,10 @@ import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.AmountInputSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -102,6 +99,7 @@ private fun AddEditRecurringMovementContent(
     onAddNewCategory: (CategoryType) -> Unit = {},
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
 
     Column(
         modifier = Modifier
@@ -119,10 +117,10 @@ private fun AddEditRecurringMovementContent(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(horizontal = spacing.s4),
+            verticalArrangement = Arrangement.spacedBy(spacing.s5),
         ) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(spacing.s1))
 
             FormSection(eyebrow = "NOMBRE") {
                 NameInput(
@@ -170,7 +168,7 @@ private fun AddEditRecurringMovementContent(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.s2))
         }
 
         val ctaLabel = if (state.isEdit) "Guardar cambios" else "Crear recurrente"
@@ -224,17 +222,13 @@ private fun AddEditRecurringMovementContent(
 @Composable
 private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholder: String = "Ej. Netflix") {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val typeTokens = LocalEmmType.current
 
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        textStyle = TextStyle(
-            color = colors.textPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
-            letterSpacing = (-0.18).sp,
-        ),
+        textStyle = typeTokens.titleL.copy(color = colors.textPrimary),
         cursorBrush = SolidColor(colors.borderFocus),
         singleLine = true,
         modifier = Modifier
@@ -247,15 +241,13 @@ private fun NameInput(value: String, onValueChange: (String) -> Unit, placeholde
                     strokeWidth = 1f,
                 )
             }
-            .padding(vertical = 8.dp),
+            .padding(vertical = spacing.s2),
         decorationBox = { inner ->
             Box {
                 if (value.isEmpty()) {
                     Text(
                         text = placeholder,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.W400,
-                        fontFamily = InterFontFamily,
+                        style = typeTokens.titleL,
                         color = colors.textTertiary,
                     )
                 }
@@ -278,11 +270,14 @@ private fun typeGlyph(type: TransactionType): String = when (type) {
 @Composable
 private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) -> Unit) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val radii = LocalEmmRadii.current
+    val typeTokens = LocalEmmType.current
 
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
         TYPE_OPTIONS.forEach { type ->
             val isSelected = selected == type
-            val shape = RoundedCornerShape(12.dp)
+            val shape = radii.rM
             val borderColor: Color = if (isSelected) colors.borderFocus else colors.border
             val bgColor = if (isSelected) colors.surface3 else colors.surface1
             val textColor = if (isSelected) colors.textPrimary else colors.textSecondary
@@ -291,28 +286,26 @@ private fun TypeToggle(selected: TransactionType, onSelect: (TransactionType) ->
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
+                    .height(spacing.s12)
                     .clip(shape)
                     .background(bgColor)
-                    .border(1.dp, borderColor, shape)
+                    .border(spacing.hairline, borderColor, shape)
                     .clickable(onClick = { onSelect(type) }),
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.s1),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = typeGlyph(type),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.W600,
-                        fontFamily = InterFontFamily,
+                        style = typeTokens.titleM,
                         color = textColor,
                     )
                     Text(
                         text = type.label,
-                        fontSize = 15.sp,
-                        fontWeight = if (isSelected) FontWeight.W600 else FontWeight.W500,
-                        fontFamily = InterFontFamily,
+                        style = typeTokens.titleM.copy(
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        ),
                         color = textColor,
                     )
                 }
@@ -331,15 +324,17 @@ private fun AmountCardSection(
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val typeTokens = LocalEmmType.current
     val tone = if (type == TransactionType.Income) AmountTone.Pos else AmountTone.Neutral
 
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.s3)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(radii.rM)
                 .background(colors.surface1)
-                .border(1.dp, colors.border, radii.rM)
+                .border(spacing.hairline, colors.border, radii.rM)
                 .then(
                     if (!isVariable) {
                         Modifier.clickable(onClick = onOpenSheet)
@@ -347,17 +342,14 @@ private fun AmountCardSection(
                         Modifier
                     },
                 )
-                .padding(vertical = 20.dp),
+                .padding(vertical = spacing.s5),
             contentAlignment = Alignment.Center,
         ) {
             if (isVariable || amountDigits.isEmpty()) {
                 Text(
                     text = "S/ —.—",
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.W500,
-                    fontFamily = InterFontFamily,
+                    style = typeTokens.amountCard,
                     color = colors.textTertiary,
-                    letterSpacing = (-0.8).sp,
                 )
             } else {
                 AmountHero(
@@ -373,8 +365,8 @@ private fun AmountCardSection(
                 .fillMaxWidth()
                 .clip(radii.rM)
                 .background(colors.surface1)
-                .border(1.dp, colors.border, radii.rM)
-                .padding(horizontal = 14.dp, vertical = 10.dp),
+                .border(spacing.hairline, colors.border, radii.rM)
+                .padding(horizontal = spacing.s4, vertical = spacing.s3),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -384,16 +376,12 @@ private fun AmountCardSection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Monto variable",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
+                        style = typeTokens.labelL,
                         color = colors.textPrimary,
                     )
                     Text(
                         text = "Lo defines al confirmar cada mes.",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.W400,
-                        fontFamily = InterFontFamily,
+                        style = typeTokens.labelM,
                         color = colors.textTertiary,
                     )
                 }
@@ -411,14 +399,16 @@ private fun AmountCardSection(
 private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing = LocalEmmSpacing.current
+    val typeTokens = LocalEmmType.current
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .border(spacing.hairline, colors.border, radii.rM)
+            .padding(horizontal = spacing.s4, vertical = spacing.s3),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -428,16 +418,12 @@ private fun ActiveCard(isActive: Boolean, onToggle: (Boolean) -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Activo",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.W500,
-                    fontFamily = InterFontFamily,
+                    style = typeTokens.labelL,
                     color = colors.textPrimary,
                 )
                 Text(
                     text = "Mientras esté pausado no genera pendientes.",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.W400,
-                    fontFamily = InterFontFamily,
+                    style = typeTokens.labelM,
                     color = colors.textTertiary,
                 )
             }
