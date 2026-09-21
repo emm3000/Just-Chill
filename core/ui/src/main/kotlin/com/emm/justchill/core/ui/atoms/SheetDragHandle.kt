@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -22,16 +21,17 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 fun SheetDragHandle(modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp),
+            .padding(top = spacing.s2, bottom = spacing.s1),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .size(width = 32.dp, height = 4.dp)
+                .size(width = spacing.s8, height = spacing.s1)
                 .background(colors.borderFocus, radii.rFull),
         )
     }

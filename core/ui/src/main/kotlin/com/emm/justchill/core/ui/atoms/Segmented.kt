@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -20,14 +19,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
@@ -35,14 +37,14 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 fun <T> Segmented(options: List<SegmentOption<T>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val shape = RoundedCornerShape(12.dp)
+    val shape: Shape = LocalEmmRadii.current.rM
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(spacing.s12)
             .clip(shape)
-            .border(width = 1.dp, color = colors.border, shape = shape)
+            .border(width = spacing.hairline, color = colors.border, shape = shape)
             .padding(horizontal = CELL_INSET),
     ) {
         options.forEach { option ->
@@ -63,7 +65,9 @@ data class SegmentOption<T>(val value: T, val label: String)
 private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
-    val cellShape = RoundedCornerShape(10.dp)
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val cellShape: Shape = radii.rS
 
     val bg: Color = if (isSelected) colors.surface2 else Color.Transparent
     val textColor: Color = if (isSelected) colors.textPrimary else colors.textSecondary
@@ -86,7 +90,7 @@ private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit,
                 .fillMaxSize()
                 .clip(cellShape)
                 .background(bg)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = spacing.s3),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -98,6 +102,7 @@ private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit,
     }
 }
 
+// The track's rM less the cell's rS, plus the hairline: keeps the selected cell's corners concentric with the track's.
 private val CELL_INSET: Dp = 3.dp
 
 @Preview

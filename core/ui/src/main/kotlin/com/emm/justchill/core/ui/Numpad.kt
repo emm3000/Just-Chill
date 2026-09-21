@@ -23,12 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.color
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 
 data class NumpadSign(val tone: AmountTone, val contentDescription: String, val onClick: () -> Unit)
@@ -43,6 +45,7 @@ fun Numpad(
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     val bottomRow: List<NumKey> = buildList {
         if (sign != null) add(NumKey.Sign(sign))
@@ -60,12 +63,12 @@ fun Numpad(
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         rows.forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             ) {
                 row.forEach { key ->
                     val isEditingKey: Boolean = key !is NumKey.Digit
@@ -75,10 +78,10 @@ fun Numpad(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp)
+                            .height(spacing.s12)
                             .clip(radii.rM)
                             .background(bgColor)
-                            .border(BorderStroke(1.dp, colors.border), radii.rM)
+                            .border(BorderStroke(spacing.hairline, colors.border), radii.rM)
                             .clickable {
                                 when (key) {
                                     is NumKey.Digit -> onDigit(key.ch)
@@ -98,7 +101,7 @@ fun Numpad(
                                     imageVector = Icons.AutoMirrored.Outlined.Backspace,
                                     contentDescription = "Borrar",
                                     tint = colors.textSecondary,
-                                    modifier = Modifier.size(18.dp),
+                                    modifier = Modifier.size(spacing.s5),
                                 )
                             }
 
@@ -123,7 +126,7 @@ fun Numpad(
 private fun KeyGlyph(text: String, color: Color, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        fontSize = 22.sp,
+        fontSize = KEY_GLYPH_FONT_SIZE,
         fontWeight = FontWeight.W500,
         fontFamily = PlexMonoFontFamily,
         color = color,
@@ -133,6 +136,9 @@ private fun KeyGlyph(text: String, color: Color, modifier: Modifier = Modifier) 
 }
 
 private const val SIGN_KEY_GLYPH = "±"
+
+// Sits between amountLead (18sp) and amountCard (32sp); no EmmType amount role is 22sp.
+private val KEY_GLYPH_FONT_SIZE: TextUnit = 22.sp
 
 private sealed interface NumKey {
     data class Digit(val ch: Char) : NumKey

@@ -20,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -58,7 +57,7 @@ fun FrequentComboChip(
             modifier = Modifier
                 .height(spacing.s8)
                 .clip(radii.rFull)
-                .border(1.dp, if (active) colors.borderFocus else colors.border, radii.rFull)
+                .border(spacing.hairline, if (active) colors.borderFocus else colors.border, radii.rFull)
                 .indication(interactionSource, ripple())
                 .padding(horizontal = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,

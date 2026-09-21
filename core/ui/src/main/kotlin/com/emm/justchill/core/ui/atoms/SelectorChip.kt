@@ -27,8 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -37,8 +35,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-
-private val ChipChevronSize: Dp = 16.dp
 
 /**
  * [onClickLabel] is what TalkBack reads as the action: the chip's own text is the current value —
@@ -75,7 +71,7 @@ fun SelectorChip(
                 .fillMaxWidth()
                 .height(spacing.s10)
                 .clip(radii.rFull)
-                .border(1.dp, colors.border, radii.rFull)
+                .border(spacing.hairline, colors.border, radii.rFull)
                 .indication(interactionSource, ripple())
                 .padding(horizontal = spacing.s3),
             verticalAlignment = Alignment.CenterVertically,
@@ -96,7 +92,7 @@ fun SelectorChip(
                 imageVector = trailingIcon,
                 contentDescription = null,
                 tint = colors.textTertiary,
-                modifier = Modifier.size(ChipChevronSize),
+                modifier = Modifier.size(spacing.s4),
             )
         }
     }
