@@ -217,18 +217,14 @@ private fun TypeBadge(type: TransactionType) {
     val emmType: EmmType = LocalEmmType.current
     val badgeShape: RoundedCornerShape = radii.rXS
     val label: String = type.label
-    val bgColor: Color = when (type) {
-        TransactionType.Income -> colors.posMuted
-        TransactionType.Spend -> colors.negMuted
-    }
     val textColor: Color = when (type) {
         TransactionType.Income -> colors.success
-        TransactionType.Spend -> colors.danger
+        TransactionType.Spend -> colors.textSecondary
     }
     Text(
         text = label,
         modifier = Modifier
-            .background(bgColor, badgeShape)
+            .background(colors.surface2, badgeShape)
             .padding(horizontal = spacing.s2, vertical = spacing.s1),
         style = emmType.caption.copy(fontWeight = FontWeight.W600),
         color = textColor,

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +41,11 @@ import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.formatCentsForDisplay
 import com.emm.justchill.core.ui.format.sanitizeCentsInput
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -61,8 +67,8 @@ fun AmountInputSheet(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
 ) {
-    val colors = LocalEmmColors.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val colors: EmmColors = LocalEmmColors.current
+    val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -94,10 +100,10 @@ private fun AmountInputSheetContent(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
 ) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
     // Seeded once per opening: every caller renders the sheet inside an `if (show…)`, so leaving
     // the composition drops the draft and the next opening reads the owner's amount again.
     var draftDigits: String by rememberSaveable { mutableStateOf(sanitizeCentsInput(amountDigits)) }
@@ -156,9 +162,9 @@ private fun AmountInputSheetContent(
 
         Spacer(Modifier.height(spacing.s3))
 
-        val confirmEnabled = draftDigits.isNotEmpty() && draftDigits.toLongOrNull() != 0L
-        val ctaBg = if (confirmEnabled) colors.textPrimary else colors.surface1
-        val ctaFg = if (confirmEnabled) colors.bg else colors.textTertiary
+        val confirmEnabled: Boolean = draftDigits.isNotEmpty() && draftDigits.toLongOrNull() != 0L
+        val ctaBg: Color = if (confirmEnabled) colors.textPrimary else colors.surface1
+        val ctaFg: Color = if (confirmEnabled) colors.bg else colors.textTertiary
 
         Box(
             modifier = Modifier
