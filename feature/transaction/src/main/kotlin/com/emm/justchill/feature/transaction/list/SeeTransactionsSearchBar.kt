@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -29,18 +28,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.theme.edgeGiveback
 
 @Composable
 internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
-    val focusRequester = remember { FocusRequester() }
-    val spacing = LocalEmmSpacing.current
+    val focusRequester: FocusRequester = remember { FocusRequester() }
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
@@ -49,10 +50,10 @@ internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: 
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                top = 12.dp,
-                start = 24.dp,
+                top = spacing.s3,
+                start = spacing.s6,
                 end = spacing.s6 - spacing.edgeGiveback(spacing.s5),
-                bottom = 14.dp,
+                bottom = spacing.s4,
             ),
     ) {
         SearchInput(
@@ -61,7 +62,7 @@ internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: 
             focusRequester = focusRequester,
             modifier = Modifier.weight(1f),
         )
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(spacing.s2))
         HeaderAction(
             icon = Icons.Outlined.Close,
             contentDescription = "Cerrar búsqueda",
@@ -77,45 +78,39 @@ private fun SearchInput(
     focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .height(spacing.s12)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(radii.rM)
             .background(colors.surface1)
-            .border(1.dp, colors.border, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp),
+            .border(spacing.hairline, colors.border, radii.rM)
+            .padding(horizontal = spacing.s3),
     ) {
         Icon(
             imageVector = Icons.Outlined.Search,
             contentDescription = null,
             tint = colors.textTertiary,
-            modifier = Modifier.size(15.dp),
+            modifier = Modifier.size(spacing.s4),
         )
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(spacing.s3))
         BasicTextField(
             value = query,
             onValueChange = onQueryChange,
             singleLine = true,
-            textStyle = type.labelM.copy(
-                color = colors.textPrimary,
-                fontSize = 13.sp,
-                letterSpacing = 0.sp,
-            ),
+            textStyle = type.labelL.copy(color = colors.textPrimary),
             cursorBrush = SolidColor(colors.borderFocus),
             decorationBox = { inner ->
                 if (query.isEmpty()) {
                     Text(
                         text = "Buscar por descripción o monto",
-                        style = type.labelM.copy(
-                            color = colors.textTertiary,
-                            fontSize = 13.sp,
-                            letterSpacing = 0.sp,
-                        ),
+                        style = type.labelL,
+                        color = colors.textTertiary,
                     )
                 }
                 inner()
@@ -137,7 +132,7 @@ private fun SearchInput(
                     imageVector = Icons.Outlined.Close,
                     contentDescription = "Limpiar búsqueda",
                     tint = colors.textTertiary,
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(spacing.s4),
                 )
             }
         }

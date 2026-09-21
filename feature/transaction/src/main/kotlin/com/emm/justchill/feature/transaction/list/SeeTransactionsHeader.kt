@@ -18,11 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.format.monthYearLabel
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
@@ -70,9 +71,9 @@ internal fun HeaderAction(
     onClick: () -> Unit,
     showBadge: Boolean = false,
 ) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Box(
         contentAlignment = Alignment.Center,
@@ -80,7 +81,7 @@ internal fun HeaderAction(
             .size(spacing.s12)
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
+            .border(spacing.hairline, colors.border, radii.rM)
             .clickable(onClick = onClick),
     ) {
         Icon(
@@ -94,10 +95,10 @@ internal fun HeaderAction(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = spacing.s2, end = spacing.s2)
-                    .size(9.dp)
+                    .size(spacing.s2)
                     .clip(CircleShape)
                     .background(colors.surface1)
-                    .padding(1.5.dp)
+                    .padding(spacing.hairline)
                     .clip(CircleShape)
                     .background(colors.textPrimary),
             )

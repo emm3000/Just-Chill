@@ -13,8 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -22,10 +25,10 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 internal fun TodayNudgeCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -34,7 +37,7 @@ internal fun TodayNudgeCard(onClick: () -> Unit, modifier: Modifier = Modifier) 
             .padding(start = spacing.s6, end = spacing.s6, top = spacing.s5)
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(1.dp, colors.border, radii.rM)
+            .border(spacing.hairline, colors.border, radii.rM)
             .clickable(onClick = onClick)
             .padding(horizontal = spacing.s4, vertical = spacing.s3),
     ) {
