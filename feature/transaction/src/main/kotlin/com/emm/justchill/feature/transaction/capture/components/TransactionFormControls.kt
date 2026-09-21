@@ -54,7 +54,7 @@ internal fun SignToggle(
             .height(spacing.s12)
             .clip(radii.rFull)
             .background(colors.bg)
-            .border(1.dp, colors.border, radii.rFull),
+            .border(spacing.hairline, colors.border, radii.rFull),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SignSegment(label = "Ingreso", selected = !isSpend, onClick = onIncomeClick)
