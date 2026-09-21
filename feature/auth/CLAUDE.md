@@ -6,7 +6,7 @@ Sign-in and sign-up for the snapshot-backup account (ADR 009): the email/passwor
 
 ## DI and navigation
 
-- `authModule` exposes `AuthViewModel` and nothing else. `:androidApp`'s `wiring/AuthWiring.kt` `includes` it and binds `AuthRepository` plus the seven auth use cases, because `DefaultAuthRepository` lives in `:core:backup` and a use case is not the feature's to own. The `SignOut`, `ObserveSession` and `DeleteUserAccount` bindings are there for Profile, not for this module.
+- `authModule` exposes `AuthViewModel` and nothing else. `:androidApp`'s `wiring/AuthWiring.kt` `includes` it and binds `AuthRepository` plus the seven auth use cases, because `DefaultAuthRepository` lives in `:core:backup` and a use case is not the feature's to own. The `SignOut`, `GetSessionStatus` and `DeleteUserAccount` bindings are there for Profile, not for this module.
 - `AuthRoutes.kt` holds `AuthRoute`, `@Serializable`, plus `authRoutes`, the registry `:androidApp`'s `RouteSerializationTest` unions. A new route lands in both or it is never round-tripped.
 - `authEntries` takes only `NavHostBindings`: nothing navigates out of auth except `nav.pop()`. The door in is Profile's `onSignInClick: (AppNavigator) -> Unit`, supplied from `AppNavHost`, since one feature never imports another.
 

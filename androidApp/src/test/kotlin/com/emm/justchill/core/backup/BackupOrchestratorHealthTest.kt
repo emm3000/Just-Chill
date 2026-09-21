@@ -1,7 +1,7 @@
 package com.emm.justchill.core.backup
 
 import com.emm.justchill.core.domain.auth.AuthUser
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.shared.RemoteWriteMutex
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
@@ -61,7 +61,7 @@ class BackupOrchestratorHealthTest {
     private val uploader = mockk<BackupUploader>(relaxed = true)
     private val pruner = mockk<BackupPruner>(relaxed = true)
     private val metadata = mockk<BackupMetadataStore>(relaxed = true)
-    private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
+    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true)
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
 
     private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
@@ -78,7 +78,7 @@ class BackupOrchestratorHealthTest {
         every { metadata.setDestinationDisclosed(any(), any()) } answers {
             disclosed[firstArg()] = secondArg()
         }
-        every { observeSession.invoke() } returns sessionFlow
+        every { getSessionStatus.invoke() } returns sessionFlow
         coEvery { backupRepository.exportToJson(any(), any()) } returns PAYLOAD
         coEvery { pruner.prune() } returns BackupPruneReport(kept = 1, deleted = 0, failedDeletes = emptyList())
         every { metadata.lastSuccessfulBackupAt(any()) } returns null
@@ -101,7 +101,7 @@ class BackupOrchestratorHealthTest {
         pruner = pruner,
         metadata = metadata,
         remoteWriteMutex = RemoteWriteMutex(),
-        observeSession = observeSession,
+        getSessionStatus = getSessionStatus,
         appVersion = APP_VERSION,
         clock = fixedClock(NOW),
         timeZone = TimeZone.UTC,

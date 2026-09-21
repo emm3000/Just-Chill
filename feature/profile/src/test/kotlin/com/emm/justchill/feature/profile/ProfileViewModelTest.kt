@@ -2,7 +2,7 @@ package com.emm.justchill.feature.profile
 
 import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.auth.SignOutResult
 import com.emm.justchill.core.domain.auth.SignOutUseCase
@@ -91,7 +91,7 @@ class ProfileViewModelTest {
     private val todayFlow = FakeTodayFlow(today)
 
     private val sessionFlow = MutableSharedFlow<SessionStatus>(replay = 1)
-    private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
+    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true)
 
     private val fixedNow = Instant.parse("2026-08-11T15:04:05Z")
     private val fixedClock = object : Clock {
@@ -99,7 +99,7 @@ class ProfileViewModelTest {
     }
 
     private fun buildViewModel(): ProfileViewModel {
-        every { observeSession.invoke() } returns sessionFlow
+        every { getSessionStatus.invoke() } returns sessionFlow
         return ProfileViewModel(
             backupRepository = backupRepository,
             importData = importData,
@@ -113,7 +113,7 @@ class ProfileViewModelTest {
             localExportHistory = localExportHistory,
             todayFlow = todayFlow,
             getRecurringMonthlySummary = getRecurringMonthlySummary,
-            observeSession = observeSession,
+            getSessionStatus = getSessionStatus,
             appVersion = "1.0.0",
             clock = fixedClock,
         )

@@ -1,6 +1,6 @@
 package com.emm.justchill.core.backup
 
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.shared.RemoteWriteMutex
 import com.emm.justchill.core.domain.shared.backup.BackupController
@@ -48,7 +48,7 @@ class BackupOrchestrator(
     private val pruner: BackupPruner,
     private val metadata: BackupMetadataStore,
     private val remoteWriteMutex: RemoteWriteMutex,
-    private val observeSession: ObserveSessionUseCase,
+    private val getSessionStatus: GetSessionStatusUseCase,
     private val appVersion: String,
     private val clock: Clock,
     private val timeZone: TimeZone,
@@ -112,7 +112,7 @@ class BackupOrchestrator(
         }
 
         launchResilientTrigger("lifecycle") {
-            observeSession().flatMapLatest { status ->
+            getSessionStatus().flatMapLatest { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
                         val userId = status.user.userId

@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.profile
 
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.auth.SignOutUseCase
 import com.emm.justchill.core.domain.category.Category
@@ -69,7 +69,7 @@ class ProfileViewModelRowDataTest {
 
     private val today = MutableStateFlow(LocalDate(2026, 8, 28))
 
-    private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true) {
+    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true) {
         every { this@mockk.invoke() } returns MutableSharedFlow<SessionStatus>(replay = 1)
     }
 
@@ -94,7 +94,7 @@ class ProfileViewModelRowDataTest {
         todayFlow = FakeTodayFlow(today),
         categoryRepository = categoryRepository,
         getRecurringMonthlySummary = getRecurringMonthlySummary,
-        observeSession = observeSession,
+        getSessionStatus = getSessionStatus,
         appVersion = "1.0.0",
         clock = object : Clock {
             override fun now(): Instant = Instant.parse("2026-08-28T15:04:05Z")

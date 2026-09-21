@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.profile
 
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SignOutUseCase
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.recurring.GetRecurringMonthlySummaryUseCase
@@ -58,7 +58,7 @@ class ProfileViewModelImportTest {
 
     private val getBackupStaleness = mockk<GetBackupStalenessUseCase>(relaxed = true)
     private val logger = mockk<DiagnosticsLogger>(relaxed = true)
-    private val observeSession = mockk<ObserveSessionUseCase>(relaxed = true)
+    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true)
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
@@ -88,7 +88,7 @@ class ProfileViewModelImportTest {
         localExportHistory = localExportHistory,
         todayFlow = todayFlow,
         getRecurringMonthlySummary = getRecurringMonthlySummary,
-        observeSession = observeSession,
+        getSessionStatus = getSessionStatus,
         appVersion = "1.0.0",
         clock = fixedClock,
     )

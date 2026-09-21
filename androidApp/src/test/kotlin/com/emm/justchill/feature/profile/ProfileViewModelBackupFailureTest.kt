@@ -3,7 +3,7 @@ package com.emm.justchill.feature.profile
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.domain.auth.AuthUser
 import com.emm.justchill.core.domain.auth.DeleteUserAccountUseCase
-import com.emm.justchill.core.domain.auth.ObserveSessionUseCase
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.auth.SignOutUseCase
 import com.emm.justchill.core.domain.category.CategoryRepository
@@ -71,7 +71,7 @@ class ProfileViewModelBackupFailureTest {
     private val remoteWriteMutex = RemoteWriteMutex()
 
     private val sessionFlow = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
-    private val observeSession = mockk<ObserveSessionUseCase>()
+    private val getSessionStatus = mockk<GetSessionStatusUseCase>()
     private val backgroundFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
     private val resumeFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
 
@@ -89,7 +89,7 @@ class ProfileViewModelBackupFailureTest {
 
     @Before
     fun setUp() {
-        every { observeSession.invoke() } returns sessionFlow
+        every { getSessionStatus.invoke() } returns sessionFlow
         coEvery { backupRepository.exportToJson(any(), any()) } returns PAYLOAD
         coEvery { pruner.prune() } returns BackupPruneReport(kept = 1, deleted = 0, failedDeletes = emptyList())
         every { metadata.lastSuccessfulBackupAt(any()) } returns null
@@ -228,7 +228,7 @@ class ProfileViewModelBackupFailureTest {
         pruner = pruner,
         metadata = metadata,
         remoteWriteMutex = remoteWriteMutex,
-        observeSession = observeSession,
+        getSessionStatus = getSessionStatus,
         appVersion = APP_VERSION,
         clock = object : Clock {
             override fun now(): Instant = NOW
@@ -253,7 +253,7 @@ class ProfileViewModelBackupFailureTest {
         localExportHistory = localExportHistory,
         todayFlow = todayFlow,
         getRecurringMonthlySummary = getRecurringMonthlySummary,
-        observeSession = observeSession,
+        getSessionStatus = getSessionStatus,
         appVersion = APP_VERSION,
         clock = object : Clock {
             override fun now(): Instant = NOW

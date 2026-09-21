@@ -20,7 +20,7 @@ val profileModule: Module = module {
             todayFlow = get(),
             categoryRepository = get(),
             getRecurringMonthlySummary = get(),
-            observeSession = get(),
+            getSessionStatus = get(),
             appVersion = get(named("appVersion")),
             clock = get(),
         )

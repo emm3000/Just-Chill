@@ -2,7 +2,7 @@ package com.emm.justchill.core.domain.auth
 
 import kotlinx.coroutines.flow.Flow
 
-class ObserveSessionUseCase(private val authRepository: AuthRepository) {
+class GetSessionStatusUseCase(private val authRepository: AuthRepository) {
 
     operator fun invoke(): Flow<SessionStatus> = authRepository.sessionStatus
 }

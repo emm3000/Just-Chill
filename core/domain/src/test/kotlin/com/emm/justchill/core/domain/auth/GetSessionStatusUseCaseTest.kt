@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.flowOf
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class ObserveSessionUseCaseTest {
+class GetSessionStatusUseCaseTest {
 
     private val repository = mockk<AuthRepository>()
-    private val useCase = ObserveSessionUseCase(repository)
+    private val useCase = GetSessionStatusUseCase(repository)
 
     @Test
     fun `invoke returns sessionStatus flow from repository`() {
