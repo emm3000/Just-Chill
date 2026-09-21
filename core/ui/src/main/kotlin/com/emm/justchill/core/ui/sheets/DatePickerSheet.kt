@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -20,17 +20,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.ripple
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,9 +72,9 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
     val type: EmmType = LocalEmmType.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val zone = TimeZone.currentSystemDefault()
+    val zone: TimeZone = TimeZone.currentSystemDefault()
     val today: LocalDate = Clock.System.now().toLocalDateTime(zone).date
 
     var selectedDate: LocalDate by remember(currentDate) { mutableStateOf(currentDate) }
@@ -103,7 +104,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = spacing.s5, end = spacing.s4, bottom = spacing.s4),
+                    .padding(start = spacing.s5, end = spacing.s5, bottom = spacing.s4),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -145,14 +146,14 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                     onClick = { displayedMonth = displayedMonth.minus(1, DateTimeUnit.MONTH) },
                     contentDescription = "Mes anterior",
                 )
-                val monthLabel = remember(displayedMonth) {
+                val monthLabel: String = remember(displayedMonth) {
                     SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
                 }
                 Text(text = monthLabel, style = type.titleM, color = colors.textPrimary)
                 // A transaction records money that already moved, so there is no month after this one
                 // to browse. The domain rejects a future date outright (TransactionDateRules); this
                 // chevron and the day cells' own enabled gate keep the user away from that error.
-                val canGoForward = displayedMonth < today.firstOfMonth()
+                val canGoForward: Boolean = displayedMonth < today.firstOfMonth()
                 IconBtn(
                     icon = Icons.Outlined.ChevronRight,
                     onClick = { displayedMonth = displayedMonth.plus(1, DateTimeUnit.MONTH) },
@@ -161,7 +162,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 )
             }
 
-            val weekdayLabels = listOf("L", "M", "M", "J", "V", "S", "D")
+            val weekdayLabels: List<String> = listOf("L", "M", "M", "J", "V", "S", "D")
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -182,7 +183,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 }
             }
 
-            val days = remember(displayedMonth) { displayedMonth.daysGrid() }
+            val days: List<LocalDate?> = remember(displayedMonth) { displayedMonth.daysGrid() }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -191,7 +192,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 for (week in 0 until 6) {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         for (col in 0 until 7) {
-                            val date = days[week * 7 + col]
+                            val date: LocalDate? = days[week * 7 + col]
                             DayCell(
                                 date = date,
                                 isSelected = date == selectedDate,
@@ -206,7 +207,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
         }
 
         val confirmShape: RoundedCornerShape = radii.rM
-        val confirmLabel = remember(selectedDate) {
+        val confirmLabel: String = remember(selectedDate) {
             SpanishDateFormat.dayFullMonth(selectedDate)
         }
 
@@ -319,22 +320,22 @@ private const val CALENDAR_GRID_CELLS = 42
 private fun LocalDate.firstOfMonth(): LocalDate = LocalDate(year, month, 1)
 
 private fun LocalDate.startOfWeekMonday(): LocalDate {
-    val offset = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
+    val offset: Int = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
     return minus(offset, DateTimeUnit.DAY)
 }
 
 private fun LocalDate.lengthOfMonth(): Int {
-    val firstOfMonth = firstOfMonth()
-    val firstOfNextMonth = firstOfMonth.plus(1, DateTimeUnit.MONTH)
+    val firstOfMonth: LocalDate = firstOfMonth()
+    val firstOfNextMonth: LocalDate = firstOfMonth.plus(1, DateTimeUnit.MONTH)
     return firstOfNextMonth.minus(1, DateTimeUnit.DAY).dayOfMonth
 }
 
 /** [this] must be the first day of the displayed month. */
 private fun LocalDate.daysGrid(): List<LocalDate?> {
-    val offset = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
-    val length = lengthOfMonth()
+    val offset: Int = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
+    val length: Int = lengthOfMonth()
     return List(CALENDAR_GRID_CELLS) { index ->
-        val dayNumber = index - offset + 1
+        val dayNumber: Int = index - offset + 1
         if (dayNumber in 1..length) LocalDate(year, month, dayNumber) else null
     }
 }

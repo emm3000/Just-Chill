@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -49,6 +50,8 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val rowBackground: Color = if (isPressed) colors.surface1 else Color.Transparent
+    val dayOfMonthLabel: String = "Día ${item.dayOfMonth}"
+    val dayLabel: String = if (item.isCatchUp) "$dayOfMonthLabel · ${item.periodLabel}" else dayOfMonthLabel
 
     Row(
         modifier = modifier
@@ -83,17 +86,26 @@ fun PendingRecurringRow(item: PendingRecurringUi, onClick: () -> Unit, modifier:
             ) {
                 CategoryDotSlot(color = null)
                 Text(
-                    text = if (item.isCatchUp) "Día ${item.dayOfMonth} · ${item.periodLabel}" else "Día ${item.dayOfMonth}",
+                    text = dayLabel,
                     style = type.caption,
                     color = if (item.isCatchUp) colors.danger else colors.textTertiary,
                 )
             }
         }
-        Text(
-            text = item.formattedAmount,
-            style = type.amountM.copy(fontWeight = FontWeight.W600),
-            color = if (item.type == TransactionType.Income) colors.success else colors.textPrimary,
-        )
+        if (item.isVariableAmount) {
+            Text(
+                text = item.formattedAmount,
+                style = type.bodyM,
+                fontStyle = FontStyle.Italic,
+                color = colors.textTertiary,
+            )
+        } else {
+            Text(
+                text = item.formattedAmount,
+                style = type.amountM.copy(fontWeight = FontWeight.W600),
+                color = if (item.type == TransactionType.Income) colors.success else colors.textPrimary,
+            )
+        }
     }
 }
 

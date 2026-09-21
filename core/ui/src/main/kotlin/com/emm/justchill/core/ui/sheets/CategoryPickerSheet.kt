@@ -24,8 +24,8 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -62,7 +62,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
-private const val LIST_MAX_HEIGHT_FRACTION = 0.55f
+private const val LIST_MAX_HEIGHT_FRACTION: Float = 0.55f
 
 @Composable
 fun CategoryPickerSheet(
@@ -91,22 +91,23 @@ fun CategoryPickerSheet(
             categories.filter { it.name.contains(query.trim(), ignoreCase = true) }
         }
     }
-    val sections: Pair<List<SelectableCategory>, List<SelectableCategory>>? = remember(categories, frequentCategoryIds, query) {
-        if (query.isNotBlank()) {
-            null
-        } else {
-            val frequent: List<SelectableCategory> = frequentCategoryIds.mapNotNull { id ->
-                categories.firstOrNull { it.categoryId.value == id }
-            }
-            if (frequent.size < 2) {
+    val sections: Pair<List<SelectableCategory>, List<SelectableCategory>>? =
+        remember(categories, frequentCategoryIds, query) {
+            if (query.isNotBlank()) {
                 null
             } else {
-                val frequentIdSet: Set<String> = frequentCategoryIds.toSet()
-                val rest: List<SelectableCategory> = categories.filter { it.categoryId.value !in frequentIdSet }
-                Pair(frequent, rest)
+                val frequent: List<SelectableCategory> = frequentCategoryIds.mapNotNull { id ->
+                    categories.firstOrNull { it.categoryId.value == id }
+                }
+                if (frequent.size < 2) {
+                    null
+                } else {
+                    val frequentIdSet: Set<String> = frequentCategoryIds.toSet()
+                    val rest: List<SelectableCategory> = categories.filter { it.categoryId.value !in frequentIdSet }
+                    Pair(frequent, rest)
+                }
             }
         }
-    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
