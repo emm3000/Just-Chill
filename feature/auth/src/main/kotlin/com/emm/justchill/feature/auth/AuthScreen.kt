@@ -42,14 +42,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
@@ -62,7 +59,6 @@ import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -213,7 +209,7 @@ private fun AuthFormStep(
                         Image(
                             painter = painterResource(R.drawable.ic_google),
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(spacing.s5),
                         )
                     },
                     onClick = { onIntent(AuthIntent.GoogleSignInClicked) },
@@ -311,7 +307,7 @@ private fun CheckEmailStep(
 
         Box(
             modifier = Modifier
-                .size(56.dp)
+                .size(spacing.s12)
                 .clip(radii.rM)
                 .background(colors.surface2),
             contentAlignment = Alignment.Center,
@@ -320,7 +316,7 @@ private fun CheckEmailStep(
                 imageVector = Icons.Outlined.MailOutline,
                 contentDescription = null,
                 tint = colors.textSecondary,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(spacing.s6),
             )
         }
 
@@ -410,30 +406,27 @@ private fun AuthFieldInput(
     onTogglePasswordVisibility: (() -> Unit)? = null,
 ) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
+    val type = LocalEmmType.current
 
     var focused by remember { mutableStateOf(false) }
 
     val labelColor = if (focused) colors.textPrimary else colors.textTertiary
     val underlineColor = if (focused) colors.borderFocus else colors.border
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
         Text(
             text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.W500,
-            fontFamily = InterFontFamily,
+            style = type.labelM,
             color = labelColor,
-            letterSpacing = 0.4.sp,
         )
 
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = TextStyle(
+            textStyle = type.bodyL.copy(
                 color = colors.textPrimary,
-                fontSize = 16.sp,
                 fontWeight = FontWeight.W500,
-                fontFamily = InterFontFamily,
             ),
             cursorBrush = SolidColor(colors.borderFocus),
             singleLine = true,
@@ -451,10 +444,10 @@ private fun AuthFieldInput(
                         color = underlineColor,
                         start = Offset(0f, size.height),
                         end = Offset(size.width, size.height),
-                        strokeWidth = 1.dp.toPx(),
+                        strokeWidth = spacing.hairline.toPx(),
                     )
                 }
-                .padding(vertical = 8.dp),
+                .padding(vertical = spacing.s2),
             decorationBox = { inner ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -463,9 +456,7 @@ private fun AuthFieldInput(
                         if (value.isEmpty()) {
                             Text(
                                 text = placeholder,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.W400,
-                                fontFamily = InterFontFamily,
+                                style = type.bodyL,
                                 color = colors.textTertiary,
                             )
                         }
@@ -475,7 +466,7 @@ private fun AuthFieldInput(
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(spacing.s12)
                                 .clickable(
                                     role = Role.Button,
                                     onClick = onTogglePasswordVisibility,
@@ -493,7 +484,7 @@ private fun AuthFieldInput(
                                     "Mostrar contraseña"
                                 },
                                 tint = colors.textTertiary,
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(spacing.s5),
                             )
                         }
                     }
