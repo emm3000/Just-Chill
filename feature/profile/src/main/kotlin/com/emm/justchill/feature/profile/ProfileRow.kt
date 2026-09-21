@@ -28,19 +28,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
-private val TileSize: Dp = 40.dp
+// No EmmSpacing step sits at 18dp; the glyph is about half the 40dp tile, same ladder as
+// core/ui's IconTile.Lg (IconTile.kt's LG_GLYPH_SIZE).
 private val TileGlyphSize: Dp = 18.dp
-private val RowVerticalPadding: Dp = 14.dp
-private val RowGap: Dp = 14.dp
+
+// No EmmSpacing step sits at 2dp; s1 doubles the label-to-meta gap, s0 removes it.
+private val LabelMetaGap: Dp = 2.dp
 
 @Composable
 internal fun SectionHeader(text: String) {
@@ -109,9 +109,9 @@ internal fun ProfileRowWithTrailing(
                     Modifier
                 },
             )
-            .padding(horizontal = spacing.s6, vertical = RowVerticalPadding),
+            .padding(horizontal = spacing.s6, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(RowGap),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         IconTile(icon = icon, tint = if (enabled) colors.textSecondary else colors.textTertiary)
         Column(modifier = Modifier.weight(1f)) {
@@ -123,13 +123,10 @@ internal fun ProfileRowWithTrailing(
                 overflow = TextOverflow.Ellipsis,
             )
             if (meta.isNotEmpty()) {
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(LabelMetaGap))
                 Text(
                     text = meta,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    fontFamily = InterFontFamily,
-                    fontWeight = FontWeight.W400,
+                    style = type.bodyM,
                     color = if (enabled) {
                         metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary
                     } else {
@@ -145,14 +142,15 @@ internal fun ProfileRowWithTrailing(
 @Composable
 private fun IconTile(icon: ImageVector, tint: Color) {
     val colors = LocalEmmColors.current
+    val spacing = LocalEmmSpacing.current
     val radii = LocalEmmRadii.current
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(TileSize)
+            .size(spacing.s10)
             .clip(radii.rM)
             .background(colors.surface1)
-            .border(width = 1.dp, color = colors.border, shape = radii.rM),
+            .border(width = spacing.hairline, color = colors.border, shape = radii.rM),
     ) {
         Icon(
             imageVector = icon,
