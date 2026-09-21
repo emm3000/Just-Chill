@@ -18,18 +18,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
-val CtaHeight = 52.dp
+// Every CTA shares this one height and no EmmSpacing step is 52dp, so it cannot become a token.
+val CtaHeight: Dp = 52.dp
 
 enum class CtaInteraction {
     Enabled,
@@ -48,6 +51,8 @@ fun StickyCTA(
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
 
     val interactive = interaction == CtaInteraction.Enabled
 
@@ -63,8 +68,8 @@ fun StickyCTA(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(top = 12.dp, bottom = 16.dp)
+                .padding(horizontal = spacing.s4)
+                .padding(top = spacing.s3, bottom = spacing.s4)
                 .height(CtaHeight)
                 .clip(radii.rL)
                 .background(bgColor)
@@ -74,12 +79,12 @@ fun StickyCTA(
             if (interaction == CtaInteraction.Loading) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.s2),
                 ) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(spacing.s4),
                         color = fgColor,
-                        strokeWidth = 2.dp,
+                        strokeWidth = spacing.hairline,
                     )
                     CtaLabel(text = label, color = fgColor)
                 }
@@ -88,14 +93,12 @@ fun StickyCTA(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    CtaLabel(text = label, color = fgColor, withLetterSpacing = false)
+                    CtaLabel(text = label, color = fgColor)
                     if (sublabel != null) {
                         Text(
                             text = sublabel,
+                            style = type.caption,
                             color = fgColor.copy(alpha = 0.65f),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.W400,
-                            fontFamily = InterFontFamily,
                         )
                     }
                 }
@@ -105,15 +108,8 @@ fun StickyCTA(
 }
 
 @Composable
-private fun CtaLabel(text: String, color: Color, withLetterSpacing: Boolean = true) {
-    Text(
-        text = text,
-        color = color,
-        fontSize = 15.sp,
-        fontWeight = FontWeight.W600,
-        fontFamily = InterFontFamily,
-        letterSpacing = if (withLetterSpacing) (-0.15).sp else 0.sp,
-    )
+private fun CtaLabel(text: String, color: Color) {
+    Text(text = text, style = LocalEmmType.current.titleM, color = color)
 }
 
 @Preview

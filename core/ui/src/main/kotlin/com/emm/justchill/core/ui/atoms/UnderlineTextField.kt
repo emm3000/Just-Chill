@@ -22,17 +22,19 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.InterFontFamily
 import com.emm.justchill.core.ui.theme.LocalEmmColors
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
-private val UnderlineStrokeWidth: Dp = 1.dp
+// No EmmType role is Inter 18sp; the input and its placeholder share this size until the field takes a role.
+private val UnderlineFieldFontSize: TextUnit = 18.sp
 
 private val UnderlineFieldTextStyle = TextStyle(
-    fontSize = 18.sp,
+    fontSize = UnderlineFieldFontSize,
     fontWeight = FontWeight.W500,
     fontFamily = InterFontFamily,
     letterSpacing = (-0.18).sp,
@@ -58,7 +60,7 @@ fun UnderlineTextField(
         singleLine = true,
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
-        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border),
+        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
         decorationBox = { inner -> UnderlineDecoration(placeholder, value.isEmpty(), inner) },
     )
 }
@@ -88,15 +90,15 @@ fun UnderlineTextField(
         singleLine = true,
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
-        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border),
+        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
         decorationBox = { inner -> UnderlineDecoration(placeholder, value.text.isEmpty(), inner) },
     )
 }
 
-private fun Modifier.underline(color: Color): Modifier = this
+private fun Modifier.underline(color: Color, spacing: EmmSpacing): Modifier = this
     .fillMaxWidth()
     .drawBehind {
-        val strokeWidth: Float = UnderlineStrokeWidth.toPx()
+        val strokeWidth: Float = spacing.hairline.toPx()
         val centerY: Float = size.height - strokeWidth / 2
         drawLine(
             color = color,
@@ -105,7 +107,7 @@ private fun Modifier.underline(color: Color): Modifier = this
             strokeWidth = strokeWidth,
         )
     }
-    .padding(vertical = 8.dp)
+    .padding(vertical = spacing.s2)
 
 @Composable
 private fun UnderlineDecoration(placeholder: String, isEmpty: Boolean, innerTextField: @Composable () -> Unit) {
@@ -113,7 +115,7 @@ private fun UnderlineDecoration(placeholder: String, isEmpty: Boolean, innerText
         if (isEmpty) {
             Text(
                 text = placeholder,
-                fontSize = 18.sp,
+                fontSize = UnderlineFieldFontSize,
                 fontWeight = FontWeight.W400,
                 fontFamily = InterFontFamily,
                 color = LocalEmmColors.current.textTertiary,
@@ -131,7 +133,7 @@ private fun UnderlineTextFieldEmptyPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             UnderlineTextField(value = "", onValueChange = {}, placeholder = "Ej. Juan")
         }
@@ -146,7 +148,7 @@ private fun UnderlineTextFieldFilledPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             UnderlineTextField(value = "Juan", onValueChange = {}, placeholder = "Ej. Juan")
         }
@@ -161,7 +163,7 @@ private fun UnderlineTextFieldCaretPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(LocalEmmColors.current.bg)
-                .padding(16.dp),
+                .padding(LocalEmmSpacing.current.s4),
         ) {
             UnderlineTextField(
                 value = TextFieldValue("12.50", TextRange(2)),

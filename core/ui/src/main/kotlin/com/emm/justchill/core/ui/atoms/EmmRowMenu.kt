@@ -21,32 +21,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.theme.InterFontFamily
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
+import com.emm.justchill.core.ui.theme.LocalEmmSpacing
+import com.emm.justchill.core.ui.theme.LocalEmmType
 
+// The artwork callers hand to EmmSpacing.edgeGiveback; no EmmSpacing step is 18dp.
 val EmmRowMenuGlyphSize: Dp = 18.dp
 
 @Composable
 fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> Unit, modifier: Modifier = Modifier) {
     val colors: EmmColors = LocalEmmColors.current
     val radii: EmmRadii = LocalEmmRadii.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
     var expanded: Boolean by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(48.dp)
+                .size(spacing.s12)
                 .clip(radii.rFull)
                 .clickable(onClick = { expanded = !expanded }),
         ) {
@@ -66,11 +70,8 @@ fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> U
                 text = {
                     Text(
                         text = "Editar",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
+                        style = type.labelL,
                         color = colors.textPrimary,
-                        letterSpacing = (-0.15).sp,
                     )
                 },
                 leadingIcon = { MenuIcon(Icons.Outlined.Edit) },
@@ -83,11 +84,8 @@ fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> U
                 text = {
                     Text(
                         text = "Borrar",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.W500,
-                        fontFamily = InterFontFamily,
+                        style = type.labelL,
                         color = colors.danger,
-                        letterSpacing = (-0.15).sp,
                     )
                 },
                 leadingIcon = {
@@ -95,7 +93,7 @@ fun EmmRowMenu(contentDescription: String, onEdit: () -> Unit, onDelete: () -> U
                         imageVector = Icons.Outlined.Delete,
                         contentDescription = null,
                         tint = colors.danger,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(spacing.s5),
                     )
                 },
                 onClick = {
@@ -114,7 +112,7 @@ private fun MenuIcon(icon: ImageVector) {
         imageVector = icon,
         contentDescription = null,
         tint = colors.textSecondary,
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(LocalEmmSpacing.current.s5),
     )
 }
 
