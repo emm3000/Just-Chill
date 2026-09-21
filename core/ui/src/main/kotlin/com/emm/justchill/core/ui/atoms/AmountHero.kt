@@ -34,7 +34,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.format.INCOME_SIGN
@@ -166,6 +168,9 @@ private const val AUTO_SIZE_MIN_DIVISOR: Int = 4
 // The TextAutoSize search step (#293), not a type role: no EmmType token is a step.
 private val AUTO_SIZE_STEP: TextUnit = 2.sp
 
+// A text caret, not a hairline or a gap: s1 draws it 60% wider and no EmmSpacing step is 2.5dp.
+private val CARET_WIDTH: Dp = 2.5.dp
+
 @Composable
 private fun BlinkingCaret(color: Color) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
@@ -188,7 +193,7 @@ private fun BlinkingCaret(color: Color) {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
-                .width(spacing.s1)
+                .width(CARET_WIDTH)
                 .fillMaxHeight()
                 .graphicsLayer { this.alpha = alpha }
                 .clip(radii.rFull)

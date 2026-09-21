@@ -22,9 +22,10 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
 fun CategoryDot(color: Color) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Box(
         modifier = Modifier
-            .size(LocalEmmSpacing.current.s2)
+            .size(spacing.s2)
             .clip(CircleShape)
             .background(color),
     )
@@ -34,9 +35,10 @@ fun CategoryDot(color: Color) {
 // starts 8dp further right on the lines without one is the ragged column the rules forbid.
 @Composable
 fun CategoryDotSlot(color: Color?) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.size(LocalEmmSpacing.current.s2),
+        modifier = Modifier.size(spacing.s2),
     ) {
         if (color != null) {
             CategoryDot(color = color)

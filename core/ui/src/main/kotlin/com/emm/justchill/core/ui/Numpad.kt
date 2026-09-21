@@ -23,7 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.color
@@ -78,7 +80,7 @@ fun Numpad(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .weight(1f)
-                            .height(spacing.s12)
+                            .height(NUMPAD_KEY_HEIGHT)
                             .clip(radii.rM)
                             .background(bgColor)
                             .border(BorderStroke(spacing.hairline, colors.border), radii.rM)
@@ -136,6 +138,9 @@ private fun KeyGlyph(text: String, color: Color, modifier: Modifier = Modifier) 
 }
 
 private const val SIGN_KEY_GLYPH = "±"
+
+// Matches CtaHeight so the keys and the save button below them read as one height; no EmmSpacing step is 52dp.
+private val NUMPAD_KEY_HEIGHT: Dp = 52.dp
 
 // Sits between amountLead (18sp) and amountCard (32sp); no EmmType amount role is 22sp.
 private val KEY_GLYPH_FONT_SIZE: TextUnit = 22.sp
