@@ -14,11 +14,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -45,9 +43,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.ui.atoms.CtaHeight
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
@@ -213,38 +214,26 @@ internal fun CategoryFilterSheet(
                 }
             }
 
+            val footReserve: Dp = spacing.s3 + CtaHeight + spacing.s4
             if (hasActiveFilter) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4)
-                        .heightIn(min = spacing.s12)
-                        .clip(radii.rM)
-                        .border(spacing.hairline, colors.border, radii.rM)
-                        .clickable {
-                            onClear()
-                            onDismiss()
-                        }
-                        .padding(horizontal = spacing.s4, vertical = spacing.s3),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = null,
-                        tint = colors.textPrimary,
-                        modifier = Modifier.size(spacing.s3),
-                    )
-                    Spacer(Modifier.width(spacing.s2))
-                    Text(
-                        text = "Limpiar filtro",
-                        style = type.labelL,
-                        fontWeight = FontWeight.W600,
-                        color = colors.textPrimary,
-                    )
-                }
+                OutlinedCta(
+                    label = "Limpiar filtro",
+                    onClick = {
+                        onClear()
+                        onDismiss()
+                    },
+                    modifier = Modifier.padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4),
+                    leading = {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = null,
+                            tint = colors.textPrimary,
+                            modifier = Modifier.size(spacing.s3),
+                        )
+                    },
+                )
             } else {
-                Spacer(Modifier.height(spacing.s4))
+                Spacer(Modifier.height(footReserve))
             }
         }
     }
