@@ -40,6 +40,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -174,7 +176,7 @@ private fun Section(eyebrow: String, content: @Composable () -> Unit) {
 
 private data class Shortcut(val label: String, val type: AccountType, val dotPicker: (EmmColors) -> Color)
 
-private val PERUVIAN_SHORTCUTS = listOf(
+private val PERUVIAN_SHORTCUTS: List<Shortcut> = listOf(
     Shortcut("Yape", AccountType.Wallet) { it.catMauve },
     Shortcut("Plin", AccountType.Wallet) { it.catSage },
     Shortcut("BCP", AccountType.Bank) { it.catSlate },
@@ -192,12 +194,12 @@ private fun ShortcutsRow(selectedName: String, onSelect: (Shortcut) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         items(PERUVIAN_SHORTCUTS.size) { idx ->
-            val s: Shortcut = PERUVIAN_SHORTCUTS[idx]
+            val shortcut: Shortcut = PERUVIAN_SHORTCUTS[idx]
             ShortcutChip(
-                label = s.label,
-                dotColor = s.dotPicker(LocalEmmColors.current),
-                selected = selectedName == s.label,
-                onClick = { onSelect(s) },
+                label = shortcut.label,
+                dotColor = shortcut.dotPicker(LocalEmmColors.current),
+                selected = selectedName == shortcut.label,
+                onClick = { onSelect(shortcut) },
             )
         }
     }
@@ -253,7 +255,7 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
 
 private data class TypeOption(val label: String, val type: AccountType, val icon: ImageVector)
 
-private val TYPE_OPTIONS = listOf(
+private val TYPE_OPTIONS: List<TypeOption> = listOf(
     TypeOption("Billetera", AccountType.Wallet, Icons.Outlined.AccountBalanceWallet),
     TypeOption("Banco", AccountType.Bank, Icons.Outlined.AccountBalance),
     TypeOption("Tarjeta", AccountType.CreditCard, Icons.Outlined.CreditCard),
@@ -305,7 +307,8 @@ private fun TypeCell(
             .clip(shape)
             .background(bgColor)
             .border(spacing.hairline, borderColor, shape)
-            .clickable(onClick = onClick, role = Role.Button)
+            .clickable(onClick = onClick, role = Role.RadioButton)
+            .semantics { this.selected = selected }
             .padding(horizontal = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s3),
