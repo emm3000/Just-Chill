@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -69,8 +70,8 @@ fun UnderlineTextField(
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
-        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
-        decorationBox = { inner -> UnderlineDecoration(placeholder, value.isEmpty(), inner, trailing) },
+        modifier = modifier.fillMaxWidth(),
+        decorationBox = { inner -> UnderlineDecoration(placeholder, value.isEmpty(), isFocused, inner, trailing) },
     )
 }
 
@@ -99,13 +100,12 @@ fun UnderlineTextField(
         singleLine = true,
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
-        modifier = modifier.underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
-        decorationBox = { inner -> UnderlineDecoration(placeholder, value.text.isEmpty(), inner, trailing = null) },
+        modifier = modifier.fillMaxWidth(),
+        decorationBox = { inner -> UnderlineDecoration(placeholder, value.text.isEmpty(), isFocused, inner, trailing = null) },
     )
 }
 
 private fun Modifier.underline(color: Color, spacing: EmmSpacing): Modifier = this
-    .fillMaxWidth()
     .drawBehind {
         val strokeWidth: Float = spacing.hairline.toPx()
         val centerY: Float = size.height - strokeWidth / 2
@@ -122,18 +122,25 @@ private fun Modifier.underline(color: Color, spacing: EmmSpacing): Modifier = th
 private fun UnderlineDecoration(
     placeholder: String,
     isEmpty: Boolean,
+    isFocused: Boolean,
     innerTextField: @Composable () -> Unit,
     trailing: (@Composable () -> Unit)?,
 ) {
+    val colors: EmmColors = LocalEmmColors.current
+
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.weight(1f)) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
+        ) {
             if (isEmpty) {
                 Text(
                     text = placeholder,
                     fontSize = UnderlineFieldFontSize,
                     fontWeight = FontWeight.W400,
                     fontFamily = InterFontFamily,
-                    color = LocalEmmColors.current.textTertiary,
+                    color = colors.textTertiary,
                 )
             }
             innerTextField()
@@ -211,6 +218,33 @@ private fun UnderlineTextFieldMaskedPreview() {
                         text = "Ver",
                         style = LocalEmmType.current.labelM,
                         color = LocalEmmColors.current.textTertiary,
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun UnderlineTextFieldTouchTargetTrailingPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(LocalEmmSpacing.current.s4),
+        ) {
+            UnderlineTextField(
+                value = "password123",
+                onValueChange = {},
+                placeholder = "Mínimo 8 caracteres",
+                visualTransformation = PasswordVisualTransformation(),
+                trailing = {
+                    Box(
+                        modifier = Modifier
+                            .size(LocalEmmSpacing.current.s12)
+                            .background(LocalEmmColors.current.surface1),
                     )
                 },
             )
