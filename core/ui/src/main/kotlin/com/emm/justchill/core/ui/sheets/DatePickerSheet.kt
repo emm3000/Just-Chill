@@ -42,12 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.SpanishDateFormat
 import com.emm.justchill.core.ui.format.titlecaseFirstChar
 import com.emm.justchill.core.ui.theme.EmmColors
-import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
@@ -70,7 +70,6 @@ private data class Shortcut(val label: String, val date: LocalDate)
 fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDismiss: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val radii: EmmRadii = LocalEmmRadii.current
     val type: EmmType = LocalEmmType.current
     val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -206,27 +205,18 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
             }
         }
 
-        val confirmShape: RoundedCornerShape = radii.rM
         val confirmLabel: String = remember(selectedDate) {
             SpanishDateFormat.dayFullMonth(selectedDate)
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = spacing.s4, end = spacing.s4, bottom = spacing.s4, top = spacing.s2)
-                .height(spacing.s12)
-                .clip(confirmShape)
-                .background(colors.textPrimary)
-                .clickable {
-                    onConfirm(selectedDate)
-                    onDismiss()
-                },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Text(text = "Confirmar · $confirmLabel", style = type.titleM, color = colors.bg)
-        }
+        FilledCta(
+            label = "Confirmar · $confirmLabel",
+            onClick = {
+                onConfirm(selectedDate)
+                onDismiss()
+            },
+            modifier = Modifier.padding(start = spacing.s4, end = spacing.s4, bottom = spacing.s4, top = spacing.s2),
+        )
     }
 }
 

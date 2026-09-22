@@ -2,6 +2,8 @@ package com.emm.justchill.core.ui.atoms
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.EmmType
@@ -52,12 +57,13 @@ fun StickyCTA(
     tone: CtaTone = CtaTone.Neutral,
     interaction: CtaInteraction = CtaInteraction.Enabled,
 ) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
-    val interactive = interaction == CtaInteraction.Enabled
+    val interactive: Boolean = interaction == CtaInteraction.Enabled
 
     val (bgColor, fgColor) = when {
         !interactive -> colors.surface1 to colors.textTertiary
@@ -76,7 +82,14 @@ fun StickyCTA(
                 .height(CtaHeight)
                 .clip(radii.rL)
                 .background(bgColor)
-                .clickable(enabled = interactive, role = Role.Button, onClick = onClick),
+                .indication(interactionSource, ripple())
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    enabled = interactive,
+                    role = Role.Button,
+                    onClick = onClick,
+                ),
             contentAlignment = Alignment.Center,
         ) {
             if (interaction == CtaInteraction.Loading) {
