@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -87,26 +88,16 @@ internal fun ProfileRowWithTrailing(
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
-    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
-    val bg: Color = if (onClick != null && isPressed) colors.surface1 else Color.Transparent
     val active: Boolean = enabled || busy
     val press: Modifier = if (onClick != null) {
-        Modifier.clickable(
-            interactionSource = interactionSource,
-            indication = null,
-            enabled = enabled,
-            role = Role.Button,
-            onClick = onClick,
-        )
+        pressableRow(onClick = onClick, enabled = enabled, pressedGround = colors.surface1)
     } else {
-        Modifier
+        Modifier.semantics(mergeDescendants = true) {}
     }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(bg)
             .then(press)
             .padding(horizontal = spacing.s6, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
@@ -138,3 +129,18 @@ internal fun ProfileRowWithTrailing(
     }
 }
 
+@Composable
+private fun pressableRow(onClick: () -> Unit, enabled: Boolean, pressedGround: Color): Modifier {
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
+    val bg: Color = if (isPressed) pressedGround else Color.Transparent
+    return Modifier
+        .background(bg)
+        .clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            enabled = enabled,
+            role = Role.Button,
+            onClick = onClick,
+        )
+}
