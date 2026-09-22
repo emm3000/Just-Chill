@@ -28,6 +28,7 @@ import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -35,7 +36,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun <T> Segmented(options: List<SegmentOption<T>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val shape: Shape = LocalEmmRadii.current.rM
 
@@ -48,7 +49,7 @@ fun <T> Segmented(options: List<SegmentOption<T>>, selected: T, onSelect: (T) ->
             .padding(horizontal = CELL_INSET),
     ) {
         options.forEach { option ->
-            val isSelected = option.value == selected
+            val isSelected: Boolean = option.value == selected
             SegmentCell(
                 label = option.label,
                 isSelected = isSelected,
@@ -63,8 +64,8 @@ data class SegmentOption<T>(val value: T, val label: String)
 
 @Composable
 private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
     val cellShape: Shape = radii.rS
@@ -72,7 +73,7 @@ private fun SegmentCell(label: String, isSelected: Boolean, onClick: () -> Unit,
     val bg: Color = if (isSelected) colors.surface2 else Color.Transparent
     val textColor: Color = if (isSelected) colors.textPrimary else colors.textSecondary
 
-    val interactionSource = remember { MutableInteractionSource() }
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = modifier
