@@ -47,8 +47,9 @@ internal fun AccountSection(
                     "Tus datos siguen en este teléfono"
                 },
                 metaIsPrimary = false,
-                enabled = op == ProfileOp.None || op == ProfileOp.SigningOut,
-                onClick = onSignOutClick.takeIf { op == ProfileOp.None },
+                enabled = op == ProfileOp.None,
+                busy = op == ProfileOp.SigningOut,
+                onClick = onSignOutClick,
                 trailing = { ChevronTrailing(enabled = op == ProfileOp.None || op == ProfileOp.SigningOut) },
             )
             ProfileRowWithTrailing(
@@ -60,8 +61,9 @@ internal fun AccountSection(
                     "Borra tu cuenta y tus datos en la nube"
                 },
                 metaIsPrimary = false,
-                enabled = op == ProfileOp.None || op == ProfileOp.DeletingAccount,
-                onClick = onDeleteAccountClick.takeIf { op == ProfileOp.None },
+                enabled = op == ProfileOp.None,
+                busy = op == ProfileOp.DeletingAccount,
+                onClick = onDeleteAccountClick,
                 trailing = { ChevronTrailing(enabled = op == ProfileOp.None || op == ProfileOp.DeletingAccount) },
             )
         }

@@ -81,6 +81,7 @@ internal fun ProfileRowWithTrailing(
     trailing: @Composable () -> Unit,
     metaColor: Color? = null,
     enabled: Boolean = true,
+    busy: Boolean = false,
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
@@ -89,29 +90,34 @@ internal fun ProfileRowWithTrailing(
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val bg: Color = if (onClick != null && isPressed) colors.surface1 else Color.Transparent
-    val clickAction: () -> Unit = remember(onClick) { onClick ?: {} }
+    val active: Boolean = enabled || busy
+    val press: Modifier = if (onClick != null) {
+        Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            enabled = enabled,
+            role = Role.Button,
+            onClick = onClick,
+        )
+    } else {
+        Modifier
+    }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(bg)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = onClick != null,
-                role = Role.Button,
-                onClick = clickAction,
-            )
+            .then(press)
             .padding(horizontal = spacing.s6, vertical = spacing.s3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
-        IconTile(icon = icon, size = IconTileSize.Lg, enabled = enabled)
+        IconTile(icon = icon, size = IconTileSize.Lg, enabled = active)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
                 style = type.bodyL.copy(fontWeight = FontWeight.W500),
-                color = if (enabled) colors.textPrimary else colors.textTertiary,
+                color = if (active) colors.textPrimary else colors.textTertiary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -120,7 +126,7 @@ internal fun ProfileRowWithTrailing(
                 Text(
                     text = meta,
                     style = type.bodyM,
-                    color = if (enabled) {
+                    color = if (active) {
                         metaColor ?: if (metaIsPrimary) colors.textSecondary else colors.textTertiary
                     } else {
                         colors.textDisabled
