@@ -15,7 +15,7 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
 | `:core:ui` | The MVI base, the navigation vocabulary (`AppRoute`, `CaptureRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
-| `:core:testing` | `MainDispatcherRule` and `FakeTodayFlow`, the JVM test fixtures on `:core:domain` alone; wired into feature modules, `:core:ui` and `:androidApp` as `testImplementation`. |
+| `:core:testing` | `MainDispatcherRule`, `FakeTodayFlow` and `FakeBackupAvailability`, the JVM test fixtures on `:core:domain` alone; wired into feature modules, `:core:ui` and `:androidApp` as `testImplementation`. |
 | `:feature:*` | One screen family: its Compose-free ViewModels, its Compose screens and nav entries, its `@Serializable` routes and its Koin module. |
 | `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, entry graph, shortcut routes, the SAF host actions), the Koin graph with the cross-cutting modules in `core/di/` and one wiring file per feature, the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, flavors, shortcuts, the session keystore. |
 
