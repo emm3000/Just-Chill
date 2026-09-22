@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -102,7 +103,7 @@ private fun AddAccountContent(
     onIntent: (AddAccountIntent) -> Unit,
     onBack: () -> Unit = {},
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
@@ -191,7 +192,7 @@ private fun ShortcutsRow(selectedName: String, onSelect: (Shortcut) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
         items(PERUVIAN_SHORTCUTS.size) { idx ->
-            val s = PERUVIAN_SHORTCUTS[idx]
+            val s: Shortcut = PERUVIAN_SHORTCUTS[idx]
             ShortcutChip(
                 label = s.label,
                 dotColor = s.dotPicker(LocalEmmColors.current),
@@ -204,15 +205,15 @@ private fun ShortcutsRow(selectedName: String, onSelect: (Shortcut) -> Unit) {
 
 @Composable
 private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
     val type: EmmType = LocalEmmType.current
     val shape: RoundedCornerShape = radii.rFull
 
-    val bgColor = if (selected) colors.surface3 else colors.surface1
+    val bgColor: Color = if (selected) colors.surface3 else colors.surface1
     val borderColor: Color = if (selected) colors.borderFocus else colors.border
-    val textColor = if (selected) colors.textPrimary else colors.textSecondary
+    val textColor: Color = if (selected) colors.textPrimary else colors.textSecondary
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -288,15 +289,15 @@ private fun TypeCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
     val type: EmmType = LocalEmmType.current
     val shape: RoundedCornerShape = radii.rM
 
     val borderColor: Color = if (selected) colors.borderFocus else colors.border
-    val bgColor = if (selected) colors.surface3 else colors.surface1
-    val tint = if (selected) colors.textPrimary else colors.textSecondary
+    val bgColor: Color = if (selected) colors.surface3 else colors.surface1
+    val labelColor: Color = if (selected) colors.textPrimary else colors.textSecondary
 
     Row(
         modifier = modifier
@@ -304,7 +305,7 @@ private fun TypeCell(
             .clip(shape)
             .background(bgColor)
             .border(spacing.hairline, borderColor, shape)
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick, role = Role.Button)
             .padding(horizontal = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s3),
@@ -312,13 +313,13 @@ private fun TypeCell(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = tint,
+            tint = colors.textSecondary,
             modifier = Modifier.size(spacing.s5),
         )
         Text(
             text = label,
             style = type.titleM.copy(fontWeight = if (selected) FontWeight.W600 else FontWeight.W500),
-            color = tint,
+            color = labelColor,
         )
     }
 }
