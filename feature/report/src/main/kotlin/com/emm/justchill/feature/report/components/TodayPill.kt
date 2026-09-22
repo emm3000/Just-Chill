@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.theme.EmmTheme
@@ -37,29 +38,24 @@ fun TodayPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .height(spacing.s12)
+            .clip(shape)
+            .background(colors.surface1)
+            .border(width = spacing.hairline, color = colors.border, shape = shape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
+                role = Role.Button,
                 onClick = onClick,
-            ),
+            )
+            .indication(interactionSource, ripple())
+            .padding(horizontal = spacing.s4),
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .height(spacing.s12)
-                .clip(shape)
-                .background(colors.surface1)
-                .border(width = spacing.hairline, color = colors.border, shape = shape)
-                .indication(interactionSource, ripple())
-                .padding(horizontal = spacing.s4),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "Hoy",
-                style = type.labelL,
-                color = colors.textPrimary,
-            )
-        }
+        Text(
+            text = "Hoy",
+            style = type.labelL,
+            color = colors.textPrimary,
+        )
     }
 }
 
