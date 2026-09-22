@@ -68,5 +68,6 @@ class BackupDisclosureSignalTest {
 
         val UNDISCLOSED: BackupHealth = BackupHealth.None.copy(canUploadToDestination = false)
 
-        val DISCLOSED: BackupHealth = BackupHealth.None.copy(canUploadToDestination = true)    }
+        val DISCLOSED: BackupHealth = BackupHealth.None.copy(canUploadToDestination = true)
+    }
 }

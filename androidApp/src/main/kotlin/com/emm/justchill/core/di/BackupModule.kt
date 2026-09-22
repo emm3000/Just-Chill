@@ -23,7 +23,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val backupModule = module {
-    single<BackupAvailability> { FlavorBackupAvailability() }
+    singleOf(::FlavorBackupAvailability) { bind<BackupAvailability>() }
 
     factoryOf(::ImportDataUseCase)
 

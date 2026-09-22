@@ -32,11 +32,11 @@ person actually promotes in Play Console. Nothing on this page is optional.
 - **Restore drill.** [ADR 009](adr/009-backup-is-a-snapshot-not-row-replication.md) Decision 4
   requires a continuously proven restore before backup ships, and this line is its only
   enforcement: delete it and nothing in the repo asks for the drill again.
-  - While `SNAPSHOT_BACKUP_ENABLED` is `false` (its state today), the drill runs over the manual
+  - While `prod`'s `SNAPSHOT_BACKUP_ENABLED` is `false` (its state today), the drill runs over the manual
     export: export from the installed build, record Cuentas' `Saldo total` and the Cuentas and
     Categorías counts first, import onto a clean install, and confirm all three figures and the
     ledger survive.
-  - Once the flag flips, the drill runs over the newest verified snapshot instead.
+  - Once `prod`'s flag flips, the drill runs over the newest verified snapshot instead.
   - Read the figures from the app, not from the import snackbar: `buildImportDoneMessage` never
     reports accounts or categories, and omits any clause whose count is zero.
 - **The declarations agree.** The advertising-ID answer, the Data Safety form,
@@ -44,7 +44,7 @@ person actually promotes in Play Console. Nothing on this page is optional.
   describe one app; changing one without the rest produces two official statements that contradict
   each other. Re-verify the advertising ID with [`play/advertising-id.md`](play/advertising-id.md)
   rather than re-deriving it.
-- **If this release flips `SNAPSHOT_BACKUP_ENABLED`**, update the privacy policy, the store listing
+- **If this release flips `prod`'s `SNAPSHOT_BACKUP_ENABLED`**, update the privacy policy, the store listing
   and the Data Safety answer in this same release — the app stops being "nothing leaves your phone".
   Not after. Flipping the flag is a compliance event, not a feature flag; a "Yes" set to unblock
   one release becomes permanent.
