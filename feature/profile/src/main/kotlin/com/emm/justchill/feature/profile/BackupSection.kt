@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.emm.justchill.core.domain.shared.backup.SNAPSHOT_BACKUP_ENABLED
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -72,10 +71,9 @@ internal fun BackupSection(
                 },
             )
         }
-        // The cloud rows and the local-only note are the two branches of ONE read of the kill
-        // switch, so the door to an account can never sit above a note promising nothing leaves the
-        // phone. Two separate reads would let a future edit negate only one of them.
-        if (SNAPSHOT_BACKUP_ENABLED) {
+        // One read keeps the cloud rows and the local-only note exclusive: the door to an account
+        // never sits above a note promising nothing leaves the phone.
+        if (state.isCloudBackupAvailable) {
             CloudBackupRows(state = state, onSignIn = onSignInClick, snapshotActions = snapshotActions)
         } else {
             BackupLocalOnlyNote()

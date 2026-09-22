@@ -17,6 +17,7 @@ import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.backup.ImportStats
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.testing.FakeBackupAvailability
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
@@ -89,6 +90,7 @@ class ProfileViewModelImportTest {
         todayFlow = todayFlow,
         getRecurringMonthlySummary = getRecurringMonthlySummary,
         getSessionStatus = getSessionStatus,
+        backupAvailability = FakeBackupAvailability(isAvailable = false),
         appVersion = "1.0.0",
         clock = fixedClock,
     )

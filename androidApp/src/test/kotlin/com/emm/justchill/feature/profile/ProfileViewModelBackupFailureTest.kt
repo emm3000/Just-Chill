@@ -26,6 +26,7 @@ import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.testing.FakeBackupAvailability
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
 import com.emm.justchill.feature.profile.toText
@@ -263,6 +264,7 @@ class ProfileViewModelBackupFailureTest {
         todayFlow = todayFlow,
         getRecurringMonthlySummary = getRecurringMonthlySummary,
         getSessionStatus = getSessionStatus,
+        backupAvailability = FakeBackupAvailability(isAvailable = false),
         appVersion = APP_VERSION,
         clock = object : Clock {
             override fun now(): Instant = NOW
