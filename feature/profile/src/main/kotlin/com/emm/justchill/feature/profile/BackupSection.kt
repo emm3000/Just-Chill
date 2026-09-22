@@ -71,8 +71,7 @@ internal fun BackupSection(
                 },
             )
         }
-        // One read keeps the cloud rows and the local-only note exclusive: the door to an account
-        // never sits above a note promising nothing leaves the phone.
+        // The door to an account never sits above a note promising nothing leaves the phone.
         if (state.isCloudBackupAvailable) {
             CloudBackupRows(state = state, onSignIn = onSignInClick, snapshotActions = snapshotActions)
         } else {
