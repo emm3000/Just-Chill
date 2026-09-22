@@ -160,6 +160,7 @@ private fun AuthFormStep(
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     val headingText: String = if (state.mode == AuthMode.SignIn) "Inicia sesión" else "Crea tu cuenta"
     val submitLabel: String = if (state.mode == AuthMode.SignIn) {
@@ -268,6 +269,7 @@ private fun AuthFormStep(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .height(spacing.s12)
+                    .clip(radii.rFull)
                     .clickable(role = Role.Button) { onIntent(AuthIntent.ToggleMode) },
             ) {
                 Text(
@@ -429,11 +431,13 @@ private fun AuthFieldInput(
 private fun PasswordVisibilityToggle(passwordVisible: Boolean, onToggle: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(spacing.s12)
+            .clip(radii.rFull)
             .clickable(role = Role.Button, onClick = onToggle),
     ) {
         Icon(
