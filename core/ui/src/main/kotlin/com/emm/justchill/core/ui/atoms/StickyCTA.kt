@@ -82,7 +82,7 @@ fun StickyCTA(
                 .height(CtaHeight)
                 .clip(radii.rL)
                 .background(bgColor)
-                .indication(interactionSource, ripple())
+                .indication(interactionSource, ripple(color = fgColor))
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
