@@ -13,14 +13,15 @@ import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun Eyebrow(text: String, modifier: Modifier = Modifier, color: Color? = null) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
 
     Text(
         text = text.uppercase(),

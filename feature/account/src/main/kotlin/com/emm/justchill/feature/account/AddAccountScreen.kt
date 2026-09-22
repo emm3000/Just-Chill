@@ -20,11 +20,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBalance
-import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.CreditCard
-import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -253,30 +248,24 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
     }
 }
 
-private data class TypeOption(val label: String, val type: AccountType, val icon: ImageVector)
-
-private val TYPE_OPTIONS: List<TypeOption> = listOf(
-    TypeOption("Billetera", AccountType.Wallet, Icons.Outlined.AccountBalanceWallet),
-    TypeOption("Banco", AccountType.Bank, Icons.Outlined.AccountBalance),
-    TypeOption("Tarjeta", AccountType.CreditCard, Icons.Outlined.CreditCard),
-    TypeOption("Efectivo", AccountType.Cash, Icons.Outlined.Payments),
-)
-
 @Composable
 private fun TypeGrid(selected: AccountType, onSelect: (AccountType) -> Unit) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        TYPE_OPTIONS.chunked(2).forEach { pair ->
+        AccountType.entries.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                pair.forEach { option ->
+                pair.forEach { type ->
                     TypeCell(
-                        label = option.label,
-                        icon = option.icon,
-                        selected = selected == option.type,
-                        onClick = { onSelect(option.type) },
+                        label = type.toLabel(),
+                        icon = type.toIcon(),
+                        selected = selected == type,
+                        onClick = { onSelect(type) },
                         modifier = Modifier.weight(1f),
                     )
+                }
+                if (pair.size == 1) {
+                    Spacer(Modifier.weight(1f))
                 }
             }
         }
