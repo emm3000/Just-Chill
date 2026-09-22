@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.emm.justchill.core.domain.shared.Money
@@ -183,9 +184,14 @@ fun ConfirmRecurringSheet(
                 onClick = { onConfirm(if (item.isVariableAmount) Money(amountCents) else null) },
             )
 
-            SkipPeriodAction(periodLabel = item.periodLabel, onSkip = onSkip)
+            SkipPeriodAction(type = item.type, periodLabel = item.periodLabel, onSkip = onSkip)
         }
     }
+}
+
+internal fun skipPeriodCopy(type: TransactionType, periodLabel: String): String = when (type) {
+    TransactionType.Income -> "No lo recibí en $periodLabel"
+    TransactionType.Spend -> "No lo pagué en $periodLabel"
 }
 
 /**
@@ -193,15 +199,15 @@ fun ConfirmRecurringSheet(
  * booked, and equal visual weight would invite tapping past one that should have been recorded.
  */
 @Composable
-private fun SkipPeriodAction(periodLabel: String, onSkip: () -> Unit) {
+private fun SkipPeriodAction(type: TransactionType, periodLabel: String, onSkip: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val emmType: EmmType = LocalEmmType.current
     Text(
-        text = "No lo pagué en $periodLabel",
+        text = skipPeriodCopy(type, periodLabel),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onSkip)
+            .clickable(onClick = onSkip, role = Role.Button)
             .padding(vertical = spacing.s4),
         textAlign = TextAlign.Center,
         style = emmType.labelL,
