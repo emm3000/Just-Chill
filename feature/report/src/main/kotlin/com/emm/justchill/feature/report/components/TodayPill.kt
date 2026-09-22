@@ -21,7 +21,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.atoms.MonthSelector
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -29,11 +32,11 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
 fun TodayPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
     val shape: RoundedCornerShape = LocalEmmRadii.current.rFull
-    val interactionSource = remember { MutableInteractionSource() }
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = modifier
