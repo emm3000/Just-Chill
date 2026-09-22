@@ -86,21 +86,16 @@ private fun TypeBadge(type: CategoryType) {
     val radii: EmmRadii = LocalEmmRadii.current
     val emmType: EmmType = LocalEmmType.current
     val isIncome: Boolean = type == CategoryType.Income
-    val bg: Color = if (isIncome) colors.posMuted else colors.negMuted
-    val fg: Color = if (isIncome) colors.success else colors.danger
+    val fg: Color = if (isIncome) colors.success else colors.textSecondary
     val label: String = if (isIncome) "Ingreso" else "Gasto"
 
-    Box(
+    Text(
+        text = label,
         modifier = Modifier
             .clip(radii.rFull)
-            .background(bg)
+            .background(colors.surface2)
             .padding(horizontal = spacing.s2, vertical = spacing.s1),
-    ) {
-        Text(
-            text = label,
-            style = emmType.caption,
-            fontWeight = FontWeight.W600,
-            color = fg,
-        )
-    }
+        style = emmType.caption.copy(fontWeight = FontWeight.W600),
+        color = fg,
+    )
 }
