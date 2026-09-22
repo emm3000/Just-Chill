@@ -2,6 +2,8 @@ package com.emm.justchill.core.ui.atoms
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,16 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -34,15 +41,16 @@ fun FilledCta(
     modifier: Modifier = Modifier,
     interaction: CtaInteraction = CtaInteraction.Enabled,
 ) {
-    val colors = LocalEmmColors.current
-    val radii = LocalEmmRadii.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
-    val interactive = interaction == CtaInteraction.Enabled
+    val interactive: Boolean = interaction == CtaInteraction.Enabled
 
-    val bgColor = if (interactive) colors.textPrimary else colors.surface1
-    val fgColor = if (interactive) colors.bg else colors.textTertiary
+    val bgColor: Color = if (interactive) colors.textPrimary else colors.surface1
+    val fgColor: Color = if (interactive) colors.bg else colors.textTertiary
 
     Box(
         modifier = modifier
@@ -50,7 +58,14 @@ fun FilledCta(
             .height(CtaHeight)
             .clip(radii.rL)
             .background(bgColor)
-            .clickable(enabled = interactive, role = Role.Button, onClick = onClick),
+            .indication(interactionSource, ripple())
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = interactive,
+                role = Role.Button,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         if (interaction == CtaInteraction.Loading) {

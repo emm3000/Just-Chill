@@ -1,7 +1,6 @@
 package com.emm.justchill.core.ui.sheets
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,15 +25,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
-import com.emm.justchill.core.ui.atoms.CtaHeight
+import com.emm.justchill.core.ui.atoms.CtaInteraction
+import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
@@ -42,12 +38,10 @@ import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.formatCentsForDisplay
 import com.emm.justchill.core.ui.format.sanitizeCentsInput
 import com.emm.justchill.core.ui.theme.EmmColors
-import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
@@ -101,7 +95,6 @@ private fun AmountInputSheetContent(
     subtitle: String? = null,
 ) {
     val colors: EmmColors = LocalEmmColors.current
-    val radii: EmmRadii = LocalEmmRadii.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
     // Seeded once per opening: every caller renders the sheet inside an `if (show…)`, so leaving
@@ -116,7 +109,7 @@ private fun AmountInputSheetContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = spacing.s6, end = spacing.s4, bottom = spacing.s4),
+                .padding(start = spacing.s6, end = spacing.s6, bottom = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -163,36 +156,18 @@ private fun AmountInputSheetContent(
         Spacer(Modifier.height(spacing.s3))
 
         val confirmEnabled: Boolean = draftDigits.isNotEmpty() && draftDigits.toLongOrNull() != 0L
-        val ctaBg: Color = if (confirmEnabled) colors.textPrimary else colors.surface1
-        val ctaFg: Color = if (confirmEnabled) colors.bg else colors.textTertiary
 
-        Box(
+        FilledCta(
+            label = "Listo · S/ $formattedDraft",
+            onClick = {
+                onAmountConfirm(draftDigits)
+                onDismiss()
+            },
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(horizontal = spacing.s4)
-                .padding(bottom = spacing.s4)
-                .height(CtaHeight)
-                .clip(radii.rL)
-                .background(ctaBg)
-                .clickable(enabled = confirmEnabled, role = Role.Button) {
-                    onAmountConfirm(draftDigits)
-                    onDismiss()
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            ) {
-                Text(text = "Listo", style = type.titleM, color = ctaFg)
-                Text(text = "·", style = type.titleM, color = ctaFg.copy(alpha = 0.6f))
-                Text(
-                    text = "S/ $formattedDraft",
-                    style = type.amountM.copy(fontWeight = FontWeight.W600),
-                    color = ctaFg.copy(alpha = 0.9f),
-                )
-            }
-        }
+                .padding(bottom = spacing.s4),
+            interaction = if (confirmEnabled) CtaInteraction.Enabled else CtaInteraction.Disabled,
+        )
     }
 }
 

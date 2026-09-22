@@ -3,6 +3,8 @@ package com.emm.justchill.core.ui.atoms
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +48,7 @@ fun OutlinedCta(
     val radii: EmmRadii = LocalEmmRadii.current
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     val enabled: Boolean = interaction == CtaInteraction.Enabled
     val loading: Boolean = interaction == CtaInteraction.Loading
@@ -55,7 +60,14 @@ fun OutlinedCta(
             .height(CtaHeight)
             .clip(radii.rL)
             .border(width = spacing.hairline, color = colors.border, shape = radii.rL)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+            .indication(interactionSource, ripple())
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Row(
