@@ -4,8 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
@@ -14,12 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +26,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -71,7 +71,15 @@ fun UnderlineTextField(
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
         modifier = modifier.fillMaxWidth(),
-        decorationBox = { inner -> UnderlineDecoration(placeholder, value.isEmpty(), isFocused, inner, trailing) },
+        decorationBox = { inner ->
+            UnderlineDecoration(
+                placeholder = placeholder,
+                isEmpty = value.isEmpty(),
+                isFocused = isFocused,
+                innerTextField = inner,
+                trailing = trailing,
+            )
+        },
     )
 }
 
@@ -101,22 +109,17 @@ fun UnderlineTextField(
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
         modifier = modifier.fillMaxWidth(),
-        decorationBox = { inner -> UnderlineDecoration(placeholder, value.text.isEmpty(), isFocused, inner, trailing = null) },
+        decorationBox = { inner ->
+            UnderlineDecoration(
+                placeholder = placeholder,
+                isEmpty = value.text.isEmpty(),
+                isFocused = isFocused,
+                innerTextField = inner,
+                trailing = null,
+            )
+        },
     )
 }
-
-private fun Modifier.underline(color: Color, spacing: EmmSpacing): Modifier = this
-    .drawBehind {
-        val strokeWidth: Float = spacing.hairline.toPx()
-        val centerY: Float = size.height - strokeWidth / 2
-        drawLine(
-            color = color,
-            start = Offset(0f, centerY),
-            end = Offset(size.width, centerY),
-            strokeWidth = strokeWidth,
-        )
-    }
-    .padding(vertical = spacing.s2)
 
 @Composable
 private fun UnderlineDecoration(
@@ -127,25 +130,46 @@ private fun UnderlineDecoration(
     trailing: (@Composable () -> Unit)?,
 ) {
     val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .underline(if (isFocused) colors.borderFocus else colors.border, LocalEmmSpacing.current),
-        ) {
-            if (isEmpty) {
-                Text(
-                    text = placeholder,
-                    fontSize = UnderlineFieldFontSize,
-                    fontWeight = FontWeight.W400,
-                    fontFamily = InterFontFamily,
-                    color = colors.textTertiary,
-                )
+    Layout(
+        content = {
+            Box(modifier = Modifier.padding(vertical = spacing.s2)) {
+                if (isEmpty) {
+                    Text(
+                        text = placeholder,
+                        fontSize = UnderlineFieldFontSize,
+                        fontWeight = FontWeight.W400,
+                        fontFamily = InterFontFamily,
+                        color = colors.textTertiary,
+                    )
+                }
+                innerTextField()
             }
-            innerTextField()
+            Box(
+                modifier = Modifier
+                    .height(spacing.hairline)
+                    .background(if (isFocused) colors.borderFocus else colors.border),
+            )
+            trailing?.invoke()
+        },
+    ) { measurables: List<Measurable>, constraints: Constraints ->
+        val width: Int = constraints.maxWidth
+        val loose: Constraints = constraints.copy(minWidth = 0, minHeight = 0)
+        val trailingPlaceables: List<Placeable> = measurables.drop(2).map { it.measure(loose) }
+        val trailingWidth: Int = trailingPlaceables.maxOfOrNull { it.width } ?: 0
+        val textWidth: Int = (width - trailingWidth).coerceAtLeast(0)
+        val text: Placeable = measurables[0].measure(loose.copy(minWidth = textWidth, maxWidth = textWidth))
+        val line: Placeable = measurables[1].measure(loose.copy(minWidth = width, maxWidth = width))
+        val trailingHeight: Int = trailingPlaceables.maxOfOrNull { it.height } ?: 0
+        val height: Int = maxOf(text.height, trailingHeight, constraints.minHeight)
+        val textTop: Int = (height - text.height) / 2
+
+        layout(width, height) {
+            text.place(0, textTop)
+            line.place(0, textTop + text.height - line.height)
+            trailingPlaceables.forEach { it.place(width - trailingWidth, (height - it.height) / 2) }
         }
-        trailing?.invoke()
     }
 }
 
