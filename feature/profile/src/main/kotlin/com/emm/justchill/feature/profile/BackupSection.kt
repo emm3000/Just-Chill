@@ -53,8 +53,9 @@ internal fun BackupSection(
                 label = "Exportar mi data",
                 meta = if (state.op == ProfileOp.Exporting) "Preparando…" else state.lastExport.toMetaText(),
                 metaIsPrimary = false,
-                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting,
-                onClick = onExportClick.takeIf { state.op == ProfileOp.None },
+                enabled = state.op == ProfileOp.None,
+                busy = state.op == ProfileOp.Exporting,
+                onClick = onExportClick,
                 trailing = {
                     ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting)
                 },
@@ -64,14 +65,14 @@ internal fun BackupSection(
                 label = "Importar respaldo",
                 meta = if (state.op == ProfileOp.Importing) "Importando…" else "Reemplaza todo lo que hay",
                 metaIsPrimary = false,
-                enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing,
-                onClick = onImportClick.takeIf { state.op == ProfileOp.None },
+                enabled = state.op == ProfileOp.None,
+                busy = state.op == ProfileOp.Importing,
+                onClick = onImportClick,
                 trailing = {
                     ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
                 },
             )
         }
-        // The door to an account never sits above a note promising nothing leaves the phone.
         if (state.isCloudBackupAvailable) {
             CloudBackupRows(state = state, onSignIn = onSignInClick, snapshotActions = snapshotActions)
         } else {
@@ -97,8 +98,9 @@ private fun CloudBackupRows(state: ProfileUiState, onSignIn: () -> Unit, snapsho
             label = "Respaldar ahora",
             meta = if (state.op == ProfileOp.BackingUp) "Respaldando…" else "Sube una copia a la nube",
             metaIsPrimary = true,
-            enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp,
-            onClick = snapshotActions.onBackUpNow.takeIf { state.op == ProfileOp.None },
+            enabled = state.op == ProfileOp.None,
+            busy = state.op == ProfileOp.BackingUp,
+            onClick = snapshotActions.onBackUpNow,
             trailing = {
                 ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp)
             },
@@ -120,8 +122,9 @@ private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
         label = "Verificar respaldo",
         meta = if (busy) "Verificando…" else "Revisa que el último se pueda restaurar",
         metaIsPrimary = true,
-        enabled = idle || busy,
-        onClick = onVerifyClick.takeIf { idle },
+        enabled = idle,
+        busy = busy,
+        onClick = onVerifyClick,
         trailing = { ChevronTrailing(enabled = idle || busy) },
     )
 }
