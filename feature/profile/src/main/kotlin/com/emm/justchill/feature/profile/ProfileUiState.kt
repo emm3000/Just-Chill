@@ -84,4 +84,5 @@ data class ProfileUiState(
     val lastExport: LastExportUi = LastExportUi.Never,
     val session: SessionUiState = SessionUiState.Initializing,
     val backupRow: BackupRowUi = BackupRowUi.NeedsAccount,
+    val isCloudBackupAvailable: Boolean = false,
 ) : UiState

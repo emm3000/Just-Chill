@@ -8,6 +8,7 @@ import com.emm.justchill.core.domain.auth.SignOutUseCase
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.recurring.GetRecurringMonthlySummaryUseCase
+import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupEvent
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
@@ -46,10 +47,14 @@ class ProfileViewModel(
     categoryRepository: CategoryRepository,
     getRecurringMonthlySummary: GetRecurringMonthlySummaryUseCase,
     getSessionStatus: GetSessionStatusUseCase,
+    backupAvailability: BackupAvailability,
     private val appVersion: String,
     private val clock: Clock,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(
-    ProfileUiState(lastExport = localExportHistory.toLastExportUi(todayFlow.today())),
+    ProfileUiState(
+        lastExport = localExportHistory.toLastExportUi(todayFlow.today()),
+        isCloudBackupAvailable = backupAvailability.isAvailable,
+    ),
 ) {
     private val onDomainError: (DomainException) -> ProfileEffect = ProfileEffect::ShowError
 

@@ -2,17 +2,21 @@ package com.emm.justchill.core.backup
 
 import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import com.emm.justchill.core.domain.auth.SessionStatus
+import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupHealth
-import com.emm.justchill.core.domain.shared.backup.SNAPSHOT_BACKUP_ENABLED
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 
-class BackupDisclosureSignal(getSessionStatus: GetSessionStatusUseCase, backupController: BackupController) {
+class BackupDisclosureSignal(
+    getSessionStatus: GetSessionStatusUseCase,
+    backupController: BackupController,
+    backupAvailability: BackupAvailability,
+) {
 
-    val isPending: Flow<Boolean> = if (SNAPSHOT_BACKUP_ENABLED) {
+    val isPending: Flow<Boolean> = if (backupAvailability.isAvailable) {
         combine(getSessionStatus(), backupController.health, ::disclosureIsPending).distinctUntilChanged()
     } else {
         flowOf(false)

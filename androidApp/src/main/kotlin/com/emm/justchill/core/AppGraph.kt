@@ -2,7 +2,7 @@ package com.emm.justchill.core
 
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.commonCoreModule
-import com.emm.justchill.core.domain.shared.backup.SNAPSHOT_BACKUP_ENABLED
+import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.di.backupModule
 import com.emm.justchill.core.di.dataModule
 import com.emm.justchill.core.di.sharedModule
@@ -36,5 +36,5 @@ fun appModules(platformModule: Module): List<Module> = listOf(
 )
 
 fun bootstrapAppGraph(koin: Koin) {
-    if (SNAPSHOT_BACKUP_ENABLED) koin.get<BackupOrchestrator>().start()
+    if (koin.get<BackupAvailability>().isAvailable) koin.get<BackupOrchestrator>().start()
 }

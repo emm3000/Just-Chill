@@ -21,6 +21,7 @@ val profileModule: Module = module {
             categoryRepository = get(),
             getRecurringMonthlySummary = get(),
             getSessionStatus = get(),
+            backupAvailability = get(),
             appVersion = get(named("appVersion")),
             clock = get(),
         )

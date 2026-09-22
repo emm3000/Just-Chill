@@ -20,6 +20,7 @@ import com.emm.justchill.core.domain.shared.backup.ExportHistory
 import com.emm.justchill.core.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.testing.FakeBackupAvailability
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
@@ -95,6 +96,7 @@ class ProfileViewModelRowDataTest {
         categoryRepository = categoryRepository,
         getRecurringMonthlySummary = getRecurringMonthlySummary,
         getSessionStatus = getSessionStatus,
+        backupAvailability = FakeBackupAvailability(isAvailable = false),
         appVersion = "1.0.0",
         clock = object : Clock {
             override fun now(): Instant = Instant.parse("2026-08-28T15:04:05Z")

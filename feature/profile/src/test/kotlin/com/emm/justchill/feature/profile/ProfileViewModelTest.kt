@@ -10,6 +10,7 @@ import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.recurring.GetRecurringMonthlySummaryUseCase
 import com.emm.justchill.core.domain.recurring.RecurringMonthlySummary
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupEvent
 import com.emm.justchill.core.domain.shared.backup.BackupHealth
@@ -22,6 +23,7 @@ import com.emm.justchill.core.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.testing.FakeBackupAvailability
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
@@ -43,6 +45,7 @@ import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -98,7 +101,9 @@ class ProfileViewModelTest {
         override fun now(): Instant = fixedNow
     }
 
-    private fun buildViewModel(): ProfileViewModel {
+    private fun buildViewModel(
+        backupAvailability: BackupAvailability = FakeBackupAvailability(isAvailable = false),
+    ): ProfileViewModel {
         every { getSessionStatus.invoke() } returns sessionFlow
         return ProfileViewModel(
             backupRepository = backupRepository,
@@ -114,9 +119,24 @@ class ProfileViewModelTest {
             todayFlow = todayFlow,
             getRecurringMonthlySummary = getRecurringMonthlySummary,
             getSessionStatus = getSessionStatus,
+            backupAvailability = backupAvailability,
             appVersion = "1.0.0",
             clock = fixedClock,
         )
+    }
+
+    @Test
+    fun `the cloud backup rows open when the snapshot backup is available`() = runTest(testDispatcher) {
+        val vm: ProfileViewModel = buildViewModel(backupAvailability = FakeBackupAvailability(isAvailable = true))
+
+        assertTrue(vm.state.value.isCloudBackupAvailable)
+    }
+
+    @Test
+    fun `the cloud backup rows stay closed when the snapshot backup is unavailable`() = runTest(testDispatcher) {
+        val vm: ProfileViewModel = buildViewModel(backupAvailability = FakeBackupAvailability(isAvailable = false))
+
+        assertFalse(vm.state.value.isCloudBackupAvailable)
     }
 
     @Test
