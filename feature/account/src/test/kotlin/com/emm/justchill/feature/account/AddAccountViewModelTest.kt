@@ -7,22 +7,32 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import kotlin.test.assertEquals
 
 @Suppress("IgnoredReturnValue")
 class AddAccountViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val createAccount = mockk<CreateAccountUseCase>()
+    private val createAccount: CreateAccountUseCase = mockk<CreateAccountUseCase>()
 
-    private fun viewModel() = AddAccountViewModel(createAccount)
+    private fun viewModel(): AddAccountViewModel = AddAccountViewModel(createAccount)
+
+    @Test
+    fun `grid offers every account type with its palette label`() {
+        val options: List<TypeGridOption> = typeGridOptions()
+
+        assertEquals(AccountType.entries, options.map { it.type })
+        assertEquals(AccountType.entries.map { it.toLabel() }, options.map { it.label })
+    }
 
     @Test
     fun `every account type can be selected and submitted`() = runTest(testDispatcher) {
