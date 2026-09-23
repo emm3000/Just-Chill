@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -248,19 +249,25 @@ private fun ShortcutChip(label: String, dotColor: Color, selected: Boolean, onCl
     }
 }
 
+internal data class TypeGridOption(val type: AccountType, val label: String, val icon: ImageVector)
+
+internal fun typeGridOptions(): List<TypeGridOption> = AccountType.entries.map {
+    TypeGridOption(type = it, label = it.toLabel(), icon = it.toIcon())
+}
+
 @Composable
 private fun TypeGrid(selected: AccountType, onSelect: (AccountType) -> Unit) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s2)) {
-        AccountType.entries.chunked(2).forEach { pair ->
+        typeGridOptions().chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
-                pair.forEach { type ->
+                pair.forEach { option ->
                     TypeCell(
-                        label = type.toLabel(),
-                        icon = type.toIcon(),
-                        selected = selected == type,
-                        onClick = { onSelect(type) },
+                        label = option.label,
+                        icon = option.icon,
+                        selected = selected == option.type,
+                        onClick = { onSelect(option.type) },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -292,7 +299,7 @@ private fun TypeCell(
 
     Row(
         modifier = modifier
-            .height(TypeTileHeight)
+            .heightIn(min = TypeTileHeight)
             .clip(shape)
             .background(bgColor)
             .border(spacing.hairline, borderColor, shape)
