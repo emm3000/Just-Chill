@@ -23,7 +23,7 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause |
 |---|---|---|---|---|---|
-| #370 | #353 | 2 | sonnet:medium | FIX FIRST | checklist |
+
 | #375 | #355 | 3 | opus:medium | MERGE | - |
 | #376 | #344 | 2 | sonnet:medium | MERGE | - |
 | #377 | #356 | 3 | opus:medium | MERGE | - |
