@@ -25,6 +25,9 @@ neither and looks the same on every phone.
 - **No `±` key.** The pill switches the type in words, and income no longer
   takes a `+` in front of the hero. `Numpad` loses its sign key and its
   key-height and gap overrides; `AmountHero` loses `signed`.
+- **The pill grows with the font.** Both segments take the width of the
+  wider label in its selected weight, 96dp at the least, so no label clips
+  at font scale 2.0 and the pill keeps its centre on a toggle.
 - **Short windows shrink the hero.** Everything except the hero takes a
   fixed 512dp, so the hero and the two gaps around it (at most s8 above and s6
   below) take whatever height is left, and the hero auto-sizes down on
