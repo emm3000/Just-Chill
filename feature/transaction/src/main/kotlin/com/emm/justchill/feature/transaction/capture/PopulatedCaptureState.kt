@@ -20,6 +20,9 @@ private const val PREVIEW_YEAR: Int = 2026
 private const val PREVIEW_DAY: Int = 23
 private const val MONTH_SPEND_CENTS: Long = 132_860L
 
+// ADR 020: two full-width combo rows keep the Redmi 15C tall at 728dp; a third row comes out of the hero.
+private const val TALL_BUDGET_COMBO_ROWS: Int = 2
+
 internal fun populatedCaptureState(): AddTransactionUiState {
     val wallet: Account = Account(accountId = AccountId("betsy"), name = "Betsy", type = AccountType.Wallet)
     val bank: Account = Account(accountId = AccountId("bcp"), name = "BCP", type = AccountType.Bank)
@@ -65,6 +68,38 @@ internal fun noAccountsCaptureState(): AddTransactionUiState {
             loadedFor = TransactionType.Spend,
             categoryIds = emptyList(),
             combos = emptyList(),
+        ),
+    )
+}
+
+internal fun tallBudgetCaptureState(): AddTransactionUiState {
+    val account: Account = Account(
+        accountId = AccountId("budget"),
+        name = "Cuenta de ahorros principal",
+        type = AccountType.Bank,
+    )
+    val categories: List<SelectableCategory> = List(TALL_BUDGET_COMBO_ROWS) { index: Int ->
+        SelectableCategory(
+            categoryId = CategoryId("budget-$index"),
+            name = "Servicios del hogar y del mes $index",
+            iconId = AppIconCatalog.catalog[index].id,
+            colorId = selectableColorIds[index],
+            categoryType = CategoryType.Spend,
+        )
+    }
+    return AddTransactionUiState(
+        today = LocalDate(PREVIEW_YEAR, Month.SEPTEMBER, PREVIEW_DAY),
+        catalog = Catalog.Loaded(
+            accounts = listOf(account),
+            categories = mapOf(CategoryType.Spend to categories),
+        ),
+        transactionType = TransactionType.Spend,
+        frequentUsage = FrequentUsage(
+            loadedFor = TransactionType.Spend,
+            categoryIds = categories.map { category: SelectableCategory -> category.categoryId.value },
+            combos = categories.map { category: SelectableCategory ->
+                FrequentCombo(account.accountId, category.categoryId, TransactionType.Spend)
+            },
         ),
     )
 }

@@ -18,20 +18,30 @@ device it runs on is a phone held upright.
   `android:resizeableActivity="false"`. On a phone that also turns off
   split-screen, freeform and desktop windowing.
 - **The pad is one column** in `AddTransactionScreenContent`, which picks
-  between two arrangements by height alone: `StackedTall`, with the combos
-  wrapped under their eyebrow, and `StackedShort`, with the combos in one row
-  that scrolls sideways, 48dp keys and 4dp gaps.
+  between two arrangements: `StackedTall`, with the combos wrapped under their
+  eyebrow, and `StackedShort`, with the combos in one row that scrolls
+  sideways, 48dp keys and 4dp gaps.
   Both behave exactly as ADR 019 set them.
 - **`StackedTall` whenever it fits** (amended by #425).
-  `PadArrangementLayout` measures the tall pad without its hero and keeps it
-  when that height plus the hero's floor, 1.3 × `amountHero.fontSize` (IBM
-  Plex Mono's line box), fits in the window; otherwise `StackedShort`. The
-  rule reads the current combos, width and font scale, so no height token
-  stands in for it. It replaced a fixed 728dp threshold that a Redmi 15C
-  (360x800dp) missed with the 3-button bar: the emulator configured as that
-  phone measures a 24dp status bar and a 48dp bar, exactly 728dp left, and
-  the phone itself loses more than that. With three combos at 360dp the tall
-  pad is 576dp at font 1.0, so it holds from 659.2dp.
+  `PadArrangementLayout` measures a fixed tall pad without its hero and keeps
+  `StackedTall` when that height plus the hero's floor, 1.3 × `amountHero.fontSize`
+  (IBM Plex Mono's line box), fits in the window; otherwise `StackedShort`.
+  The measured pad is a placeholder, never the live state, so the choice reads
+  only the window's height and width and the font scale: a sign toggle, a
+  catalog still loading or a combo re-rank never flips it. The placeholder
+  reserves two full-width combo rows. At 360dp and font 1.0 that is 605dp,
+  and 605 + 83.2 = 688.2dp, so the Redmi 15C (360x800dp) stays tall with the
+  3-button bar, where the emulator configured as that phone measures a 24dp
+  status bar and a 48dp bar, 728dp left; the phone itself loses more.
+  Budgeting all three combos on their own rows costs 657dp and would put that
+  phone back in `StackedShort`, so when real labels wrap to a third row the
+  hero gives up that row (52dp) and auto-sizes instead. At font 2.0 the
+  budget is 617.5 + 88.55 = 706.05dp. The rule replaced a fixed 728dp
+  threshold.
+- **Robolectric cannot see row counts.** Its text measures the same at every
+  font scale and label length (576dp tall pad), so the Robolectric tests pin
+  the arrangement's stability and the key height, and the screenshot
+  references are the truth for wrapped rows.
 - **Lint.** `LockedOrientationActivity` and `NonResizeableActivity` are
   ignored in `androidApp/lint.xml`, and `DiscouragedApi` is ignored for the
   manifest only, each for this reason.
