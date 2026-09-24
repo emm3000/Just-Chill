@@ -22,15 +22,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
-/**
- * Date and note are inline links, not rows: neither is a decision the user has to make — the day
- * defaults to today and a note is optional — so neither may claim a row's worth of the form.
- */
+// Date and note are inline links, not rows: the day defaults to today and a note is optional,
+// so neither may claim a row's worth of the form.
 @Composable
 internal fun FormMetaRow(
     dateLabel: String,
@@ -38,17 +37,26 @@ internal fun FormMetaRow(
     onDateClick: () -> Unit,
     onNoteClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isCompact: Boolean = false,
 ) {
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Row(
         modifier = modifier.height(spacing.s12),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.s5),
+        horizontalArrangement = Arrangement.spacedBy(if (isCompact) spacing.s2 else spacing.s5),
     ) {
         DateAction(label = dateLabel, onClick = onDateClick)
-        MetaDivider()
-        NoteAction(note = note, onClick = onNoteClick, modifier = Modifier.weight(1f, fill = false))
+        if (!isCompact) {
+            MetaDivider()
+        }
+        NoteAction(
+            note = note,
+            onClick = onNoteClick,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .widthIn(min = spacing.s12),
+        )
     }
 }
 

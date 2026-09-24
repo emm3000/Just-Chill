@@ -28,9 +28,10 @@ internal fun PadForm(
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val isStacked: Boolean = !arrangement.isSideBySide
+    val isNarrow: Boolean = arrangement == PadArrangement.SideBySideNarrow
 
     Column {
-        if (arrangement == PadArrangement.SideBySideNarrow) {
+        if (isNarrow) {
             Column(modifier = Modifier.padding(horizontal = spacing.s4)) {
                 AccountChip(state, onIntent, onAddNewAccount, Modifier.fillMaxWidth())
                 CategoryChip(state, onIntent, Modifier.fillMaxWidth())
@@ -54,7 +55,11 @@ internal fun PadForm(
             onNoteClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = spacing.s6),
+                .padding(
+                    start = if (isNarrow) spacing.s4 else spacing.s6,
+                    end = if (isNarrow) spacing.s0 else spacing.s6,
+                ),
+            isCompact = isNarrow,
         )
 
         if (state.frequentCombos.isNotEmpty()) {
