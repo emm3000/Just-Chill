@@ -23,6 +23,7 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 - A combo can name a deleted account or category: resolve by id, fall back to the normal defaults, never crash and never show an empty selection.
 - The amount digits are irreducible. Every entry point shortens the path to the amount pad; no field, chip row or sheet gets added to `AddTransactionScreen`. The month-total line above the hero is a read and a door, never a step: it adds no tap to a capture.
 - The month total is `GetMonthSpendUseCase` `flatMapLatest`ed on `todayFlow()`, so a pad left open across midnight re-queries the month it lands in; the label and the amount ride one `MonthSpend` field so they can never name different months.
+- The pad is portrait-only (ADR 020): the manifest locks `MainActivity` upright and out of multi-window, and `CapturePadLayout` picks `StackedTall` or `StackedShort` by height alone.
 - The date is `null` until the save, and `null` is not "no date" — it is the day the movement gets written on. `TodayFlow` decides that day, the injected `Clock` only supplies the time.
 
 ## List
