@@ -256,6 +256,19 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `screenshot plugin enables the screenshot source set and gates its debug validation`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.library", "justchill.screenshot"),
+            arguments = REPORT_GATE_TASKS,
+            files = SCREENSHOT_PROPERTIES,
+        )
+
+        assertEquals("true", report["screenshotSourceSet"])
+        assertEquals("screenshot-validation-api,ui-tooling", report["screenshotTestDependencies"])
+        assertEquals(SCREENSHOT_GATE_TASKS, report["gateTasks"])
+    }
+
+    @Test
     fun `the namespace is the module path under the app prefix`() {
         assertEquals("com.emm.justchill.core.domain", BuildConventions.namespaceOf(":core:domain"))
         assertEquals("com.emm.justchill.feature.loan", BuildConventions.namespaceOf(":feature:loan"))
@@ -327,6 +340,15 @@ class ConventionPluginTest {
             "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
                 "checkSqlDelightSnapshots," +
                 "compileDebugAndroidTestKotlin,compileReleaseKotlin,detekt,testDebugUnitTest"
+
+        const val SCREENSHOT_GATE_TASKS: String =
+            "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
+                "checkSqlDelightSnapshots," +
+                "compileDebugAndroidTestKotlin,compileReleaseKotlin,detekt,testDebugUnitTest," +
+                "validateDebugScreenshotTest"
+
+        val SCREENSHOT_PROPERTIES: Map<String, String> =
+            mapOf("gradle.properties" to "android.experimental.enableScreenshotTest=true")
 
         val RELEASE_PLUGINS: List<String> = listOf("justchill.android.application", "justchill.android.release")
 

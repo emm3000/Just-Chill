@@ -6,6 +6,8 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 
 `./gradlew :feature:transaction:testDebugUnitTest`. The MockK ViewModel suites moved here from `:androidApp` with the ViewModels; `MainDispatcherRule` and `FakeTodayFlow` come from `:core:testing`. `TransactionDateEndToEndTest` stayed in `:androidApp`'s test set: it drives the date through the real repository over an in-memory SQLite, which needs `:core:database`, an edge a feature module may not have.
 
+`id("justchill.screenshot")` renders `AddTransactionScreenContent` over `populatedCaptureState()` under `@PreviewWindowEdges` from `src/screenshotTest/`, against the PNGs in `src/screenshotTestDebug/reference/`. `./gradlew :feature:transaction:validateDebugScreenshotTest` compares, and runs on the gate; `updateDebugScreenshotTest --rerun` re-renders after an intended change and never deletes a stale PNG. The renderer skips `AppNavHost`'s `Scaffold` insets, so every cell overstates the pad's height by the system bars, and it ignores the device spec's `navigation=`, so gesture and three-button bars are one cell.
+
 ## Koin and the graph
 
 `transactionModule` is declared here and binds the three ViewModels, nothing else. `:androidApp`'s `wiring/TransactionWiring.kt` includes it and adds the six transaction use cases plus `GetSpendShortcutCombos`, which `ShortcutPublisher` also resolves. `EditTransactionViewModel` is the one parametrised binding: the DSL builds its constructor by hand, so every dependency is listed, `todayFlow` included. Every ViewModel here is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.

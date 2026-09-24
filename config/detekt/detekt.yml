@@ -5,12 +5,12 @@ complexity:
     excludes: ['**/test/**', '**/androidTest/**']
   LongMethod:
     allowedLines: 60
-    ignoreAnnotated: ['Composable', 'Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth']
+    ignoreAnnotated: ['Composable', 'Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth', 'PreviewWindowEdges']
   NestedBlockDepth:
     allowedDepth: 4
   TooManyFunctions:
     allowedFunctionsPerFile: 8
-    ignoreAnnotatedFunctions: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth']
+    ignoreAnnotatedFunctions: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth', 'PreviewWindowEdges']
 
 naming:
   FunctionNaming:
@@ -20,7 +20,7 @@ naming:
 
 style:
   MagicNumber:
-    ignoreAnnotated: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth']
+    ignoreAnnotated: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth', 'PreviewWindowEdges']
   ReturnCount:
     max: 2
     excludeReturnFromLambda: true

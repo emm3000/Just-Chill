@@ -14,6 +14,7 @@ fun marker(plugin: Provider<PluginDependency>): String = plugin.get().run {
 
 dependencies {
     implementation(marker(libs.plugins.android.application))
+    implementation(marker(libs.plugins.android.compose.screenshot))
     implementation(marker(libs.plugins.detekt))
     implementation(marker(libs.plugins.google.crashlytics))
     implementation(marker(libs.plugins.kotlin.compose))
@@ -59,6 +60,10 @@ gradlePlugin {
         register("detekt") {
             id = "justchill.detekt"
             implementationClass = "com.emm.buildlogic.DetektConventionPlugin"
+        }
+        register("screenshot") {
+            id = "justchill.screenshot"
+            implementationClass = "com.emm.buildlogic.ScreenshotConventionPlugin"
         }
         register("qualityGate") {
             id = "justchill.quality.gate"

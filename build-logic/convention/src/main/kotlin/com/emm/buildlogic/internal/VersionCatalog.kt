@@ -14,3 +14,8 @@ internal fun VersionCatalog.library(alias: String): Provider<MinimalExternalModu
     findLibrary(alias).orElseThrow {
         IllegalStateException("Version catalog entry '$alias' is missing from gradle/libs.versions.toml")
     }
+
+internal fun VersionCatalog.pluginId(alias: String): String =
+    findPlugin(alias).orElseThrow {
+        IllegalStateException("Version catalog plugin '$alias' is missing from gradle/libs.versions.toml")
+    }.get().pluginId

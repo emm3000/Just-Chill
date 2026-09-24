@@ -25,13 +25,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.account.Account
-import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.NumpadSign
@@ -56,6 +52,7 @@ import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.preview.PreviewRedmi15C
+import com.emm.justchill.core.ui.preview.PreviewWindowEdges
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.sheets.DatePickerSheet
@@ -439,41 +436,12 @@ private fun AddTransactionPreview() {
 }
 
 @PreviewRedmi15C
+@PreviewWindowEdges
 @Composable
-private fun AddTransactionRedmi15CPreview() {
+private fun AddTransactionPopulatedPreview() {
     EmmTheme {
-        val wallet = Account(accountId = AccountId("betsy"), name = "Betsy", type = AccountType.Wallet)
-        val bank = Account(accountId = AccountId("bcp"), name = "BCP", type = AccountType.Bank)
-        val categories: List<SelectableCategory> = listOf("Gasto diario", "Comida", "Transporte")
-            .mapIndexed { index, name ->
-                SelectableCategory(
-                    categoryId = CategoryId(name),
-                    name = name,
-                    iconId = AppIconCatalog.catalog[index].id,
-                    colorId = selectableColorIds[index + 1],
-                    categoryType = CategoryType.Spend,
-                )
-            }
-        val combos: List<FrequentCombo> = listOf(
-            FrequentCombo(wallet.accountId, categories[0].categoryId, TransactionType.Spend),
-            FrequentCombo(bank.accountId, categories[1].categoryId, TransactionType.Spend),
-            FrequentCombo(wallet.accountId, categories[2].categoryId, TransactionType.Spend),
-        )
         AddTransactionScreenContent(
-            state = AddTransactionUiState(
-                today = LocalDate(2026, Month.SEPTEMBER, 23),
-                catalog = Catalog.Loaded(
-                    accounts = listOf(wallet, bank),
-                    categories = mapOf(CategoryType.Spend to categories),
-                ),
-                transactionType = TransactionType.Spend,
-                frequentUsage = FrequentUsage(
-                    loadedFor = TransactionType.Spend,
-                    categoryIds = categories.map { it.categoryId.value },
-                    combos = combos,
-                ),
-                monthSpend = MonthSpend(YearMonth(2026, Month.SEPTEMBER), Money(132_860L)),
-            ),
+            state = populatedCaptureState(),
             onIntent = {},
             onOpenMenu = {},
             onOpenTransactions = {},

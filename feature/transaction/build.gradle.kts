@@ -1,5 +1,6 @@
 plugins {
     id("justchill.android.feature")
+    id("justchill.screenshot")
 }
 
 android {
