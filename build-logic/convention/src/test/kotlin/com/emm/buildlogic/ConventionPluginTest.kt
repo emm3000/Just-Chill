@@ -341,11 +341,7 @@ class ConventionPluginTest {
                 "checkSqlDelightSnapshots," +
                 "compileDebugAndroidTestKotlin,compileReleaseKotlin,detekt,testDebugUnitTest"
 
-        const val SCREENSHOT_GATE_TASKS: String =
-            "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
-                "checkSqlDelightSnapshots," +
-                "compileDebugAndroidTestKotlin,compileReleaseKotlin,detekt,testDebugUnitTest," +
-                "validateDebugScreenshotTest"
+        const val SCREENSHOT_GATE_TASKS: String = "$GATE_TASKS,validateDebugScreenshotTest"
 
         val SCREENSHOT_PROPERTIES: Map<String, String> =
             mapOf("gradle.properties" to "android.experimental.enableScreenshotTest=true")

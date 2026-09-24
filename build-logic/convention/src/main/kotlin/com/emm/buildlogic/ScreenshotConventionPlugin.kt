@@ -6,12 +6,14 @@ import com.emm.buildlogic.internal.libs
 import com.emm.buildlogic.internal.pluginId
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.findByType
 
 class ScreenshotConventionPlugin : Plugin<Project> {
 
     override fun apply(target: Project) = with(target) {
-        extensions.getByType<CommonExtension>().experimentalProperties[SOURCE_SET_PROPERTY] = true
+        val android: CommonExtension = extensions.findByType<CommonExtension>()
+            ?: error("justchill.screenshot needs an Android plugin applied before it in $path")
+        android.experimentalProperties[SOURCE_SET_PROPERTY] = true
         pluginManager.apply(libs.pluginId(PLUGIN))
         TOOLING_LIBRARIES.forEach { alias -> dependencies.add(CONFIGURATION, libs.library(alias)) }
     }
