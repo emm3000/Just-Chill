@@ -18,11 +18,20 @@ device it runs on is a phone held upright.
   `android:resizeableActivity="false"`. On a phone that also turns off
   split-screen, freeform and desktop windowing.
 - **The pad is one column** in `AddTransactionScreenContent`, which picks
-  between two arrangements by height alone: `StackedTall` from
-  `WrappedCombosMinHeight` (728dp) up, with the combos wrapped under their
-  eyebrow, and `StackedShort` below it, with the combos in one row that
-  scrolls sideways, 48dp keys and 4dp gaps.
+  between two arrangements by height alone: `StackedTall`, with the combos
+  wrapped under their eyebrow, and `StackedShort`, with the combos in one row
+  that scrolls sideways, 48dp keys and 4dp gaps.
   Both behave exactly as ADR 019 set them.
+- **`StackedTall` whenever it fits** (amended by #425).
+  `PadArrangementLayout` measures the tall pad without its hero and keeps it
+  when that height plus the hero's floor, 1.3 × `amountHero.fontSize` (IBM
+  Plex Mono's line box), fits in the window; otherwise `StackedShort`. The
+  rule reads the current combos, width and font scale, so no height token
+  stands in for it. It replaced a fixed 728dp threshold that a Redmi 15C
+  (360x800dp) missed with the 3-button bar: the emulator configured as that
+  phone measures a 24dp status bar and a 48dp bar, exactly 728dp left, and
+  the phone itself loses more than that. With three combos at 360dp the tall
+  pad is 576dp at font 1.0, so it holds from 659.2dp.
 - **Lint.** `LockedOrientationActivity` and `NonResizeableActivity` are
   ignored in `androidApp/lint.xml`, and `DiscouragedApi` is ignored for the
   manifest only, each for this reason.
