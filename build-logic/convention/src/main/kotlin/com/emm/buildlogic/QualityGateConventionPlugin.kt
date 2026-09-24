@@ -25,8 +25,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
                 "Runs every check that must pass before pushing: " +
                     "detekt, compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
                     ":build-logic:convention:test on the root, " +
-                    "checkModuleBoundaries, checkComposeFreeViewModels, checkSqlDelightSnapshots " +
-                    "and checkLazyListKeys, " +
+                    "checkModuleBoundaries, checkComposeFreeViewModels, checkSqlDelightSnapshots, " +
+                    "checkLazyListKeys and validateDebugScreenshotTest where justchill.screenshot applies, " +
                     "the unit tests the library plugins name, plus the tests and the prodRelease " +
                     "compile :androidApp adds. " +
                     "Invoked by CI."
@@ -44,7 +44,10 @@ class QualityGateConventionPlugin : Plugin<Project> {
     }
 
     private fun gates(task: Task): Boolean =
-        task.name in COMPILE_GATE_TASKS || task.name in SCHEMA_GATE_TASKS || task.name == DetektConventionPlugin.TASK
+        task.name in COMPILE_GATE_TASKS ||
+            task.name in SCHEMA_GATE_TASKS ||
+            task.name == DetektConventionPlugin.TASK ||
+            task.name == ScreenshotConventionPlugin.VALIDATE_TASK
 
     private fun Project.registerBoundaryCheck(): TaskProvider<CheckModuleBoundariesTask> =
         tasks.register<CheckModuleBoundariesTask>(BOUNDARY_TASK) {

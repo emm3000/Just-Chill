@@ -176,6 +176,7 @@ internal class ConventionPluginFixture(
                         println("REPORT sourceCompatibility=" + android.compileOptions.sourceCompatibility)
                         println("REPORT compose=" + android.buildFeatures.compose)
                         println("REPORT namespace=" + android.namespace)
+                        println("REPORT screenshotSourceSet=" + android.experimentalProperties["android.experimental.enableScreenshotTest"])
                     }
                     val library = project.extensions.findByType(com.android.build.api.dsl.LibraryExtension::class.java)
                     if (library != null) {
@@ -216,6 +217,7 @@ internal class ConventionPluginFixture(
                     println("REPORT projectDependencies=" + declared.map { it.second }.filterIsInstance<org.gradle.api.artifacts.ProjectDependency>().map { it.path }.filter { it != project.path }.distinct().sorted().joinToString(","))
                     println("REPORT implementationDependencies=" + declared.filter { it.first == "implementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
                     println("REPORT testDependencies=" + declared.filter { it.first == "testImplementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
+                    println("REPORT screenshotTestDependencies=" + declared.filter { it.first == "screenshotTestImplementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
                     println("REPORT plugins=" + listOf("justchill.detekt", "justchill.quality.gate").filter { project.pluginManager.hasPlugin(it) }.joinToString(","))
                     println("REPORT detektTasks=" + project.tasks.names.filter { it.startsWith("detekt") }.sorted().joinToString(","))
                     val detekt = project.tasks.findByName("detekt") as? dev.detekt.gradle.Detekt
