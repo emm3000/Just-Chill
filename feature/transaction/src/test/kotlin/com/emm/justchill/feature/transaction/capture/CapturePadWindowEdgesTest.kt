@@ -10,6 +10,8 @@ import androidx.compose.ui.test.FontScale
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -60,6 +62,17 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
         assertTrue(hero.bottom - hero.top >= heroLineHeight, "hero ${hero.bottom - hero.top} under $heroLineHeight")
     }
 
+    @Test
+    fun `every key keeps a full touch target`() {
+        showPad()
+
+        KEY_LABELS.forEach { label: String ->
+            val key: DpRect = composeRule.onNode(hasText(label) or hasContentDescription(label)).getBoundsInRoot()
+            assertTrue(key.right - key.left >= TOUCH_TARGET, "key $label is ${key.right - key.left} wide")
+            assertTrue(key.bottom - key.top >= TOUCH_TARGET, "key $label is ${key.bottom - key.top} tall")
+        }
+    }
+
     private fun showPad(onHeroLineHeight: (TextUnit, Density) -> Unit = { _, _ -> }) {
         composeRule.setContent {
             DeviceConfigurationOverride(
@@ -84,6 +97,9 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
 
     companion object {
         private const val FRAME_TAG: String = "frame"
+        private val TOUCH_TARGET: Dp = 48.dp
+        private val KEY_LABELS: List<String> =
+            listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "Borrar", "Cambiar a ingreso")
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}x{1} at font scale {2}")

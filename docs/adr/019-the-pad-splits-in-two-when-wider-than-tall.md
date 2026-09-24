@@ -13,29 +13,48 @@ column fits a four-row keypad, the hero and the save button in 350dp.
 
 ## Decision
 
-- **Wider than tall, the pad has two panes.** `CapturePadLayout` reads its own
-  constraints through `BoxWithConstraints`; when `maxWidth > maxHeight`, the
-  menu and the hero share the top row and take the leftover height, the month
-  total, selectors, date and note and combos sit in the left pane, the keypad
-  in the right, and the save button spans the bottom. Nothing is added and no
-  step moves behind a tap.
-- **Taller than wide, one column, as ADR 017 set it**, with the menu beside
-  the month total instead of above it.
-- **The combos are one row that scrolls sideways**, on every window: up to five
-  wrapping chips cost three rows, more height than a 640dp phone has.
-- **In two panes the keys are 48dp with a 4dp gap**, the touch-target floor;
-  the combos lose their eyebrow. Everywhere else the keys stay 52dp.
+`CapturePadLayout` reads its own constraints through `BoxWithConstraints` and
+picks one of four arrangements. Nothing is added and no step moves behind a
+tap; the save stays one white full-width button under everything.
 
-The rule is the window's aspect, not a size class: no `material3-adaptive` or
-`window-size-class` dependency is added.
+- **Taller than wide, at least `WrappedCombosMinHeight` (728dp) tall:** one
+  column as ADR 017 set it, with the menu beside the month total instead of
+  above it. The combos wrap. 728dp is the fixed column (~573dp) plus three
+  wrapped combo rows and the hero at `amountHero`.
+- **Taller than wide, shorter than that:** the same column, but the combos are
+  one row that scrolls sideways.
+- **Wider than tall:** two panes. The menu and hero share the top row and take
+  the leftover height; the month total, selectors, date and note and combos
+  sit on the left; the keypad sits on the right; the save spans the bottom.
+  The keypad pane is half the width but never less than four 48dp keys, three
+  4dp gaps and the s4 padding on both sides (236dp), so every key keeps a 48dp
+  target. The combos scroll in one row without their eyebrow.
+- **Wider than tall, with a left pane under `ReadableFormMinWidth` (280dp):**
+  the same two panes, with the account and category chips stacked one per row
+  and no month line.
+
+The rule is the window's shape, not a size class: no `material3-adaptive` or
+`window-size-class` dependency is added. Both thresholds live in
+`:core:ui`'s `theme/EmmBreakpoints.kt`.
+
+### The 360x350 split window
+
+350dp tall: the save block takes 81dp (hairline 1, padding 12 + 16, button 52),
+the keypad 4 × 48 + 3 × 4 = 204dp, which leaves 65dp for the menu and hero row.
+The left pane holds four 48dp rows (account, category, date and note, combos),
+192dp, under the keypad's 204dp. The month total fits in neither pane nor the
+top row, which keeps 296dp for a hero that needs about 245dp, so this cell
+drops it. The movements screen stays one tap away from the menu.
 
 ## Consequences
 
 The hero keeps `amountHero` size in every fontScale-1.0 cell of
 `@PreviewWindowEdges`. On a tablet in landscape the hero row is mostly empty
-space; a maximum keypad width was not needed to keep the save in the frame and
-is left out. At 360x350 the selector chips are too narrow to show their labels.
-A combo beyond the window's edge needs a swipe before its tap.
+space. At 360x350 the left pane is 124dp and each chip 92dp, which leaves the
+label about 20–40dp: the account reads "Betsy", the category ellipsizes to
+"G…". The chip stays usable through its 48dp target, its colour dot and the
+picker sheet one tap away. A combo past the window's edge needs a swipe
+before its tap when the combos scroll.
 
 ## Considered options
 
@@ -44,3 +63,7 @@ A combo beyond the window's edge needs a swipe before its tap.
 - **A minimum hero height.** Pushes the save button out of the frame instead
   of fixing the budget.
 - **A scrolling pad.** Refused by #415: the save must never be off screen.
+- **Stacked below a readable width.** At 360x350 it pushes the save out of the
+  frame, which #415 refuses.
+- **Dropping `SelectorChip`'s chevron on request.** Changes an atom's API for
+  one split-screen cell and still ellipsizes the category.
