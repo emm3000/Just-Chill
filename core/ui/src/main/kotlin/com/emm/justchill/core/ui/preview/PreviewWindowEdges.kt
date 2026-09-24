@@ -12,4 +12,6 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 @Preview(name = "360x350 split", device = "spec:width=360dp,height=350dp,dpi=320")
 @Preview(name = "360x800 font 200%", device = "spec:width=360dp,height=800dp,dpi=320", fontScale = 2f)
 @Preview(name = "360x640 font 200%", device = "spec:width=360dp,height=640dp,dpi=320", fontScale = 2f)
+@Preview(name = "360x568 bars", device = "spec:width=360dp,height=568dp,dpi=320")
+@Preview(name = "360x568 bars font 200%", device = "spec:width=360dp,height=568dp,dpi=320", fontScale = 2f)
 annotation class PreviewWindowEdges

@@ -296,6 +296,7 @@ private fun PadNumpad(
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val isSideBySide: Boolean = arrangement.isSideBySide
+    val isTall: Boolean = arrangement == PadArrangement.StackedTall
     val onAmountChange: (String) -> Unit = { newAmount ->
         onIntent(AddTransactionIntent.OnAmountChange(newAmount.take(MAX_AMOUNT_DIGITS)))
     }
@@ -310,10 +311,10 @@ private fun PadNumpad(
             onClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(kind.toggledType)) },
         ),
         keyHeight = if (isSideBySide) spacing.s12 else NumpadKeyHeight,
-        keyGap = if (isSideBySide) spacing.s1 else spacing.s2,
+        keyGap = if (isTall) spacing.s2 else spacing.s1,
         modifier = modifier
             .padding(horizontal = spacing.s4)
-            .padding(bottom = if (isSideBySide) spacing.s0 else spacing.s2),
+            .padding(bottom = if (isTall) spacing.s2 else spacing.s0),
     )
 }
 
