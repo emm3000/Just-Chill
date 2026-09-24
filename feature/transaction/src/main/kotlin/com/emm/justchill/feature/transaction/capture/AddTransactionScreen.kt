@@ -199,7 +199,6 @@ internal fun AddTransactionScreenContent(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s6)
-                .padding(top = spacing.s8, bottom = spacing.s6)
                 .clearAndSetSemantics { contentDescription = amountDescription },
         ) {
             AmountHero(
@@ -443,26 +442,35 @@ private fun AddTransactionPreview() {
 @Composable
 private fun AddTransactionRedmi15CPreview() {
     EmmTheme {
-        val account = Account(accountId = AccountId("betsy"), name = "Betsy", type = AccountType.Wallet)
-        val category = SelectableCategory(
-            categoryId = CategoryId("daily"),
-            name = "Gasto diario",
-            iconId = AppIconCatalog.catalog[0].id,
-            colorId = selectableColorIds[4],
-            categoryType = CategoryType.Spend,
+        val wallet = Account(accountId = AccountId("betsy"), name = "Betsy", type = AccountType.Wallet)
+        val bank = Account(accountId = AccountId("bcp"), name = "BCP", type = AccountType.Bank)
+        val categories: List<SelectableCategory> = listOf("Gasto diario", "Comida", "Transporte")
+            .mapIndexed { index, name ->
+                SelectableCategory(
+                    categoryId = CategoryId(name),
+                    name = name,
+                    iconId = AppIconCatalog.catalog[index].id,
+                    colorId = selectableColorIds[index + 1],
+                    categoryType = CategoryType.Spend,
+                )
+            }
+        val combos: List<FrequentCombo> = listOf(
+            FrequentCombo(wallet.accountId, categories[0].categoryId, TransactionType.Spend),
+            FrequentCombo(bank.accountId, categories[1].categoryId, TransactionType.Spend),
+            FrequentCombo(wallet.accountId, categories[2].categoryId, TransactionType.Spend),
         )
         AddTransactionScreenContent(
             state = AddTransactionUiState(
                 today = LocalDate(2026, Month.SEPTEMBER, 23),
                 catalog = Catalog.Loaded(
-                    accounts = listOf(account),
-                    categories = mapOf(CategoryType.Spend to listOf(category)),
+                    accounts = listOf(wallet, bank),
+                    categories = mapOf(CategoryType.Spend to categories),
                 ),
                 transactionType = TransactionType.Spend,
                 frequentUsage = FrequentUsage(
                     loadedFor = TransactionType.Spend,
-                    categoryIds = listOf(category.categoryId.value),
-                    combos = listOf(FrequentCombo(account.accountId, category.categoryId, TransactionType.Spend)),
+                    categoryIds = categories.map { it.categoryId.value },
+                    combos = combos,
                 ),
                 monthSpend = MonthSpend(YearMonth(2026, Month.SEPTEMBER), Money(132_860L)),
             ),
