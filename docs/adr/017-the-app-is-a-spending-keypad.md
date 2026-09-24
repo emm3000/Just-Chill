@@ -32,7 +32,8 @@ input to this decision and not a deliverable.
   stands, which W2 narrows by the typed amount and the hour — each editable
   through a chip under the number. A `±` key switches to income: the number
   turns green and takes a `+`. Save is one white full-width button, the only
-  high-contrast element on screen.
+  high-contrast element on screen. (ADR 021 replaces the `±` key with the
+  `Ingreso`/`Gasto` pill and drops the `+`.)
 - **The month screen leads with "gastado este mes".** Entró and neto sit under
   it in secondary, neto green with a `+` when positive; rows are flat, grouped
   by day. It is reached by tapping the month total on the pad, or swiping up.

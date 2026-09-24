@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by 021
 date: 2026-09-24
 ---
 # The pad is portrait-only

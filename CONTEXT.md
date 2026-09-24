@@ -55,8 +55,8 @@ Category and date taking defaults the user can override before saving.
 _Avoid_: calculator, add screen, entry form, capture form
 
 **Frequent combo**:
-An Account, a Category and a Transaction type the user records together often, surfaced as a
-shortcut into the amount pad.
+An Account, a Category and a Transaction type the user records together often, used to preselect
+the amount pad's account and category.
 _Avoid_: favourite, preset, template, quick add
 
 **Month**:
