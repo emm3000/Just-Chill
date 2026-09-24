@@ -28,8 +28,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
-// Date and note are inline links, not rows: the day defaults to today and a note is optional,
-// so neither may claim a row's worth of the form.
 @Composable
 internal fun FormMetaRow(
     dateLabel: String,
