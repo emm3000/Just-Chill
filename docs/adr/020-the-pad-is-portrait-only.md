@@ -17,10 +17,11 @@ device it runs on is a phone held upright.
 - **`MainActivity` opts out of multi-window** with
   `android:resizeableActivity="false"`. On a phone that also turns off
   split-screen, freeform and desktop windowing.
-- **`CapturePadLayout` keeps one column** and picks between two arrangements
-  by height alone: `StackedTall` from `WrappedCombosMinHeight` (728dp) up,
-  with the combos wrapped under their eyebrow, and `StackedShort` below it,
-  with the combos in one row that scrolls sideways, 48dp keys and 4dp gaps.
+- **The pad is one column** in `AddTransactionScreenContent`, which picks
+  between two arrangements by height alone: `StackedTall` from
+  `WrappedCombosMinHeight` (728dp) up, with the combos wrapped under their
+  eyebrow, and `StackedShort` below it, with the combos in one row that
+  scrolls sideways, 48dp keys and 4dp gaps.
   Both behave exactly as ADR 019 set them.
 - **Lint.** `LockedOrientationActivity` and `NonResizeableActivity` are
   ignored in `androidApp/lint.xml`, and `DiscouragedApi` is ignored for the
@@ -30,8 +31,9 @@ device it runs on is a phone held upright.
 
 Everything that served only the wide windows: the `SideBySide` and
 `SideBySideNarrow` arrangements, the keypad pane width and its 236dp floor,
-the `movableContentOf` slots that carried the pad across the Row/Column
-switch, `PadForm`'s stacked chips, `FormMetaRow`'s compact spacing,
+`CapturePadLayout` with its slots and the `movableContentOf` that carried the
+pad across the Row/Column switch, `PadForm`'s stacked chips, `FormMetaRow`'s
+compact spacing and the note action's 48dp minimum width,
 `ReadableFormMinWidth`, the `800x360 landscape` and `360x350 split` preview
 cells, `@PreviewScreenSizes` (its landscape, tablet, foldable and desktop
 cells; its `Phone` cell is declared again with the same values) and the

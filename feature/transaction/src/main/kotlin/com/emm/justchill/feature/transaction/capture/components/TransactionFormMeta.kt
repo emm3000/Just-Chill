@@ -45,13 +45,7 @@ internal fun FormMetaRow(
     ) {
         DateAction(label = dateLabel, onClick = onDateClick)
         MetaDivider()
-        NoteAction(
-            note = note,
-            onClick = onNoteClick,
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .widthIn(min = spacing.s12),
-        )
+        NoteAction(note = note, onClick = onNoteClick, modifier = Modifier.weight(1f, fill = false))
     }
 }
 
