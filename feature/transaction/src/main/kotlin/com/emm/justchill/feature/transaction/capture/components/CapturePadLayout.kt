@@ -33,6 +33,9 @@ internal enum class PadArrangement {
 internal val PadArrangement.isSideBySide: Boolean
     get() = this == PadArrangement.SideBySide || this == PadArrangement.SideBySideNarrow
 
+internal val PadArrangement.isStackedTall: Boolean
+    get() = this == PadArrangement.StackedTall
+
 @Composable
 internal fun CapturePadLayout(
     menu: @Composable () -> Unit,

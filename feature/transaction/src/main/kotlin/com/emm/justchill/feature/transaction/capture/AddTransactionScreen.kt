@@ -60,7 +60,7 @@ import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
 import com.emm.justchill.feature.transaction.capture.components.PadArrangement
 import com.emm.justchill.feature.transaction.capture.components.PadForm
 import com.emm.justchill.feature.transaction.capture.components.SaveMotion
-import com.emm.justchill.feature.transaction.capture.components.isSideBySide
+import com.emm.justchill.feature.transaction.capture.components.isStackedTall
 import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
 import kotlinx.coroutines.Job
@@ -295,8 +295,7 @@ private fun PadNumpad(
     modifier: Modifier = Modifier,
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val isSideBySide: Boolean = arrangement.isSideBySide
-    val isTall: Boolean = arrangement == PadArrangement.StackedTall
+    val isStackedTall: Boolean = arrangement.isStackedTall
     val onAmountChange: (String) -> Unit = { newAmount ->
         onIntent(AddTransactionIntent.OnAmountChange(newAmount.take(MAX_AMOUNT_DIGITS)))
     }
@@ -310,11 +309,11 @@ private fun PadNumpad(
             contentDescription = kind.signDescription,
             onClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(kind.toggledType)) },
         ),
-        keyHeight = if (isSideBySide) spacing.s12 else NumpadKeyHeight,
-        keyGap = if (isTall) spacing.s2 else spacing.s1,
+        keyHeight = if (isStackedTall) NumpadKeyHeight else spacing.s12,
+        keyGap = if (isStackedTall) spacing.s2 else spacing.s1,
         modifier = modifier
             .padding(horizontal = spacing.s4)
-            .padding(bottom = if (isTall) spacing.s2 else spacing.s0),
+            .padding(bottom = if (isStackedTall) spacing.s2 else spacing.s0),
     )
 }
 

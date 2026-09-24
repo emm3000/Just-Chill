@@ -22,10 +22,12 @@ tap; the save stays one white full-width button under everything.
   above it. The combos wrap. 728dp is the fixed column (~573dp) plus three
   wrapped combo rows and the hero at `amountHero`.
 - **Taller than wide, shorter than that:** the same column, but the combos are
-  one row that scrolls sideways without their eyebrow, 4dp above and below
-  it, and the keypad keeps 52dp keys with 4dp gaps and no bottom padding.
-  That returns 52dp to the hero, which keeps `amountHero` size on a 360x640dp
-  phone once the status bar and a three-button bar take 72dp (#418).
+  one row that scrolls sideways, with no eyebrow and no padding around it, and
+  the keypad has the side-by-side keypad's 48dp keys, 4dp gaps and no bottom
+  padding. On a 360x640dp phone the status bar and a three-button bar leave
+  568dp. There the hero box gets 91dp, over the 83.2dp that a 64sp Plex Mono
+  line needs (ascent plus descent is 1.3em), so the amount draws at
+  `amountHero` size (#418).
 - **Wider than tall:** two panes. The menu and hero share the top row and take
   the leftover height; the month total, selectors, date and note and combos
   sit on the left; the keypad sits on the right; the save spans the bottom.
@@ -51,8 +53,10 @@ drops it. The movements screen stays one tap away from the menu.
 
 ## Consequences
 
-The hero keeps `amountHero` size in every fontScale-1.0 cell of
-`@PreviewWindowEdges`. On a tablet in landscape the hero row is mostly empty
+The hero keeps `amountHero` size in every stacked fontScale-1.0 cell of
+`@PreviewWindowEdges`. The side-by-side hero boxes are 75dp at 800x360 and
+65dp at 360x350, under the 83.2dp a full 64sp line needs, so those cells
+auto-size the amount one step down. On a tablet in landscape the hero row is mostly empty
 space. At 360x350 the left pane is 124dp and each chip 92dp, which leaves the
 label about 20–40dp: the account reads "Betsy", the category ellipsizes to
 "G…". The chip stays usable through its 48dp target, its colour dot and the
@@ -62,7 +66,9 @@ before its tap when the combos scroll.
 ## Considered options
 
 - **Key height from the space available.** Recovers 16dp at most; the 640dp
-  column was short by more than the hero's 64dp.
+  column was short by more than the hero's 64dp. The short column takes those
+  16dp anyway, with fixed 48dp keys, because it still needs them once the
+  eyebrow and the gaps are gone (#418).
 - **A minimum hero height.** Pushes the save button out of the frame instead
   of fixing the budget.
 - **A scrolling pad.** Refused by #415: the save must never be off screen.

@@ -24,18 +24,14 @@ internal fun FrequentCombos(
     selectedAccountId: String?,
     selectedCategoryId: String?,
     onSelect: (FrequentComboUi) -> Unit,
-    showsLabel: Boolean,
-    wraps: Boolean,
+    wrapsUnderLabel: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
-        if (showsLabel) {
+        if (wrapsUnderLabel) {
             Eyebrow(text = "Tus combinaciones frecuentes", modifier = Modifier.padding(start = spacing.s6))
-        }
-
-        if (wraps) {
             FlowRow(
                 modifier = Modifier.padding(horizontal = spacing.s4),
                 horizontalArrangement = Arrangement.spacedBy(spacing.s2),
