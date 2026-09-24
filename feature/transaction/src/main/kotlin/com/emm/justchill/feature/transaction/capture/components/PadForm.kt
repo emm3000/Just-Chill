@@ -28,24 +28,16 @@ internal fun PadForm(
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val isStackedTall: Boolean = arrangement.isStackedTall
-    val isNarrow: Boolean = arrangement == PadArrangement.SideBySideNarrow
 
     Column {
-        if (isNarrow) {
-            Column(modifier = Modifier.padding(horizontal = spacing.s4)) {
-                AccountChip(state, onIntent, onAddNewAccount, Modifier.fillMaxWidth())
-                CategoryChip(state, onIntent, Modifier.fillMaxWidth())
-            }
-        } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.s4),
-                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            ) {
-                AccountChip(state, onIntent, onAddNewAccount, Modifier.weight(ACCOUNT_CHIP_WEIGHT))
-                CategoryChip(state, onIntent, Modifier.weight(CATEGORY_CHIP_WEIGHT))
-            }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.s4),
+            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+        ) {
+            AccountChip(state, onIntent, onAddNewAccount, Modifier.weight(ACCOUNT_CHIP_WEIGHT))
+            CategoryChip(state, onIntent, Modifier.weight(CATEGORY_CHIP_WEIGHT))
         }
 
         FormMetaRow(
@@ -55,11 +47,7 @@ internal fun PadForm(
             onNoteClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = if (isNarrow) spacing.s4 else spacing.s6,
-                    end = if (isNarrow) spacing.s0 else spacing.s6,
-                ),
-            isCompact = isNarrow,
+                .padding(horizontal = spacing.s6),
         )
 
         if (state.frequentCombos.isNotEmpty()) {

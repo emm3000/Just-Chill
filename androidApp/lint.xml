@@ -15,4 +15,13 @@
     <issue id="GradleDependency" severity="ignore" />
     <issue id="NewerVersionAvailable" severity="ignore" />
 
+    <!-- ADR 020: the capture pad is a one-handed portrait keypad, so MainActivity locks
+         portrait and opts out of multi-window. ChromeOS is not a target, and Android 16
+         ignoring both attributes on 600dp+ displays is the accepted gap the ADR records. -->
+    <issue id="LockedOrientationActivity" severity="ignore" />
+    <issue id="NonResizeableActivity" severity="ignore" />
+    <issue id="DiscouragedApi">
+        <ignore path="src/main/AndroidManifest.xml" />
+    </issue>
+
 </lint>

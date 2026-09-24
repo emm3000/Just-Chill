@@ -19,6 +19,8 @@
         android:theme="@style/Theme.JustChill">
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
+            android:resizeableActivity="false"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTop"
             android:exported="true">
