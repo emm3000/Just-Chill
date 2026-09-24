@@ -34,6 +34,7 @@ internal fun ComposeContentTestRule.showPad(
     width: Int,
     height: Int,
     fontScale: Float,
+    state: () -> AddTransactionUiState = { populatedCaptureState() },
     onAmountHero: (TextStyle, Density) -> Unit = { _, _ -> },
 ) {
     setContent {
@@ -45,7 +46,7 @@ internal fun ComposeContentTestRule.showPad(
                 onAmountHero(LocalEmmType.current.amountHero, LocalDensity.current)
                 Box(modifier = Modifier.fillMaxSize().testTag(PAD_FRAME_TAG)) {
                     AddTransactionScreenContent(
-                        state = populatedCaptureState(),
+                        state = state(),
                         onIntent = {},
                         onOpenMenu = {},
                         onOpenTransactions = {},

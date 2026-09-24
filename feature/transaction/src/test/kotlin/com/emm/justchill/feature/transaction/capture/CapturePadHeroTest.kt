@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.feature.transaction.capture.components.PLEX_MONO_LINE_BOX_EM
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
@@ -35,8 +36,6 @@ class CapturePadHeroTest(private val width: Int, private val height: Int) {
     }
 
     companion object {
-        private const val PLEX_MONO_LINE_BOX_EM: Float = 1.3f
-
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}x{1}")
         fun cells(): List<Array<Any>> = PAD_WINDOWS.map { (width, height) -> arrayOf<Any>(width, height) }

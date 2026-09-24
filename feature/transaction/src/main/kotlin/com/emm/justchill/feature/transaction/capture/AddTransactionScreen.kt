@@ -161,7 +161,6 @@ internal fun AddTransactionScreenContent(
     onAddNewAccount: () -> Unit = {},
 ) {
     val colors: EmmColors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     val isSpend: Boolean = state.transactionType == TransactionType.Spend
     val noAccounts: Boolean = state.hasNoAccounts
@@ -174,47 +173,20 @@ internal fun AddTransactionScreenContent(
 
     PadArrangementLayout(
         heroFontSize = LocalEmmType.current.amountHero.fontSize,
+        tallBudget = { TallBudgetPad() },
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg),
     ) { arrangement: PadArrangement ->
-        Column(modifier = Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier.padding(start = spacing.s4),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconBtn(icon = Icons.Outlined.Menu, onClick = onOpenMenu, contentDescription = "Abrir el menú")
-                MonthSpendLine(
-                    label = state.monthSpendLabel,
-                    amount = motion.displayedTotal(state.monthSpendAmount),
-                    onClick = onOpenTransactions,
-                    modifier = with(motion) { Modifier.weight(1f).monthLineTarget() },
-                )
-            }
-            PadHero(
-                amount = state.amount,
-                kind = kind,
-                motion = motion,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.s6)
-                    .clearAndSetSemantics { contentDescription = amountDescription },
-            )
-            PadForm(
-                state = state,
-                onIntent = onIntent,
-                onAddNewAccount = onAddNewAccount,
-                arrangement = arrangement,
-            )
-            PadNumpad(
-                amount = state.amount,
-                kind = kind,
-                onIntent = onIntent,
-                arrangement = arrangement,
-            )
-            StickyCTA(label = ctaLabel, interaction = ctaInteraction(state), onClick = onSave)
-        }
+        PadColumn(
+            state = state,
+            kind = kind,
+            ctaLabel = ctaLabel,
+            amountDescription = amountDescription,
+            motion = motion,
+            actions = PadActions(onIntent, onOpenMenu, onOpenTransactions, onSave, onAddNewAccount),
+            arrangement = arrangement,
+        )
     }
 
     OpenSheet(
@@ -223,6 +195,88 @@ internal fun AddTransactionScreenContent(
         onAddNewCategory = onAddNewCategory,
         onAddNewAccount = onAddNewAccount,
     )
+}
+
+private class PadActions(
+    val onIntent: (AddTransactionIntent) -> Unit,
+    val onOpenMenu: () -> Unit,
+    val onOpenTransactions: () -> Unit,
+    val onSave: () -> Unit,
+    val onAddNewAccount: () -> Unit,
+)
+
+private val NO_PAD_ACTIONS: PadActions = PadActions(
+    onIntent = {},
+    onOpenMenu = {},
+    onOpenTransactions = {},
+    onSave = {},
+    onAddNewAccount = {},
+)
+
+@Composable
+private fun TallBudgetPad() {
+    val state: AddTransactionUiState = remember { tallBudgetCaptureState() }
+
+    PadColumn(
+        state = state,
+        kind = SPEND_KIND,
+        ctaLabel = SPEND_KIND.ctaLabel,
+        amountDescription = "",
+        motion = rememberSaveMotion(),
+        actions = NO_PAD_ACTIONS,
+        arrangement = PadArrangement.StackedTall,
+    )
+}
+
+@Composable
+private fun PadColumn(
+    state: AddTransactionUiState,
+    kind: TransactionKindContent,
+    ctaLabel: String,
+    amountDescription: String,
+    motion: SaveMotion,
+    actions: PadActions,
+    arrangement: PadArrangement,
+) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier.padding(start = spacing.s4),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconBtn(icon = Icons.Outlined.Menu, onClick = actions.onOpenMenu, contentDescription = "Abrir el menú")
+            MonthSpendLine(
+                label = state.monthSpendLabel,
+                amount = motion.displayedTotal(state.monthSpendAmount),
+                onClick = actions.onOpenTransactions,
+                modifier = with(motion) { Modifier.weight(1f).monthLineTarget() },
+            )
+        }
+        PadHero(
+            amount = state.amount,
+            kind = kind,
+            motion = motion,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = spacing.s6)
+                .clearAndSetSemantics { contentDescription = amountDescription },
+        )
+        PadForm(
+            state = state,
+            onIntent = actions.onIntent,
+            onAddNewAccount = actions.onAddNewAccount,
+            arrangement = arrangement,
+        )
+        PadNumpad(
+            amount = state.amount,
+            kind = kind,
+            onIntent = actions.onIntent,
+            arrangement = arrangement,
+        )
+        StickyCTA(label = ctaLabel, interaction = ctaInteraction(state), onClick = actions.onSave)
+    }
 }
 
 @Composable
