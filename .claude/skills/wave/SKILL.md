@@ -45,7 +45,7 @@ Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a ro
 2. Classify each ticket with the table. The table binds: deviate only with a one-line reason stated in the plan, never silently. Tell the owner the plan in one line per ticket: `@<name> #<n> <model>:<effort>`, before booting anything.
 3. Run `scripts/justchill-wave <name>:<model>:<effort> ...` once with every ticket.
 4. Poll `ListAgents` until every pane name is listed, at most 60 seconds.
-5. Send each peer one dispatch built from the playbook checklist: issue, docs to read, branch `<type>/<n>-<slug>`, its worktree `../justchill-<name>`, the acceptance-criteria line, the gates (`./gradlew qualityGate assembleDevDebug`), TDD or visual check per the table, `Closes #<n>`, no merge, reply with the PR URL. Ask for `notify_when_idle`.
+5. Send each peer one dispatch built from the playbook checklist: issue, docs to read, branch `<type>/<n>-<slug>`, its worktree `../justchill-<name>`, the acceptance-criteria line, the gate (`scripts/justchill-ci` after every push, before `gh pr create`), TDD or visual check per the table, `Closes #<n>`, no merge, reply with the PR URL. Ask for `notify_when_idle`.
 6. Report to the owner in one or two lines: peers booted, tickets dispatched.
 
 ## Output Contract
