@@ -3,6 +3,7 @@ package com.emm.justchill.feature.transaction.capture
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Menu
@@ -197,13 +198,12 @@ internal fun AddTransactionScreenContent(
                 arrangement = arrangement,
             )
         },
-        numpad = { arrangement, numpadModifier ->
+        numpad = { arrangement ->
             PadNumpad(
                 amount = state.amount,
                 kind = kind,
                 onIntent = onIntent,
                 arrangement = arrangement,
-                modifier = numpadModifier,
             )
         },
         cta = { StickyCTA(label = ctaLabel, interaction = ctaInteraction(state), onClick = onSave) },
@@ -292,7 +292,6 @@ private fun PadNumpad(
     kind: TransactionKindContent,
     onIntent: (AddTransactionIntent) -> Unit,
     arrangement: PadArrangement,
-    modifier: Modifier = Modifier,
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val isStackedTall: Boolean = arrangement.isStackedTall
@@ -311,7 +310,8 @@ private fun PadNumpad(
         ),
         keyHeight = if (isStackedTall) NumpadKeyHeight else spacing.s12,
         keyGap = if (isStackedTall) spacing.s2 else spacing.s1,
-        modifier = modifier
+        modifier = Modifier
+            .fillMaxWidth()
             .padding(horizontal = spacing.s4)
             .padding(bottom = if (isStackedTall) spacing.s2 else spacing.s0),
     )

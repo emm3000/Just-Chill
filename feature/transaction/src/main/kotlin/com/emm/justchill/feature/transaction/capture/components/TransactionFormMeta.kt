@@ -35,19 +35,16 @@ internal fun FormMetaRow(
     onDateClick: () -> Unit,
     onNoteClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isCompact: Boolean = false,
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Row(
         modifier = modifier.height(spacing.s12),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(if (isCompact) spacing.s2 else spacing.s5),
+        horizontalArrangement = Arrangement.spacedBy(spacing.s5),
     ) {
         DateAction(label = dateLabel, onClick = onDateClick)
-        if (!isCompact) {
-            MetaDivider()
-        }
+        MetaDivider()
         NoteAction(
             note = note,
             onClick = onNoteClick,
