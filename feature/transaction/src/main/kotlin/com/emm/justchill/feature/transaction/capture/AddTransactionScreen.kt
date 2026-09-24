@@ -25,9 +25,14 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.justchill.core.domain.account.Account
+import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.NumpadSign
@@ -55,6 +60,7 @@ import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.sheets.DatePickerSheet
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -191,6 +197,7 @@ internal fun AddTransactionScreenContent(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
+                .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s6)
                 .padding(top = spacing.s8, bottom = spacing.s6)
@@ -259,19 +266,16 @@ internal fun AddTransactionScreenContent(
                 .padding(horizontal = spacing.s6),
         )
 
-        if (state.frequentCombos.isEmpty()) {
-            Spacer(Modifier.weight(1f))
-        } else {
+        if (state.frequentCombos.isNotEmpty()) {
             FrequentCombos(
                 combos = state.frequentCombos,
                 selectedAccountId = state.accountSelected?.accountId?.value,
                 selectedCategoryId = state.categorySelected?.categoryId?.value,
                 onSelect = { combo -> onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
                     .padding(horizontal = spacing.s4)
-                    .padding(top = spacing.s3),
+                    .padding(top = spacing.s3, bottom = spacing.s3),
             )
         }
 
@@ -416,6 +420,41 @@ private fun AddTransactionPreview() {
                 ),
                 amount = "8540",
                 transactionType = TransactionType.Spend,
+            ),
+            onIntent = {},
+            onOpenMenu = {},
+            onOpenTransactions = {},
+            onSave = {},
+        )
+    }
+}
+
+@PreviewRedmi15C
+@Composable
+private fun AddTransactionRedmi15CPreview() {
+    EmmTheme {
+        val account = Account(accountId = AccountId("betsy"), name = "Betsy", type = AccountType.Wallet)
+        val category = SelectableCategory(
+            categoryId = CategoryId("daily"),
+            name = "Gasto diario",
+            iconId = AppIconCatalog.catalog[0].id,
+            colorId = selectableColorIds[4],
+            categoryType = CategoryType.Spend,
+        )
+        AddTransactionScreenContent(
+            state = AddTransactionUiState(
+                today = LocalDate(2026, Month.SEPTEMBER, 23),
+                catalog = Catalog.Loaded(
+                    accounts = listOf(account),
+                    categories = mapOf(CategoryType.Spend to listOf(category)),
+                ),
+                transactionType = TransactionType.Spend,
+                frequentUsage = FrequentUsage(
+                    loadedFor = TransactionType.Spend,
+                    categoryIds = listOf(category.categoryId.value),
+                    combos = listOf(FrequentCombo(account.accountId, category.categoryId, TransactionType.Spend)),
+                ),
+                monthSpend = MonthSpend(YearMonth(2026, Month.SEPTEMBER), Money(132_860L)),
             ),
             onIntent = {},
             onOpenMenu = {},
