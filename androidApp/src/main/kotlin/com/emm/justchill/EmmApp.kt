@@ -9,7 +9,6 @@ import com.emm.justchill.core.ioDispatcher
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.session.KeystoreSessionManager
 import com.emm.justchill.core.shortcuts.ShortcutPublisher
-import com.emm.justchill.experiences.readjsonfromassets.experiencesModule
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -36,7 +35,7 @@ class EmmApp : Application() {
         val koinApp = startKoin {
             androidLogger()
             androidContext(this@EmmApp)
-            modules(appModules(androidPlatformModule) + experiencesModule)
+            modules(appModules(androidPlatformModule))
         }
 
         registerActivityLifecycleCallbacks(koinApp.koin.get<CurrentActivityHolder>())

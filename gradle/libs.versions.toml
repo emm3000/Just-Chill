@@ -2,7 +2,6 @@
 activityCompose = "1.13.0"
 # SQLDelight: gradle plugin + all four drivers/extensions share this version.
 sqldelight = "2.3.2"
-appcompat = "1.8.0"
 composeBom = "2026.08.00"
 coreKtx = "1.19.0"
 firebaseBom = "34.17.0"
@@ -19,7 +18,6 @@ material = "1.14.0"
 mockk = "1.14.11"
 # Robolectric — the Android runtime a JVM composition test renders against. Latest stable 4.x.
 robolectric = "4.17"
-navigationCompose = "2.9.8"
 androidApplication = "9.3.3"
 credentialsVersion = "1.6.0"
 googleIdentityVersion = "1.2.0"
@@ -57,7 +55,6 @@ android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = 
 sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activityCompose" }
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
@@ -68,7 +65,6 @@ androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmode
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleLivedataKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 # Compose artifacts below are BOM-managed (androidx-compose-bom) — do not add a version.ref.
 androidx-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-runtime = { module = "androidx.compose.runtime:runtime" }

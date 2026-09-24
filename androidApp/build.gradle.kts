@@ -120,11 +120,6 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.androidx.material.icons.extended)
 
-    // Only the dev experiences playground uses these. Quoted: AGP generates no typed accessor
-    // for flavor configurations.
-    "devImplementation"(libs.androidx.navigation.compose)
-    "devImplementation"(libs.androidx.appcompat)
-
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
 
