@@ -1,0 +1,34 @@
+complexity:
+  CyclomaticComplexMethod:
+    allowedComplexity: 14
+  LargeClass:
+    excludes: ['**/test/**', '**/androidTest/**']
+  LongMethod:
+    allowedLines: 60
+    ignoreAnnotated: ['Composable', 'Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth']
+  NestedBlockDepth:
+    allowedDepth: 4
+  TooManyFunctions:
+    allowedFunctionsPerFile: 8
+    ignoreAnnotatedFunctions: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth']
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+  MatchingDeclarationName:
+    active: false
+
+style:
+  MagicNumber:
+    ignoreAnnotated: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth']
+  ReturnCount:
+    max: 2
+    excludeReturnFromLambda: true
+
+Compose:
+  CompositionLocalAllowlist:
+    allowedCompositionLocals:
+      - 'LocalEmmColors'
+      - 'LocalEmmRadii'
+      - 'LocalEmmSpacing'
+      - 'LocalEmmType'

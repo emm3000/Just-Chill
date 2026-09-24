@@ -15,6 +15,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("com.android.application")
         pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
+        apply<DetektConventionPlugin>()
         apply<QualityGateConventionPlugin>()
 
         val extension: ApplicationExtension = extensions.getByType<ApplicationExtension>()

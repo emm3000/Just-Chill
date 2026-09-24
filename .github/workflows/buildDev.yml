@@ -101,3 +101,11 @@ jobs:
           if-no-files-found: error
           path: '**/build/reports/tests/'
           retention-days: 7
+
+      - name: Upload detekt reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: detekt-sarif
+          path: '**/build/reports/detekt/detekt.sarif'
+          retention-days: 7

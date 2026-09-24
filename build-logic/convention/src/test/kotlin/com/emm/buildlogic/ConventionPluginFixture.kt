@@ -92,14 +92,11 @@ internal class ConventionPluginFixture(
         }
     }
 
-    private fun runner(arguments: List<String>): GradleRunner {
-        val runner: GradleRunner = GradleRunner.create()
-            .withProjectDir(projectDirectory)
-            .withPluginClasspath()
-            .withArguments(arguments + listOf("-g", gradleUserHome, "--stacktrace"))
-        if (ambientEnvironment.isEmpty()) return runner
-        return runner.withEnvironment(System.getenv() + ambientEnvironment)
-    }
+    private fun runner(arguments: List<String>): GradleRunner = GradleRunner.create()
+        .withProjectDir(projectDirectory)
+        .withPluginClasspath()
+        .withArguments(arguments + listOf("-g", gradleUserHome, "--stacktrace"))
+        .withEnvironment(System.getenv() - CI_VARIABLE + ambientEnvironment)
 
     private fun writeSettings(includes: List<String>) {
         val catalog: File = File(rootDirectory, "gradle/libs.versions.toml")
@@ -156,6 +153,7 @@ internal class ConventionPluginFixture(
 
     private companion object {
         const val REPORT_PREFIX: String = "REPORT "
+        const val CI_VARIABLE: String = "CI"
 
         val rootDirectory: File = File(System.getProperty("justchill.rootDir"))
 
@@ -218,7 +216,20 @@ internal class ConventionPluginFixture(
                     println("REPORT projectDependencies=" + declared.map { it.second }.filterIsInstance<org.gradle.api.artifacts.ProjectDependency>().map { it.path }.filter { it != project.path }.distinct().sorted().joinToString(","))
                     println("REPORT implementationDependencies=" + declared.filter { it.first == "implementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
                     println("REPORT testDependencies=" + declared.filter { it.first == "testImplementation" }.map { it.second.name }.distinct().sorted().joinToString(","))
-                    println("REPORT plugins=" + listOf("justchill.quality.gate").filter { project.pluginManager.hasPlugin(it) }.joinToString(","))
+                    println("REPORT plugins=" + listOf("justchill.detekt", "justchill.quality.gate").filter { project.pluginManager.hasPlugin(it) }.joinToString(","))
+                    println("REPORT detektTasks=" + project.tasks.names.filter { it.startsWith("detekt") }.sorted().joinToString(","))
+                    val detekt = project.tasks.findByName("detekt") as? dev.detekt.gradle.Detekt
+                    if (detekt != null) {
+                        println("REPORT detektSources=" + detekt.source.files.map { it.relativeTo(project.projectDir).invariantSeparatorsPath }.sorted().joinToString(","))
+                        println("REPORT detektConfig=" + detekt.config.files.map { it.relativeTo(project.rootDir).invariantSeparatorsPath }.joinToString(","))
+                        println("REPORT detektBuildUponDefaultConfig=" + detekt.buildUponDefaultConfig.get())
+                        println("REPORT detektAllRules=" + detekt.allRules.get())
+                        println("REPORT detektAutoCorrect=" + detekt.autoCorrect.get())
+                        println("REPORT detektBaseline=" + detekt.baseline.orNull)
+                        println("REPORT detektClasspath=" + detekt.classpath.files.joinToString(","))
+                        println("REPORT detektReports=" + listOf(detekt.reports.checkstyle, detekt.reports.html, detekt.reports.markdown, detekt.reports.sarif).filter { it.required.get() }.map { it.outputLocation.get().asFile.relativeTo(project.projectDir).invariantSeparatorsPath }.joinToString(","))
+                        println("REPORT detektRules=" + project.configurations.getByName("detektPlugins").dependencies.map { it.group + ":" + it.name }.sorted().joinToString(","))
+                    }
                     val gate = project.tasks.findByName("qualityGate")
                     if (gate != null) {
                         println("REPORT gatedTests=" + gate.dependsOn.filterIsInstance<String>().sorted().joinToString(","))

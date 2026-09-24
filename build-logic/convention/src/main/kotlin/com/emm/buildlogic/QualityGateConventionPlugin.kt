@@ -23,7 +23,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description =
                 "Runs every check that must pass before pushing: " +
-                    "compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
+                    "detekt, compileDebugAndroidTestKotlin, compileReleaseKotlin, verifySqlDelightMigration, " +
                     ":build-logic:convention:test on the root, " +
                     "checkModuleBoundaries, checkComposeFreeViewModels, checkSqlDelightSnapshots " +
                     "and checkLazyListKeys, " +
@@ -44,7 +44,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
     }
 
     private fun gates(task: Task): Boolean =
-        task.name in COMPILE_GATE_TASKS || task.name in SCHEMA_GATE_TASKS
+        task.name in COMPILE_GATE_TASKS || task.name in SCHEMA_GATE_TASKS || task.name == DetektConventionPlugin.TASK
 
     private fun Project.registerBoundaryCheck(): TaskProvider<CheckModuleBoundariesTask> =
         tasks.register<CheckModuleBoundariesTask>(BOUNDARY_TASK) {

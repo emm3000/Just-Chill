@@ -215,6 +215,47 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `detekt lints every kotlin source under src with one config, no baseline and no type resolution`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.library"),
+            files = PROBE_SOURCES,
+        )
+
+        assertEquals(LINTED_SOURCES, report["detektSources"])
+        assertEquals("config/detekt/detekt.yml", report["detektConfig"])
+        assertEquals("true", report["detektBuildUponDefaultConfig"])
+        assertEquals("false", report["detektAllRules"])
+        assertEquals("null", report["detektBaseline"])
+        assertEquals("", report["detektClasspath"])
+        assertEquals("build/reports/detekt/detekt.sarif", report["detektReports"])
+        assertEquals(DETEKT_RULES, report["detektRules"])
+        assertEquals("true", report["detektAutoCorrect"])
+    }
+
+    @Test
+    fun `detekt adds no per-variant or per-source-set task to a flavored application or a jvm library`() {
+        val application: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.application"),
+            androidConfiguration = FLAVORED_APPLICATION_CONFIGURATION,
+        )
+        val library: Map<String, String> = ConventionPluginFixture(temporaryFolder.newFolder("jvm"))
+            .report(listOf("justchill.jvm.library"))
+
+        assertEquals("detekt", application["detektTasks"])
+        assertEquals("detekt", library["detektTasks"])
+    }
+
+    @Test
+    fun `detekt reports formatting instead of correcting it when CI is set`() {
+        val report: Map<String, String> = ConventionPluginFixture(
+            projectDirectory = temporaryFolder.root,
+            ambientEnvironment = mapOf("CI" to "true"),
+        ).report(listOf("justchill.jvm.library"))
+
+        assertEquals("false", report["detektAutoCorrect"])
+    }
+
+    @Test
     fun `the namespace is the module path under the app prefix`() {
         assertEquals("com.emm.justchill.core.domain", BuildConventions.namespaceOf(":core:domain"))
         assertEquals("com.emm.justchill.feature.loan", BuildConventions.namespaceOf(":feature:loan"))
@@ -240,7 +281,19 @@ class ConventionPluginTest {
             "kotlinx-serialization-json",
         )
 
-        const val CHECK_PLUGINS: String = "justchill.quality.gate"
+        const val CHECK_PLUGINS: String = "justchill.detekt,justchill.quality.gate"
+
+        const val DETEKT_RULES: String = "dev.detekt:detekt-rules-ktlint-wrapper,io.nlopez.compose.rules:detekt"
+
+        val PROBE_SOURCES: Map<String, String> = mapOf(
+            "probe/src/main/kotlin/Probe.kt" to "class Probe",
+            "probe/src/test/kotlin/ProbeTest.kt" to "class ProbeTest",
+            "probe/src/androidTest/kotlin/ProbeMigrationTest.kt" to "class ProbeMigrationTest",
+            "probe/src/main/sqldelight/Probe.sq" to "SELECT 1;",
+        )
+
+        const val LINTED_SOURCES: String =
+            "src/androidTest/kotlin/ProbeMigrationTest.kt,src/main/kotlin/Probe.kt,src/test/kotlin/ProbeTest.kt"
 
         val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
 
@@ -268,12 +321,12 @@ class ConventionPluginTest {
         const val FLAVORED_GATE_TASKS: String =
             "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
                 "checkSqlDelightSnapshots," +
-                "compileProdReleaseKotlin"
+                "compileProdReleaseKotlin,detekt"
 
         const val GATE_TASKS: String =
             "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
                 "checkSqlDelightSnapshots," +
-                "compileDebugAndroidTestKotlin,compileReleaseKotlin,testDebugUnitTest"
+                "compileDebugAndroidTestKotlin,compileReleaseKotlin,detekt,testDebugUnitTest"
 
         val RELEASE_PLUGINS: List<String> = listOf("justchill.android.application", "justchill.android.release")
 
