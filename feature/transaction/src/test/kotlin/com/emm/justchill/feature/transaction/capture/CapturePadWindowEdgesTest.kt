@@ -11,11 +11,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
+import com.emm.justchill.core.ui.NumpadKeyHeight
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
@@ -44,6 +47,17 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
             assertTrue(key.right - key.left >= TOUCH_TARGET, "key $label is ${key.right - key.left} wide")
             assertTrue(key.bottom - key.top >= TOUCH_TARGET, "key $label is ${key.bottom - key.top} tall")
         }
+    }
+
+    @Test
+    fun `a phone window inside its system bars keeps full keys and the combos eyebrow`() {
+        assumeTrue(width to height in REDMI_INSIDE_BARS_WINDOWS && fontScale == 1f)
+        composeRule.showPad(width, height, fontScale)
+
+        val key: DpRect = composeRule.onNodeWithText("1").getBoundsInRoot()
+
+        assertEquals(NumpadKeyHeight, key.bottom - key.top)
+        composeRule.onNodeWithText("TUS COMBINACIONES FRECUENTES").assertIsDisplayed()
     }
 
     companion object {
