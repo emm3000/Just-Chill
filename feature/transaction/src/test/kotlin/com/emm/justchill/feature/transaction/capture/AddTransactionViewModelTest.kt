@@ -392,30 +392,19 @@ class AddTransactionViewModelTest {
         }
 
     @Test
-    fun `frequentCombos populated on init when combos match accounts and categories`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+    fun `the top ranked combo preselects the account on init`() = runTest(testDispatcher) {
+        val combo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
         coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
 
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        val combos = vm.state.value.frequentCombos
-        assertEquals(1, combos.size)
-        assertEquals("Yape · Comida", combos[0].label)
-        assertEquals("yape", combos[0].accountId)
-        assertEquals("food", combos[0].categoryId)
+        assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
+        assertEquals("food", vm.state.value.categorySelected?.categoryId?.value)
     }
 
     @Test
-    fun `frequentCombos is empty on init when history is absent`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertTrue(vm.state.value.frequentCombos.isEmpty())
-    }
-
-    @Test
-    fun `frequentCombos reloads on OnTransactionTypeChange`() = runTest(testDispatcher) {
+    fun `a type switch preselects from the new type's top ranked combo`() = runTest(testDispatcher) {
         val spendCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
         val incomeCombo = FrequentCombo(AccountId("bcp"), CategoryId("salary"), TransactionType.Income)
         coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(spendCombo)
@@ -427,65 +416,9 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
         advanceUntilIdle()
 
-        val combos = vm.state.value.frequentCombos
-        assertEquals(1, combos.size)
-        assertEquals("BCP · Sueldo", combos[0].label)
+        assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
+        assertEquals("salary", vm.state.value.categorySelected?.categoryId?.value)
         coVerify(atLeast = 1) { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) }
-    }
-
-    @Test
-    fun `combo whose account was deleted is excluded from frequentCombos`() = runTest(testDispatcher) {
-        val orphanCombo = FrequentCombo(AccountId("deleted-acc"), CategoryId("salary"), TransactionType.Income)
-        coEvery { getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns listOf(orphanCombo)
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertTrue(vm.state.value.frequentCombos.isEmpty())
-    }
-
-    @Test
-    fun `combo whose category was deleted is excluded from frequentCombos`() = runTest(testDispatcher) {
-        val orphanCombo = FrequentCombo(AccountId("bcp"), CategoryId("deleted-cat"), TransactionType.Income)
-        coEvery { getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns listOf(orphanCombo)
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertTrue(vm.state.value.frequentCombos.isEmpty())
-    }
-
-    @Test
-    fun `OnFrequentComboSelected sets accountSelected and categorySelected`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
-        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        val comboUi = vm.state.value.frequentCombos.first()
-        vm.onIntent(AddTransactionIntent.OnFrequentComboSelected(comboUi))
-        advanceUntilIdle()
-
-        val state = vm.state.value
-        assertEquals("yape", state.accountSelected?.accountId?.value)
-        assertEquals("food", state.categorySelected?.categoryId?.value)
-    }
-
-    @Test
-    fun `OnFrequentComboSelected does not change transactionType`() = runTest(testDispatcher) {
-        val combo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
-        coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        val initialType = vm.state.value.transactionType
-        val comboUi = vm.state.value.frequentCombos.first()
-        vm.onIntent(AddTransactionIntent.OnFrequentComboSelected(comboUi))
-        advanceUntilIdle()
-
-        assertEquals(initialType, vm.state.value.transactionType)
     }
 
     @Test
@@ -754,13 +687,12 @@ class AddTransactionViewModelTest {
         }
 
     @Test
-    fun `the chip row never shows the previous type's suggestions after a type switch`() = runTest(testDispatcher) {
-        val spendCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
+    fun `a type switch never preselects from the previous type's combos`() = runTest(testDispatcher) {
+        val spendCombo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
         coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(spendCombo)
         coEvery {
             getTopUsedCategoryIds.invoke(TransactionType.Spend, any<Int>(), any<Int>())
         } returns listOf(CategoryId("food"))
-        // The Income reads never land, so nothing but the read-time type filter can empty the row.
         val incomeReads = CompletableDeferred<Unit>()
         coEvery { getTopUsedCategoryIds.invoke(TransactionType.Income, any<Int>(), any<Int>()) } coAnswers {
             incomeReads.await()
@@ -769,13 +701,17 @@ class AddTransactionViewModelTest {
 
         val vm = buildViewModel()
         advanceUntilIdle()
-        assertEquals(listOf("Yape · Comida"), vm.state.value.frequentCombos.map { it.label })
+        assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
         assertEquals(listOf("food"), vm.state.value.frequentCategoryIds)
 
         vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
         advanceUntilIdle()
 
-        assertTrue(vm.state.value.frequentCombos.isEmpty(), "a Spend combo cannot be offered on an Income movement")
+        assertEquals(
+            "yape",
+            vm.state.value.accountSelected?.accountId?.value,
+            "a Spend combo cannot preselect an Income movement",
+        )
         assertTrue(vm.state.value.frequentCategoryIds.isEmpty())
 
         incomeReads.complete(Unit)
@@ -1002,10 +938,10 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `the chip row keeps the settled combos while the next amount's ranking is in flight`() =
+    fun `the preselection keeps the settled combo while the next amount's ranking is in flight`() =
         runTest(testDispatcher) {
-            val typeOnlyCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
-            val rankedCombo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
+            val typeOnlyCombo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
+            val rankedCombo = FrequentCombo(AccountId("yape"), CategoryId("food"), TransactionType.Spend)
             coEvery {
                 getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>())
             } returns listOf(typeOnlyCombo)
@@ -1019,23 +955,21 @@ class AddTransactionViewModelTest {
 
             val vm = buildViewModel()
             advanceUntilIdle()
-            assertEquals(listOf("Yape · Comida"), vm.state.value.frequentCombos.map { it.label })
+            assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
 
             vm.onIntent(AddTransactionIntent.OnAmountChange("50000"))
             advanceUntilIdle()
 
             assertEquals(
-                listOf("Yape · Comida"),
-                vm.state.value.frequentCombos.map { it.label },
-                "the row answers with the last ranking it has until the next one lands, never with a blank",
+                "bcp",
+                vm.state.value.accountSelected?.accountId?.value,
+                "the pad answers with the last ranking it has until the next one lands, never with a blank",
             )
-            assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
 
             rankedReads.complete(Unit)
             advanceUntilIdle()
 
-            assertEquals(listOf("BCP · Comida"), vm.state.value.frequentCombos.map { it.label })
-            assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
+            assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
         }
 
     @Test

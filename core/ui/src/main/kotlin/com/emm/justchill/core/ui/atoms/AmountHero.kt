@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.emm.justchill.core.ui.format.INCOME_SIGN
 import com.emm.justchill.core.ui.format.NumberFormatEs
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -68,13 +67,11 @@ fun AmountHero(
     withDecimals: Boolean = true,
     prefix: String = "S/",
     showCaret: Boolean = false,
-    signed: Boolean = false,
 ) {
     val colors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     val mainColor: Color = tone.color(colors)
-    val signedPrefix: String = if (signed && tone == AmountTone.Pos) "$INCOME_SIGN$prefix" else prefix
 
     val absValue = abs(value)
     val isNegative = value < 0
@@ -136,7 +133,7 @@ fun AmountHero(
 
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
         Text(
-            text = signedPrefix,
+            text = prefix,
             style = prefixStyle,
             color = colors.textTertiary,
             modifier = Modifier.alignByBaseline(),
@@ -216,7 +213,7 @@ private fun AmountHeroPreview() {
                 .padding(spacing.s4),
         ) {
             AmountHero(value = 1234.5)
-            AmountHero(value = 980.0, tone = AmountTone.Pos, signed = true)
+            AmountHero(value = 980.0, tone = AmountTone.Pos)
         }
     }
 }
