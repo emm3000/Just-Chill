@@ -15,101 +15,70 @@ import kotlin.test.assertEquals
 
 class AddTransactionCombosTest {
 
-    private val bcp = Account(AccountId("bcp"), "BCP")
-    private val yape = Account(AccountId("yape"), "Yape")
-    private val market = selectableCategory("market", "Supermercado")
-    private val taxi = selectableCategory("taxi", "Taxi")
-    private val coffee = selectableCategory("coffee", "Café")
+    private val bcp: Account = Account(AccountId("bcp"), "BCP")
+    private val yape: Account = Account(AccountId("yape"), "Yape")
+    private val closed: Account = Account(AccountId("closed"), "Cuenta cerrada")
+    private val market: SelectableCategory = selectableCategory("market", "Supermercado")
+    private val taxi: SelectableCategory = selectableCategory("taxi", "Taxi")
+    private val coffee: SelectableCategory = selectableCategory("coffee", "Café")
 
     @Test
-    fun `the chip row is offered at most three combos`() {
-        val state = stateWith(
-            listOf(
-                combo(bcp, market),
-                combo(bcp, taxi),
-                combo(bcp, coffee),
-                combo(yape, market),
-                combo(yape, taxi),
-            ),
-        )
+    fun `the top ranked combo preselects the account and the category`() {
+        val state: AddTransactionUiState = stateWith(listOf(combo(yape, coffee), combo(bcp, market)))
 
-        assertEquals(3, state.frequentCombos.size)
-    }
-
-    @Test
-    fun `capping keeps the most-used-first order the use case returned`() {
-        val state = stateWith(
-            listOf(
-                combo(yape, coffee),
-                combo(bcp, market),
-                combo(bcp, taxi),
-                combo(yape, market),
-            ),
-        )
-
-        assertEquals(
-            listOf("Yape · Café", "BCP · Supermercado", "BCP · Taxi"),
-            state.frequentCombos.map { it.label },
-        )
-    }
-
-    @Test
-    fun `a combo naming a deleted account is pruned before the cap applies`() {
-        val closed = Account(AccountId("closed"), "Cuenta cerrada")
-        val state = stateWith(
-            listOf(
-                combo(bcp, market),
-                combo(closed, taxi),
-                combo(bcp, coffee),
-                combo(yape, market),
-            ),
-        )
-
-        assertEquals(
-            listOf("BCP · Supermercado", "BCP · Café", "Yape · Supermercado"),
-            state.frequentCombos.map { it.label },
-            "capping before pruning would leave the row two chips short",
-        )
-    }
-
-    @Test
-    fun `fewer combos than the cap are offered as-is`() {
-        val state = stateWith(listOf(combo(bcp, market)))
-
-        assertEquals(listOf("BCP · Supermercado"), state.frequentCombos.map { it.label })
+        assertEquals("yape", state.accountSelected?.accountId?.value)
+        assertEquals("coffee", state.categorySelected?.categoryId?.value)
     }
 
     @Test
     fun `a ranked combo naming a deleted account leaves the normal defaults in place`() {
-        val closed = Account(AccountId("closed"), "Cuenta cerrada")
-        val state = stateWith(listOf(FrequentCombo(closed.accountId, taxi.categoryId, TransactionType.Spend)))
+        val state: AddTransactionUiState =
+            stateWith(listOf(FrequentCombo(closed.accountId, taxi.categoryId, TransactionType.Spend)))
 
-        assertEquals(emptyList(), state.frequentCombos)
         assertEquals("bcp", state.accountSelected?.accountId?.value)
         assertEquals("market", state.categorySelected?.categoryId?.value)
     }
 
     @Test
     fun `a ranked combo naming a deleted category leaves the normal defaults in place`() {
-        val state = stateWith(listOf(FrequentCombo(yape.accountId, CategoryId("gone"), TransactionType.Spend)))
+        val state: AddTransactionUiState =
+            stateWith(listOf(FrequentCombo(yape.accountId, CategoryId("gone"), TransactionType.Spend)))
 
-        assertEquals(emptyList(), state.frequentCombos)
         assertEquals("bcp", state.accountSelected?.accountId?.value)
         assertEquals("market", state.categorySelected?.categoryId?.value)
     }
 
     @Test
-    fun `the surviving ranked combo supplies the defaults when the first one was pruned`() {
-        val closed = Account(AccountId("closed"), "Cuenta cerrada")
-        val state = stateWith(
+    fun `the first combo whose account and category both exist preselects past pruned ones`() {
+        val state: AddTransactionUiState = stateWith(
             listOf(
                 FrequentCombo(closed.accountId, taxi.categoryId, TransactionType.Spend),
+                FrequentCombo(yape.accountId, CategoryId("gone"), TransactionType.Spend),
+                FrequentCombo(bcp.accountId, CategoryId("gone"), TransactionType.Spend),
+                FrequentCombo(closed.accountId, market.categoryId, TransactionType.Spend),
                 combo(yape, coffee),
             ),
         )
 
         assertEquals("yape", state.accountSelected?.accountId?.value)
         assertEquals("coffee", state.categorySelected?.categoryId?.value)
+    }
+
+    @Test
+    fun `combos loaded for the other type preselect nothing`() {
+        val state: AddTransactionUiState = stateWith(listOf(combo(yape, coffee)))
+            .copy(transactionType = TransactionType.Income)
+
+        assertEquals("bcp", state.accountSelected?.accountId?.value)
+    }
+
+    @Test
+    fun `an explicit pick wins over the ranked combo`() {
+        val state: AddTransactionUiState = stateWith(listOf(combo(yape, coffee)))
+            .copy(accountId = bcp.accountId, categoryId = taxi.categoryId)
+
+        assertEquals("bcp", state.accountSelected?.accountId?.value)
+        assertEquals("taxi", state.categorySelected?.categoryId?.value)
     }
 
     private fun stateWith(combos: List<FrequentCombo>): AddTransactionUiState = AddTransactionUiState(

@@ -1,11 +1,14 @@
 package com.emm.justchill.feature.transaction.capture
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Menu
@@ -27,8 +30,6 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
-import com.emm.justchill.core.ui.NumpadKeyHeight
-import com.emm.justchill.core.ui.NumpadSign
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
@@ -59,11 +60,9 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
-import com.emm.justchill.feature.transaction.capture.components.PadArrangement
-import com.emm.justchill.feature.transaction.capture.components.PadArrangementLayout
 import com.emm.justchill.feature.transaction.capture.components.PadForm
 import com.emm.justchill.feature.transaction.capture.components.SaveMotion
-import com.emm.justchill.feature.transaction.capture.components.isStackedTall
+import com.emm.justchill.feature.transaction.capture.components.SignToggle
 import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
 import kotlinx.coroutines.Job
@@ -71,6 +70,8 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
+
+private const val HERO_WEIGHT: Float = 8f
 
 private fun ctaInteraction(state: AddTransactionUiState): CtaInteraction = when {
     state.isSaving -> CtaInteraction.Loading
@@ -81,24 +82,18 @@ private fun ctaInteraction(state: AddTransactionUiState): CtaInteraction = when 
 private data class TransactionKindContent(
     val amountTone: AmountTone,
     val ctaLabel: String,
-    val signDescription: String,
-    val toggledType: TransactionType,
     val describeAmount: (Money) -> String,
 )
 
 private val SPEND_KIND = TransactionKindContent(
     amountTone = AmountTone.Neutral,
     ctaLabel = "Anotar gasto",
-    signDescription = "Cambiar a ingreso",
-    toggledType = TransactionType.Income,
     describeAmount = { money -> "Gasto de ${money.balanceFormatted()}" },
 )
 
 private val INCOME_KIND = TransactionKindContent(
     amountTone = AmountTone.Pos,
     ctaLabel = "Anotar ingreso",
-    signDescription = "Cambiar a gasto",
-    toggledType = TransactionType.Spend,
     describeAmount = { money -> "Ingreso de ${money.positiveMoneyFormatted()}" },
 )
 
@@ -171,23 +166,17 @@ internal fun AddTransactionScreenContent(
         kind.describeAmount(centsToMoney(state.amount))
     }
 
-    PadArrangementLayout(
-        heroFontSize = LocalEmmType.current.amountHero.fontSize,
-        tallBudget = { TallBudgetPad() },
+    PadColumn(
+        state = state,
+        kind = kind,
+        ctaLabel = ctaLabel,
+        amountDescription = amountDescription,
+        motion = motion,
+        actions = PadActions(onIntent, onOpenMenu, onOpenTransactions, onSave, onAddNewAccount),
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg),
-    ) { arrangement: PadArrangement ->
-        PadColumn(
-            state = state,
-            kind = kind,
-            ctaLabel = ctaLabel,
-            amountDescription = amountDescription,
-            motion = motion,
-            actions = PadActions(onIntent, onOpenMenu, onOpenTransactions, onSave, onAddNewAccount),
-            arrangement = arrangement,
-        )
-    }
+    )
 
     OpenSheet(
         state = state,
@@ -205,29 +194,6 @@ private class PadActions(
     val onAddNewAccount: () -> Unit,
 )
 
-private val NO_PAD_ACTIONS: PadActions = PadActions(
-    onIntent = {},
-    onOpenMenu = {},
-    onOpenTransactions = {},
-    onSave = {},
-    onAddNewAccount = {},
-)
-
-@Composable
-private fun TallBudgetPad() {
-    val state: AddTransactionUiState = remember { tallBudgetCaptureState() }
-
-    PadColumn(
-        state = state,
-        kind = SPEND_KIND,
-        ctaLabel = SPEND_KIND.ctaLabel,
-        amountDescription = "",
-        motion = rememberSaveMotion(),
-        actions = NO_PAD_ACTIONS,
-        arrangement = PadArrangement.StackedTall,
-    )
-}
-
 @Composable
 private fun PadColumn(
     state: AddTransactionUiState,
@@ -236,11 +202,12 @@ private fun PadColumn(
     amountDescription: String,
     motion: SaveMotion,
     actions: PadActions,
-    arrangement: PadArrangement,
+    modifier: Modifier = Modifier,
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val isSpend: Boolean = state.transactionType == TransactionType.Spend
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = modifier) {
         Row(
             modifier = Modifier.padding(start = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
@@ -253,28 +220,42 @@ private fun PadColumn(
                 modifier = with(motion) { Modifier.weight(1f).monthLineTarget() },
             )
         }
-        PadHero(
-            amount = state.amount,
-            kind = kind,
-            motion = motion,
+        Row(
             modifier = Modifier
-                .weight(1f)
                 .fillMaxWidth()
-                .padding(horizontal = spacing.s6)
-                .clearAndSetSemantics { contentDescription = amountDescription },
-        )
-        PadForm(
-            state = state,
-            onIntent = actions.onIntent,
-            onAddNewAccount = actions.onAddNewAccount,
-            arrangement = arrangement,
-        )
-        PadNumpad(
-            amount = state.amount,
-            kind = kind,
-            onIntent = actions.onIntent,
-            arrangement = arrangement,
-        )
+                .padding(horizontal = spacing.s4),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            SignToggle(
+                isSpend = isSpend,
+                onIncomeClick = {
+                    actions.onIntent(
+                        AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income),
+                    )
+                },
+                onSpendClick = {
+                    actions.onIntent(
+                        AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend),
+                    )
+                },
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Spacer(Modifier.weight(1f, fill = false).height(spacing.s8))
+            PadHero(
+                amount = state.amount,
+                kind = kind,
+                motion = motion,
+                modifier = Modifier
+                    .weight(HERO_WEIGHT, fill = false)
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing.s6)
+                    .clearAndSetSemantics { contentDescription = amountDescription },
+            )
+            Spacer(Modifier.weight(1f, fill = false).height(spacing.s6))
+            PadForm(state = state, onIntent = actions.onIntent, onAddNewAccount = actions.onAddNewAccount)
+        }
+        PadNumpad(amount = state.amount, onIntent = actions.onIntent)
         StickyCTA(label = ctaLabel, interaction = ctaInteraction(state), onClick = actions.onSave)
     }
 }
@@ -330,7 +311,6 @@ private fun PadHero(amount: String, kind: TransactionKindContent, motion: SaveMo
             size = type.amountHero.fontSize,
             tone = kind.amountTone,
             showCaret = true,
-            signed = true,
             modifier = with(motion) { Modifier.restingHero() },
         )
         motion.flyingAmount?.let { saved ->
@@ -338,7 +318,6 @@ private fun PadHero(amount: String, kind: TransactionKindContent, motion: SaveMo
                 value = centsToSoles(moneyCentsString(saved)),
                 size = type.amountHero.fontSize,
                 tone = kind.amountTone,
-                signed = true,
                 modifier = with(motion) { Modifier.inFlight() },
             )
         }
@@ -346,14 +325,8 @@ private fun PadHero(amount: String, kind: TransactionKindContent, motion: SaveMo
 }
 
 @Composable
-private fun PadNumpad(
-    amount: String,
-    kind: TransactionKindContent,
-    onIntent: (AddTransactionIntent) -> Unit,
-    arrangement: PadArrangement,
-) {
+private fun PadNumpad(amount: String, onIntent: (AddTransactionIntent) -> Unit) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val isStackedTall: Boolean = arrangement.isStackedTall
     val onAmountChange: (String) -> Unit = { newAmount ->
         onIntent(AddTransactionIntent.OnAmountChange(newAmount.take(MAX_AMOUNT_DIGITS)))
     }
@@ -362,17 +335,10 @@ private fun PadNumpad(
         onDigit = { digit -> onAmountChange(amount + digit) },
         onDoubleZero = { onAmountChange(amount + "00") },
         onBackspace = { onAmountChange(amount.dropLast(1)) },
-        sign = NumpadSign(
-            tone = kind.amountTone,
-            contentDescription = kind.signDescription,
-            onClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(kind.toggledType)) },
-        ),
-        keyHeight = if (isStackedTall) NumpadKeyHeight else spacing.s12,
-        keyGap = if (isStackedTall) spacing.s2 else spacing.s1,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = spacing.s4)
-            .padding(bottom = if (isStackedTall) spacing.s2 else spacing.s0),
+            .padding(bottom = spacing.s2),
     )
 }
 

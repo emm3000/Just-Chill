@@ -24,10 +24,8 @@ internal fun PadForm(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
     onAddNewAccount: () -> Unit,
-    arrangement: PadArrangement,
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val isStackedTall: Boolean = arrangement.isStackedTall
 
     Column {
         Row(
@@ -49,17 +47,6 @@ internal fun PadForm(
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s6),
         )
-
-        if (state.frequentCombos.isNotEmpty()) {
-            FrequentCombos(
-                combos = state.frequentCombos,
-                selectedAccountId = state.accountSelected?.accountId?.value,
-                selectedCategoryId = state.categorySelected?.categoryId?.value,
-                onSelect = { combo -> onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
-                wrapsUnderLabel = isStackedTall,
-                modifier = Modifier.padding(vertical = if (isStackedTall) spacing.s3 else spacing.s0),
-            )
-        }
     }
 }
 

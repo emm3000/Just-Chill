@@ -102,16 +102,11 @@ class AddTransactionViewModel(
             AddTransactionIntent.OnSave -> addTransaction()
             is AddTransactionIntent.OnAccountSelected -> updateState { copy(accountId = intent.value.accountId) }
             is AddTransactionIntent.OnCategorySelected -> updateState { copy(categoryId = intent.value.categoryId) }
-            is AddTransactionIntent.OnFrequentComboSelected -> selectFrequentCombo(intent.value)
             is AddTransactionIntent.OnPreselectCombo -> registerPreselect(intent)
             is AddTransactionIntent.OnNewValueFromOthers -> addCategoryFromOthers(intent.value)
             is AddTransactionIntent.OnSheetRequested -> updateState { copy(openSheet = intent.sheet) }
             AddTransactionIntent.OnSheetDismissed -> updateState { copy(openSheet = null) }
         }
-    }
-
-    private fun selectFrequentCombo(combo: FrequentComboUi) = updateState {
-        copy(accountId = AccountId(combo.accountId), categoryId = CategoryId(combo.categoryId))
     }
 
     private fun registerPreselect(request: AddTransactionIntent.OnPreselectCombo) {

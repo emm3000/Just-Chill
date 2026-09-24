@@ -2,6 +2,7 @@ package com.emm.justchill.feature.transaction.capture
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -46,10 +47,24 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
         }
     }
 
+    @Test
+    fun `both sign segments keep a full touch target`() {
+        composeRule.showPad(width, height, fontScale)
+
+        SIGN_SEGMENTS.forEach { label: String ->
+            val segment: DpRect = composeRule.onNode(hasText(label) and hasClickAction()).getBoundsInRoot()
+            val segmentWidth: Dp = segment.right - segment.left
+            val segmentHeight: Dp = segment.bottom - segment.top
+            assertTrue(segmentWidth >= TOUCH_TARGET, "segment $label is $segmentWidth wide")
+            assertTrue(segmentHeight >= TOUCH_TARGET, "segment $label is $segmentHeight tall")
+        }
+    }
+
     companion object {
         private val TOUCH_TARGET: Dp = 48.dp
         private val KEY_LABELS: List<String> =
-            listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "Borrar", "Cambiar a ingreso")
+            listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "Borrar")
+        private val SIGN_SEGMENTS: List<String> = listOf("Ingreso", "Gasto")
 
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}x{1} at font scale {2}")

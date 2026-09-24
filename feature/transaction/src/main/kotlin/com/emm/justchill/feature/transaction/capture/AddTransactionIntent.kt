@@ -22,8 +22,6 @@ sealed interface AddTransactionIntent : UiIntent {
 
     data class OnCategorySelected(val value: SelectableCategory) : AddTransactionIntent
 
-    data class OnFrequentComboSelected(val value: FrequentComboUi) : AddTransactionIntent
-
     data class OnPreselectCombo(val accountId: String?, val categoryId: String?, val type: TransactionType?) :
         AddTransactionIntent
 

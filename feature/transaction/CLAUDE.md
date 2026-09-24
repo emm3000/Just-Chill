@@ -18,12 +18,12 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 
 ## Capture
 
-- An id-based selection has no expiry: a preselected id missing when the catalog first loads still lands when a later emission carries it. `selectFrequentCombo` no-ops until the account and category catalogs arrive, and a preselection from a launcher shortcut always arrives before them.
+- An id-based selection has no expiry: a preselected id missing when the catalog first loads still lands when a later emission carries it. A preselection from a launcher shortcut always arrives before the account and category catalogs.
 - A preselect is consumed once per ViewModel (`preselectConsumed`). The entry's `LaunchedEffect(key)` restarts on rotation, on a theme change and on popping back from the category screen, and a second firing would silently revert what the user picked.
 - A combo can name a deleted account or category: resolve by id, fall back to the normal defaults, never crash and never show an empty selection.
-- The amount digits are irreducible. Every entry point shortens the path to the amount pad; no field, chip row or sheet gets added to `AddTransactionScreen`. The month-total line above the hero is a read and a door, never a step: it adds no tap to a capture.
+- The amount digits are irreducible. Every entry point shortens the path to the amount pad; no field, chip row or sheet gets added to `AddTransactionScreen`. The top-ranked `FrequentCombo` whose account and category both exist preselects the pad's account and category, silently. The month-total line above the hero is a read and a door, never a step: it adds no tap to a capture.
 - The month total is `GetMonthSpendUseCase` `flatMapLatest`ed on `todayFlow()`, so a pad left open across midnight re-queries the month it lands in; the label and the amount ride one `MonthSpend` field so they can never name different months.
-- The pad is portrait-only (ADR 020): the manifest locks `MainActivity` upright and out of multi-window, and `PadArrangementLayout` picks `StackedTall` whenever a fixed tall pad, `tallBudgetCaptureState()` with two full-width combo rows, plus the hero's floor (1.3 × `amountHero.fontSize`) fits the height, `StackedShort` otherwise. The live state never enters the choice. Robolectric measures text without real fonts, so row counts are checked on the screenshot references only.
+- The pad is portrait-only and shares `EditTransaction`'s layout (ADR 021): one column, no window measurement. The hero and its gaps are the only part that gives way, auto-sizing down below about 640dp. Robolectric measures text without real fonts, so hero room on short windows is checked on the screenshot references only.
 - The date is `null` until the save, and `null` is not "no date" — it is the day the movement gets written on. `TodayFlow` decides that day, the injected `Clock` only supplies the time.
 
 ## List
