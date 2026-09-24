@@ -18,11 +18,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.then
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -52,14 +52,21 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
     }
 
     @Test
-    fun `the hero keeps its full line height at the default font scale`() {
-        assumeTrue(fontScale == 1f)
+    fun `the stacked hero has room for a full-size Plex Mono line at the default font scale`() {
+        assumeTrue(fontScale == 1f && height > width)
+        var heroFontSize: Dp = 0.dp
+        showPad { amountHero, density -> heroFontSize = with(density) { amountHero.fontSize.toDp() } }
+
+        assertHeroAtLeast(heroFontSize * PLEX_MONO_LINE_BOX_EM)
+    }
+
+    @Test
+    fun `the side-by-side hero keeps its line height at the default font scale`() {
+        assumeTrue(fontScale == 1f && width > height)
         var heroLineHeight: Dp = 0.dp
-        showPad { lineHeight, density -> heroLineHeight = with(density) { lineHeight.toDp() } }
+        showPad { amountHero, density -> heroLineHeight = with(density) { amountHero.lineHeight.toDp() } }
 
-        val hero: DpRect = composeRule.onNodeWithContentDescription("Gasto de S/ 0.00").getBoundsInRoot()
-
-        assertTrue(hero.bottom - hero.top >= heroLineHeight, "hero ${hero.bottom - hero.top} under $heroLineHeight")
+        assertHeroAtLeast(heroLineHeight)
     }
 
     @Test
@@ -73,14 +80,20 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
         }
     }
 
-    private fun showPad(onHeroLineHeight: (TextUnit, Density) -> Unit = { _, _ -> }) {
+    private fun assertHeroAtLeast(minHeight: Dp) {
+        val hero: DpRect = composeRule.onNodeWithContentDescription("Gasto de S/ 0.00").getBoundsInRoot()
+
+        assertTrue(hero.bottom - hero.top >= minHeight, "hero ${hero.bottom - hero.top} under $minHeight")
+    }
+
+    private fun showPad(onAmountHero: (TextStyle, Density) -> Unit = { _, _ -> }) {
         composeRule.setContent {
             DeviceConfigurationOverride(
                 DeviceConfigurationOverride.ForcedSize(DpSize(width.dp, height.dp)) then
                     DeviceConfigurationOverride.FontScale(fontScale),
             ) {
                 EmmTheme {
-                    onHeroLineHeight(LocalEmmType.current.amountHero.lineHeight, LocalDensity.current)
+                    onAmountHero(LocalEmmType.current.amountHero, LocalDensity.current)
                     Box(modifier = Modifier.fillMaxSize().testTag(FRAME_TAG)) {
                         AddTransactionScreenContent(
                             state = populatedCaptureState(),
@@ -98,6 +111,7 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
     companion object {
         private const val FRAME_TAG: String = "frame"
         private val TOUCH_TARGET: Dp = 48.dp
+        private const val PLEX_MONO_LINE_BOX_EM: Float = 1.3f
         private val KEY_LABELS: List<String> =
             listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "Borrar", "Cambiar a ingreso")
 
