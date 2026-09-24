@@ -72,6 +72,7 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 
 ## Commands
 
+- `scripts/justchill-ci` — runs `CI=true ./gradlew qualityGate assembleDevDebug` on a clean, pushed HEAD and posts the `local-gate` status PRs require; `--dry-run` prints it instead.
 - `./gradlew qualityGate` — the gate CI runs, defined in `QualityGateConventionPlugin.kt`; its `qualityGate` task `description` is the task list. `ConventionPluginTest`'s gate constants pin the per-module closure only.
 - `./gradlew detekt` — the lint the gate runs on every module (ADR 018), one config in `config/detekt/detekt.yml` and no baseline. Locally it rewrites formatting in place; with `CI=true` it reports it instead, and that is how CI fails on it.
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.

@@ -19,10 +19,10 @@ jobs:
   # the same Gradle configuration only to assemble what it could not have assembled in parallel
   # anyway — it needed the gate to pass first.
   #
-  # The gate runs here on every trunk push even though the PR workflow already validated the
-  # branch: protection is `strict: false`, so two PRs green on their own can break trunk together,
-  # and admin direct pushes skip PR CI. Nothing runs the gate locally, so this is the only net for
-  # both. Do not remove it.
+  # The gate runs here on every trunk push even though `scripts/justchill-ci` already gated the PR
+  # head locally: protection is `strict: false`, so two PRs green on their own can break trunk
+  # together, admin direct pushes skip the PR check, and the `local-gate` status is only as honest
+  # as whoever posted it. This is the only GitHub-hosted run of the gate. Do not remove it.
   distribute:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -51,6 +51,23 @@ jobs:
         with:
           name: lint-report
           path: '**/build/reports/lint-results-*.html'
+          retention-days: 7
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-test-report
+          if-no-files-found: error
+          path: '**/build/reports/tests/'
+          retention-days: 7
+
+      - name: Upload detekt reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: detekt-sarif
+          path: '**/build/reports/detekt/detekt.sarif'
           retention-days: 7
 
       # The Crashlytics mapping upload is off unless the property is true: trunk only.

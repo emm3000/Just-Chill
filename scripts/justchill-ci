@@ -1,0 +1,52 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+dry_run=false
+if (( $# == 1 )) && [[ "$1" == "--dry-run" ]]; then
+  dry_run=true
+elif (( $# != 0 )); then
+  echo "usage: scripts/justchill-ci [--dry-run]" >&2
+  exit 64
+fi
+
+repo="${0:A:h:h}"
+slug="emm3000/Just-Chill"
+cd "$repo"
+
+dirty="$(git status --porcelain --untracked-files=all)"
+if [[ -n "$dirty" ]]; then
+  echo "refusing to gate a dirty tree:" >&2
+  printf '%s\n' "$dirty" >&2
+  exit 1
+fi
+
+sha="$(git rev-parse HEAD)"
+if [[ "$dry_run" == false ]] && ! gh api "repos/$slug/commits/$sha" --silent 2>/dev/null; then
+  echo "HEAD $sha is not on GitHub yet; push it first" >&2
+  exit 1
+fi
+
+SECONDS=0
+code=0
+CI=true ./gradlew qualityGate assembleDevDebug || code=$?
+duration=$SECONDS
+echo "gate exit code: $code"
+
+state=success
+if (( code != 0 )); then
+  state=failure
+fi
+
+payload="$(jq -n \
+  --arg state "$state" \
+  --arg description "${duration}s on $(hostname -s)" \
+  '{state: $state, context: "local-gate", description: $description}')"
+
+if [[ "$dry_run" == true ]]; then
+  echo "POST repos/$slug/statuses/$sha"
+  printf '%s\n' "$payload"
+else
+  gh api -X POST "repos/$slug/statuses/$sha" --input - --jq '"posted \(.context) \(.state) on \(.url)"' <<< "$payload"
+fi
+
+exit $code
