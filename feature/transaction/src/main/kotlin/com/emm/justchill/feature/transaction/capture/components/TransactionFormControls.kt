@@ -6,12 +6,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -20,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -51,19 +54,20 @@ internal fun SignToggle(
 
     Row(
         modifier = modifier
+            .width(IntrinsicSize.Max)
             .height(spacing.s12)
             .clip(radii.rFull)
             .background(colors.bg)
             .border(spacing.hairline, colors.border, radii.rFull),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SignSegment(label = "Ingreso", selected = !isSpend, onClick = onIncomeClick)
-        SignSegment(label = "Gasto", selected = isSpend, onClick = onSpendClick)
+        SignSegment(label = "Ingreso", selected = !isSpend, onClick = onIncomeClick, modifier = Modifier.weight(1f))
+        SignSegment(label = "Gasto", selected = isSpend, onClick = onSpendClick, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
     val spacing = LocalEmmSpacing.current
@@ -74,8 +78,8 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
     // still selects. Selection is a surface step and a weight — neither reaches TalkBack, so it
     // is stated.
     Box(
-        modifier = Modifier
-            .width(SignSegmentWidth)
+        modifier = modifier
+            .widthIn(min = SignSegmentWidth)
             .fillMaxHeight()
             .semantics { this.selected = selected }
             .clickable(
@@ -91,8 +95,16 @@ private fun SignSegment(label: String, selected: Boolean, onClick: () -> Unit) {
                 .padding(spacing.s1)
                 .clip(radii.rFull)
                 .background(if (selected) colors.surface2 else Color.Transparent)
-                .indication(interactionSource, ripple()),
+                .indication(interactionSource, ripple())
+                .padding(horizontal = spacing.s3),
         ) {
+            Text(
+                text = label,
+                style = type.labelL,
+                fontWeight = FontWeight.W600,
+                color = Color.Transparent,
+                modifier = Modifier.clearAndSetSemantics {},
+            )
             Text(
                 text = label,
                 style = type.labelL,
