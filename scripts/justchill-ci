@@ -21,8 +21,12 @@ if [[ -n "$dirty" ]]; then
 fi
 
 sha="$(git rev-parse HEAD)"
-if [[ "$dry_run" == false ]] && ! gh api "repos/$slug/commits/$sha" --silent 2>/dev/null; then
-  echo "HEAD $sha is not on GitHub yet; push it first" >&2
+if [[ "$dry_run" == false ]] && ! lookup="$(gh api "repos/$slug/commits/$sha" --silent 2>&1)"; then
+  if [[ "$lookup" == *"(HTTP 404)"* || "$lookup" == *"(HTTP 422)"* ]]; then
+    echo "HEAD $sha is not on GitHub yet; push it first" >&2
+  else
+    echo "could not check HEAD $sha on GitHub: $lookup" >&2
+  fi
   exit 1
 fi
 

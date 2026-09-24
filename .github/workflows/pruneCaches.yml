@@ -1,7 +1,7 @@
 name: Prune Gradle Cache Generations
 
 # The Actions cache store has a hard 10 GiB cap and GitHub evicts by LRU once it is crossed, so a
-# PR can lose an entry it was going to restore for reasons unrelated to its own diff (#256).
+# build can lose an entry it was going to restore for reasons unrelated to its own diff (#256).
 # `uploadApk` on `trunk` is the only writer, and setup-gradle writes a fresh extracted entry per
 # component whenever that component's content hash moved. The transforms directory moves on every
 # push, so every trunk push adds another ~286,700,000-byte copy of a directory otherwise unchanged.
@@ -48,8 +48,8 @@ jobs:
       #     by `last_accessed_at`. This is the one the code cannot justify on its own: creation
       #     order is not liveness, so once a component carries more than KEEP_PER_PREFIX
       #     generations the first guard stops covering the entry the runs actually read. It also
-      #     covers a PR job that began restoring a generation moments before `workflow_run` fired
-      #     this one. The evidence is in `.claude/rules/github-workflows.md`; do not drop it
+      #     covers an `uploadRelease` or `trunk` run that began restoring a generation moments
+      #     before `workflow_run` fired this one. The evidence is in `.claude/rules/github-workflows.md`; do not drop it
       #     because a snapshot shows it deleting nothing.
       - name: Prune stale generations
         env:
