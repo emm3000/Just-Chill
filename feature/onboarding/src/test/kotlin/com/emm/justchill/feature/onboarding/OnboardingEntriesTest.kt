@@ -13,12 +13,12 @@ import com.emm.justchill.core.ui.navigation.AppRoute
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.PlatformHostActions
 import com.emm.justchill.core.ui.theme.EmmTheme
-import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlinx.serialization.Serializable
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 @Serializable
 private data object HomeRoute : AppRoute

@@ -6,11 +6,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.theme.EmmTheme
-import kotlin.test.Test
 import kotlinx.datetime.Month
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.Test
 
 @RunWith(RobolectricTestRunner::class)
 class SeeTransactionsMonthNavigationTest {

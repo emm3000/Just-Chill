@@ -10,11 +10,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.emm.justchill.core.ui.theme.EmmTheme
-import kotlin.test.Test
-import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class ManifestoScreenTest {
@@ -91,8 +91,7 @@ class ManifestoScreenTest {
         composeRule.onNodeWithText("Solo tú, tu plata,\ny la verdad.").assertExists()
     }
 
-    private fun isButton(): SemanticsMatcher =
-        SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
+    private fun isButton(): SemanticsMatcher = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
 
     private fun renderManifesto(isRevisit: Boolean) {
         composeRule.setContent {

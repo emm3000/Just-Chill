@@ -22,10 +22,10 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     appVersion: String = "",
     commitHash: String = "",
-    onBack: () -> Unit,
     onTransactionsClick: () -> Unit = {},
     onReportClick: () -> Unit = {},
     onAccountsClick: () -> Unit = {},

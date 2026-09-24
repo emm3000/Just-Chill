@@ -70,13 +70,11 @@ class TransactionStatsLocalDataSource(private val tq: TransactionsQueries) {
         tq.lastUsedAccountId().executeAsOneOrNull()
     }
 
-    suspend fun comboOccurrences(
-        type: TransactionType,
-        startInclusive: String,
-    ): List<ComboOccurrences> = withContext(ioDispatcher) {
-        tq.comboOccurrences(
-            type = type.name,
-            startInclusive = startInclusive,
-        ).executeAsList()
-    }
+    suspend fun comboOccurrences(type: TransactionType, startInclusive: String): List<ComboOccurrences> =
+        withContext(ioDispatcher) {
+            tq.comboOccurrences(
+                type = type.name,
+                startInclusive = startInclusive,
+            ).executeAsList()
+        }
 }

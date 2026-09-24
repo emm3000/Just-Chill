@@ -121,7 +121,8 @@ internal fun RecurringMovementRow(
                         color = colors.textTertiary,
                     )
                 } else {
-                    val amountColor: Color = if (item.type == TransactionType.Income) colors.success else colors.textPrimary
+                    val amountColor: Color =
+                        if (item.type == TransactionType.Income) colors.success else colors.textPrimary
                     Text(
                         text = item.formattedAmount,
                         style = type.amountS,

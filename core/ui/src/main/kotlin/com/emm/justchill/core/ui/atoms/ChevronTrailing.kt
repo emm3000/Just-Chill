@@ -19,7 +19,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
-fun ChevronTrailing(enabled: Boolean = true) {
+fun ChevronTrailing(modifier: Modifier = Modifier, enabled: Boolean = true) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val tint: Color = if (enabled) colors.textTertiary else colors.textDisabled
@@ -29,7 +29,7 @@ fun ChevronTrailing(enabled: Boolean = true) {
         imageVector = Icons.Outlined.ChevronRight,
         contentDescription = null,
         tint = tint,
-        modifier = Modifier.size(size),
+        modifier = modifier.size(size),
     )
 }
 

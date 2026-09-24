@@ -30,7 +30,7 @@ class EmmColorsContrastTest {
     }
 
     @Test
-    fun `DialogAction, OutlinedCta and EmmButton paint the disabled label on a ground it clears 4 dot 5 to 1 against`() {
+    fun `DialogAction, OutlinedCta and EmmButton disabled labels clear 4 dot 5 to 1 against their ground`() {
         val disabledActionLabel: Color = emmDarkColors.textTertiary
 
         val ratio: Double = contrastRatio(disabledActionLabel, emmDarkColors.bg)

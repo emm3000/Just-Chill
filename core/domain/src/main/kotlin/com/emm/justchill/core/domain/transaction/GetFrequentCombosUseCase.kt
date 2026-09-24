@@ -19,13 +19,15 @@ class GetFrequentCombosUseCase(
         limit: Int = DEFAULT_LIMIT,
         amount: Money? = null,
     ): List<FrequentCombo> {
-        val startInclusive = startOfDayDaysAgo(windowDays, clock, zone)
+        val startInclusive: String = startOfDayDaysAgo(windowDays, clock, zone)
         if (amount == null || amount == Money.Zero) {
             return transactionStatsRepository.topUsedCombos(type, startInclusive, limit)
         }
         val occurrences: List<ComboOccurrence> = transactionStatsRepository.comboOccurrences(type, startInclusive)
-        if (occurrences.isEmpty()) return emptyList()
+        return rankByContext(occurrences, amount, limit)
+    }
 
+    private fun rankByContext(occurrences: List<ComboOccurrence>, amount: Money, limit: Int): List<FrequentCombo> {
         val currentHour: Int = clock.now().toLocalDateTime(zone).hour
         val amountBandRadiusCents: Long = amountBandRadiusCents(amount)
 

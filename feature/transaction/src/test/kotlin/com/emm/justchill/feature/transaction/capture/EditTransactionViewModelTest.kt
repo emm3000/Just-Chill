@@ -16,13 +16,13 @@ import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionUpdate
 import com.emm.justchill.core.domain.transaction.UpdateTransactionUseCase
-import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
+import com.emm.justchill.core.ui.category.SelectableCategory
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.CapturingSlot
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.flow.MutableSharedFlow

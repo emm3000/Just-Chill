@@ -2,9 +2,9 @@ package com.emm.justchill.core
 
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.emm.justchill.core.SupabaseConfig
 import com.emm.justchill.core.database.JustChillDatabase
 import com.emm.justchill.core.database.provideDb
-import com.emm.justchill.core.SupabaseConfig
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.feature.auth.GoogleSignInLauncher
 import com.emm.justchill.feature.auth.GoogleSignInResult

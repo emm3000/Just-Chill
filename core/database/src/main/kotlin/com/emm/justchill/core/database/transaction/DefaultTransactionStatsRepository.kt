@@ -70,22 +70,20 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
             }
     }
 
-    override suspend fun comboOccurrences(
-        type: TransactionType,
-        startInclusive: String,
-    ): List<ComboOccurrence> = safeDbCall {
-        localDataSource.comboOccurrences(type, startInclusive)
-            .mapNotNull { row ->
-                val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
-                ComboOccurrence(
-                    accountId = AccountId(row.accountId),
-                    categoryId = CategoryId(row.categoryId),
-                    type = parsedType,
-                    amount = Money(row.amount),
-                    occurredAt = row.occurredAt,
-                )
-            }
-    }
+    override suspend fun comboOccurrences(type: TransactionType, startInclusive: String): List<ComboOccurrence> =
+        safeDbCall {
+            localDataSource.comboOccurrences(type, startInclusive)
+                .mapNotNull { row ->
+                    val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
+                    ComboOccurrence(
+                        accountId = AccountId(row.accountId),
+                        categoryId = CategoryId(row.categoryId),
+                        type = parsedType,
+                        amount = Money(row.amount),
+                        occurredAt = row.occurredAt,
+                    )
+                }
+        }
 
     override suspend fun lastUsedAccountId(): AccountId? = safeDbCall {
         localDataSource.lastUsedAccountId()?.let { AccountId(it) }

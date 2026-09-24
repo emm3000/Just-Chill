@@ -53,14 +53,13 @@ class BackupDisclosureSignalTest {
         assertFalse(signal.isPending.first())
     }
 
-    private fun signedInUndisclosedSignal(isAvailable: Boolean): BackupDisclosureSignal =
-        BackupDisclosureSignal(
-            getSessionStatus = GetSessionStatusUseCase(
-                mockk<AuthRepository> { every { sessionStatus } returns flowOf(AUTHENTICATED) },
-            ),
-            backupController = mockk<BackupController> { every { health } returns MutableStateFlow(UNDISCLOSED) },
-            backupAvailability = FakeBackupAvailability(isAvailable),
-        )
+    private fun signedInUndisclosedSignal(isAvailable: Boolean): BackupDisclosureSignal = BackupDisclosureSignal(
+        getSessionStatus = GetSessionStatusUseCase(
+            mockk<AuthRepository> { every { sessionStatus } returns flowOf(AUTHENTICATED) },
+        ),
+        backupController = mockk<BackupController> { every { health } returns MutableStateFlow(UNDISCLOSED) },
+        backupAvailability = FakeBackupAvailability(isAvailable),
+    )
 
     private companion object {
 

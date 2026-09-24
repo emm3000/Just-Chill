@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,11 +55,11 @@ import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
+import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.sheets.DatePickerSheet
 import com.emm.justchill.core.ui.theme.EmmColors
-import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -310,18 +309,31 @@ internal fun AddTransactionScreenContent(
         )
     }
 
-    if (state.openSheet == TransactionSheet.Account) {
-        AccountPickerSheet(
+    OpenSheet(
+        state = state,
+        onIntent = onIntent,
+        onAddNewCategory = onAddNewCategory,
+        onAddNewAccount = onAddNewAccount,
+    )
+}
+
+@Composable
+private fun OpenSheet(
+    state: AddTransactionUiState,
+    onIntent: (AddTransactionIntent) -> Unit,
+    onAddNewCategory: (CategoryType) -> Unit,
+    onAddNewAccount: () -> Unit,
+) {
+    when (state.openSheet) {
+        TransactionSheet.Account -> AccountPickerSheet(
             accounts = state.accounts,
             selectedAccountId = state.accountSelected?.accountId?.value,
             onSelect = { onIntent(AddTransactionIntent.OnAccountSelected(it)) },
             onDismiss = { onIntent(AddTransactionIntent.OnSheetDismissed) },
             onAddNew = { onAddNewAccount() },
         )
-    }
 
-    if (state.openSheet == TransactionSheet.Category) {
-        CategoryPickerSheet(
+        TransactionSheet.Category -> CategoryPickerSheet(
             categories = state.categories,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
             onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
@@ -329,22 +341,20 @@ internal fun AddTransactionScreenContent(
             onDismiss = { onIntent(AddTransactionIntent.OnSheetDismissed) },
             frequentCategoryIds = state.frequentCategoryIds,
         )
-    }
 
-    if (state.openSheet == TransactionSheet.Date) {
-        DatePickerSheet(
+        TransactionSheet.Date -> DatePickerSheet(
             currentDate = state.pickerDate,
             onConfirm = { date -> onIntent(AddTransactionIntent.OnDateSelected(date)) },
             onDismiss = { onIntent(AddTransactionIntent.OnSheetDismissed) },
         )
-    }
 
-    if (state.openSheet == TransactionSheet.Note) {
-        NoteSheet(
+        TransactionSheet.Note -> NoteSheet(
             initialNote = state.description,
             onSave = { note -> onIntent(AddTransactionIntent.OnDescriptionChange(note)) },
             onDismiss = { onIntent(AddTransactionIntent.OnSheetDismissed) },
         )
+
+        null -> Unit
     }
 }
 

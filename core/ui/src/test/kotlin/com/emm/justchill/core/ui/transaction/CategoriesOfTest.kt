@@ -20,9 +20,8 @@ class CategoriesOfTest {
         colorId = "green",
     )
 
-    private fun loaded(
-        categories: Map<CategoryType, List<SelectableCategory>> = emptyMap(),
-    ): Catalog.Loaded = Catalog.Loaded(accounts = emptyList(), categories = categories)
+    private fun loaded(categories: Map<CategoryType, List<SelectableCategory>> = emptyMap()): Catalog.Loaded =
+        Catalog.Loaded(accounts = emptyList(), categories = categories)
 
     @Test
     fun `loaded rows keep their order`() {

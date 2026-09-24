@@ -72,9 +72,9 @@ private val EmptyStateTileSize: Dp = 44.dp
 
 @Composable
 fun ReportScreen(
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onAddTransaction: () -> Unit = {},
-    onBack: () -> Unit,
     vm: ReportViewModel = koinViewModel(),
 ) {
     val state: ReportUiState by vm.state.collectAsStateWithLifecycle()

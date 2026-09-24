@@ -22,12 +22,9 @@ class FakeAccountRepository : AccountRepository {
 
     override fun default(): Flow<Account?> = flowOf()
 
-    override suspend fun create(account: AccountUpsert) {
-    }
+    override suspend fun create(account: AccountUpsert) = Unit
 
-    override suspend fun update(accountId: AccountId, account: AccountUpsert) {
-    }
+    override suspend fun update(accountId: AccountId, account: AccountUpsert) = Unit
 
-    override suspend fun delete(accountId: AccountId) {
-    }
+    override suspend fun delete(accountId: AccountId) = Unit
 }

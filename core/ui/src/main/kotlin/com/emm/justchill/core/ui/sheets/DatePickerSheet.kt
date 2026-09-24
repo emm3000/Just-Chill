@@ -188,10 +188,10 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                     .fillMaxWidth()
                     .padding(horizontal = spacing.s5),
             ) {
-                for (week in 0 until 6) {
+                for (week in 0 until CALENDAR_WEEKS) {
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        for (col in 0 until 7) {
-                            val date: LocalDate? = days[week * 7 + col]
+                        for (col in 0 until DAYS_IN_WEEK) {
+                            val date: LocalDate? = days[week * DAYS_IN_WEEK + col]
                             DayCell(
                                 date = date,
                                 isSelected = date == selectedDate,
@@ -306,6 +306,8 @@ private fun DayCell(
 }
 
 private const val CALENDAR_GRID_CELLS = 42
+private const val CALENDAR_WEEKS: Int = 6
+private const val DAYS_IN_WEEK: Int = 7
 
 private fun LocalDate.firstOfMonth(): LocalDate = LocalDate(year, month, 1)
 

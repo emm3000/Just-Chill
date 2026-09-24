@@ -10,13 +10,13 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.category.CategoryUi
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.transaction.TransactionUi
-import kotlin.test.Test
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.Test
 
 @RunWith(RobolectricTestRunner::class)
 class SeeTransactionsMonthSummaryLabelsTest {

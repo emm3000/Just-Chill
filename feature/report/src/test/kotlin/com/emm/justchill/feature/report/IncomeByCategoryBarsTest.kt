@@ -5,10 +5,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.feature.report.components.IncomeByCategoryBars
-import kotlin.test.Test
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.Test
 
 @RunWith(RobolectricTestRunner::class)
 class IncomeByCategoryBarsTest {

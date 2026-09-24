@@ -12,10 +12,7 @@ import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
-fun EntryProviderScope<NavKey>.accountEntries(
-    bindings: NavHostBindings,
-    onOpenLoans: (AppNavigator) -> Unit,
-) {
+fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings, onOpenLoans: (AppNavigator) -> Unit) {
     entry<AccountsRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: AccountsViewModel = koinViewModel()

@@ -64,6 +64,8 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
+private const val SHEET_HEIGHT_FRACTION: Float = 0.8f
+
 @Composable
 internal fun CategoryFilterSheet(
     items: List<CategorySheetItem>,
@@ -105,7 +107,7 @@ internal fun CategoryFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.8f),
+                .fillMaxHeight(SHEET_HEIGHT_FRACTION),
         ) {
             Row(
                 modifier = Modifier
@@ -222,7 +224,12 @@ internal fun CategoryFilterSheet(
                         onClear()
                         onDismiss()
                     },
-                    modifier = Modifier.padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4),
+                    modifier = Modifier.padding(
+                        start = spacing.s4,
+                        end = spacing.s4,
+                        top = spacing.s3,
+                        bottom = spacing.s4,
+                    ),
                     leading = {
                         Icon(
                             imageVector = Icons.Outlined.Close,

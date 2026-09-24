@@ -194,7 +194,8 @@ private fun AuthFormStep(
             )
             Spacer(Modifier.height(spacing.s2))
             Text(
-                text = "Tu data vive en tu celular. Con una cuenta, que es opcional, guardas una copia de respaldo y tú decides cuándo restaurarla.",
+                text = "Tu data vive en tu celular. Con una cuenta, que es opcional, guardas una copia de respaldo " +
+                    "y tú decides cuándo restaurarla.",
                 style = type.bodyM,
                 color = colors.textSecondary,
             )

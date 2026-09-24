@@ -46,6 +46,7 @@ import kotlinx.coroutines.delay
 
 // A plot height, not a gap: no EmmSpacing step reaches it (s16 is 64dp).
 private val CHART_HEIGHT: Dp = 120.dp
+private const val BAR_STAGGER_MS: Long = 50L
 
 @Composable
 fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier) {
@@ -62,7 +63,7 @@ fun VerticalBarChart(items: List<MonthlyBarItem>, modifier: Modifier = Modifier)
 
     items.forEachIndexed { index, _ ->
         LaunchedEffect(items[index].incomeAmount, items[index].expenseAmount) {
-            delay(index * 50L)
+            delay(index * BAR_STAGGER_MS)
             animatables[index].animateTo(
                 targetValue = 1f,
                 animationSpec = tween(durationMillis = 300),

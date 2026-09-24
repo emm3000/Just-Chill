@@ -21,10 +21,10 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
-fun CategoryDot(color: Color) {
+fun CategoryDot(color: Color, modifier: Modifier = Modifier) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(spacing.s2)
             .clip(CircleShape)
             .background(color),
@@ -34,11 +34,11 @@ fun CategoryDot(color: Color) {
 // A row whose lines take the dot one at a time keeps the slot on every line: a text column that
 // starts 8dp further right on the lines without one is the ragged column the rules forbid.
 @Composable
-fun CategoryDotSlot(color: Color?) {
+fun CategoryDotSlot(color: Color?, modifier: Modifier = Modifier) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.size(spacing.s2),
+        modifier = modifier.size(spacing.s2),
     ) {
         if (color != null) {
             CategoryDot(color = color)

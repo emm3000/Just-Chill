@@ -57,6 +57,8 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
+private const val PAUSED_ROW_ALPHA: Float = 0.5f
+
 @Composable
 fun RecurringMovementsScreen(
     state: RecurringMovementsUiState,
@@ -130,7 +132,7 @@ fun RecurringMovementsScreen(
                         )
                     }
                     items(state.pausedItems, key = { it.id }) { item ->
-                        Box(modifier = Modifier.alpha(0.5f)) {
+                        Box(modifier = Modifier.alpha(PAUSED_ROW_ALPHA)) {
                             RecurringMovementRow(
                                 item = item,
                                 onEdit = { onIntent(RecurringMovementsIntent.NavigateToEdit(item.id)) },

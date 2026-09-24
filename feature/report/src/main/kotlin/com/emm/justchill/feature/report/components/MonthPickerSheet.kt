@@ -49,6 +49,8 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.Month
 
+private const val MONTH_GRID_COLUMNS: Int = 3
+
 @Composable
 fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismiss: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
@@ -133,7 +135,7 @@ fun MonthPickerSheet(current: YearMonth, onSelect: (YearMonth) -> Unit, onDismis
         }
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            columns = GridCells.Fixed(MONTH_GRID_COLUMNS),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s4, vertical = spacing.s2)

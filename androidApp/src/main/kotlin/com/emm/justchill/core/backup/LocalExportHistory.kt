@@ -12,11 +12,8 @@ import kotlin.time.Instant
 // The file the user saves themselves, never the cloud snapshot pipeline: no userId scopes the key,
 // because an exported file leaves the device whoever is signed in, and every
 // DefaultBackupMetadataStore key is per-user by construction.
-class LocalExportHistory(
-    private val settings: Settings,
-    private val clock: Clock,
-    private val timeZone: TimeZone,
-) : ExportHistory {
+class LocalExportHistory(private val settings: Settings, private val clock: Clock, private val timeZone: TimeZone) :
+    ExportHistory {
 
     // today is the caller's, never this class's: TodayFlow is the app's one source of it.
     override fun daysSinceLastExport(today: LocalDate): Int? {

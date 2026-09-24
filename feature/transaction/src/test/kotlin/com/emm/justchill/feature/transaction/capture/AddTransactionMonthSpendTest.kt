@@ -13,7 +13,6 @@ import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
 import com.emm.justchill.core.domain.transaction.GetMonthSpendUseCase
-import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository

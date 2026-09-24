@@ -14,10 +14,7 @@ import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
 import org.koin.compose.viewmodel.koinViewModel
 
-fun EntryProviderScope<NavKey>.reportEntries(
-    bindings: NavHostBindings,
-    onAddTransaction: (AppNavigator) -> Unit,
-) {
+fun EntryProviderScope<NavKey>.reportEntries(bindings: NavHostBindings, onAddTransaction: (AppNavigator) -> Unit) {
     entry<ReportRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         ReportEntry(

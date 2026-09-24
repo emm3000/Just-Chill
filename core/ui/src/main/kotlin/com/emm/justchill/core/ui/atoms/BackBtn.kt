@@ -15,10 +15,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
-fun BackBtn(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun BackBtn(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     IconBtn(

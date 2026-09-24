@@ -48,8 +48,20 @@ class ComboOccurrencesTest {
 
         assertEquals(
             listOf(
-                ComboOccurrence(AccountId("acc-1"), CategoryId("cat-1"), TransactionType.Spend, Money(1000L), "2026-08-10T09:00:00"),
-                ComboOccurrence(AccountId("acc-1"), CategoryId("cat-2"), TransactionType.Spend, Money(2000L), "2026-08-11T21:00:00"),
+                ComboOccurrence(
+                    AccountId("acc-1"),
+                    CategoryId("cat-1"),
+                    TransactionType.Spend,
+                    Money(1000L),
+                    "2026-08-10T09:00:00",
+                ),
+                ComboOccurrence(
+                    AccountId("acc-1"),
+                    CategoryId("cat-2"),
+                    TransactionType.Spend,
+                    Money(2000L),
+                    "2026-08-11T21:00:00",
+                ),
             ),
             occurrences,
         )
