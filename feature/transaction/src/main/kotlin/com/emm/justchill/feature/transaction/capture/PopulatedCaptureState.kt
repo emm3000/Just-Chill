@@ -53,3 +53,18 @@ internal fun populatedCaptureState(): AddTransactionUiState {
         monthSpend = MonthSpend(YearMonth(PREVIEW_YEAR, Month.SEPTEMBER), Money(MONTH_SPEND_CENTS)),
     )
 }
+
+internal fun noAccountsCaptureState(): AddTransactionUiState {
+    val populated: AddTransactionUiState = populatedCaptureState()
+    return populated.copy(
+        catalog = Catalog.Loaded(
+            accounts = emptyList(),
+            categories = mapOf(CategoryType.Spend to populated.categories),
+        ),
+        frequentUsage = FrequentUsage(
+            loadedFor = TransactionType.Spend,
+            categoryIds = emptyList(),
+            combos = emptyList(),
+        ),
+    )
+}
