@@ -2,6 +2,9 @@ package com.emm.justchill.feature.transaction.capture
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,12 +59,12 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.transaction.Catalog
-import com.emm.justchill.feature.transaction.capture.components.CapturePadLayout
 import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
 import com.emm.justchill.feature.transaction.capture.components.PadArrangement
 import com.emm.justchill.feature.transaction.capture.components.PadForm
 import com.emm.justchill.feature.transaction.capture.components.SaveMotion
 import com.emm.justchill.feature.transaction.capture.components.isStackedTall
+import com.emm.justchill.feature.transaction.capture.components.padArrangement
 import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
 import kotlinx.coroutines.Job
@@ -170,47 +173,51 @@ internal fun AddTransactionScreenContent(
         kind.describeAmount(centsToMoney(state.amount))
     }
 
-    CapturePadLayout(
-        menu = { IconBtn(icon = Icons.Outlined.Menu, onClick = onOpenMenu, contentDescription = "Abrir el menú") },
-        monthLine = { lineModifier ->
-            MonthSpendLine(
-                label = state.monthSpendLabel,
-                amount = motion.displayedTotal(state.monthSpendAmount),
-                onClick = onOpenTransactions,
-                modifier = with(motion) { lineModifier.monthLineTarget() },
-            )
-        },
-        hero = { heroModifier ->
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.bg),
+    ) {
+        val arrangement: PadArrangement = padArrangement(maxHeight)
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.padding(start = spacing.s4),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconBtn(icon = Icons.Outlined.Menu, onClick = onOpenMenu, contentDescription = "Abrir el menú")
+                MonthSpendLine(
+                    label = state.monthSpendLabel,
+                    amount = motion.displayedTotal(state.monthSpendAmount),
+                    onClick = onOpenTransactions,
+                    modifier = with(motion) { Modifier.weight(1f).monthLineTarget() },
+                )
+            }
             PadHero(
                 amount = state.amount,
                 kind = kind,
                 motion = motion,
-                modifier = heroModifier
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
                     .padding(horizontal = spacing.s6)
                     .clearAndSetSemantics { contentDescription = amountDescription },
             )
-        },
-        form = { arrangement ->
             PadForm(
                 state = state,
                 onIntent = onIntent,
                 onAddNewAccount = onAddNewAccount,
                 arrangement = arrangement,
             )
-        },
-        numpad = { arrangement ->
             PadNumpad(
                 amount = state.amount,
                 kind = kind,
                 onIntent = onIntent,
                 arrangement = arrangement,
             )
-        },
-        cta = { StickyCTA(label = ctaLabel, interaction = ctaInteraction(state), onClick = onSave) },
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.bg),
-    )
+            StickyCTA(label = ctaLabel, interaction = ctaInteraction(state), onClick = onSave)
+        }
+    }
 
     OpenSheet(
         state = state,
