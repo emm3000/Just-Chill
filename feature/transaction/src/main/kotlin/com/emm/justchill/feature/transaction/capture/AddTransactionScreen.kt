@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,13 +29,12 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
+import com.emm.justchill.core.ui.NumpadKeyHeight
 import com.emm.justchill.core.ui.NumpadSign
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
-import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.core.ui.atoms.FrequentComboChip
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SelectorChip
 import com.emm.justchill.core.ui.atoms.StickyCTA
@@ -57,15 +55,20 @@ import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.sheets.DatePickerSheet
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.components.ACCOUNT_CHIP_WEIGHT
 import com.emm.justchill.feature.transaction.capture.components.CATEGORY_CHIP_WEIGHT
+import com.emm.justchill.feature.transaction.capture.components.CapturePadLayout
 import com.emm.justchill.feature.transaction.capture.components.FormMetaRow
+import com.emm.justchill.feature.transaction.capture.components.FrequentCombos
 import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
+import com.emm.justchill.feature.transaction.capture.components.PadArrangement
 import com.emm.justchill.feature.transaction.capture.components.SaveMotion
 import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
@@ -176,134 +179,48 @@ internal fun AddTransactionScreenContent(
         kind.describeAmount(centsToMoney(state.amount))
     }
 
-    Column(
+    CapturePadLayout(
+        menu = { IconBtn(icon = Icons.Outlined.Menu, onClick = onOpenMenu, contentDescription = "Abrir el menú") },
+        monthLine = { lineModifier ->
+            MonthSpendLine(
+                label = state.monthSpendLabel,
+                amount = motion.displayedTotal(state.monthSpendAmount),
+                onClick = onOpenTransactions,
+                modifier = with(motion) { lineModifier.monthLineTarget() },
+            )
+        },
+        hero = { heroModifier ->
+            PadHero(
+                amount = state.amount,
+                kind = kind,
+                motion = motion,
+                modifier = heroModifier
+                    .padding(horizontal = spacing.s6)
+                    .clearAndSetSemantics { contentDescription = amountDescription },
+            )
+        },
+        form = { arrangement ->
+            PadForm(
+                state = state,
+                onIntent = onIntent,
+                onAddNewAccount = onAddNewAccount,
+                showsComboLabel = arrangement == PadArrangement.Stacked,
+            )
+        },
+        numpad = { arrangement, numpadModifier ->
+            PadNumpad(
+                amount = state.amount,
+                kind = kind,
+                onIntent = onIntent,
+                arrangement = arrangement,
+                modifier = numpadModifier,
+            )
+        },
+        cta = { StickyCTA(label = ctaLabel, interaction = ctaInteraction(state), onClick = onSave) },
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg),
-    ) {
-        FormHeader(onOpenMenu = onOpenMenu)
-
-        MonthSpendLine(
-            label = state.monthSpendLabel,
-            amount = motion.displayedTotal(state.monthSpendAmount),
-            onClick = onOpenTransactions,
-            modifier = with(motion) { Modifier.monthLineTarget() },
-        )
-
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = spacing.s6)
-                .clearAndSetSemantics { contentDescription = amountDescription },
-        ) {
-            AmountHero(
-                value = centsToSoles(state.amount),
-                size = type.amountHero.fontSize,
-                tone = kind.amountTone,
-                showCaret = true,
-                signed = true,
-                modifier = with(motion) { Modifier.restingHero() },
-            )
-            motion.flyingAmount?.let { saved ->
-                AmountHero(
-                    value = centsToSoles(moneyCentsString(saved)),
-                    size = type.amountHero.fontSize,
-                    tone = kind.amountTone,
-                    signed = true,
-                    modifier = with(motion) { Modifier.inFlight() },
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.s4),
-            horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-        ) {
-            if (noAccounts) {
-                SelectorChip(
-                    label = "Crear cuenta",
-                    dotColor = null,
-                    onClickLabel = "Crear una cuenta",
-                    onClick = onAddNewAccount,
-                    trailingIcon = Icons.Outlined.Add,
-                    modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
-                )
-            } else {
-                SelectorChip(
-                    label = state.accountSelected?.name ?: "—",
-                    dotColor = null,
-                    onClickLabel = "Cambiar la cuenta",
-                    onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Account)) },
-                    modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
-                )
-            }
-
-            SelectorChip(
-                label = state.categorySelected?.name ?: "—",
-                dotColor = state.categorySelected?.let { colors.resolvedColor(it.colorId) },
-                onClickLabel = "Cambiar la categoría",
-                onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
-                modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT),
-            )
-        }
-
-        FormMetaRow(
-            dateLabel = state.dateLabel,
-            note = state.description,
-            onDateClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Date)) },
-            onNoteClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.s6),
-        )
-
-        if (state.frequentCombos.isNotEmpty()) {
-            FrequentCombos(
-                combos = state.frequentCombos,
-                selectedAccountId = state.accountSelected?.accountId?.value,
-                selectedCategoryId = state.categorySelected?.categoryId?.value,
-                onSelect = { combo -> onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.s4)
-                    .padding(top = spacing.s3, bottom = spacing.s3),
-            )
-        }
-
-        Numpad(
-            onDigit = { digit ->
-                val newAmount = (state.amount + digit).take(MAX_AMOUNT_DIGITS)
-                onIntent(AddTransactionIntent.OnAmountChange(newAmount))
-            },
-            onDoubleZero = {
-                val newAmount = (state.amount + "00").take(MAX_AMOUNT_DIGITS)
-                onIntent(AddTransactionIntent.OnAmountChange(newAmount))
-            },
-            onBackspace = {
-                val newAmount = state.amount.dropLast(1)
-                onIntent(AddTransactionIntent.OnAmountChange(newAmount))
-            },
-            sign = NumpadSign(
-                tone = kind.amountTone,
-                contentDescription = kind.signDescription,
-                onClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(kind.toggledType)) },
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.s4)
-                .padding(bottom = spacing.s2),
-        )
-
-        StickyCTA(
-            label = ctaLabel,
-            interaction = ctaInteraction(state),
-            onClick = onSave,
-        )
-    }
+    )
 
     OpenSheet(
         state = state,
@@ -355,47 +272,127 @@ private fun OpenSheet(
 }
 
 @Composable
-private fun FormHeader(onOpenMenu: () -> Unit) {
-    val spacing = LocalEmmSpacing.current
+private fun PadHero(amount: String, kind: TransactionKindContent, motion: SaveMotion, modifier: Modifier = Modifier) {
+    val type: EmmType = LocalEmmType.current
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.s4, vertical = spacing.s2),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconBtn(icon = Icons.Outlined.Menu, onClick = onOpenMenu, contentDescription = "Abrir el menú")
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+        AmountHero(
+            value = centsToSoles(amount),
+            size = type.amountHero.fontSize,
+            tone = kind.amountTone,
+            showCaret = true,
+            signed = true,
+            modifier = with(motion) { Modifier.restingHero() },
+        )
+        motion.flyingAmount?.let { saved ->
+            AmountHero(
+                value = centsToSoles(moneyCentsString(saved)),
+                size = type.amountHero.fontSize,
+                tone = kind.amountTone,
+                signed = true,
+                modifier = with(motion) { Modifier.inFlight() },
+            )
+        }
     }
 }
 
 @Composable
-private fun FrequentCombos(
-    combos: List<FrequentComboUi>,
-    selectedAccountId: String?,
-    selectedCategoryId: String?,
-    onSelect: (FrequentComboUi) -> Unit,
-    modifier: Modifier = Modifier,
+private fun PadForm(
+    state: AddTransactionUiState,
+    onIntent: (AddTransactionIntent) -> Unit,
+    onAddNewAccount: () -> Unit,
+    showsComboLabel: Boolean,
 ) {
     val colors: EmmColors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
-        Eyebrow(text = "Tus combinaciones frecuentes", modifier = Modifier.padding(start = spacing.s2))
-
-        FlowRow(
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.s4),
             horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-            verticalArrangement = Arrangement.spacedBy(spacing.s1),
         ) {
-            combos.forEach { combo ->
-                FrequentComboChip(
-                    label = combo.label,
-                    dotColor = combo.colorId?.let(colors::resolvedColor),
-                    onClick = { onSelect(combo) },
-                    active = combo.accountId == selectedAccountId && combo.categoryId == selectedCategoryId,
+            if (state.hasNoAccounts) {
+                SelectorChip(
+                    label = "Crear cuenta",
+                    dotColor = null,
+                    onClickLabel = "Crear una cuenta",
+                    onClick = onAddNewAccount,
+                    trailingIcon = Icons.Outlined.Add,
+                    modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
+                )
+            } else {
+                SelectorChip(
+                    label = state.accountSelected?.name ?: "—",
+                    dotColor = null,
+                    onClickLabel = "Cambiar la cuenta",
+                    onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Account)) },
+                    modifier = Modifier.weight(ACCOUNT_CHIP_WEIGHT),
                 )
             }
+
+            SelectorChip(
+                label = state.categorySelected?.name ?: "—",
+                dotColor = state.categorySelected?.let { colors.resolvedColor(it.colorId) },
+                onClickLabel = "Cambiar la categoría",
+                onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
+                modifier = Modifier.weight(CATEGORY_CHIP_WEIGHT),
+            )
+        }
+
+        FormMetaRow(
+            dateLabel = state.dateLabel,
+            note = state.description,
+            onDateClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Date)) },
+            onNoteClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Note)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.s6),
+        )
+
+        if (state.frequentCombos.isNotEmpty()) {
+            FrequentCombos(
+                combos = state.frequentCombos,
+                selectedAccountId = state.accountSelected?.accountId?.value,
+                selectedCategoryId = state.categorySelected?.categoryId?.value,
+                onSelect = { combo -> onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
+                showsLabel = showsComboLabel,
+                modifier = Modifier.padding(vertical = if (showsComboLabel) spacing.s3 else spacing.s0),
+            )
         }
     }
+}
+
+@Composable
+private fun PadNumpad(
+    amount: String,
+    kind: TransactionKindContent,
+    onIntent: (AddTransactionIntent) -> Unit,
+    arrangement: PadArrangement,
+    modifier: Modifier = Modifier,
+) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val isSideBySide: Boolean = arrangement == PadArrangement.SideBySide
+    val onAmountChange: (String) -> Unit = { newAmount ->
+        onIntent(AddTransactionIntent.OnAmountChange(newAmount.take(MAX_AMOUNT_DIGITS)))
+    }
+
+    Numpad(
+        onDigit = { digit -> onAmountChange(amount + digit) },
+        onDoubleZero = { onAmountChange(amount + "00") },
+        onBackspace = { onAmountChange(amount.dropLast(1)) },
+        sign = NumpadSign(
+            tone = kind.amountTone,
+            contentDescription = kind.signDescription,
+            onClick = { onIntent(AddTransactionIntent.OnTransactionTypeChange(kind.toggledType)) },
+        ),
+        keyHeight = if (isSideBySide) spacing.s12 else NumpadKeyHeight,
+        keyGap = if (isSideBySide) spacing.s1 else spacing.s2,
+        modifier = modifier
+            .padding(horizontal = spacing.s4)
+            .padding(bottom = if (isSideBySide) spacing.s0 else spacing.s2),
+    )
 }
 
 @Preview

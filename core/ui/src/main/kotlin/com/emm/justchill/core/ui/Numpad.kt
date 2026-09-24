@@ -44,6 +44,8 @@ fun Numpad(
     onBackspace: () -> Unit,
     modifier: Modifier = Modifier,
     sign: NumpadSign? = null,
+    keyHeight: Dp = NumpadKeyHeight,
+    keyGap: Dp = LocalEmmSpacing.current.s2,
 ) {
     val colors = LocalEmmColors.current
     val radii = LocalEmmRadii.current
@@ -65,12 +67,12 @@ fun Numpad(
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(spacing.s2),
+        verticalArrangement = Arrangement.spacedBy(keyGap),
     ) {
         rows.forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(spacing.s2),
+                horizontalArrangement = Arrangement.spacedBy(keyGap),
             ) {
                 row.forEach { key ->
                     val isEditingKey: Boolean = key !is NumKey.Digit
@@ -80,7 +82,7 @@ fun Numpad(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .weight(1f)
-                            .height(NUMPAD_KEY_HEIGHT)
+                            .height(keyHeight)
                             .clip(radii.rM)
                             .background(bgColor)
                             .border(BorderStroke(spacing.hairline, colors.border), radii.rM)
@@ -140,7 +142,7 @@ private fun KeyGlyph(text: String, color: Color, modifier: Modifier = Modifier) 
 private const val SIGN_KEY_GLYPH = "±"
 
 // Matches CtaHeight so the keys and the save button below them read as one height; no EmmSpacing step is 52dp.
-private val NUMPAD_KEY_HEIGHT: Dp = 52.dp
+val NumpadKeyHeight: Dp = 52.dp
 
 // Sits between amountLead (18sp) and amountCard (32sp); no EmmType amount role is 22sp.
 private val KEY_GLYPH_FONT_SIZE: TextUnit = 22.sp
