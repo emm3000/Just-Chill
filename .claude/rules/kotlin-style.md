@@ -53,18 +53,13 @@ When you delete code, delete it. Git has the history.
 - Prefer expression bodies for functions that are genuinely one expression, with the return type still declared.
 - Prefer `sealed interface` over `enum` when the variants carry data.
 - Use `require` / `check` in `init` to reject invalid state at construction — see `principles.md`, fail fast.
-- A signature that fits in 120 columns sits on one line; a hand-wrapped short signature is a review comment.
+- A signature that fits in 120 columns sits on one line; detekt's formatting rules rewrite a hand-wrapped short one.
 
 ## Complexity limits
 
-No linter runs in this repo, and none is coming back (ADR 016). These limits are review-enforced, and the numbers are the ones the current code was written against:
+detekt enforces them on the gate (ADR 018). The numbers live in `config/detekt/detekt.yml` and nowhere else: nesting depth, real returns per function (a labeled return out of a lambda is not one), functions per file, cyclomatic complexity, and function length, which holds in tests too. Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return. `@Composable` and `@Preview` functions are exempt from the length limit — see Compose sizing below, where decomposition is the measure instead.
 
-- At most 4 levels of nesting. Nested `also` / `apply` / `run` / `let` chains get refactored into named intermediate functions or an early return.
-- At most 2 real returns per function; a labeled return out of a lambda is not one. More than two means the function should be split.
-- At most 8 functions per file — the limit the repo leans on for Compose decomposition.
-- Cyclomatic complexity around 14 per function, and 60 lines is a long function in production and in a test alike. `@Composable` and `@Preview` functions are exempt from the length number — see Compose sizing below, where decomposition is the measure instead.
-
-`./gradlew qualityGate` must be green before every commit, but it compiles and tests; it never judges style. Passing it is necessary, never sufficient: a reviewer may require a change no number here forbids.
+A finding is fixed in code or its rule is changed in that file; there is no baseline. Passing the gate is necessary, never sufficient: a reviewer may require a change no rule forbids.
 
 ### Compose sizing
 
@@ -74,7 +69,7 @@ A parameter carrying a default does not count toward coupling: the number that m
 
 ### Check before committing
 
-1. More than 4 levels of nesting? Extract a function.
+1. Too deep to read? Extract a function.
 2. A chain of `else if`? Use `when`, or extract functions.
 3. A function doing several things? Split it — see `principles.md`, SLAP.
 4. Nested `also` / `apply` / `run` / `let`? Refactor into named steps.

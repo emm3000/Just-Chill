@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded by 018
 date: 2026-09-18
 ---
 # No linter: the gate compiles and tests

@@ -55,6 +55,6 @@ Placeholder copy in the screen is a literal Spanish string, tuteo. A message a V
 - A feature depends on `:core:ui` and `:core:domain` only, plus `:core:testing` on the test edge; `checkModuleBoundaries` fails anything else.
 - No Compose import in a ViewModel or a UiState; `checkComposeFreeViewModels` is on the gate.
 - Explicit types on every property and local; no comments.
-- At most 4 levels of nesting, no nested `also/apply/run/let`, ≤ 2 real returns per function — review-enforced, see `.claude/rules/kotlin-style.md`.
+- No nested `also/apply/run/let`; nesting, returns, length and functions per file are detekt's, on the gate — see `.claude/rules/kotlin-style.md`.
 
 After creating the files, run `./gradlew qualityGate assembleDevDebug`.

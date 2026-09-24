@@ -26,8 +26,8 @@ Review the pending changes (staged + unstaged) against `CLAUDE.md` and `.claude/
    - New shared components live in `core/ui/atoms/` with a `@Preview` in `EmmTheme`?
    - Every new route `@Serializable`?
 
-4. **Complexity (`.claude/rules/kotlin-style.md`, review-enforced)**
-   - More than 4 levels of nesting? No nested `also/apply/run/let`? ≤ 2 real returns per function?
+4. **Complexity (`.claude/rules/kotlin-style.md`; detekt holds the numbers)**
+   - No nested `also/apply/run/let`? Any rule switched off or loosened in `config/detekt/detekt.yml` without a reason in the PR?
    - A function or file doing several things that should be split?
 
 5. **Local-first and data**
