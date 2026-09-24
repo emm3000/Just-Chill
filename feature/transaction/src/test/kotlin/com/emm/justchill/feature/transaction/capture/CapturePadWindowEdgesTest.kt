@@ -105,6 +105,7 @@ class CapturePadWindowEdgesTest(private val width: Int, private val height: Int,
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}x{1} at font scale {2}")
         fun cells(): List<Array<Any>> = listOf(
             360 to 640,
+            360 to 568,
             320 to 640,
             800 to 360,
             360 to 350,

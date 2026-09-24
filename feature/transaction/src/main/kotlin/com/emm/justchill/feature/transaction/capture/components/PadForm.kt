@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.ui.atoms.SelectorChip
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -27,7 +28,7 @@ internal fun PadForm(
     arrangement: PadArrangement,
 ) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val isStacked: Boolean = !arrangement.isSideBySide
+    val isTall: Boolean = arrangement == PadArrangement.StackedTall
     val isNarrow: Boolean = arrangement == PadArrangement.SideBySideNarrow
 
     Column {
@@ -68,9 +69,9 @@ internal fun PadForm(
                 selectedAccountId = state.accountSelected?.accountId?.value,
                 selectedCategoryId = state.categorySelected?.categoryId?.value,
                 onSelect = { combo -> onIntent(AddTransactionIntent.OnFrequentComboSelected(combo)) },
-                showsLabel = isStacked,
-                wraps = arrangement == PadArrangement.StackedTall,
-                modifier = Modifier.padding(vertical = if (isStacked) spacing.s3 else spacing.s0),
+                showsLabel = isTall,
+                wraps = isTall,
+                modifier = Modifier.padding(vertical = spacing.comboGap(arrangement)),
             )
         }
     }
@@ -118,4 +119,10 @@ private fun CategoryChip(
         onClick = { onIntent(AddTransactionIntent.OnSheetRequested(TransactionSheet.Category)) },
         modifier = modifier,
     )
+}
+
+private fun EmmSpacing.comboGap(arrangement: PadArrangement): Dp = when (arrangement) {
+    PadArrangement.StackedTall -> s3
+    PadArrangement.StackedShort -> s1
+    PadArrangement.SideBySide, PadArrangement.SideBySideNarrow -> s0
 }

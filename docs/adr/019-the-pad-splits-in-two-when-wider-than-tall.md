@@ -22,7 +22,10 @@ tap; the save stays one white full-width button under everything.
   above it. The combos wrap. 728dp is the fixed column (~573dp) plus three
   wrapped combo rows and the hero at `amountHero`.
 - **Taller than wide, shorter than that:** the same column, but the combos are
-  one row that scrolls sideways.
+  one row that scrolls sideways without their eyebrow, 4dp above and below
+  it, and the keypad keeps 52dp keys with 4dp gaps and no bottom padding.
+  That returns 52dp to the hero, which keeps `amountHero` size on a 360x640dp
+  phone once the status bar and a three-button bar take 72dp (#418).
 - **Wider than tall:** two panes. The menu and hero share the top row and take
   the leftover height; the month total, selectors, date and note and combos
   sit on the left; the keypad sits on the right; the save spans the bottom.
