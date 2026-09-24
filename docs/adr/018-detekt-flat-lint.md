@@ -32,6 +32,8 @@ and per source set on every Kotlin module, whatever the extension says.
   a suppressed finding never fails the task, so a CI run with `autoCorrect` on
   would rewrite its own checkout and pass. Reading `CI` keeps every workflow
   command as it was and holds `uploadApk` and `uploadRelease` to the same rule.
+  Only a run with `autoCorrect` off goes through the build cache, since a
+  correcting run restored from it would skip the rewrite and pass uncorrected.
 
 ## Why the flat task cannot go quiet
 

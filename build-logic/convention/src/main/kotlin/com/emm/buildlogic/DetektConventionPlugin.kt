@@ -27,6 +27,7 @@ class DetektConventionPlugin : Plugin<Project> {
         rules: NamedDomainObjectProvider<Configuration>,
     ) {
         val root: Directory = isolated.rootProject.projectDirectory
+        val corrects: Provider<Boolean> = correctsOutsideCi()
         tasks.register<Detekt>(TASK) {
             description = "Runs detekt over every Kotlin source under src/ of this module, without type resolution."
             detektClasspath.from(cli)
@@ -37,7 +38,8 @@ class DetektConventionPlugin : Plugin<Project> {
             buildUponDefaultConfig.set(true)
             allRules.set(false)
             disableDefaultRuleSets.set(false)
-            autoCorrect.set(correctsOutsideCi())
+            autoCorrect.set(corrects)
+            outputs.cacheIf { !corrects.get() }
             parallel.set(true)
             debug.set(false)
             ignoreFailures.set(false)
