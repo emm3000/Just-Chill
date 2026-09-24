@@ -19,7 +19,12 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 
 internal const val PAD_FRAME_TAG: String = "frame"
 
-internal val PAD_WINDOWS: List<Pair<Int, Int>> = listOf(
+internal val REDMI_INSIDE_BARS_WINDOWS: List<Pair<Int, Int>> = listOf(
+    360 to 728,
+    360 to 720,
+)
+
+internal val PAD_WINDOWS: List<Pair<Int, Int>> = REDMI_INSIDE_BARS_WINDOWS + listOf(
     360 to 640,
     360 to 568,
     320 to 640,

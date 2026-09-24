@@ -2,7 +2,6 @@ package com.emm.justchill.feature.transaction.capture
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,10 +60,10 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
 import com.emm.justchill.feature.transaction.capture.components.PadArrangement
+import com.emm.justchill.feature.transaction.capture.components.PadArrangementLayout
 import com.emm.justchill.feature.transaction.capture.components.PadForm
 import com.emm.justchill.feature.transaction.capture.components.SaveMotion
 import com.emm.justchill.feature.transaction.capture.components.isStackedTall
-import com.emm.justchill.feature.transaction.capture.components.padArrangement
 import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
 import kotlinx.coroutines.Job
@@ -173,13 +172,12 @@ internal fun AddTransactionScreenContent(
         kind.describeAmount(centsToMoney(state.amount))
     }
 
-    BoxWithConstraints(
+    PadArrangementLayout(
+        heroFontSize = LocalEmmType.current.amountHero.fontSize,
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg),
-    ) {
-        val arrangement: PadArrangement = padArrangement(maxHeight)
-
+    ) { arrangement: PadArrangement ->
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier.padding(start = spacing.s4),
