@@ -27,4 +27,4 @@ What this module exports: `app.cash.sqldelight:coroutines-extensions` is `implem
 ## Testing
 
 - Host tests (JUnit4 + MockK) in `core/database/src/test/kotlin/`: mappers, enum parsing, the snapshot store, plus plain `kotlin.test` suites. `./gradlew :core:database:testDebugUnitTest`. A snapshot test that starts from a JSON file lives in `:androidApp`, the only module that sees `:core:backup` too.
-- Instrumented tests in `core/database/src/androidTest/`: the `MigrationV*Test`s plus `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. `./gradlew :core:database:connectedDebugAndroidTest` on the `medium_phone` emulator; the only thing that exercises migrations against the real `AndroidSqliteDriver`.
+- Instrumented tests in `core/database/src/androidTest/`: the `MigrationV*Test`s plus `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. `./gradlew :core:database:connectedDebugAndroidTest` on `justchill-api36`; the only thing that exercises migrations against the real `AndroidSqliteDriver`.

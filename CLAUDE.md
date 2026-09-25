@@ -78,7 +78,7 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
 - `./gradlew :feature:transaction:validateDebugScreenshotTest` — the capture pad's screenshot matrix (`@PreviewWindowEdges`), on the gate; `updateDebugScreenshotTest --rerun` re-renders the references after an intended visual change. Update never deletes a stale PNG: clear `src/screenshotTestDebug/reference/` first when a cell is renamed or dropped.
 - `./gradlew test` — every module's host tests; per module `:<module>:testDebugUnitTest`, `:core:domain:test`, and `:androidApp:testDevDebugUnitTest` for the MockK ViewModel suite.
-- `./gradlew :core:database:connectedDebugAndroidTest` — the migration suite, on the `medium_phone` emulator. Peers shoot on the `gema-*` pool instead; `docs/agents/multi-session.md` holds the split.
+- `./gradlew :core:database:connectedDebugAndroidTest` — the migration suite, on `justchill-api36`. `docs/agents/multi-session.md` `## Isolation: emulators` holds the pool split.
 - Test tasks go `UP-TO-DATE` or `FROM-CACHE` across sessions: `--rerun-tasks` re-runs every task in the invocation, `--no-build-cache` stops a stale cache hit.
 
 ## Test stack
