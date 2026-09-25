@@ -16,11 +16,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
+import com.emm.justchill.core.ioDispatcher
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.navigation.PlatformHostActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.time.LocalDate
@@ -110,7 +112,10 @@ fun rememberPlatformHostActions(
             }
 
             override val shareCsv: (String, String, () -> Unit) -> Unit = { fileName, content, onFailed ->
-                if (!startCsvChooser(context, fileName, content)) onFailed()
+                scope.launch {
+                    val uri: Uri? = withContext(ioDispatcher) { writeSharedExport(context, fileName, content) }
+                    if (uri == null || !startCsvChooser(context, fileName, uri)) onFailed()
+                }
             }
         }
     }
@@ -124,8 +129,7 @@ private fun suggestedExportFilename(): String {
 private const val CSV_MIME_TYPE: String = "text/csv"
 private const val SHARED_EXPORTS_DIR: String = "exports"
 
-private fun startCsvChooser(context: Context, fileName: String, content: String): Boolean = try {
-    val uri: Uri = writeSharedExport(context, fileName, content)
+private fun startCsvChooser(context: Context, fileName: String, uri: Uri): Boolean = try {
     val send: Intent = Intent(Intent.ACTION_SEND)
         .setType(CSV_MIME_TYPE)
         .putExtra(Intent.EXTRA_STREAM, uri)
@@ -133,16 +137,16 @@ private fun startCsvChooser(context: Context, fileName: String, content: String)
     send.clipData = ClipData.newRawUri(fileName, uri)
     context.startActivity(Intent.createChooser(send, "Exportar movimientos"))
     true
-} catch (_: IOException) {
-    false
-} catch (_: IllegalArgumentException) {
-    false
 } catch (_: ActivityNotFoundException) {
     false
 }
 
-private fun writeSharedExport(context: Context, fileName: String, content: String): Uri {
+private fun writeSharedExport(context: Context, fileName: String, content: String): Uri? = try {
     val directory: File = File(context.cacheDir, SHARED_EXPORTS_DIR).apply { mkdirs() }
     val file: File = File(directory, fileName).apply { writeText(content, Charsets.UTF_8) }
-    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+} catch (_: IOException) {
+    null
+} catch (_: IllegalArgumentException) {
+    null
 }

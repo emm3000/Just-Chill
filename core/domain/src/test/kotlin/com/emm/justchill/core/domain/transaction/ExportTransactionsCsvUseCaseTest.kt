@@ -9,6 +9,7 @@ import com.emm.justchill.core.domain.shared.TransactionId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDateTime
@@ -57,9 +58,17 @@ class ExportTransactionsCsvUseCaseTest {
 
     private suspend fun exportCurrentMonthOf(vararg movements: TransactionWithCategory): List<String> {
         every { transactionRepository.fetchAllWithCategoryInRange(any(), any()) } returns flowOf(movements.toList())
-        val useCase = ExportTransactionsCsvUseCase(transactionRepository, lastNightOfSeptemberInLima, lima)
+        val useCase = ExportTransactionsCsvUseCase(
+            transactionRepository,
+            lastNightOfSeptemberInLima,
+            lima,
+            Dispatchers.Unconfined,
+        )
         return useCase(TransactionsCsvScope.CurrentMonth).content.removeSuffix("\r\n").split("\r\n").drop(1)
     }
+
+    private fun exportUseCase(): ExportTransactionsCsvUseCase =
+        ExportTransactionsCsvUseCase(transactionRepository, lastNightOfSeptemberInLima, lima, Dispatchers.Unconfined)
 
     private fun fixedClock(instant: String): Clock = object : Clock {
         override fun now(): Instant = Instant.parse(instant)
@@ -67,7 +76,12 @@ class ExportTransactionsCsvUseCaseTest {
 
     @Test
     fun `an empty month yields the byte order mark and the header only`() = runTest {
-        val useCase = ExportTransactionsCsvUseCase(transactionRepository, lastNightOfSeptemberInLima, lima)
+        val useCase = ExportTransactionsCsvUseCase(
+            transactionRepository,
+            lastNightOfSeptemberInLima,
+            lima,
+            Dispatchers.Unconfined,
+        )
 
         val csv: TransactionsCsv = useCase(TransactionsCsvScope.CurrentMonth)
 
@@ -76,7 +90,12 @@ class ExportTransactionsCsvUseCaseTest {
 
     @Test
     fun `the current month is the one the injected clock reads in the injected zone`() = runTest {
-        val useCase = ExportTransactionsCsvUseCase(transactionRepository, lastNightOfSeptemberInLima, lima)
+        val useCase = ExportTransactionsCsvUseCase(
+            transactionRepository,
+            lastNightOfSeptemberInLima,
+            lima,
+            Dispatchers.Unconfined,
+        )
 
         val csv: TransactionsCsv = useCase(TransactionsCsvScope.CurrentMonth)
 
@@ -140,7 +159,12 @@ class ExportTransactionsCsvUseCaseTest {
                 ),
             ),
         )
-        val useCase = ExportTransactionsCsvUseCase(transactionRepository, lastNightOfSeptemberInLima, lima)
+        val useCase = ExportTransactionsCsvUseCase(
+            transactionRepository,
+            lastNightOfSeptemberInLima,
+            lima,
+            Dispatchers.Unconfined,
+        )
 
         val csv: TransactionsCsv = useCase(TransactionsCsvScope.CurrentMonth)
 
@@ -156,7 +180,12 @@ class ExportTransactionsCsvUseCaseTest {
         every { transactionRepository.fetchAllWithCategory() } returns flowOf(
             listOf(movement("tx-1", LocalDateTime(2024, Month.JANUARY, 5, 8, 0), description = "antiguo")),
         )
-        val useCase = ExportTransactionsCsvUseCase(transactionRepository, lastNightOfSeptemberInLima, lima)
+        val useCase = ExportTransactionsCsvUseCase(
+            transactionRepository,
+            lastNightOfSeptemberInLima,
+            lima,
+            Dispatchers.Unconfined,
+        )
 
         val csv: TransactionsCsv = useCase(TransactionsCsvScope.Everything)
 

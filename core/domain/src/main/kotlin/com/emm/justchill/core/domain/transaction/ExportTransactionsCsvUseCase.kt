@@ -2,8 +2,10 @@ package com.emm.justchill.core.domain.transaction
 
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
@@ -19,11 +21,13 @@ class ExportTransactionsCsvUseCase(
     private val transactionRepository: TransactionRepository,
     private val clock: Clock,
     private val zone: TimeZone,
+    private val formatting: CoroutineDispatcher,
 ) {
     suspend operator fun invoke(scope: TransactionsCsvScope): TransactionsCsv {
         val today: LocalDate = clock.todayIn(zone)
         val movements: List<TransactionWithCategory> = movementsIn(scope, today).first()
-        return TransactionsCsv(fileName = fileNameFor(scope, today), content = movements.toCsv())
+        val content: String = withContext(formatting) { movements.toCsv() }
+        return TransactionsCsv(fileName = fileNameFor(scope, today), content = content)
     }
 
     private fun movementsIn(scope: TransactionsCsvScope, today: LocalDate): Flow<List<TransactionWithCategory>> =
