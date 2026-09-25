@@ -91,6 +91,7 @@ class ProfileViewModelImportTest {
         getRecurringMonthlySummary = getRecurringMonthlySummary,
         getSessionStatus = getSessionStatus,
         backupAvailability = FakeBackupAvailability(isAvailable = false),
+        exportTransactionsCsv = mockk(),
         appVersion = "1.0.0",
         clock = fixedClock,
     )

@@ -120,6 +120,7 @@ class ProfileViewModelTest {
             getRecurringMonthlySummary = getRecurringMonthlySummary,
             getSessionStatus = getSessionStatus,
             backupAvailability = backupAvailability,
+            exportTransactionsCsv = mockk(),
             appVersion = "1.0.0",
             clock = fixedClock,
         )

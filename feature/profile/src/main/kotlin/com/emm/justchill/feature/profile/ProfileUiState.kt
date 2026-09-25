@@ -72,7 +72,7 @@ fun BackupRowUi.severity(): BackupRowSeverity = when (this) {
 
 enum class ProfileOp { None, Exporting, Importing, DeletingAccount, SigningOut, BackingUp, VerifyingBackup }
 
-enum class ProfileDialog { None, DeleteAccount, Import }
+enum class ProfileDialog { None, DeleteAccount, Import, Export }
 
 data class ProfileUiState(
     val op: ProfileOp = ProfileOp.None,

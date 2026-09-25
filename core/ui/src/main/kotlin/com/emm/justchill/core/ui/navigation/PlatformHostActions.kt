@@ -17,4 +17,5 @@ interface PlatformHostActions {
      */
     val requestExport: (json: String, onResult: (saved: Boolean) -> Unit) -> Unit
     val requestImport: () -> Unit
+    val shareCsv: (fileName: String, content: String, onFailed: () -> Unit) -> Unit
 }

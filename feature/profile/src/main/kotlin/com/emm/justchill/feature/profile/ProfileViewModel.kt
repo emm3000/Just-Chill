@@ -23,6 +23,8 @@ import com.emm.justchill.core.domain.shared.backup.toBackupFailureReason
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.domain.time.TodayFlow
+import com.emm.justchill.core.domain.transaction.ExportTransactionsCsvUseCase
+import com.emm.justchill.core.domain.transaction.TransactionsCsv
 import com.emm.justchill.core.ui.mvi.MviViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.combine
@@ -48,6 +50,7 @@ class ProfileViewModel(
     getRecurringMonthlySummary: GetRecurringMonthlySummaryUseCase,
     getSessionStatus: GetSessionStatusUseCase,
     backupAvailability: BackupAvailability,
+    private val exportTransactionsCsv: ExportTransactionsCsvUseCase,
     private val appVersion: String,
     private val clock: Clock,
 ) : MviViewModel<ProfileUiState, ProfileIntent, ProfileEffect>(
@@ -94,7 +97,7 @@ class ProfileViewModel(
             .launchSafeIn(onError = onDomainError)
 
         backupController.isBackingUp
-            .onEach(::onBackupProgress)
+            .onEach { backingUp -> updateState { withBackupProgress(backingUp) } }
             .launchSafeIn(onError = onDomainError)
 
         backupController.events
@@ -116,7 +119,9 @@ class ProfileViewModel(
 
     override fun onIntent(intent: ProfileIntent) {
         when (intent) {
+            ProfileIntent.ExportClicked -> updateState { copy(dialog = ProfileDialog.Export) }
             ProfileIntent.ExportRequested -> exportRequested()
+            is ProfileIntent.CsvExport -> onCsvExportIntent(intent)
             is ProfileIntent.ExportFinished -> exportFinished(intent.saved)
             is ProfileIntent.ImportJson -> importFromJson(intent.json)
             ProfileIntent.SignOut -> performSignOut()
@@ -127,14 +132,6 @@ class ProfileViewModel(
             ProfileIntent.BackUpNow -> backUpNow()
             ProfileIntent.VerifyBackup -> verifyBackup()
             ProfileIntent.AcknowledgeBackupDestination -> acknowledgeBackupDestination()
-        }
-    }
-
-    private fun onBackupProgress(backingUp: Boolean) = updateState {
-        when {
-            backingUp && op == ProfileOp.None -> copy(op = ProfileOp.BackingUp)
-            !backingUp && op == ProfileOp.BackingUp -> copy(op = ProfileOp.None)
-            else -> this
         }
     }
 
@@ -234,6 +231,21 @@ class ProfileViewModel(
         sendEffect(ProfileEffect.Notify(if (saved) ProfileMessage.ExportDone else ProfileMessage.ExportFailed))
     }
 
+    private fun onCsvExportIntent(intent: ProfileIntent.CsvExport) {
+        when (intent) {
+            is ProfileIntent.CsvExportRequested -> launchOp(
+                op = ProfileOp.Exporting,
+                onError = { ProfileEffect.Notify(ProfileMessage.CsvExportFailed) },
+            ) {
+                val csv: TransactionsCsv = exportTransactionsCsv(intent.scope)
+                updateState { copy(dialog = ProfileDialog.None) }
+                sendEffect(ProfileEffect.CsvReady(fileName = csv.fileName, content = csv.content))
+            }
+
+            ProfileIntent.CsvShareFailed -> sendEffect(ProfileEffect.Notify(ProfileMessage.CsvExportFailed))
+        }
+    }
+
     private fun importFromJson(json: String) = launchOp(
         op = ProfileOp.Importing,
         onError = { e ->
@@ -255,6 +267,12 @@ class ProfileViewModel(
             ),
         )
     }
+}
+
+private fun ProfileUiState.withBackupProgress(backingUp: Boolean): ProfileUiState = when {
+    backingUp && op == ProfileOp.None -> copy(op = ProfileOp.BackingUp)
+    !backingUp && op == ProfileOp.BackingUp -> copy(op = ProfileOp.None)
+    else -> this
 }
 
 private fun ExportHistory.toLastExportUi(today: LocalDate): LastExportUi =

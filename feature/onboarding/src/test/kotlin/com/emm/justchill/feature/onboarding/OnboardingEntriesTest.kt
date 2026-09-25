@@ -34,6 +34,7 @@ private object SilentPlatformHostActions : PlatformHostActions {
     override val onOpenEmailApp: () -> Unit = {}
     override val requestExport: (String, (Boolean) -> Unit) -> Unit = { _, _ -> }
     override val requestImport: () -> Unit = {}
+    override val shareCsv: (String, String, () -> Unit) -> Unit = { _, _, _ -> }
 }
 
 @RunWith(RobolectricTestRunner::class)

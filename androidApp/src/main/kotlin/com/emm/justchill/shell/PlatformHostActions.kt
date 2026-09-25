@@ -1,7 +1,10 @@
 package com.emm.justchill.shell
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
@@ -12,11 +15,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.navigation.PlatformHostActions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.IOException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -102,6 +108,10 @@ fun rememberPlatformHostActions(
             override val requestImport: () -> Unit = {
                 importLauncher.launch(arrayOf("application/json"))
             }
+
+            override val shareCsv: (String, String, () -> Unit) -> Unit = { fileName, content, onFailed ->
+                if (!startCsvChooser(context, fileName, content)) onFailed()
+            }
         }
     }
 }
@@ -109,4 +119,30 @@ fun rememberPlatformHostActions(
 private fun suggestedExportFilename(): String {
     val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
     return "justchill-backup-$date.json"
+}
+
+private const val CSV_MIME_TYPE: String = "text/csv"
+private const val SHARED_EXPORTS_DIR: String = "exports"
+
+private fun startCsvChooser(context: Context, fileName: String, content: String): Boolean = try {
+    val uri: Uri = writeSharedExport(context, fileName, content)
+    val send: Intent = Intent(Intent.ACTION_SEND)
+        .setType(CSV_MIME_TYPE)
+        .putExtra(Intent.EXTRA_STREAM, uri)
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    send.clipData = ClipData.newRawUri(fileName, uri)
+    context.startActivity(Intent.createChooser(send, "Exportar movimientos"))
+    true
+} catch (_: IOException) {
+    false
+} catch (_: IllegalArgumentException) {
+    false
+} catch (_: ActivityNotFoundException) {
+    false
+}
+
+private fun writeSharedExport(context: Context, fileName: String, content: String): Uri {
+    val directory: File = File(context.cacheDir, SHARED_EXPORTS_DIR).apply { mkdirs() }
+    val file: File = File(directory, fileName).apply { writeText(content, Charsets.UTF_8) }
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 }

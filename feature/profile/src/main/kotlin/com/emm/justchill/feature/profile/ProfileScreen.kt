@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.transaction.TransactionsCsvScope
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -34,6 +35,8 @@ fun ProfileScreen(
     onLoansClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
+    onBackupExportClick: () -> Unit = {},
+    onCsvExportClick: (TransactionsCsvScope) -> Unit = {},
     onImportClick: () -> Unit = {},
     onImportConfirm: () -> Unit = {},
     onPrivacyClick: () -> Unit = {},
@@ -91,7 +94,11 @@ fun ProfileScreen(
 
         BackupSection(
             state = state,
-            onExportClick = onExportClick,
+            exportActions = ExportActions(
+                onOpen = onExportClick,
+                onBackup = onBackupExportClick,
+                onCsv = onCsvExportClick,
+            ),
             onImportClick = onImportClick,
             onImportConfirm = onImportConfirm,
             onDialogDismiss = onDialogDismiss,
