@@ -67,7 +67,7 @@ class MonthlyAmountByCategoryQueryTest {
         insertTransaction(id = "t-4", categoryId = "cat-live", amount = 200, deletedAt = 900L)
         insertTransaction(id = "t-5", categoryId = "cat-live", amount = 700, occurredAt = JUST_AFTER_MONTH)
 
-        val reportTotal = monthRows().sumOf { it.totalAmount }
+        val reportTotal: Long = monthRows().sumOf { it.totalAmount }
         val monthTotal = db.transactionsQueries
             .monthlyStats(type = SPEND, startInclusive = MONTH_START, endExclusive = MONTH_END)
             .executeAsOne()
