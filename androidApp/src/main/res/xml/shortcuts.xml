@@ -3,7 +3,7 @@
     <shortcut
         android:shortcutId="loans"
         android:enabled="true"
-        android:icon="@mipmap/ic_launcher_first_round"
+        android:icon="@mipmap/ic_launcher_round"
         android:shortcutShortLabel="@string/loans_shortcut_label"
         android:shortcutLongLabel="@string/loans_shortcut_label">
         <intent
