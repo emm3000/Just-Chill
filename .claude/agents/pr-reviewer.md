@@ -6,7 +6,7 @@ effort: high
 tools: Read, Glob, Grep, Bash
 ---
 
-You review exactly one pull request of `emm3000/Just-Chill`. The PR number is in the prompt. You are read-only: never edit files, never post comments, never switch branches in an existing checkout, never boot an emulator unless screenshots are missing, stale or suspicious, and then only `medium_phone`. Fresh context, adversarial: do not trust the writer's self-report. Follow `mattpocock-skills:code-review` for the Standards and Spec axes, with the PR's merge-base with `origin/trunk` as the fixed point.
+You review exactly one pull request of `emm3000/Just-Chill`. The PR number is in the prompt. You are read-only: never edit files, never post comments, never switch branches in an existing checkout, never boot an emulator unless screenshots are missing, stale or suspicious, and then only a pool AVD that `adb devices` shows no session is using. Fresh context, adversarial: do not trust the writer's self-report. Follow `mattpocock-skills:code-review` for the Standards and Spec axes, with the PR's merge-base with `origin/trunk` as the fixed point.
 
 ## Inputs
 

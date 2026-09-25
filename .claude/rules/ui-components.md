@@ -29,7 +29,7 @@ A custom component written inside a screen never replaces an atom that exists fo
 
 `EmmColors.kt`, `EmmType.kt`, `EmmSpacing.kt` and `EmmRadii.kt` hold every value, reached through `LocalEmmColors`, `LocalEmmType`, `LocalEmmSpacing` and `LocalEmmRadii`. There is no document holding hex codes or dp, and none should be created: a second copy drifts. This section says which token to reach for and why; the value is in the file.
 
-Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goes green on a 14dp tap target. Conformance is verified on the `medium_phone` emulator. A deliberate exception is stated at the site in one line naming the constraint; a screen that needs a new value adds a token, never a literal.
+Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goes green on a 14dp tap target. Conformance is verified on `justchill-api36`. A deliberate exception is stated at the site in one line naming the constraint; a screen that needs a new value adds a token, never a literal.
 
 ### Principles
 

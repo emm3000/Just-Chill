@@ -32,11 +32,11 @@ paths:
 - `kotlin.assert()` is a no-op on ART; use `kotlin.test.assertTrue`.
 - Prove the test is not vacuous before trusting it: set its `oldVersion` to the current schema version so the migration is skipped, watch it fail on the missing column, restore it.
 - Foreign keys: `csm()`'s `onOpen` turns them on only after the upgrade chain ran (they cannot be switched on inside `SQLiteOpenHelper`'s upgrade transaction), and SQLite never re-checks rows already written, so an FK-violating row written by a migration is silent on device forever. A test that enables foreign keys in its own `onOpen` and then calls `Schema.migrate` is the only check of the chain's writes; `MigrationV1ToV2Test` does it and `MigrationV4ToV5Test` flips them on for the cases where `4.sqm`'s statement order matters. Never drop that callback: the test stays green while proving less.
-- Run the suite with `./gradlew :core:database:connectedDebugAndroidTest` on the `medium_phone` emulator before shipping any schema change; the gate only compiles it.
+- Run the suite with `./gradlew :core:database:connectedDebugAndroidTest` on `justchill-api36` before shipping any schema change; the gate only compiles it.
 
 ## The restore drill
 
-The suite proves a migration keeps rows already on the device, never that a snapshot written before the bump still restores after it. Before shipping a bump, run it on `medium_phone` with the dev flavor (`com.emm.justchill.dev`), never on a second AVD and never with a seeded database file:
+The suite proves a migration keeps rows already on the device, never that a snapshot written before the bump still restores after it. Before shipping a bump, run it on `justchill-api36` with the dev flavor (`com.emm.justchill.dev`), never on a second AVD and never with a seeded database file:
 
 1. Install the pre-bump build (`./gradlew installDevDebug` from `trunk`), import the latest production snapshot through the app, and record the six `ImportStats` counts (`accounts`, `categories`, `transactions`, `recurring`, `loans`, `loanPayments`).
 2. The owner wipes the dev app's data. Agents are denied `adb uninstall` and `adb shell pm clear`, so this step is always the owner's.
