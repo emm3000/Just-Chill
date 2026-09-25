@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -657,46 +658,64 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `a confirmed minimum bound reaches searchWithCategory in the filter`() = runTest(testDispatcher) {
         val vm = buildViewModel()
+        val states = mutableListOf<Money?>()
+        backgroundScope.launch { vm.state.collect { states += it.minAmount } }
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Min))
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("2000"))
         advanceUntilIdle()
 
+        assertEquals(listOf(null, Money(2_000L)), states)
         verify { transactionRepository.searchWithCategory(match { it.minAmount == Money(2_000L) }) }
     }
 
     @Test
     fun `a confirmed maximum bound reaches searchWithCategory in the filter`() = runTest(testDispatcher) {
         val vm = buildViewModel()
+        val states = mutableListOf<Money?>()
+        backgroundScope.launch { vm.state.collect { states += it.maxAmount } }
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Max))
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("5000"))
         advanceUntilIdle()
 
+        assertEquals(listOf(null, Money(5_000L)), states)
         verify { transactionRepository.searchWithCategory(match { it.maxAmount == Money(5_000L) }) }
     }
 
     @Test
     fun `a minimum set above an existing maximum arrives swapped`() = runTest(testDispatcher) {
         val vm = buildViewModel()
+        val ranges = mutableListOf<Pair<Money?, Money?>>()
+        backgroundScope.launch { vm.state.collect { ranges += it.minAmount to it.maxAmount } }
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Max))
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("2000"))
+        advanceUntilIdle()
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Min))
         vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("5000"))
         advanceUntilIdle()
 
-        assertEquals(Money(2_000L), vm.state.value.minAmount)
-        assertEquals(Money(5_000L), vm.state.value.maxAmount)
+        assertEquals(
+            listOf(null to null, null to Money(2_000L), Money(2_000L) to Money(5_000L)),
+            ranges,
+        )
+        verify {
+            transactionRepository.searchWithCategory(
+                match { it.minAmount == Money(2_000L) && it.maxAmount == Money(5_000L) },
+            )
+        }
     }
 
     @Test
     fun `the banner clear resets category and range and keeps the text query`() = runTest(testDispatcher) {
         categoriesFlow.value = listOf(category("cat-1"))
         val vm = buildViewModel()
+        val states = mutableListOf<SeeTransactionsUiState>()
+        backgroundScope.launch { vm.state.collect { states += it } }
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -709,7 +728,7 @@ class SeeTransactionsViewModelTest {
         vm.onIntent(SeeTransactionsIntent.OnClearCategoryFilter)
         advanceUntilIdle()
 
-        val state = vm.state.value
+        val state = states.last()
         assertEquals("café", state.query)
         assertEquals(null, state.activeCategory)
         assertEquals(null, state.minAmount)
@@ -719,6 +738,8 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `OnClearFilters resets query, category and range together`() = runTest(testDispatcher) {
         val vm = buildViewModel()
+        val states = mutableListOf<SeeTransactionsUiState>()
+        backgroundScope.launch { vm.state.collect { states += it } }
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -730,7 +751,7 @@ class SeeTransactionsViewModelTest {
         vm.onIntent(SeeTransactionsIntent.OnClearFilters)
         advanceUntilIdle()
 
-        val state = vm.state.value
+        val state = states.last()
         assertEquals("", state.query)
         assertEquals(null, state.minAmount)
         assertEquals(null, state.maxAmount)

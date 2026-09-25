@@ -15,6 +15,7 @@ import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class SeeTransactionsRangeBannerTest {
@@ -24,7 +25,7 @@ class SeeTransactionsRangeBannerTest {
 
     @Test
     fun `a range with no category renders its text and the clear intent fires`() {
-        var cleared = false
+        var cleared: Boolean = false
         val state = SeeTransactionsUiState(
             month = YearMonth(2026, Month.AUGUST),
             movementCount = 3L,
@@ -50,6 +51,6 @@ class SeeTransactionsRangeBannerTest {
         composeRule.onNodeWithContentDescription("Limpiar filtro").assertHasClickAction()
         composeRule.onNodeWithContentDescription("Limpiar filtro").performClick()
 
-        assert(cleared) { "the clear affordance must send OnClearCategoryFilter" }
+        assertTrue(cleared, "the clear affordance must send OnClearCategoryFilter")
     }
 }

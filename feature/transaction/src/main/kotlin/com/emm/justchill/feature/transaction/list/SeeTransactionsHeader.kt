@@ -51,9 +51,9 @@ internal fun ScreenHeader(
                 HeaderAction(
                     icon = Icons.Outlined.FilterList,
                     contentDescription = if (isCategoryFilterActive) {
-                        "Filtrar por categoría, filtro activo"
+                        "Filtrar movimientos, filtro activo"
                     } else {
-                        "Filtrar por categoría"
+                        "Filtrar movimientos"
                     },
                     onClick = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested) },
                     showBadge = isCategoryFilterActive,

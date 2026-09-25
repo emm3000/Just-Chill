@@ -57,8 +57,13 @@ data class SeeTransactionsUiState(
     val searchRequested: Boolean = false,
 ) : UiState {
 
+    // The sheet-governed half of the filter: category and amount range, never the free-text query.
+    // Drives the header badge, the banner's visibility and the sheet's "Limpiar filtro".
+    val isCategoryOrAmountFilterActive: Boolean
+        get() = activeCategory != null || minAmount != null || maxAmount != null
+
     val isFilterActive: Boolean
-        get() = query.isNotBlank() || activeCategory != null || minAmount != null || maxAmount != null
+        get() = query.isNotBlank() || isCategoryOrAmountFilterActive
 
     val isSearchOpen: Boolean
         get() = searchRequested || query.isNotBlank()
