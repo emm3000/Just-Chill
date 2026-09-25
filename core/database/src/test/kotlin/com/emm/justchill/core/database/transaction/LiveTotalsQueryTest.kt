@@ -36,7 +36,7 @@ class LiveTotalsQueryTest {
         insert(id = "t-2", type = "Income", amount = 5_000)
         insert(id = "t-3", type = "Spend", amount = 3_000)
 
-        val totals = totals()
+        val totals: LiveTotals = totals()
 
         assertEquals(12_000L, totals.balance)
         assertEquals(3L, totals.movementCount)
@@ -55,7 +55,7 @@ class LiveTotalsQueryTest {
         insert(id = "t-1", type = "Income", amount = 10_000)
         insert(id = "t-2", type = "Spend", amount = 4_000, deletedAt = 900L)
 
-        val totals = totals()
+        val totals: LiveTotals = totals()
 
         assertEquals(10_000L, totals.balance)
         assertEquals(1L, totals.movementCount)
@@ -66,7 +66,7 @@ class LiveTotalsQueryTest {
         insert(id = "t-1", type = "Income", amount = 10_000)
         insert(id = "t-2", type = "Transfer", amount = 7_000)
 
-        val totals = totals()
+        val totals: LiveTotals = totals()
 
         assertEquals(10_000L, totals.balance)
         assertEquals(1L, totals.movementCount)
@@ -82,10 +82,22 @@ class LiveTotalsQueryTest {
     }
 
     @Test
+    fun `a ledger holding only soft-deleted movements sums to 0`() {
+        insert(id = "t-1", type = "Income", amount = 10_000, deletedAt = 900L)
+        insert(id = "t-2", type = "Spend", amount = 4_000, deletedAt = 900L)
+
+        val totals: LiveTotals = totals()
+        val balance: Long = totals.balance
+
+        assertEquals(0L, balance)
+        assertEquals(0L, totals.movementCount)
+    }
+
+    @Test
     fun `a ledger of only unreadable rows reads as having no movements`() {
         insert(id = "t-1", type = "Transfer", amount = 7_000)
 
-        val totals = totals()
+        val totals: LiveTotals = totals()
 
         assertEquals(0L, totals.balance)
         assertEquals(0L, totals.movementCount)
