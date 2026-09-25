@@ -84,7 +84,7 @@ actual.
 | Contiene anuncios | No |
 | Compras dentro de la app | No |
 | Acceso restringido | No |
-| URL política de privacidad | (pendiente — ver `privacy-policy.md` y subir como Gist público) |
+| URL política de privacidad | https://emm3000.github.io/Just-Chill/play/ (GitHub Pages, fuente: `docs/play/privacy-policy.md`) |
 | Email de contacto | edgardo.emm20@gmail.com |
 | Audiencia objetivo | 18+ |
 | Distribución geográfica inicial | Perú (expandir Latam si pedidos lo justifican) |
