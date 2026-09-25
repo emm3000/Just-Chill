@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -408,7 +407,7 @@ private fun ActiveFilterBanner(
         Box(
             contentAlignment = Alignment.CenterEnd,
             modifier = Modifier
-                .fillMaxHeight()
+                .heightIn(min = spacing.s12)
                 .widthIn(min = spacing.s12)
                 .clickable(interactionSource = clearInteraction, indication = null, onClick = onClear),
         ) {
