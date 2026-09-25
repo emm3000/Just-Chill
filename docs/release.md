@@ -44,6 +44,10 @@ person actually promotes in Play Console. Nothing on this page is optional.
   describe one app; changing one without the rest produces two official statements that contradict
   each other. Re-verify the advertising ID with [`play/advertising-id.md`](play/advertising-id.md)
   rather than re-deriving it.
+- **Public privacy policy URL.** `https://emm3000.github.io/Just-Chill/play/`, GitHub Pages
+  serving `docs/play/privacy-policy.md` through the `docs/play/index.md` symlink (repo Pages
+  source: branch `trunk`, path `/docs`). One copy of the text; editing the `.md` file is the only
+  edit the hosted page ever needs.
 - **If this release flips `prod`'s `SNAPSHOT_BACKUP_ENABLED`**, update the privacy policy, the store listing
   and the Data Safety answer in this same release — the app stops being "nothing leaves your phone".
   Not after. Flipping the flag is a compliance event, not a feature flag; a "Yes" set to unblock

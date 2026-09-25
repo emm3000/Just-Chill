@@ -1,3 +1,7 @@
+---
+title: Política de privacidad — JustChill
+---
+
 # Política de privacidad — JustChill
 
 **Última actualización**: 2026-08-20
@@ -125,13 +129,7 @@ Edgardo Muñoz — edgardo.emm20@gmail.com
 
 ---
 
-**Para hostear esta política como URL pública** (requerido por Play
-Store; la sección "Borrar data y borrar tu cuenta" sirve también como
-el recurso web de eliminación de cuenta que pide el Data Safety form):
-
-1. Crear un Gist público en https://gist.github.com con este markdown.
-2. Copiar la URL del Gist.
-3. Pegarla en Play Console → Privacy Policy URL y en Data Safety →
-   account deletion URL.
-
-Alternativa: subir el markdown como page en GitHub Pages del repo.
+Esta página está publicada en GitHub Pages desde este mismo archivo; no
+hay una copia separada. La sección "Borrar data y borrar tu cuenta"
+sirve también como el recurso web de eliminación de cuenta que pide el
+Data Safety form.
