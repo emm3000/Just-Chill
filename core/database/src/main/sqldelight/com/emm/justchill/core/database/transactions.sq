@@ -128,13 +128,15 @@ WHERE accountId = :accountId AND deletedAt IS NULL;
 -- TransactionRepository.observeTotals(). Folding the whole table in memory on every emission was
 -- O(rows) per insert; this is O(1) work for the caller. Unknown type values contribute 0 to the
 -- balance and are not counted, matching the mapper skip-row policy that hides them from every
--- list in the app.
+-- list in the app. An empty ledger sums to 0, never to NULL. The COUNT is cast because SQLDelight
+-- 2.4.0 types every non-aggregate column as nullable once an ungrouped query exposes a bare
+-- aggregate, which would widen the COALESCE to Long?; the cast keeps that rule off.
 liveTotals:
 SELECT
     COALESCE(
         SUM(CASE WHEN type = 'Income' THEN amount WHEN type = 'Spend' THEN -amount ELSE 0 END), 0
     ) AS balance,
-    COUNT(CASE WHEN type IN ('Income', 'Spend') THEN 1 END) AS movementCount
+    CAST(COUNT(CASE WHEN type IN ('Income', 'Spend') THEN 1 END) AS INTEGER) AS movementCount
 FROM transactions
 WHERE deletedAt IS NULL;
 
@@ -211,8 +213,9 @@ UPDATE transactions
 SET type = ?, amount = ?, description = ?, occurredAt = ?, categoryId = ?, accountId = ?, updatedAt = ?, deletedAt = NULL, syncState = 'Pending'
 WHERE transactionId = ?;
 
+-- COUNT cast for the same reason as liveTotals: an empty month sums to 0, never to NULL.
 monthlyStats:
-SELECT COUNT(*) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount
+SELECT CAST(COUNT(*) AS INTEGER) AS movementCount, COALESCE(SUM(amount), 0) AS totalAmount
 FROM transactions
 WHERE type = :type
   AND occurredAt >= :startInclusive

@@ -14,7 +14,7 @@ fun MonthlyAmountByCategory.asEntity() = MonthlyAmountByCategoryEntity(
     categoryName = categoryName,
     categoryIcon = categoryIcon,
     categoryColor = categoryColor,
-    totalAmount = totalAmount ?: 0L,
+    totalAmount = totalAmount,
 )
 
 fun MonthlyAmountByCategoryEntity.toDomain() = CategoryAmount(
@@ -31,7 +31,7 @@ fun MonthlyAmountByCategoryAndType.asEntity() = MonthlyAmountByTypeEntity(
     categoryName = categoryName,
     categoryIcon = categoryIcon,
     categoryColor = categoryColor,
-    totalAmount = totalAmount ?: 0L,
+    totalAmount = totalAmount,
 )
 
 fun MonthlyAmountByTypeEntity.toDomain() = CategoryAmount(
