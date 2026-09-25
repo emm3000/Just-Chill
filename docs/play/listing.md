@@ -105,5 +105,5 @@ adb shell screencap -p /sdcard/sc.png && adb pull /sdcard/sc.png home1.png
 
 ## Ícono de Play Store
 
-Ya existe: `androidApp/src/prod/ic_launcher_first-playstore.png` (512×512).
-Usa ese — no hay que regenerar. Hay una copia equivalente en `androidApp/src/dev/`.
+`androidApp/src/prod/ic_launcher-playstore.png` (512×512). Se renderiza a partir de
+`ic_launcher_foreground.xml`: si el glifo cambia, hay que volver a renderizarlo.
