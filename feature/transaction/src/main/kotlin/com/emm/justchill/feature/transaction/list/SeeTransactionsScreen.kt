@@ -54,7 +54,6 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.category.CategoryUi
-import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.format.moneyCentsString
@@ -349,10 +348,8 @@ private fun ActiveFilterBanner(
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
 
-    // A regular space between "S/" and the number lets the line break mid-amount; the whole
-    // "S/ 20.00" must move together.
-    val nbspMin: String? = minAmount?.balanceFormatted()?.replace(' ', ' ')
-    val nbspMax: String? = maxAmount?.balanceFormatted()?.replace(' ', ' ')
+    val nbspMin: String? = minAmount?.balanceFormattedNonBreaking()
+    val nbspMax: String? = maxAmount?.balanceFormattedNonBreaking()
     val rangeText: String? = when {
         nbspMin != null && nbspMax != null -> "$nbspMin – $nbspMax"
         nbspMin != null -> "desde $nbspMin"
