@@ -47,7 +47,7 @@ class SeeTransactionsRangeBannerTest {
             }
         }
 
-        composeRule.onNodeWithText("S/ 20.00 – S/ 50.00", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("S/ 20.00 – S/ 50.00", substring = true).assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Limpiar filtro").assertHasClickAction()
         composeRule.onNodeWithContentDescription("Limpiar filtro").performClick()
 

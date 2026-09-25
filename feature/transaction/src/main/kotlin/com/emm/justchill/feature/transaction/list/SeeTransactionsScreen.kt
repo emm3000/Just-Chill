@@ -131,7 +131,7 @@ internal fun SeeTransactionsContent(
         } else {
             ScreenHeader(
                 month = state.month.takeIf { state.isMonthSelectorVisible },
-                isCategoryFilterActive = state.isCategoryOrAmountFilterActive,
+                isCategoryOrAmountFilterActive = state.isCategoryOrAmountFilterActive,
                 onBack = onBack,
                 onIntent = onIntent,
             )
@@ -349,10 +349,14 @@ private fun ActiveFilterBanner(
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
 
+    // A regular space between "S/" and the number lets the line break mid-amount; the whole
+    // "S/ 20.00" must move together.
+    val nbspMin: String? = minAmount?.balanceFormatted()?.replace(' ', ' ')
+    val nbspMax: String? = maxAmount?.balanceFormatted()?.replace(' ', ' ')
     val rangeText: String? = when {
-        minAmount != null && maxAmount != null -> "${minAmount.balanceFormatted()} – ${maxAmount.balanceFormatted()}"
-        minAmount != null -> "desde ${minAmount.balanceFormatted()}"
-        maxAmount != null -> "hasta ${maxAmount.balanceFormatted()}"
+        nbspMin != null && nbspMax != null -> "$nbspMin – $nbspMax"
+        nbspMin != null -> "desde $nbspMin"
+        nbspMax != null -> "hasta $nbspMax"
         else -> null
     }
 
@@ -385,7 +389,7 @@ private fun ActiveFilterBanner(
             .clip(radii.rS)
             .background(colors.surface1)
             .border(spacing.hairline, colors.border, radii.rS)
-            .padding(start = spacing.s3, top = spacing.s2, bottom = spacing.s2),
+            .padding(start = spacing.s3),
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.List,
@@ -398,7 +402,9 @@ private fun ActiveFilterBanner(
             text = displayText,
             style = type.labelM,
             color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = spacing.s2),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
