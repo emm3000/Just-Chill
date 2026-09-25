@@ -41,6 +41,10 @@ data class SeeTransactionsUiState(
     val sheetItems: List<CategorySheetItem> = emptyList(),
     val incomeCount: Int = 0,
     val spendCount: Int = 0,
+    val minAmount: Money? = null,
+    val maxAmount: Money? = null,
+    // null means the amount sheet is closed (ADR 012 Decision 2).
+    val amountSheetTarget: AmountRangeTarget? = null,
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
     // The clock's real month, refreshed each time pendingRecurringMovements re-emits.
     val currentMonth: YearMonth = month,
@@ -54,7 +58,7 @@ data class SeeTransactionsUiState(
 ) : UiState {
 
     val isFilterActive: Boolean
-        get() = query.isNotBlank() || activeCategory != null
+        get() = query.isNotBlank() || activeCategory != null || minAmount != null || maxAmount != null
 
     val isSearchOpen: Boolean
         get() = searchRequested || query.isNotBlank()

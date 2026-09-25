@@ -171,6 +171,8 @@ LEFT JOIN accounts a ON t.accountId = a.accountId
 WHERE t.deletedAt IS NULL
   AND (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
   AND (:categoryFilterEmpty = 1 OR t.categoryId IN :categoryIds)
+  AND (:minUnbounded = 1 OR t.amount >= :minAmount)
+  AND (:maxUnbounded = 1 OR t.amount <= :maxAmount)
 ORDER BY t.occurredAt DESC
 LIMIT :limit;
 

@@ -45,7 +45,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.ui.atoms.CtaHeight
+import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.OutlinedCta
@@ -54,6 +56,7 @@ import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.AppIconCatalog
 import com.emm.justchill.core.ui.category.IconCatalog
+import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.stripSpanishAccents
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -66,6 +69,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 
 private const val SHEET_HEIGHT_FRACTION: Float = 0.8f
 
+@Suppress("LongParameterList")
 @Composable
 internal fun CategoryFilterSheet(
     items: List<CategorySheetItem>,
@@ -73,8 +77,12 @@ internal fun CategoryFilterSheet(
     spendCount: Int,
     hasActiveFilter: Boolean,
     initialSegment: CategoryType,
+    minAmount: Money?,
+    maxAmount: Money?,
     onSelect: (String) -> Unit,
     onClear: () -> Unit,
+    onAmountBoundClick: (AmountRangeTarget) -> Unit,
+    onAmountBoundClear: (AmountRangeTarget) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors: EmmColors = LocalEmmColors.current
@@ -117,7 +125,7 @@ internal fun CategoryFilterSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "Filtrar por categoría",
+                    text = "Filtrar movimientos",
                     style = type.titleM,
                     color = colors.textPrimary,
                 )
@@ -187,6 +195,16 @@ internal fun CategoryFilterSheet(
                     )
                 }
             }
+
+            MontoSection(
+                minAmount = minAmount,
+                maxAmount = maxAmount,
+                onMinClick = { onAmountBoundClick(AmountRangeTarget.Min) },
+                onMaxClick = { onAmountBoundClick(AmountRangeTarget.Max) },
+                onMinClear = { onAmountBoundClear(AmountRangeTarget.Min) },
+                onMaxClear = { onAmountBoundClear(AmountRangeTarget.Max) },
+                modifier = Modifier.padding(horizontal = spacing.s5, vertical = spacing.s2),
+            )
 
             Segmented(
                 options = listOf(
@@ -292,3 +310,80 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
 }
 
 private fun String.normalizeForSearch(): String = this.trim().lowercase().stripSpanishAccents()
+
+@Composable
+private fun MontoSection(
+    minAmount: Money?,
+    maxAmount: Money?,
+    onMinClick: () -> Unit,
+    onMaxClick: () -> Unit,
+    onMinClear: () -> Unit,
+    onMaxClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    FormSection(eyebrow = "MONTO", modifier = modifier) {
+        AmountBoundRow(label = "Mínimo", amount = minAmount, onClick = onMinClick, onClear = onMinClear)
+        Spacer(Modifier.height(spacing.s1))
+        AmountBoundRow(label = "Máximo", amount = maxAmount, onClick = onMaxClick, onClear = onMaxClear)
+    }
+}
+
+@Composable
+private fun AmountBoundRow(label: String, amount: Money?, onClick: () -> Unit, onClear: () -> Unit) {
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(spacing.s12)
+            .clip(radii.rM)
+            .background(colors.surface1)
+            .border(spacing.hairline, colors.border, radii.rM)
+            .clickable(onClick = onClick)
+            .padding(horizontal = spacing.s4),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(text = label, style = type.bodyM, color = colors.textSecondary)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = amount?.balanceFormatted() ?: "Sin límite",
+                style = type.bodyM,
+                color = colors.textPrimary,
+            )
+            if (amount != null) {
+                val clearInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(spacing.s12)
+                        .clickable(
+                            interactionSource = clearInteraction,
+                            indication = null,
+                            onClick = onClear,
+                        ),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(spacing.s6)
+                            .clip(CircleShape)
+                            .indication(clearInteraction, ripple()),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = "Quitar $label",
+                            tint = colors.textTertiary,
+                            modifier = Modifier.size(spacing.s3),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

@@ -19,7 +19,9 @@ import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionTotals
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
+import com.emm.justchill.core.domain.transaction.withAmountRange
 import com.emm.justchill.core.ui.error.toUserMessage
+import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.mvi.MviViewModel
 import com.emm.justchill.core.ui.pending.toPendingRecurringUi
 import com.emm.justchill.core.ui.transaction.toUi
@@ -157,12 +159,7 @@ class SeeTransactionsViewModel(
                 updateState { copy(query = intent.query) }
             }
 
-            is SeeTransactionsIntent.OnCategoryToggled -> {
-                val id = CategoryId(intent.categoryId)
-                val current = filter.value.categoryIds
-                val next = if (id in current) emptySet() else setOf(id)
-                filter.value = filter.value.copy(categoryIds = next)
-            }
+            is SeeTransactionsIntent.OnCategoryToggled -> toggleCategory(CategoryId(intent.categoryId))
 
             is SeeTransactionsIntent.OnCategorySelected -> {
                 val id = CategoryId(intent.categoryId)
@@ -170,13 +167,16 @@ class SeeTransactionsViewModel(
             }
 
             SeeTransactionsIntent.OnClearCategoryFilter -> {
-                filter.value = filter.value.copy(categoryIds = emptySet())
+                filter.value = filter.value.copy(categoryIds = emptySet()).withAmountRange(null, null)
+                updateState { copy(minAmount = null, maxAmount = null) }
             }
 
             SeeTransactionsIntent.OnClearFilters -> {
                 filter.value = TransactionFilter.None
-                updateState { copy(query = "") }
+                updateState { copy(query = "", minAmount = null, maxAmount = null) }
             }
+
+            is SeeTransactionsIntent.AmountFilterIntent -> onAmountFilterIntent(intent)
 
             is SeeTransactionsIntent.ConfirmRecurring -> onConfirmRecurring(intent)
 
@@ -188,6 +188,45 @@ class SeeTransactionsViewModel(
             SeeTransactionsIntent.OnConfirmSheetDismissed -> updateState { copy(confirmSheetPendingId = null) }
 
             is SeeTransactionsIntent.ScreenChromeIntent -> onScreenChromeIntent(intent)
+        }
+    }
+
+    private fun toggleCategory(id: CategoryId) {
+        val next = if (id in filter.value.categoryIds) emptySet() else setOf(id)
+        filter.value = filter.value.copy(categoryIds = next)
+    }
+
+    private fun onAmountFilterIntent(intent: SeeTransactionsIntent.AmountFilterIntent) {
+        when (intent) {
+            is SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested ->
+                updateState { copy(amountSheetTarget = intent.target) }
+
+            SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetDismissed ->
+                updateState { copy(amountSheetTarget = null) }
+
+            is SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed -> onAmountConfirmed(intent)
+
+            is SeeTransactionsIntent.AmountFilterIntent.OnAmountBoundCleared -> {
+                val newMin = if (intent.target == AmountRangeTarget.Min) null else filter.value.minAmount
+                val newMax = if (intent.target == AmountRangeTarget.Max) null else filter.value.maxAmount
+                filter.value = filter.value.withAmountRange(newMin, newMax)
+                updateState { copy(minAmount = newMin, maxAmount = newMax) }
+            }
+        }
+    }
+
+    private fun onAmountConfirmed(intent: SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed) {
+        val target = state.value.amountSheetTarget ?: return
+        val amount = centsToMoney(intent.digits)
+        val newMin = if (target == AmountRangeTarget.Min) amount else filter.value.minAmount
+        val newMax = if (target == AmountRangeTarget.Max) amount else filter.value.maxAmount
+        filter.value = filter.value.withAmountRange(newMin, newMax)
+        updateState {
+            copy(
+                minAmount = filter.value.minAmount,
+                maxAmount = filter.value.maxAmount,
+                amountSheetTarget = null,
+            )
         }
     }
 

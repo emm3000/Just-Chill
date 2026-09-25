@@ -66,6 +66,8 @@ class DefaultTransactionRepository(private val localDataSource: TransactionLocal
         localDataSource.searchTransactions(
             query = filter.query,
             categoryIds = filter.categoryIds.map { it.value }.toSet(),
+            minAmountCents = filter.minAmount?.cents,
+            maxAmountCents = filter.maxAmount?.cents,
         )
             .map { it.toDomain() }
             .catchAsDomainException()
