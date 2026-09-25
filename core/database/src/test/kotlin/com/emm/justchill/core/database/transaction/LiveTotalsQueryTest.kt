@@ -73,10 +73,11 @@ class LiveTotalsQueryTest {
     }
 
     @Test
-    fun `an empty table reports zero rather than null`() {
-        val totals = totals()
+    fun `an empty ledger sums to a balance of 0, never an absent one`() {
+        val totals: LiveTotals = totals()
+        val balance: Long = totals.balance
 
-        assertEquals(0L, totals.balance)
+        assertEquals(0L, balance)
         assertEquals(0L, totals.movementCount)
     }
 
