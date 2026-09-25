@@ -34,7 +34,7 @@ class ShortcutPublisher(private val context: Context, private val getShortcutCom
         return ShortcutInfoCompat.Builder(context, "combo-$accountId-$categoryId-$type")
             .setShortLabel(title)
             .setLongLabel(subtitle)
-            .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher_first_round))
+            .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher_round))
             .setRank(rank)
             .setIntent(intent)
             .build()

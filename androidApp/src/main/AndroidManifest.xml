@@ -12,9 +12,9 @@
         android:name=".EmmApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:icon="@mipmap/ic_launcher_first"
+        android:icon="@mipmap/ic_launcher"
         android:label="${app_name}${flavor_suffix}"
-        android:roundIcon="@mipmap/ic_launcher_first_round"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.JustChill">
         <activity
