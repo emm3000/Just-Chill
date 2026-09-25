@@ -32,7 +32,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 @Composable
 internal fun ScreenHeader(
     month: YearMonth?,
-    isCategoryFilterActive: Boolean,
+    isCategoryOrAmountFilterActive: Boolean,
     onBack: () -> Unit,
     onIntent: (SeeTransactionsIntent) -> Unit,
 ) {
@@ -50,13 +50,13 @@ internal fun ScreenHeader(
                 )
                 HeaderAction(
                     icon = Icons.Outlined.FilterList,
-                    contentDescription = if (isCategoryFilterActive) {
+                    contentDescription = if (isCategoryOrAmountFilterActive) {
                         "Filtrar movimientos, filtro activo"
                     } else {
                         "Filtrar movimientos"
                     },
                     onClick = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested) },
-                    showBadge = isCategoryFilterActive,
+                    showBadge = isCategoryOrAmountFilterActive,
                 )
             }
         },

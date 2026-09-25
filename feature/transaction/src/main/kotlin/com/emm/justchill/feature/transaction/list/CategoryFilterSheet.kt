@@ -322,11 +322,8 @@ private fun MontoSection(
     onMaxClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-
     FormSection(eyebrow = "MONTO", modifier = modifier) {
         AmountBoundRow(label = "Mínimo", amount = minAmount, onClick = onMinClick, onClear = onMinClear)
-        Spacer(Modifier.height(spacing.s1))
         AmountBoundRow(label = "Máximo", amount = maxAmount, onClick = onMaxClick, onClear = onMaxClear)
     }
 }
