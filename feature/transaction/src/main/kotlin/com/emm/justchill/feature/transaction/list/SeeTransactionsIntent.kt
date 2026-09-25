@@ -30,4 +30,12 @@ sealed interface SeeTransactionsIntent : UiIntent {
         data object OnSearchRequested : ScreenChromeIntent
         data object OnSearchClosed : ScreenChromeIntent
     }
+
+    // Grouped for the same CyclomaticComplexMethod reason as ScreenChromeIntent.
+    sealed interface AmountFilterIntent : SeeTransactionsIntent {
+        data class OnAmountSheetRequested(val target: AmountRangeTarget) : AmountFilterIntent
+        data object OnAmountSheetDismissed : AmountFilterIntent
+        data class OnAmountConfirmed(val digits: String) : AmountFilterIntent
+        data class OnAmountBoundCleared(val target: AmountRangeTarget) : AmountFilterIntent
+    }
 }

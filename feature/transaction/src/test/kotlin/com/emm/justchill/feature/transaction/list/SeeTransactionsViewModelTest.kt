@@ -655,6 +655,89 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
+    fun `a confirmed minimum bound reaches searchWithCategory in the filter`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Min))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("2000"))
+        advanceUntilIdle()
+
+        verify { transactionRepository.searchWithCategory(match { it.minAmount == Money(2_000L) }) }
+    }
+
+    @Test
+    fun `a confirmed maximum bound reaches searchWithCategory in the filter`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Max))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("5000"))
+        advanceUntilIdle()
+
+        verify { transactionRepository.searchWithCategory(match { it.maxAmount == Money(5_000L) }) }
+    }
+
+    @Test
+    fun `a minimum set above an existing maximum arrives swapped`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Max))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("2000"))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Min))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("5000"))
+        advanceUntilIdle()
+
+        assertEquals(Money(2_000L), vm.state.value.minAmount)
+        assertEquals(Money(5_000L), vm.state.value.maxAmount)
+    }
+
+    @Test
+    fun `the banner clear resets category and range and keeps the text query`() = runTest(testDispatcher) {
+        categoriesFlow.value = listOf(category("cat-1"))
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+        vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Min))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("2000"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnClearCategoryFilter)
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals("café", state.query)
+        assertEquals(null, state.activeCategory)
+        assertEquals(null, state.minAmount)
+        assertEquals(null, state.maxAmount)
+    }
+
+    @Test
+    fun `OnClearFilters resets query, category and range together`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(AmountRangeTarget.Min))
+        vm.onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed("2000"))
+        advanceTimeBy(300L)
+        advanceUntilIdle()
+
+        vm.onIntent(SeeTransactionsIntent.OnClearFilters)
+        advanceUntilIdle()
+
+        val state = vm.state.value
+        assertEquals("", state.query)
+        assertEquals(null, state.minAmount)
+        assertEquals(null, state.maxAmount)
+        assertFalse(state.isFilterActive)
+    }
+
+    @Test
     fun `OnSearchClosed clears the query as well as searchRequested, and requeries the month range`() =
         runTest(testDispatcher) {
             val vm = buildViewModel()

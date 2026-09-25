@@ -4,7 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
@@ -27,6 +31,7 @@ import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,14 +51,18 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.category.CategoryUi
+import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
+import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.pending.ConfirmRecurringSheet
 import com.emm.justchill.core.ui.pending.PendingRecurringHeader
 import com.emm.justchill.core.ui.pending.PendingRecurringRow
 import com.emm.justchill.core.ui.pending.PendingRecurringUi
+import com.emm.justchill.core.ui.sheets.AmountInputSheet
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -148,9 +157,11 @@ internal fun SeeTransactionsContent(
         }
 
         val activeCategory = state.activeCategory
-        if (activeCategory != null) {
+        if (activeCategory != null || state.minAmount != null || state.maxAmount != null) {
             ActiveFilterBanner(
-                categoryName = activeCategory.name,
+                categoryName = activeCategory?.name,
+                minAmount = state.minAmount,
+                maxAmount = state.maxAmount,
                 query = state.query.takeIf { it.isNotBlank() },
                 onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
             )
@@ -164,21 +175,7 @@ internal fun SeeTransactionsContent(
         )
     }
 
-    if (state.showFilterSheet) {
-        CategoryFilterSheet(
-            items = state.sheetItems,
-            incomeCount = state.incomeCount,
-            spendCount = state.spendCount,
-            hasActiveFilter = state.activeCategory != null,
-            initialSegment = state.sheetItems
-                .firstOrNull { it.id == state.activeCategory?.id }
-                ?.type
-                ?: CategoryType.Spend,
-            onSelect = { onIntent(SeeTransactionsIntent.OnCategorySelected(it)) },
-            onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
-            onDismiss = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetDismissed) },
-        )
-    }
+    FilterSheets(state = state, onIntent = onIntent)
 
     PendingConfirmSheetHost(
         pendingItem = state.confirmSheetPendingId?.let(pendingMap::get),
@@ -265,6 +262,53 @@ private fun TransactionListColumn(
 }
 
 @Composable
+private fun FilterSheets(state: SeeTransactionsUiState, onIntent: (SeeTransactionsIntent) -> Unit) {
+    if (state.showFilterSheet) {
+        CategoryFilterSheet(
+            items = state.sheetItems,
+            incomeCount = state.incomeCount,
+            spendCount = state.spendCount,
+            hasActiveFilter = state.activeCategory != null,
+            initialSegment = state.sheetItems
+                .firstOrNull { it.id == state.activeCategory?.id }
+                ?.type
+                ?: CategoryType.Spend,
+            minAmount = state.minAmount,
+            maxAmount = state.maxAmount,
+            onSelect = { onIntent(SeeTransactionsIntent.OnCategorySelected(it)) },
+            onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
+            onAmountBoundClick = {
+                onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetRequested(it))
+            },
+            onAmountBoundClear = {
+                onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountBoundCleared(it))
+            },
+            onDismiss = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetDismissed) },
+        )
+    }
+
+    val amountSheetTarget = state.amountSheetTarget
+    if (amountSheetTarget != null) {
+        val currentAmount = when (amountSheetTarget) {
+            AmountRangeTarget.Min -> state.minAmount
+            AmountRangeTarget.Max -> state.maxAmount
+        }
+        AmountInputSheet(
+            amountDigits = currentAmount?.let { moneyCentsString(it) } ?: "",
+            title = when (amountSheetTarget) {
+                AmountRangeTarget.Min -> "Monto mínimo"
+                AmountRangeTarget.Max -> "Monto máximo"
+            },
+            tone = AmountTone.Neutral,
+            onAmountConfirm = {
+                onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed(it))
+            },
+            onDismiss = { onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetDismissed) },
+        )
+    }
+}
+
+@Composable
 private fun PendingConfirmSheetHost(
     pendingItem: PendingRecurringUi?,
     onIntent: (SeeTransactionsIntent) -> Unit,
@@ -293,18 +337,37 @@ private fun PendingConfirmSheetHost(
 }
 
 @Composable
-private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: () -> Unit) {
+private fun ActiveFilterBanner(
+    categoryName: String?,
+    minAmount: Money?,
+    maxAmount: Money?,
+    query: String?,
+    onClear: () -> Unit,
+) {
     val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
 
+    val rangeText: String? = when {
+        minAmount != null && maxAmount != null -> "${minAmount.balanceFormatted()} – ${maxAmount.balanceFormatted()}"
+        minAmount != null -> "desde ${minAmount.balanceFormatted()}"
+        maxAmount != null -> "hasta ${maxAmount.balanceFormatted()}"
+        else -> null
+    }
+
     val displayText: AnnotatedString = buildAnnotatedString {
-        append("Filtrando por «")
-        withStyle(SpanStyle(fontWeight = FontWeight.W600)) {
-            append(categoryName)
+        if (categoryName != null) {
+            append("Filtrando por «")
+            withStyle(SpanStyle(fontWeight = FontWeight.W600)) {
+                append(categoryName)
+            }
+            append("»")
         }
-        append("»")
+        if (rangeText != null) {
+            if (categoryName != null) append(", ")
+            withStyle(SpanStyle(fontWeight = FontWeight.W600)) { append(rangeText) }
+        }
         if (query != null) {
             append(" + \"")
             withStyle(SpanStyle(fontFamily = InterFontFamily)) { append(query) }
@@ -340,26 +403,34 @@ private fun ActiveFilterBanner(categoryName: String, query: String?, onClear: ()
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.width(spacing.s2))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        val clearInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
+        Box(
+            contentAlignment = Alignment.CenterEnd,
             modifier = Modifier
                 .fillMaxHeight()
-                .clip(radii.rXS)
-                .clickable(onClick = onClear)
-                .padding(horizontal = spacing.s3),
+                .widthIn(min = spacing.s12)
+                .clickable(interactionSource = clearInteraction, indication = null, onClick = onClear),
         ) {
-            Text(
-                text = "Limpiar",
-                style = type.labelM,
-                color = colors.textSecondary,
-            )
-            Spacer(Modifier.width(spacing.s1))
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = "Limpiar filtro",
-                tint = colors.textSecondary,
-                modifier = Modifier.size(spacing.s3),
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(radii.rXS)
+                    .indication(clearInteraction, ripple())
+                    .padding(horizontal = spacing.s3),
+            ) {
+                Text(
+                    text = "Limpiar",
+                    style = type.labelM,
+                    color = colors.textSecondary,
+                )
+                Spacer(Modifier.width(spacing.s1))
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = "Limpiar filtro",
+                    tint = colors.textSecondary,
+                    modifier = Modifier.size(spacing.s3),
+                )
+            }
         }
     }
 }

@@ -71,7 +71,12 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
             list.map { row -> CategoryUsageCountEntity(categoryId = row.categoryId, usageCount = row.usageCount) }
         }
 
-    fun searchTransactions(query: String, categoryIds: Set<String>): Flow<List<TransactionWithCategoryEntity>> {
+    fun searchTransactions(
+        query: String,
+        categoryIds: Set<String>,
+        minAmountCents: Long? = null,
+        maxAmountCents: Long? = null,
+    ): Flow<List<TransactionWithCategoryEntity>> {
         val queryEmpty: Long = if (query.isBlank()) 1L else 0L
         val categoryFilterEmpty: Long = if (categoryIds.isEmpty()) 1L else 0L
         val safeCategoryIds: Collection<String> =
@@ -82,6 +87,10 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
             query = query.trim(),
             categoryFilterEmpty = categoryFilterEmpty,
             categoryIds = safeCategoryIds,
+            minUnbounded = if (minAmountCents == null) 1L else 0L,
+            minAmount = minAmountCents ?: 0L,
+            maxUnbounded = if (maxAmountCents == null) 1L else 0L,
+            maxAmount = maxAmountCents ?: 0L,
             limit = SEARCH_RESULT_CAP,
         )
             .asFlow()

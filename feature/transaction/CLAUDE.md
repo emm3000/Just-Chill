@@ -31,6 +31,6 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 - Filter at read time over clearing at write time: a list derived per `transactionType` cannot go stale; a list a reducer must remember to clear always can.
 - The browsed month follows a midnight rollover only while it equals the month the rollover leaves. Report's month never moves; `SeeTransactionsViewModelTest` pins both halves.
 - Pending recurring movements are about "now": a filtered list stays filtered, and browsing another month never surfaces today's pending row under a month it does not belong to.
-- A category filter turns the list into a cross-month search, so the month selector steps aside; in month mode it is always there, including before the ledger count is known.
+- A category filter, or an amount range, turns the list into a cross-month search, so the month selector steps aside; in month mode it is always there, including before the ledger count is known.
 - `SeeTransactionsViewModel` takes six constructor parameters, the ceiling review holds it to: a datum either needs new joins through the query or an existing flow, not a seventh parameter.
 - This screen owns the transaction list and nothing else. Income, spend and balance belong to `:feature:report`; before adding a section, find the owner.

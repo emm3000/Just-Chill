@@ -64,7 +64,7 @@ A calendar year-month, the window every total, report and Account figure is scop
 _Avoid_: period (reserved for Recurring), cycle, range
 
 **Filter**:
-Free text plus a set of Categories that narrows the Transaction list. Empty means everything.
+Free text, a set of Categories and an optional amount range that narrow the Transaction list. Empty means everything.
 _Avoid_: search, query, criteria
 
 ### Recurring
