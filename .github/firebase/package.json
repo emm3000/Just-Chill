@@ -1,0 +1,8 @@
+{
+  "name": "justchill-firebase-distribution",
+  "private": true,
+  "description": "Pinned firebase-tools for the uploadApk App Distribution steps.",
+  "dependencies": {
+    "firebase-tools": "15.31.0"
+  }
+}

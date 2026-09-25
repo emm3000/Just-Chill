@@ -34,3 +34,18 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+
+  # firebase-tools for uploadApk's App Distribution steps. The lockfile is the pinned boundary
+  # around the Firebase credentials, so bumps arrive as one grouped PR that rewrites it.
+  - package-ecosystem: npm
+    directory: /.github/firebase
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      firebase:
+        patterns:
+          - "*"

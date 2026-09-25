@@ -89,26 +89,47 @@ jobs:
           echo "devDebug=$(find androidApp/build/outputs/apk/dev/debug -name '*.apk' | head -n1)" >> "$GITHUB_OUTPUT"
           echo "prodRelease=$(find androidApp/build/outputs/apk/prod/release -name '*.apk' | head -n1)" >> "$GITHUB_OUTPUT"
 
-      # Third-party actions are pinned to a commit, not to a floating tag. They receive the Firebase
-      # service credentials, and a floating tag can be repointed at new code by anyone who controls
-      # the upstream repo. Dependabot (.github/dependabot.yml) proposes the bumps.
-      - name: Distribute Dev Debug to Firebase
-        uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
+      # firebase-tools receives the Firebase service credentials, so its whole dependency tree is
+      # pinned by the committed lockfile in .github/firebase, integrity hashes included. An exact
+      # npx version would pin only the top package and re-resolve the ranged transitive tree on
+      # every run. Dependabot (.github/dependabot.yml) proposes the bumps.
+      - uses: actions/setup-node@v7
         with:
-          appId: ${{ secrets.FIREBASE_DEV_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
-          groups: EMM
-          file: ${{ steps.paths.outputs.devDebug }}
-          releaseNotes: ${{ steps.notes.outputs.msg }}
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: .github/firebase/package-lock.json
+
+      - name: Install firebase-tools
+        working-directory: .github/firebase
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Write Firebase credentials
+        env:
+          CREDENTIALS: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
+        run: |
+          umask 077
+          printf '%s' "$CREDENTIALS" > "$RUNNER_TEMP/firebase-credentials.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-credentials.json" >> "$GITHUB_ENV"
+
+      - name: Distribute Dev Debug to Firebase
+        working-directory: .github/firebase
+        env:
+          APP_ID: ${{ secrets.FIREBASE_DEV_APP_ID }}
+          APK: ${{ github.workspace }}/${{ steps.paths.outputs.devDebug }}
+          NOTES: ${{ steps.notes.outputs.msg }}
+        run: npx --no-install firebase appdistribution:distribute "$APK" --app "$APP_ID" --groups EMM --release-notes "$NOTES" --non-interactive
 
       - name: Distribute Prod Release to Firebase
-        uses: wzieba/Firebase-Distribution-Github-Action@bd494989dd4bec0343f78adee87fe66e48279ad6 # v1.7.1
-        with:
-          appId: ${{ secrets.FIREBASE_PROD_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.CREDENTIAL_FILE_CONTENT }}
-          groups: EMM
-          file: ${{ steps.paths.outputs.prodRelease }}
-          releaseNotes: ${{ steps.notes.outputs.msg }}
+        working-directory: .github/firebase
+        env:
+          APP_ID: ${{ secrets.FIREBASE_PROD_APP_ID }}
+          APK: ${{ github.workspace }}/${{ steps.paths.outputs.prodRelease }}
+          NOTES: ${{ steps.notes.outputs.msg }}
+        run: npx --no-install firebase appdistribution:distribute "$APK" --app "$APP_ID" --groups EMM --release-notes "$NOTES" --non-interactive
+
+      - name: Remove Firebase credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-credentials.json"
 
       - name: Upload Dev Debug APK artifact
         uses: actions/upload-artifact@v7
