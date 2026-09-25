@@ -97,6 +97,7 @@ class ProfileViewModelRowDataTest {
         getRecurringMonthlySummary = getRecurringMonthlySummary,
         getSessionStatus = getSessionStatus,
         backupAvailability = FakeBackupAvailability(isAvailable = false),
+        exportTransactionsCsv = mockk(),
         appVersion = "1.0.0",
         clock = object : Clock {
             override fun now(): Instant = Instant.parse("2026-08-28T15:04:05Z")

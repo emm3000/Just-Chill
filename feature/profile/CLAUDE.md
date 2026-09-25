@@ -10,7 +10,7 @@ One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState`
 
 ## Koin and the graph
 
-`profileModule` is declared here and binds `ProfileViewModel`, nothing else; the DSL builds its constructor by hand, so every dependency is listed, `clock` included. `:androidApp`'s `wiring/ProfileWiring.kt` includes it and binds no use case of its own: every port this feature injects is app-level backup, auth, category or recurring vocabulary already bound in `backupModule`, `dataModule`, `authWiring` and `recurringWiring`. `ProfileViewModel` is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
+`profileModule` is declared here and binds `ProfileViewModel`, nothing else; the DSL builds its constructor by hand, so every dependency is listed, `clock` included. `:androidApp`'s `wiring/ProfileWiring.kt` includes it and binds one use case of its own, `ExportTransactionsCsvUseCase`; every other port this feature injects is app-level backup, auth, category or recurring vocabulary already bound in `backupModule`, `dataModule`, `authWiring` and `recurringWiring`. `ProfileViewModel` is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
 
 ## Routes and cross-feature navigation
 

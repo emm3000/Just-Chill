@@ -30,7 +30,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 @Composable
 internal fun BackupSection(
     state: ProfileUiState,
-    onExportClick: () -> Unit,
+    exportActions: ExportActions,
     onImportClick: () -> Unit,
     onImportConfirm: () -> Unit,
     onDialogDismiss: () -> Unit,
@@ -45,6 +45,10 @@ internal fun BackupSection(
         )
     }
 
+    if (state.dialog == ProfileDialog.Export) {
+        ExportSheet(op = state.op, actions = exportActions, onDismiss = onDialogDismiss)
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(text = "Respaldo")
         ProfileGroup {
@@ -55,10 +59,8 @@ internal fun BackupSection(
                 metaIsPrimary = false,
                 enabled = state.op == ProfileOp.None,
                 busy = state.op == ProfileOp.Exporting,
-                onClick = onExportClick,
-                trailing = {
-                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Exporting)
-                },
+                onClick = exportActions.onOpen,
+                trailing = {},
             )
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.FileUpload,

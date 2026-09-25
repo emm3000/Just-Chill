@@ -22,6 +22,7 @@ val profileModule: Module = module {
             getRecurringMonthlySummary = get(),
             getSessionStatus = get(),
             backupAvailability = get(),
+            exportTransactionsCsv = get(),
             appVersion = get(named("appVersion")),
             clock = get(),
         )

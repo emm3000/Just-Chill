@@ -104,10 +104,15 @@ private fun ProfileEntry(
                     vm.onIntent(ProfileIntent.ExportFinished(saved))
                 }
 
+                is ProfileEffect.CsvReady -> bindings.platform.shareCsv(effect.fileName, effect.content) {
+                    vm.onIntent(ProfileIntent.CsvShareFailed)
+                }
+
                 is ProfileEffect.Notify -> bindings.snackbarHostState.showEmmSnackbar(
                     message = effect.message.toText(),
                     tone = when (effect.message) {
                         ProfileMessage.ExportFailed,
+                        ProfileMessage.CsvExportFailed,
                         ProfileMessage.ImportFailed,
                         ProfileMessage.OperationInProgress,
                         is ProfileMessage.BackupFailed,
@@ -153,9 +158,12 @@ private fun ProfileEntry(
         onRecurringClick = { onRecurringClick(nav) },
         onLoansClick = { onLoansClick(nav) },
         onAboutClick = { onAboutClick(nav) },
-        onExportClick = {
+        onExportClick = { vm.onIntent(ProfileIntent.ExportClicked) },
+        onBackupExportClick = {
+            vm.onIntent(ProfileIntent.DialogDismissed)
             if (bindings.platform.supportsBackup) vm.onIntent(ProfileIntent.ExportRequested)
         },
+        onCsvExportClick = { scope -> vm.onIntent(ProfileIntent.CsvExportRequested(scope)) },
         onImportClick = { vm.onIntent(ProfileIntent.ImportClicked) },
         onImportConfirm = {
             vm.onIntent(ProfileIntent.DialogDismissed)

@@ -9,6 +9,7 @@ sealed interface ProfileEffect : UiEffect {
     data class ShowError(val error: DomainException) : ProfileEffect
     data class Notify(val message: ProfileMessage) : ProfileEffect
     data class ExportReady(val json: String) : ProfileEffect
+    data class CsvReady(val fileName: String, val content: String) : ProfileEffect
 }
 
 sealed interface ProfileMessage {
@@ -20,6 +21,7 @@ sealed interface ProfileMessage {
     data object AccountDeleted : ProfileMessage
     data object ExportDone : ProfileMessage
     data object ExportFailed : ProfileMessage
+    data object CsvExportFailed : ProfileMessage
     data class ImportDone(val transactions: Int, val recurring: Int, val loans: Int, val loanPayments: Int) :
         ProfileMessage
     data object ImportFailed : ProfileMessage

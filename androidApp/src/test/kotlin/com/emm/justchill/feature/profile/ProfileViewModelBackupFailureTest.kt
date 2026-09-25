@@ -265,6 +265,7 @@ class ProfileViewModelBackupFailureTest {
         getRecurringMonthlySummary = getRecurringMonthlySummary,
         getSessionStatus = getSessionStatus,
         backupAvailability = FakeBackupAvailability(isAvailable = false),
+        exportTransactionsCsv = mockk(),
         appVersion = APP_VERSION,
         clock = object : Clock {
             override fun now(): Instant = NOW
