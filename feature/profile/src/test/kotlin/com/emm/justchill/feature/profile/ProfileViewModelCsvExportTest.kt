@@ -20,6 +20,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -175,6 +176,24 @@ class ProfileViewModelCsvExportTest {
 
         assertEquals(listOf<ProfileEffect>(ProfileEffect.Notify(ProfileMessage.CsvExportFailed)), effects)
         assertEquals(ProfileOp.None, vm.state.value.op)
+        recording.cancel()
+    }
+
+    @Test
+    fun `the sheet stays open and busy while the CSV is being built`() = runTest(testDispatcher) {
+        val gate: CompletableDeferred<TransactionsCsv> = CompletableDeferred()
+        coEvery { exportTransactionsCsv(TransactionsCsvScope.CurrentMonth) } coAnswers { gate.await() }
+        val vm: ProfileViewModel = buildViewModel()
+        val recording: Job = recordEffects(vm, mutableListOf())
+        vm.onIntent(ProfileIntent.ExportClicked)
+
+        vm.onIntent(ProfileIntent.CsvExportRequested(TransactionsCsvScope.CurrentMonth))
+        advanceUntilIdle()
+
+        assertEquals(ProfileDialog.Export, vm.state.value.dialog)
+        assertEquals(ProfileOp.Exporting, vm.state.value.op)
+        gate.complete(monthCsv)
+        advanceUntilIdle()
         recording.cancel()
     }
 }
