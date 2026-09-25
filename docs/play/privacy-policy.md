@@ -1,5 +1,6 @@
 ---
 title: Política de privacidad — JustChill
+permalink: /play/
 ---
 
 # Política de privacidad — JustChill
