@@ -29,13 +29,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -125,16 +126,17 @@ class ProfileViewModelCsvExportTest {
     @Test
     fun `the CSV content never lands in state`() = runTest(testDispatcher) {
         val vm: ProfileViewModel = buildViewModel()
-        val recording: Job = recordEffects(vm, mutableListOf())
+        val states: MutableList<ProfileUiState> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect(states::add) }
+        backgroundScope.launch { vm.effect.collect {} }
         vm.onIntent(ProfileIntent.ExportClicked)
 
         vm.onIntent(ProfileIntent.CsvExportRequested(TransactionsCsvScope.CurrentMonth))
         advanceUntilIdle()
 
-        assertFalse(vm.state.value.toString().contains(monthCsv.content))
-        assertEquals(ProfileDialog.None, vm.state.value.dialog)
-        assertEquals(ProfileOp.None, vm.state.value.op)
-        recording.cancel()
+        assertTrue(states.any { it.op == ProfileOp.Exporting })
+        assertEquals(ProfileOp.None, states.last().op)
+        assertTrue(states.none { it.toString().contains(monthCsv.content) })
     }
 
     @Test
