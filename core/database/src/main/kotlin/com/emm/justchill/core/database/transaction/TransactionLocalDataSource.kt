@@ -74,8 +74,8 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
     fun searchTransactions(
         query: String,
         categoryIds: Set<String>,
-        minAmountCents: Long? = null,
-        maxAmountCents: Long? = null,
+        minAmountCents: Long?,
+        maxAmountCents: Long?,
     ): Flow<List<TransactionWithCategoryEntity>> {
         val queryEmpty: Long = if (query.isBlank()) 1L else 0L
         val categoryFilterEmpty: Long = if (categoryIds.isEmpty()) 1L else 0L

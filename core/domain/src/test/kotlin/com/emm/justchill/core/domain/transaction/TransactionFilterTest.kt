@@ -44,7 +44,7 @@ class TransactionFilterTest {
     }
 
     @Test
-    fun `equal min and max are kept as a one-cent-wide range`() {
+    fun `equal bounds match one amount`() {
         val filter = TransactionFilter.None.withAmountRange(minAmount = Money(3_000L), maxAmount = Money(3_000L))
 
         assertEquals(Money(3_000L), filter.minAmount)

@@ -1,7 +1,5 @@
 package com.emm.justchill.core.database.transaction
 
-import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
-import com.emm.justchill.core.database.JustChillDatabase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -10,29 +8,19 @@ import org.junit.Test
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Clock
 
 class SearchTransactionsCapTest {
 
-    private lateinit var driver: JdbcSqliteDriver
-    private lateinit var dataSource: TransactionLocalDataSource
+    private lateinit var fixture: TransactionSearchFixture
 
     @Before
     fun setUp() {
-        driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-        JustChillDatabase.Schema.create(driver)
-        val db = JustChillDatabase(driver)
-        dataSource = TransactionLocalDataSource(db.transactionsQueries, Clock.System)
-        exec("PRAGMA foreign_keys=ON")
-        exec(
-            "INSERT INTO accounts(accountId, name, type, currency, updatedAt, createdAt) " +
-                "VALUES ('acc-1', 'Cuenta', 'Bank', 'PEN', 1, 1)",
-        )
+        fixture = TransactionSearchFixture()
     }
 
     @After
     fun tearDown() {
-        driver.close()
+        fixture.close()
     }
 
     @Test
@@ -41,7 +29,7 @@ class SearchTransactionsCapTest {
             insert(id = "t-$index", description = "pollo a la brasa $index", minutesFromStart = index)
         }
 
-        val results = dataSource.searchTransactions(query = "pollo", categoryIds = emptySet()).first()
+        val results: List<TransactionWithCategoryEntity> = search()
 
         assertEquals(200, results.size)
     }
@@ -52,7 +40,7 @@ class SearchTransactionsCapTest {
             insert(id = "t-$index", description = "pollo a la brasa $index", minutesFromStart = index)
         }
 
-        val results = dataSource.searchTransactions(query = "pollo", categoryIds = emptySet()).first()
+        val results: List<TransactionWithCategoryEntity> = search()
 
         assertEquals(200, results.size)
         assertTrue(results.none { it.occurredAt < "2026-08-01T00:05:00" })
@@ -65,22 +53,21 @@ class SearchTransactionsCapTest {
             insert(id = "t-$index", description = "pollo a la brasa $index", minutesFromStart = index)
         }
 
-        val results = dataSource.searchTransactions(query = "pollo", categoryIds = emptySet()).first()
+        val results: List<TransactionWithCategoryEntity> = search()
 
         assertEquals(3, results.size)
     }
 
-    private fun exec(sql: String) {
-        driver.execute(identifier = null, sql = sql, parameters = 0)
-    }
+    private suspend fun search(): List<TransactionWithCategoryEntity> = fixture.dataSource.searchTransactions(
+        query = "pollo",
+        categoryIds = emptySet(),
+        minAmountCents = null,
+        maxAmountCents = null,
+    ).first()
 
     private fun insert(id: String, description: String, minutesFromStart: Int) {
-        val occurredAt =
+        val occurredAt: String =
             "2026-08-%02dT00:%02d:00".format(Locale.ROOT, 1 + minutesFromStart / 60, minutesFromStart % 60)
-        exec(
-            "INSERT INTO transactions(transactionId, type, amount, description, occurredAt, categoryId, " +
-                "accountId, createdAt, updatedAt) " +
-                "VALUES ('$id', 'Spend', 100, '$description', '$occurredAt', NULL, 'acc-1', 1, 1)",
-        )
+        fixture.insertTransaction(id = id, description = description, occurredAt = occurredAt)
     }
 }

@@ -192,7 +192,7 @@ class SeeTransactionsViewModel(
     }
 
     private fun toggleCategory(id: CategoryId) {
-        val next = if (id in filter.value.categoryIds) emptySet() else setOf(id)
+        val next: Set<CategoryId> = if (id in filter.value.categoryIds) emptySet() else setOf(id)
         filter.value = filter.value.copy(categoryIds = next)
     }
 
@@ -207,8 +207,8 @@ class SeeTransactionsViewModel(
             is SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed -> onAmountConfirmed(intent)
 
             is SeeTransactionsIntent.AmountFilterIntent.OnAmountBoundCleared -> {
-                val newMin = if (intent.target == AmountRangeTarget.Min) null else filter.value.minAmount
-                val newMax = if (intent.target == AmountRangeTarget.Max) null else filter.value.maxAmount
+                val newMin: Money? = if (intent.target == AmountRangeTarget.Min) null else filter.value.minAmount
+                val newMax: Money? = if (intent.target == AmountRangeTarget.Max) null else filter.value.maxAmount
                 filter.value = filter.value.withAmountRange(newMin, newMax)
                 updateState { copy(minAmount = newMin, maxAmount = newMax) }
             }
@@ -216,10 +216,10 @@ class SeeTransactionsViewModel(
     }
 
     private fun onAmountConfirmed(intent: SeeTransactionsIntent.AmountFilterIntent.OnAmountConfirmed) {
-        val target = state.value.amountSheetTarget ?: return
-        val amount = centsToMoney(intent.digits)
-        val newMin = if (target == AmountRangeTarget.Min) amount else filter.value.minAmount
-        val newMax = if (target == AmountRangeTarget.Max) amount else filter.value.maxAmount
+        val target: AmountRangeTarget = state.value.amountSheetTarget ?: return
+        val amount: Money = centsToMoney(intent.digits)
+        val newMin: Money? = if (target == AmountRangeTarget.Min) amount else filter.value.minAmount
+        val newMax: Money? = if (target == AmountRangeTarget.Max) amount else filter.value.maxAmount
         filter.value = filter.value.withAmountRange(newMin, newMax)
         updateState {
             copy(

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -131,7 +132,7 @@ internal fun SeeTransactionsContent(
         } else {
             ScreenHeader(
                 month = state.month.takeIf { state.isMonthSelectorVisible },
-                isCategoryFilterActive = state.activeCategory != null,
+                isCategoryFilterActive = state.isCategoryOrAmountFilterActive,
                 onBack = onBack,
                 onIntent = onIntent,
             )
@@ -156,8 +157,8 @@ internal fun SeeTransactionsContent(
             Spacer(Modifier.height(LocalEmmSpacing.current.s2))
         }
 
-        val activeCategory = state.activeCategory
-        if (activeCategory != null || state.minAmount != null || state.maxAmount != null) {
+        val activeCategory: ActiveCategoryInfo? = state.activeCategory
+        if (state.isCategoryOrAmountFilterActive) {
             ActiveFilterBanner(
                 categoryName = activeCategory?.name,
                 minAmount = state.minAmount,
@@ -268,7 +269,7 @@ private fun FilterSheets(state: SeeTransactionsUiState, onIntent: (SeeTransactio
             items = state.sheetItems,
             incomeCount = state.incomeCount,
             spendCount = state.spendCount,
-            hasActiveFilter = state.activeCategory != null,
+            hasActiveFilter = state.isCategoryOrAmountFilterActive,
             initialSegment = state.sheetItems
                 .firstOrNull { it.id == state.activeCategory?.id }
                 ?.type
@@ -287,9 +288,9 @@ private fun FilterSheets(state: SeeTransactionsUiState, onIntent: (SeeTransactio
         )
     }
 
-    val amountSheetTarget = state.amountSheetTarget
+    val amountSheetTarget: AmountRangeTarget? = state.amountSheetTarget
     if (amountSheetTarget != null) {
-        val currentAmount = when (amountSheetTarget) {
+        val currentAmount: Money? = when (amountSheetTarget) {
             AmountRangeTarget.Min -> state.minAmount
             AmountRangeTarget.Max -> state.maxAmount
         }
@@ -381,11 +382,11 @@ private fun ActiveFilterBanner(
             .fillMaxWidth()
             .padding(horizontal = spacing.s6)
             .padding(bottom = spacing.s3)
-            .height(spacing.s12)
+            .heightIn(min = spacing.s12)
             .clip(radii.rS)
             .background(colors.surface1)
             .border(spacing.hairline, colors.border, radii.rS)
-            .padding(start = spacing.s3),
+            .padding(start = spacing.s3, top = spacing.s2, bottom = spacing.s2),
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Outlined.List,
@@ -399,7 +400,7 @@ private fun ActiveFilterBanner(
             style = type.labelM,
             color = colors.textPrimary,
             modifier = Modifier.weight(1f),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.width(spacing.s2))

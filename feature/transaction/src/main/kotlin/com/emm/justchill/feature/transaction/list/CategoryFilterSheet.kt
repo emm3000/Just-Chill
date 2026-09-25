@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -336,15 +337,18 @@ private fun AmountBoundRow(label: String, amount: Money?, onClick: () -> Unit, o
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
+    val rowInteraction: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isRowPressed: Boolean by rowInteraction.collectIsPressedAsState()
+    val rowBackground: Color = if (isRowPressed) colors.surface2 else colors.surface1
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(spacing.s12)
             .clip(radii.rM)
-            .background(colors.surface1)
+            .background(rowBackground)
             .border(spacing.hairline, colors.border, radii.rM)
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = rowInteraction, indication = null, onClick = onClick)
             .padding(horizontal = spacing.s4),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -353,7 +357,7 @@ private fun AmountBoundRow(label: String, amount: Money?, onClick: () -> Unit, o
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = amount?.balanceFormatted() ?: "Sin límite",
-                style = type.bodyM,
+                style = type.amountS,
                 color = colors.textPrimary,
             )
             if (amount != null) {
