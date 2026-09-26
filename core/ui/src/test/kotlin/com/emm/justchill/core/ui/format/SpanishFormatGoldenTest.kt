@@ -1,6 +1,7 @@
 package com.emm.justchill.core.ui.format
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -86,6 +87,12 @@ class SpanishFormatGoldenTest {
         assertEquals("1,234", NumberFormatEs.integerRounded(1234.5)) // .5 -> nearest even (1234)
         assertEquals("1,236", NumberFormatEs.integerRounded(1235.5)) // .5 -> nearest even (1236)
         assertEquals("1,234,568", NumberFormatEs.integerRounded(1234567.6))
+    }
+
+    @Test fun time_matches_HH_mm_24h() {
+        assertEquals("09:05", SpanishDateFormat.time(LocalTime(9, 5)))
+        assertEquals("23:59", SpanishDateFormat.time(LocalTime(23, 59)))
+        assertEquals("00:00", SpanishDateFormat.time(LocalTime(0, 0)))
     }
 
     @Test fun stripSpanishAccents_maps_accented_to_base() {

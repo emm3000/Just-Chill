@@ -1,7 +1,7 @@
 package com.emm.justchill.core.ui.format
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.number
 
@@ -44,10 +44,10 @@ object SpanishDateFormat {
 
     fun dayShortMonth(date: LocalDate): String = "${date.dayOfMonth} ${shortMonth(date.month)}"
 
-    fun dayShortMonthTime(dateTime: LocalDateTime): String {
-        val hour = dateTime.hour.toString().padStart(2, '0')
-        val minute = dateTime.minute.toString().padStart(2, '0')
-        return "${dateTime.dayOfMonth} ${shortMonth(dateTime.month)}, $hour:$minute"
+    fun time(time: LocalTime): String {
+        val hour = time.hour.toString().padStart(2, '0')
+        val minute = time.minute.toString().padStart(2, '0')
+        return "$hour:$minute"
     }
 
     fun monthDayPadded(date: LocalDate): String {
