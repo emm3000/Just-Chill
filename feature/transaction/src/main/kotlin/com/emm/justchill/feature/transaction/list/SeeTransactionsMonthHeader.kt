@@ -36,7 +36,6 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.format.monthLabel
-import com.emm.justchill.core.ui.format.monthYearLabel
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -95,7 +94,7 @@ private fun MonthEyebrowRow(month: YearMonth, currentYear: Int, onIntent: (SeeTr
             }
             .padding(horizontal = spacing.s6)
             .semantics {
-                contentDescription = "Gastado en ${month.monthYearLabel()}. Cambiar de mes"
+                contentDescription = "$eyebrowText. Cambiar de mes"
                 role = Role.Button
             },
     ) {
