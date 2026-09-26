@@ -31,14 +31,10 @@ data class DayGroup(
             }
         }
 
-    // Only search results render this: their rows cross months, while in month mode the selector
-    // already names the month once.
     val monthYearCaption: String
         get() = SpanishDateFormat.monthYear(date.year, date.month)
 }
 
-// The day a row belongs under is the day it carries. No zone, no conversion, nothing that can put
-// the same transaction under a different header on a different device.
 internal fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<DayGroup> =
     groupBy { transaction -> transaction.occurredAt.date }
         .map { (date, transactions) ->
