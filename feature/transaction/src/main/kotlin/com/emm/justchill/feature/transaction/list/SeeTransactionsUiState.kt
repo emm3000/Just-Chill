@@ -68,7 +68,6 @@ data class SeeTransactionsUiState(
             else -> ListDisplayState.EmptyMonth
         }
 
-    // An eyebrow naming a spend that does not exist says nothing (PRD §3, ADR 022).
     val isEyebrowVisible: Boolean
         get() = !isFilterActive && !isSearchOpen && listDisplayState != ListDisplayState.EmptyLedger
 }
