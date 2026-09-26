@@ -158,7 +158,7 @@ class AddTransactionViewModel(
             val timeOfDay: LocalTime = clock.now().toLocalDateTime(zone).time
             val insert: TransactionInsert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
             createTransaction(insert)
-            sendEffect(AddTransactionEffect.TransactionSaved)
+            sendEffect(AddTransactionEffect.TransactionSaved(YearMonth.of(insert.occurredAt.date)))
         }
     }
 }

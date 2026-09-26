@@ -3,6 +3,7 @@ package com.emm.justchill.shell
 import androidx.compose.runtime.Stable
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.feature.account.AddAccountRoute
@@ -30,6 +31,9 @@ internal class HostResultChannels(
     val pendingCategory: () -> SelectableCategory?,
     val onCategoryCaptured: (SelectableCategory) -> Unit,
     val onPendingCategoryConsumed: () -> Unit,
+    val savedMonth: () -> YearMonth?,
+    val onMovementSaved: (YearMonth) -> Unit,
+    val onSavedMonthConsumed: () -> Unit,
     val pendingImportJson: () -> String?,
     val onImportHandled: () -> Unit,
 )
@@ -43,7 +47,11 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
 ) {
     onboardingEntries(bindings, home = HOME_ROUTE, onFirstLaunchSeen = onFirstLaunchSeen)
     authEntries(bindings)
-    seeTransactionsEntries(bindings)
+    seeTransactionsEntries(
+        bindings = bindings,
+        savedMonth = channels.savedMonth,
+        onSavedMonthConsumed = channels.onSavedMonthConsumed,
+    )
     accountEntries(
         bindings = bindings,
         onOpenLoans = { nav -> nav.pushToTop(LoansRoute) },
@@ -57,6 +65,7 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
         bindings = bindings,
         pendingCategory = channels.pendingCategory,
         onPendingCategoryConsumed = channels.onPendingCategoryConsumed,
+        onMovementSaved = channels.onMovementSaved,
         onAddNewAccount = { nav -> nav.push(AddAccountRoute) },
         onAddNewCategory = { nav, categoryType ->
             nav.push(CategoryRoute(initialType = categoryType, propagateToTransaction = true))

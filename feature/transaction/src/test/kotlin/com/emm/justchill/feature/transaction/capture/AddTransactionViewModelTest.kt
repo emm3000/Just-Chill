@@ -9,6 +9,7 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.FrequentCombo
@@ -62,6 +63,7 @@ class AddTransactionViewModelTest {
     private val lima: TimeZone = TimeZone.of("America/Lima")
     private val today: LocalDate = LocalDate(2026, Month.AUGUST, 10)
     private val tomorrow: LocalDate = LocalDate(2026, Month.AUGUST, 11)
+    private val augustSaved: YearMonth = YearMonth(2026, Month.AUGUST)
 
     private class MovableClock(var instant: Instant) : Clock {
         override fun now(): Instant = instant
@@ -335,7 +337,45 @@ class AddTransactionViewModelTest {
         advanceUntilIdle()
         collector.cancel()
 
-        assertEquals(listOf<AddTransactionEffect>(AddTransactionEffect.TransactionSaved), effects)
+        assertEquals(listOf<AddTransactionEffect>(AddTransactionEffect.TransactionSaved(augustSaved)), effects)
+    }
+
+    @Test
+    fun `a save with no date picked lands on TodayFlow's month`() = runTest(testDispatcher) {
+        val vm: AddTransactionViewModel = buildViewModel()
+        advanceUntilIdle()
+        val effects: MutableList<AddTransactionEffect> = mutableListOf()
+        val collector: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        todayDates.value = LocalDate(2026, Month.SEPTEMBER, 1)
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertEquals(
+            listOf<AddTransactionEffect>(AddTransactionEffect.TransactionSaved(YearMonth(2026, Month.SEPTEMBER))),
+            effects,
+        )
+    }
+
+    @Test
+    fun `a save with a June date picked lands on June`() = runTest(testDispatcher) {
+        val vm: AddTransactionViewModel = buildViewModel()
+        advanceUntilIdle()
+        val effects: MutableList<AddTransactionEffect> = mutableListOf()
+        val collector: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertEquals(
+            listOf<AddTransactionEffect>(AddTransactionEffect.TransactionSaved(YearMonth(2026, Month.JUNE))),
+            effects,
+        )
     }
 
     @Test

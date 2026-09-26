@@ -28,6 +28,7 @@ import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
@@ -95,19 +96,19 @@ private val INCOME_KIND = TransactionKindContent(
 fun AddTransactionScreen(
     vm: AddTransactionViewModel,
     onClose: () -> Unit,
-    onSaveSuccess: () -> Unit,
+    onSaveSuccess: (YearMonth) -> Unit,
     snackbarHostState: SnackbarHostState,
     onOpenTransactions: () -> Unit,
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val currentOnSaveSuccess: () -> Unit by rememberUpdatedState(onSaveSuccess)
+    val currentOnSaveSuccess: (YearMonth) -> Unit by rememberUpdatedState(onSaveSuccess)
 
     LaunchedEffect(vm) {
         vm.effect.collect { effect ->
             when (effect) {
-                AddTransactionEffect.TransactionSaved -> currentOnSaveSuccess()
+                is AddTransactionEffect.TransactionSaved -> currentOnSaveSuccess(effect.month)
 
                 is AddTransactionEffect.ShowError ->
                     snackbarHostState.showEmmSnackbar(message = effect.message, tone = EmmSnackbarTone.Error)

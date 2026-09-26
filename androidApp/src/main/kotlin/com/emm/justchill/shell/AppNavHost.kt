@@ -30,6 +30,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.emm.justchill.core.CommitHash
 import com.emm.justchill.core.backup.BackupDisclosureSignal
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
@@ -69,6 +70,7 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
         }
         var pendingCategory by remember { mutableStateOf<SelectableCategory?>(null) }
         var pendingImportJson by remember { mutableStateOf<String?>(null) }
+        var savedMonth by remember { mutableStateOf<YearMonth?>(null) }
         val snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
         val rootScope: CoroutineScope = rememberCoroutineScope()
         val showRootMessage: (String) -> Unit = { message ->
@@ -90,6 +92,9 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
             pendingCategory = { pendingCategory },
             onCategoryCaptured = { created -> pendingCategory = created },
             onPendingCategoryConsumed = { pendingCategory = null },
+            savedMonth = { savedMonth },
+            onMovementSaved = { month -> savedMonth = month },
+            onSavedMonthConsumed = { savedMonth = null },
             pendingImportJson = { pendingImportJson },
             onImportHandled = { pendingImportJson = null },
         )

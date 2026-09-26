@@ -12,6 +12,7 @@ import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.TransactionId
 import com.emm.justchill.core.domain.shared.UniqueIdProvider
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.DeleteTransactionUseCase
@@ -133,7 +134,7 @@ class TransactionDateEndToEndTest {
         vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
         vm.onIntent(AddTransactionIntent.OnSave)
-        assertEquals(AddTransactionEffect.TransactionSaved, vm.effect.first())
+        assertEquals(AddTransactionEffect.TransactionSaved(YearMonth(2026, Month.JUNE)), vm.effect.first())
 
         assertEquals("2026-06-13T14:30:00", storedOccurredAt("tx-1"))
     }
@@ -147,7 +148,7 @@ class TransactionDateEndToEndTest {
         clock.instant = instantAt(LocalDate(2026, Month.AUGUST, 11), hour = 0, minute = 5)
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
         vm.onIntent(AddTransactionIntent.OnSave)
-        assertEquals(AddTransactionEffect.TransactionSaved, vm.effect.first())
+        assertEquals(AddTransactionEffect.TransactionSaved(YearMonth(2026, Month.AUGUST)), vm.effect.first())
 
         assertEquals("2026-08-11T00:05:00", storedOccurredAt("tx-1"))
     }
