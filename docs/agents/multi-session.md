@@ -62,6 +62,7 @@ Every dispatch to a peer session must include:
 ## Isolation: worktrees
 
 - Every peer works in its own git worktree (`../justchill-<name>`, branched off `origin/trunk`), never in the owner's main checkout, which holds owner-only uncommitted files. All sessions open in the same folder by default, so a checkout there changes the branch under every other session.
+- A fresh worktree has no `supabase.properties`: the file is gitignored and `androidApp/build.gradle.kts` reads it from the root, so a dev build there signs in to nothing. A dispatch that needs a signed-in shot tells the peer to `cp` it from the owner's checkout root, never to commit it. *Why: on 2026-09-25 @mas skipped the signed-in shot of #443 for exactly this.*
 - Before changing the state of any checkout, find out who is using it; an unexpected branch may be a live peer, not a leftover.
 - Review and verification prompts are read-only on every existing checkout. If gradle must run on a branch, or a red/green check needs a source edit, use a throwaway worktree under the session scratchpad and remove it afterward.
 - `git checkout trunk` fails inside a worktree while the primary worktree is already on `trunk`; use `git fetch` + `git switch -c <branch> origin/trunk` instead.
