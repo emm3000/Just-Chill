@@ -3,8 +3,6 @@ package com.emm.justchill.core.ui.error
 import com.emm.justchill.core.domain.auth.MIN_SIGNUP_PASSWORD_LENGTH
 import com.emm.justchill.core.domain.loan.MAX_INTEREST_BPS
 import com.emm.justchill.core.domain.loan.MIN_INTEREST_BPS
-import com.emm.justchill.core.domain.recurring.MAX_DAY_OF_MONTH
-import com.emm.justchill.core.domain.recurring.MIN_DAY_OF_MONTH
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
 
@@ -35,10 +33,7 @@ fun ValidationCode.toUserMessage(): String = when (this) {
     ValidationCode.AmountRequired -> "Ingresa un monto"
     ValidationCode.AmountMustBePositive -> "El monto debe ser mayor a cero"
     ValidationCode.DateInTheFuture -> "No puedes registrar un movimiento con fecha futura"
-    ValidationCode.DayOfMonthOutOfRange -> "El día del mes debe estar entre $MIN_DAY_OF_MONTH y $MAX_DAY_OF_MONTH"
-    ValidationCode.RecurringAlreadyConfirmed -> "Ya confirmaste este movimiento para este mes"
     ValidationCode.AccountHasTransactions -> "Esta cuenta tiene movimientos. Bórralos o muévelos antes de eliminarla"
-    ValidationCode.AccountHasRecurringMovements -> "Esta cuenta tiene recurrentes activos. Elimínalos primero"
     ValidationCode.EmailInvalid -> "Revisa el correo — no parece válido"
     ValidationCode.EmailAlreadyRegistered -> "Ese correo ya tiene una cuenta. Inicia sesión"
     ValidationCode.PasswordRequired -> "Ingresa tu contraseña"

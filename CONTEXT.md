@@ -1,8 +1,8 @@
 # JustChill
 
 Local-first personal finance app for one person in Peru: manual capture of income and spending in
-soles in seconds, a month report, recurring movements, informal loans kept apart from the ledger, and
-an opt-in snapshot backup. The device is the source of truth; nothing needs an account or a network.
+soles in seconds, a month report, informal loans kept apart from the ledger, and an opt-in snapshot
+backup. The device is the source of truth; nothing needs an account or a network.
 
 ## Language
 
@@ -11,7 +11,7 @@ an opt-in snapshot backup. The device is the source of truth; nothing needs an a
 **Transaction**:
 One recorded movement of money on an Account: an Income or a Spend with an Amount, an optional
 Category, a description and the local date and time it occurred.
-_Avoid_: entry, record, expense row, item
+_Avoid_: entry, record, expense row, item, recurring movement, variable amount, period, pending, paused
 _UI term_: "movimiento"
 
 **Income**:
@@ -61,52 +61,11 @@ _Avoid_: favourite, preset, template, quick add
 
 **Month**:
 A calendar year-month, the window every total, report and Account figure is scoped to.
-_Avoid_: period (reserved for Recurring), cycle, range
+_Avoid_: period, cycle, range
 
 **Filter**:
 Free text, a set of Categories and an optional amount range that narrow the Transaction list. Empty means everything.
 _Avoid_: search, query, criteria
-
-### Recurring
-
-**Recurring movement**:
-A template for a Transaction expected every Month on a given day, with a fixed Amount or a Variable
-one. It records nothing by itself; each Period is confirmed or skipped by hand.
-_Avoid_: subscription, scheduled transaction, bill, standing order
-_UI term_: "Movimiento recurrente"
-
-**Variable amount**:
-A Recurring movement with no fixed Amount; the Amount is typed when its Period is confirmed.
-_Avoid_: estimated amount, open amount
-_UI term_: "Variable"
-
-**Period**:
-One Month a Recurring movement is due in, identified by its year and month.
-_Avoid_: month (in this context), occurrence, instance
-
-**Pending**:
-A Period whose due day has arrived and that is neither confirmed nor skipped. A due day past the
-Month's length falls on its last day.
-_Avoid_: overdue, unpaid, missed, late
-_UI term_: "Pendientes"
-
-**Confirm**:
-Record the Transaction for a Pending Period and settle that Period.
-_Avoid_: pay, apply, execute, post
-_UI term_: "Confirmar"
-
-**Skip**:
-Settle a Pending Period without recording a Transaction.
-_Avoid_: dismiss, ignore, delete, cancel
-
-**Catch-up window**:
-The twelve most recent Months. A Period older than that is never offered as Pending, because
-reconstructing payments from memory past a year stops being a to-do list.
-_Avoid_: backlog, history, lookback
-
-**Paused**:
-A Recurring movement switched off. It produces no Pending Periods and keeps everything it recorded.
-_Avoid_: disabled, archived, inactive, deleted
 
 ### Loans
 

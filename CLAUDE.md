@@ -31,7 +31,7 @@ Shared Gradle configuration lives in convention plugins under `build-logic/conve
 
 ## Product
 
-Manual capture of income and spending in soles, in under fifteen seconds per movement; accounts, categories, recurring movements, a month report, and informal loans as a parallel ledger. Spanish only, free, no ads, no bank sync. The Won't-have rows and the acceptance criterion: `docs/PRODUCT_REQUIREMENTS.md`.
+Manual capture of income and spending in soles, in under fifteen seconds per movement; accounts, categories, a month report, and informal loans as a parallel ledger. Spanish only, free, no ads, no bank sync. The Won't-have rows and the acceptance criterion: `docs/PRODUCT_REQUIREMENTS.md`.
 
 ## Non-negotiable rules
 

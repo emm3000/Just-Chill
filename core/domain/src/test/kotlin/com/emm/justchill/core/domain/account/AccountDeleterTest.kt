@@ -1,6 +1,5 @@
 package com.emm.justchill.core.domain.account
 
-import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.transaction.TransactionRepository
@@ -16,19 +15,13 @@ import kotlin.test.assertFailsWith
 
 class AccountDeleterTest {
 
-    private val repository = mockk<AccountRepository>()
-    private val transactionRepository = mockk<TransactionRepository>()
-    private val recurringMovementRepository = mockk<RecurringMovementRepository>()
-    private val accountDeleter = DeleteAccountUseCase(
-        repository,
-        transactionRepository,
-        recurringMovementRepository,
-    )
+    private val repository: AccountRepository = mockk()
+    private val transactionRepository: TransactionRepository = mockk()
+    private val accountDeleter: DeleteAccountUseCase = DeleteAccountUseCase(repository, transactionRepository)
 
     @Test
-    fun `delete should call repository delete when account has no live transactions or recurring`() = runTest {
+    fun `delete should call repository delete when account has no live transactions`() = runTest {
         coEvery { transactionRepository.countLiveByAccount(any()) } returns 0L
-        coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 0L
         coEvery { repository.delete(any()) } just Runs
 
         accountDeleter(AccountId("1234"))
@@ -39,7 +32,6 @@ class AccountDeleterTest {
     @Test
     fun `delete should throw ValidationError when account has live transactions`() = runTest {
         coEvery { transactionRepository.countLiveByAccount(any()) } returns 3L
-        coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 0L
 
         assertFailsWith<DomainException.ValidationError> {
             accountDeleter(AccountId("1234"))
@@ -50,7 +42,6 @@ class AccountDeleterTest {
     @Test
     fun `delete should succeed when account has only tombstoned transactions`() = runTest {
         coEvery { transactionRepository.countLiveByAccount(any()) } returns 0L
-        coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 0L
         coEvery { repository.delete(any()) } just Runs
 
         accountDeleter(AccountId("acc-tombstoned"))
@@ -59,40 +50,14 @@ class AccountDeleterTest {
     }
 
     @Test
-    fun `delete should throw ValidationError when account has live recurring movements`() = runTest {
-        coEvery { transactionRepository.countLiveByAccount(any()) } returns 0L
-        coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 2L
-
-        assertFailsWith<DomainException.ValidationError> {
-            accountDeleter(AccountId("1234"))
-        }
-        coVerify(exactly = 0) { repository.delete(any()) }
-    }
-
-    @Test
     fun `delete ValidationError message for live transactions is exact`() = runTest {
         coEvery { transactionRepository.countLiveByAccount(any()) } returns 1L
-        coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 0L
 
-        val ex = assertFailsWith<DomainException.ValidationError> {
+        val ex: DomainException.ValidationError = assertFailsWith<DomainException.ValidationError> {
             accountDeleter(AccountId("acc-1"))
         }
         assertEquals(
             "Cannot delete an account with transactions. Delete or move them first.",
-            ex.message,
-        )
-    }
-
-    @Test
-    fun `delete ValidationError message for live recurring movements is exact`() = runTest {
-        coEvery { transactionRepository.countLiveByAccount(any()) } returns 0L
-        coEvery { recurringMovementRepository.countLiveByAccount(any()) } returns 1L
-
-        val ex = assertFailsWith<DomainException.ValidationError> {
-            accountDeleter(AccountId("acc-1"))
-        }
-        assertEquals(
-            "Cannot delete an account with active recurring movements. Remove them first.",
             ex.message,
         )
     }

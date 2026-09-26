@@ -31,7 +31,15 @@ CONTEXT.md did.
   are untouched, so every snapshot already in Storage still decodes and
   restores. `SnapshotStore` keeps writing the section from the table and
   restoring it into the table; from now on it carries the rows the device
-  had on 2026-09-25, and no screen reads them.
+  had on 2026-09-25, and no screen reads them. To serve it the code keeps
+  `RecurringMovement`, `Frequency`, `RecurringMovementId`, `periodKey` and
+  `parsePeriodKey` in `com.emm.justchill.core.domain.recurring`,
+  `RecurringMovementEntity` with its mappers, and ten queries in
+  `recurring_movements.sq`: `selectAllLive`, `softDeleteAllLive`,
+  `insertOrIgnoreFromBackup`, `restoreFromBackup` and
+  `clearCategoryOnTypeChange` for the snapshot, and `find`, `insert`,
+  `softDelete`, `countLiveByAccount` and `selectAllWithDetails` for the frozen
+  migration and backup-compatibility tests.
 - **Docs.** CLAUDE.md's Product line and module list, CONTEXT.md's
   `### Recurring` block (its terms become `_Avoid_` under Transaction, so
   "period" and "pending" are not reused with another meaning), and

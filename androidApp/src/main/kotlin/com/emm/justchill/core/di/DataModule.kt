@@ -15,8 +15,6 @@ import com.emm.justchill.core.database.loan.DefaultLoanRepository
 import com.emm.justchill.core.database.loan.LoanLocalDataSource
 import com.emm.justchill.core.database.loan.LoanPaymentLocalDataSource
 import com.emm.justchill.core.database.provideTransactionQueries
-import com.emm.justchill.core.database.recurring.DefaultRecurringMovementRepository
-import com.emm.justchill.core.database.recurring.RecurringMovementLocalDataSource
 import com.emm.justchill.core.database.transaction.DefaultTransactionRepository
 import com.emm.justchill.core.database.transaction.DefaultTransactionStatsRepository
 import com.emm.justchill.core.database.transaction.TransactionLocalDataSource
@@ -25,7 +23,6 @@ import com.emm.justchill.core.domain.account.AccountRepository
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.loan.LoanPaymentRepository
 import com.emm.justchill.core.domain.loan.LoanRepository
-import com.emm.justchill.core.domain.recurring.RecurringMovementRepository
 import com.emm.justchill.core.domain.shared.backup.BackupEraser
 import com.emm.justchill.core.domain.shared.backup.BackupPruner
 import com.emm.justchill.core.domain.shared.backup.BackupRepository
@@ -47,7 +44,6 @@ val dataModule = module {
     factoryOf(::TransactionLocalDataSource)
     factoryOf(::TransactionStatsLocalDataSource)
     factoryOf(::AccountLocalDataSource)
-    factoryOf(::RecurringMovementLocalDataSource)
     factoryOf(::LoanLocalDataSource)
     factoryOf(::LoanPaymentLocalDataSource)
 
@@ -55,7 +51,6 @@ val dataModule = module {
     factoryOf(::DefaultTransactionStatsRepository) { bind<TransactionStatsRepository>() }
     factoryOf(::DefaultCategoryRepository) { bind<CategoryRepository>() }
     factoryOf(::DefaultAccountRepository) { bind<AccountRepository>() }
-    factoryOf(::DefaultRecurringMovementRepository) { bind<RecurringMovementRepository>() }
     factoryOf(::DefaultLoanRepository) { bind<LoanRepository>() }
     factoryOf(::DefaultLoanPaymentRepository) { bind<LoanPaymentRepository>() }
     factoryOf(::SqlDelightSnapshotStore) { bind<SnapshotStore>() }

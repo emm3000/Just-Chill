@@ -12,8 +12,6 @@ import com.emm.justchill.core.database.transaction.asExternalModel
 import com.emm.justchill.core.domain.account.AccountType
 import com.emm.justchill.core.domain.recurring.Frequency
 import com.emm.justchill.core.domain.recurring.RecurringMovement
-import com.emm.justchill.core.domain.recurring.pendingPeriods
-import com.emm.justchill.core.domain.recurring.periodKey
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.RecurringMovementId
@@ -22,8 +20,6 @@ import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.domain.transaction.TransactionType
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -613,21 +609,19 @@ class DefaultBackupRepositoryImportTest {
     }
 
     @Test
-    fun `a restored template keeps the mark it was settled through, so the app does not re-mint it`() = runTest {
+    fun `a restored template keeps the mark it was settled through`() = runTest {
         val settledThroughJuly = NEVER_CONFIRMED.copy(lastConfirmedPeriod = "2026-07")
 
         val restored = assertNotNull(roundTrip(settledThroughJuly))
 
         assertEquals("2026-07", restored.lastConfirmedPeriod)
-        assertEquals(listOf("2026-08"), owedPeriodsOf(restored))
     }
 
     @Test
-    fun `a restored template keeps its own createdAt, so the months it still owes survive`() = runTest {
+    fun `a restored template keeps its own createdAt`() = runTest {
         val restored = assertNotNull(roundTrip(NEVER_CONFIRMED))
 
         assertEquals(TEMPLATE_CREATED, restored.createdAt)
-        assertEquals(listOf("2026-06", "2026-07", "2026-08"), owedPeriodsOf(restored))
     }
 
     private suspend fun roundTrip(template: RecurringMovement): RecurringMovement? {
@@ -662,9 +656,6 @@ class DefaultBackupRepositoryImportTest {
             ?.asEntity()
             ?.asExternalModelOrNull()
     }
-
-    private fun owedPeriodsOf(template: RecurringMovement): List<String> =
-        pendingPeriods(template, TODAY, TimeZone.UTC).map(::periodKey)
 
     private fun exec(sql: String) {
         driver.execute(identifier = null, sql = sql, parameters = 0)
@@ -750,8 +741,6 @@ class DefaultBackupRepositoryImportTest {
         val SECOND_IMPORT: Instant = Instant.parse("2026-08-11T16:04:05Z")
 
         val TEMPLATE_CREATED: Long = Instant.parse("2026-06-10T12:00:00Z").toEpochMilliseconds()
-
-        val TODAY = LocalDate(2026, 8, 13)
 
         val NEVER_CONFIRMED = RecurringMovement(
             id = RecurringMovementId("rec-1"),

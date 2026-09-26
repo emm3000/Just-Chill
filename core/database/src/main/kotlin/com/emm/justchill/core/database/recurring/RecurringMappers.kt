@@ -1,19 +1,16 @@
 package com.emm.justchill.core.database.recurring
 
 import com.emm.justchill.core.database.Recurring_movements
-import com.emm.justchill.core.database.SelectAllWithDetails
 import com.emm.justchill.core.database.shared.enumValueOrNull
 import com.emm.justchill.core.domain.recurring.Frequency
 import com.emm.justchill.core.domain.recurring.RecurringMovement
-import com.emm.justchill.core.domain.recurring.RecurringMovementDetails
-import com.emm.justchill.core.domain.recurring.RecurringMovementInsert
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.domain.transaction.TransactionType
 
-fun Recurring_movements.asEntity() = RecurringMovementEntity(
+fun Recurring_movements.asEntity(): RecurringMovementEntity = RecurringMovementEntity(
     id = id,
     name = name,
     type = type,
@@ -29,7 +26,7 @@ fun Recurring_movements.asEntity() = RecurringMovementEntity(
     updatedAt = updatedAt,
 )
 
-fun List<Recurring_movements>.asEntity() = map(Recurring_movements::asEntity)
+fun List<Recurring_movements>.asEntity(): List<RecurringMovementEntity> = map(Recurring_movements::asEntity)
 
 fun RecurringMovementEntity.asExternalModelOrNull(): RecurringMovement? {
     val parsedType = enumValueOrNull<TransactionType>(type)
@@ -51,35 +48,5 @@ fun RecurringMovementEntity.asExternalModelOrNull(): RecurringMovement? {
     )
 }
 
-fun List<RecurringMovementEntity>.asExternalModel() = mapNotNull(RecurringMovementEntity::asExternalModelOrNull)
-
-fun SelectAllWithDetails.asExternalModelOrNull(): RecurringMovementDetails? {
-    val parsedType = enumValueOrNull<TransactionType>(type) ?: return null
-    return RecurringMovementDetails(
-        id = id,
-        name = name,
-        type = parsedType,
-        amount = amount?.let { Money(it) },
-        categoryName = categoryName,
-        categoryColor = categoryColor,
-        accountName = accountName,
-        dayOfMonth = dayOfMonth.toInt(),
-        isActive = isActive != 0L,
-    )
-}
-
-fun RecurringMovementInsert.toPersistParams(id: String, now: Long) = RecurringMovementEntity(
-    id = id,
-    name = name,
-    type = type.name,
-    amount = amount?.cents,
-    description = description,
-    categoryId = categoryId?.value,
-    accountId = accountId.value,
-    frequency = Frequency.Monthly.name,
-    dayOfMonth = dayOfMonth.toLong(),
-    isActive = if (isActive) 1L else 0L,
-    lastConfirmedPeriod = null,
-    createdAt = now,
-    updatedAt = now,
-)
+fun List<RecurringMovementEntity>.asExternalModel(): List<RecurringMovement> =
+    mapNotNull(RecurringMovementEntity::asExternalModelOrNull)
