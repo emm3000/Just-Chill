@@ -1,6 +1,5 @@
 package com.emm.justchill.feature.profile
 
-import com.emm.justchill.core.domain.shared.Money
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -9,21 +8,6 @@ class ProfileRowTextTest {
     @Test
     fun `the categories row splits the total by type`() {
         assertEquals("24 en total · 7 de ingreso", categoriesMetaText(total = 24, incomeCount = 7))
-    }
-
-    @Test
-    fun `the recurring row pairs the count with the money that leaves every month`() {
-        assertEquals("3 al mes · salen S/ 90.00", recurringMetaText(activeCount = 3, monthlyOutflow = Money(9_000L)))
-    }
-
-    @Test
-    fun `no active template says so instead of reciting two zeroes`() {
-        assertEquals("Ninguno todavía", recurringMetaText(activeCount = 0, monthlyOutflow = Money.Zero))
-    }
-
-    @Test
-    fun `a template with no fixed amount still shows the count`() {
-        assertEquals("1 al mes · salen S/ 0.00", recurringMetaText(activeCount = 1, monthlyOutflow = Money.Zero))
     }
 
     @Test

@@ -1,8 +1,0 @@
-package com.emm.justchill.feature.recurring
-
-import com.emm.justchill.core.ui.mvi.UiEffect
-
-sealed interface RecurringMovementsEffect : UiEffect {
-    data class NavigateToAddEdit(val id: String? = null) : RecurringMovementsEffect
-    data class ShowError(val message: String) : RecurringMovementsEffect
-}

@@ -12,7 +12,6 @@ import com.emm.justchill.wiring.authWiring
 import com.emm.justchill.wiring.categoryWiring
 import com.emm.justchill.wiring.loanWiring
 import com.emm.justchill.wiring.profileWiring
-import com.emm.justchill.wiring.recurringWiring
 import com.emm.justchill.wiring.reportWiring
 import com.emm.justchill.wiring.transactionWiring
 import org.koin.core.Koin
@@ -27,7 +26,6 @@ fun appModules(platformModule: Module): List<Module> = listOf(
     transactionWiring,
     accountWiring,
     categoryWiring,
-    recurringWiring,
     reportWiring,
     loanWiring,
     profileWiring,

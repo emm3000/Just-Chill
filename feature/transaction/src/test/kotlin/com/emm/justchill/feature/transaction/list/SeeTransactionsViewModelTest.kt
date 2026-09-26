@@ -3,10 +3,6 @@ package com.emm.justchill.feature.transaction.list
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.domain.recurring.ConfirmRecurringMovementUseCase
-import com.emm.justchill.core.domain.recurring.GetPendingRecurringMovementsUseCase
-import com.emm.justchill.core.domain.recurring.PendingRecurring
-import com.emm.justchill.core.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
@@ -78,19 +74,10 @@ class SeeTransactionsViewModelTest {
         every { fetchAllWithCategoryInRange(any(), any()) } returns monthTransactionsFlow
         every { searchWithCategory(any()) } returns flowOf(emptyList())
     }
-    private val pendingFlow = MutableStateFlow(emptyList<PendingRecurring>())
-    private val getPendingRecurringMovements = mockk<GetPendingRecurringMovementsUseCase> {
-        every { this@mockk(any()) } returns pendingFlow
-    }
-    private val confirmRecurring = mockk<ConfirmRecurringMovementUseCase>()
-    private val skipRecurring = mockk<SkipRecurringMovementUseCase>()
 
     private fun buildViewModel(today: MutableStateFlow<LocalDate> = MutableStateFlow(TODAY)) = SeeTransactionsViewModel(
         categoryRepository,
         transactionRepository,
-        getPendingRecurringMovements,
-        confirmRecurring,
-        skipRecurring,
         FakeTodayFlow(today),
     )
 
@@ -247,6 +234,22 @@ class SeeTransactionsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(currentMonth.next(), vm.state.value.month, "the browsed month must follow the calendar")
+    }
+
+    @Test
+    fun `the current month follows the calendar across a midnight rollover`() = runTest(testDispatcher) {
+        val today: MutableStateFlow<LocalDate> = MutableStateFlow(LocalDate(2026, 8, 31))
+        val vm: SeeTransactionsViewModel = buildViewModel(today)
+        val currentMonths: MutableList<YearMonth> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.currentMonth }.distinctUntilChanged().collect { currentMonths += it }
+        }
+        advanceUntilIdle()
+
+        today.value = LocalDate(2026, 9, 1)
+        advanceUntilIdle()
+
+        assertEquals(listOf(YearMonth(2026, Month.AUGUST), YearMonth(2026, Month.SEPTEMBER)), currentMonths)
     }
 
     @Test

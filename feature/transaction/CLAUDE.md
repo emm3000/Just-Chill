@@ -1,8 +1,8 @@
 # :feature:transaction — CLAUDE.md
 
-Everything a movement is: `capture/` holds the add, edit and delete form with its sheets and its shortcut combos, `list/` holds the Movimientos tab with its search, its category filter and its pending recurring rows. ViewModels, `UiState` / `Intent` / `Effect`, Compose screens, the three routes and both entry functions live here, in `com.emm.justchill.feature.transaction`.
+Everything a movement is: `capture/` holds the add, edit and delete form with its sheets and its shortcut combos, `list/` holds the Movimientos tab with its search and its category filter. ViewModels, `UiState` / `Intent` / `Effect`, Compose screens, the three routes and both entry functions live here, in `com.emm.justchill.feature.transaction`.
 
-`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended`. Depends on `:core:ui` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge. The transaction row and its `Catalog`, the account, category and date pickers, `AmountInputSheet` and the pending recurring UI are `:core:ui`'s shared vocabulary: consume them, never copy them here.
+`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended`. Depends on `:core:ui` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge. The transaction row and its `Catalog`, the account, category and date pickers and `AmountInputSheet` are `:core:ui`'s shared vocabulary: consume them, never copy them here.
 
 `./gradlew :feature:transaction:testDebugUnitTest`. The MockK ViewModel suites moved here from `:androidApp` with the ViewModels; `MainDispatcherRule` and `FakeTodayFlow` come from `:core:testing`. `TransactionDateEndToEndTest` stayed in `:androidApp`'s test set: it drives the date through the real repository over an in-memory SQLite, which needs `:core:database`, an edge a feature module may not have.
 
@@ -29,8 +29,7 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 ## List
 
 - Filter at read time over clearing at write time: a list derived per `transactionType` cannot go stale; a list a reducer must remember to clear always can.
-- The browsed month follows a midnight rollover only while it equals the month the rollover leaves. Report's month never moves; `SeeTransactionsViewModelTest` pins both halves.
-- Pending recurring movements are about "now": a filtered list stays filtered, and browsing another month never surfaces today's pending row under a month it does not belong to.
+- The browsed month follows a midnight rollover only while it equals the month the rollover leaves. Report's month never moves; `currentMonth` follows `today` unconditionally. `SeeTransactionsViewModelTest` pins all three.
 - A category filter, or an amount range, turns the list into a cross-month search, so the month selector steps aside; in month mode it is always there, including before the ledger count is known.
-- `SeeTransactionsViewModel` takes six constructor parameters, the ceiling review holds it to: a datum either needs new joins through the query or an existing flow, not a seventh parameter.
+- `SeeTransactionsViewModel` takes three constructor parameters and review holds it to six: a datum joins through the query or an existing flow before it earns a new parameter.
 - This screen owns the transaction list and its own month header: the spend hero, `Entró` and `Neto` (ADR 022). Income detail and savings rate still belong to `:feature:report`; before adding a section beyond that header, find the owner.

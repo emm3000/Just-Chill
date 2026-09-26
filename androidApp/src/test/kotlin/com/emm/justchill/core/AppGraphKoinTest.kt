@@ -10,7 +10,6 @@ import com.emm.justchill.feature.category.AddCategoryViewModel
 import com.emm.justchill.feature.loan.AddEditLoanViewModel
 import com.emm.justchill.feature.loan.LoanDetailViewModel
 import com.emm.justchill.feature.loan.PersonLoansViewModel
-import com.emm.justchill.feature.recurring.AddEditRecurringMovementViewModel
 import com.emm.justchill.feature.transaction.capture.EditTransactionViewModel
 import com.russhwolf.settings.SettingsInitializer
 import io.mockk.mockk
@@ -247,7 +246,6 @@ class AppGraphKoinTest {
             "AddAccountViewModel",
             "AddCategoryViewModel",
             "AddEditLoanViewModel",
-            "AddEditRecurringMovementViewModel",
             "AddTransactionViewModel",
             "AuthViewModel",
             "CategoriesViewModel",
@@ -256,7 +254,6 @@ class AppGraphKoinTest {
             "LoansViewModel",
             "PersonLoansViewModel",
             "ProfileViewModel",
-            "RecurringMovementsViewModel",
             "ReportViewModel",
             "SeeTransactionsViewModel",
         )
@@ -266,8 +263,6 @@ class AppGraphKoinTest {
         val RUNTIME_PARAMETERS: Map<KClass<*>, ParametersDefinition> = mapOf(
             AddCategoryViewModel::class to { parametersOf(CategoryType.Spend, "Test Category") },
             EditTransactionViewModel::class to { parametersOf("test-transaction-id") },
-            // Non-null so this exercises the edit branch over the create one.
-            AddEditRecurringMovementViewModel::class to { parametersOf("test-recurring-id") },
             PersonLoansViewModel::class to { parametersOf("test-person-key") },
             LoanDetailViewModel::class to { parametersOf("test-loan-id") },
             AddEditLoanViewModel::class to { parametersOf("test-loan-id") },

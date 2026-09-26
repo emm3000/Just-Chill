@@ -7,7 +7,6 @@ import com.emm.justchill.core.domain.auth.SignOutResult
 import com.emm.justchill.core.domain.auth.SignOutUseCase
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.domain.recurring.GetRecurringMonthlySummaryUseCase
 import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupEvent
@@ -47,7 +46,6 @@ class ProfileViewModel(
     private val localExportHistory: ExportHistory,
     private val todayFlow: TodayFlow,
     categoryRepository: CategoryRepository,
-    getRecurringMonthlySummary: GetRecurringMonthlySummaryUseCase,
     getSessionStatus: GetSessionStatusUseCase,
     backupAvailability: BackupAvailability,
     private val exportTransactionsCsv: ExportTransactionsCsvUseCase,
@@ -73,14 +71,6 @@ class ProfileViewModel(
                         categoryCount = categories.size,
                         incomeCategoryCount = categories.count { it.categoryType == CategoryType.Income },
                     )
-                }
-            }
-            .launchSafeIn(onError = onDomainError)
-
-        getRecurringMonthlySummary()
-            .onEach { summary ->
-                updateState {
-                    copy(recurringCount = summary.activeCount, recurringMonthlyOutflow = summary.monthlyOutflow)
                 }
             }
             .launchSafeIn(onError = onDomainError)

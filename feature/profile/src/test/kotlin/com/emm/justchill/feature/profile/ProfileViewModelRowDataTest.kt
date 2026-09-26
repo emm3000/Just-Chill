@@ -7,10 +7,7 @@ import com.emm.justchill.core.domain.auth.SignOutUseCase
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.domain.recurring.GetRecurringMonthlySummaryUseCase
-import com.emm.justchill.core.domain.recurring.RecurringMonthlySummary
 import com.emm.justchill.core.domain.shared.CategoryId
-import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupEvent
 import com.emm.justchill.core.domain.shared.backup.BackupHealth
@@ -60,10 +57,6 @@ class ProfileViewModelRowDataTest {
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
-    private val getRecurringMonthlySummary = mockk<GetRecurringMonthlySummaryUseCase> {
-        every { this@mockk.invoke() } returns
-            flowOf(RecurringMonthlySummary(activeCount = 0, monthlyOutflow = Money.Zero))
-    }
     private val localExportHistory = mockk<ExportHistory>(relaxed = true) {
         every { daysSinceLastExport(any()) } returns null
     }
@@ -94,7 +87,6 @@ class ProfileViewModelRowDataTest {
         localExportHistory = localExportHistory,
         todayFlow = FakeTodayFlow(today),
         categoryRepository = categoryRepository,
-        getRecurringMonthlySummary = getRecurringMonthlySummary,
         getSessionStatus = getSessionStatus,
         backupAvailability = FakeBackupAvailability(isAvailable = false),
         exportTransactionsCsv = mockk(),
@@ -118,18 +110,6 @@ class ProfileViewModelRowDataTest {
 
         assertEquals(3, vm.state.value.categoryCount)
         assertEquals(1, vm.state.value.incomeCategoryCount)
-    }
-
-    @Test
-    fun `the recurring row carries the summary the use case computed`() = runTest(testDispatcher) {
-        every { getRecurringMonthlySummary.invoke() } returns
-            flowOf(RecurringMonthlySummary(activeCount = 3, monthlyOutflow = Money(9_000L)))
-
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        assertEquals(3, vm.state.value.recurringCount)
-        assertEquals(Money(9_000L), vm.state.value.recurringMonthlyOutflow)
     }
 
     @Test

@@ -19,7 +19,6 @@ val profileModule: Module = module {
             localExportHistory = get(),
             todayFlow = get(),
             categoryRepository = get(),
-            getRecurringMonthlySummary = get(),
             getSessionStatus = get(),
             backupAvailability = get(),
             exportTransactionsCsv = get(),

@@ -59,10 +59,6 @@ import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.format.moneyCentsString
-import com.emm.justchill.core.ui.pending.ConfirmRecurringSheet
-import com.emm.justchill.core.ui.pending.PendingRecurringHeader
-import com.emm.justchill.core.ui.pending.PendingRecurringRow
-import com.emm.justchill.core.ui.pending.PendingRecurringUi
 import com.emm.justchill.core.ui.sheets.AmountInputSheet
 import com.emm.justchill.core.ui.sheets.MonthPickerSheet
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -103,10 +99,6 @@ internal fun SeeTransactionsContent(
     navigateToEdit: (String) -> Unit,
 ) {
     val colors = LocalEmmColors.current
-
-    val pendingMap = remember(state.pendingRecurringMovements) {
-        state.pendingRecurringMovements.associateBy { it.id }
-    }
 
     BackHandler(enabled = state.isSearchOpen) { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed) }
 
@@ -160,7 +152,6 @@ internal fun SeeTransactionsContent(
             state = state,
             onIntent = onIntent,
             navigateToEdit = navigateToEdit,
-            onPendingClick = { pending -> onIntent(SeeTransactionsIntent.OnPendingClicked(pending.id)) },
         )
     }
 
@@ -173,12 +164,6 @@ internal fun SeeTransactionsContent(
             onDismiss = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerDismissed) },
         )
     }
-
-    PendingConfirmSheetHost(
-        pendingItem = state.confirmSheetPendingId?.let(pendingMap::get),
-        onIntent = onIntent,
-        onDismiss = { onIntent(SeeTransactionsIntent.OnConfirmSheetDismissed) },
-    )
 }
 
 @Composable
@@ -186,7 +171,6 @@ private fun TransactionListColumn(
     state: SeeTransactionsUiState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
-    onPendingClick: (PendingRecurringUi) -> Unit,
 ) {
     val listState: LazyListState = rememberLazyListState()
     val spacing: EmmSpacing = LocalEmmSpacing.current
@@ -200,29 +184,10 @@ private fun TransactionListColumn(
         state = listState,
         contentPadding = PaddingValues(bottom = spacing.s4),
     ) {
-        if (state.isPendingSectionVisible) {
-            item {
-                PendingRecurringHeader(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = spacing.s6, end = spacing.s6, top = spacing.s4, bottom = spacing.s2),
-                )
-            }
-            items(state.pendingRecurringMovements, PendingRecurringUi::id) { pendingItem ->
-                PendingRecurringRow(item = pendingItem, onClick = { onPendingClick(pendingItem) })
-            }
-        }
-
         // fillParentMaxHeight() sets height only, not width — these wrap-content Columns need
         // fillMaxWidth() explicitly, or their CenterHorizontally hugs the left edge instead.
         // It's a LazyItemScope extension, so it can only be built inside an `item` lambda.
-        val emptyStateModifier: LazyItemScope.() -> Modifier = {
-            if (state.isPendingSectionVisible) {
-                Modifier.fillMaxWidth()
-            } else {
-                Modifier.fillMaxWidth().fillParentMaxHeight()
-            }
-        }
+        val emptyStateModifier: LazyItemScope.() -> Modifier = { Modifier.fillMaxWidth().fillParentMaxHeight() }
 
         when (state.listDisplayState) {
             ListDisplayState.Loading -> item { Spacer(emptyStateModifier()) }
@@ -298,34 +263,6 @@ private fun FilterSheets(state: SeeTransactionsUiState, onIntent: (SeeTransactio
             onDismiss = { onIntent(SeeTransactionsIntent.AmountFilterIntent.OnAmountSheetDismissed) },
         )
     }
-}
-
-@Composable
-private fun PendingConfirmSheetHost(
-    pendingItem: PendingRecurringUi?,
-    onIntent: (SeeTransactionsIntent) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    if (pendingItem == null) return
-
-    ConfirmRecurringSheet(
-        item = pendingItem,
-        onConfirm = { callerAmount ->
-            onIntent(
-                SeeTransactionsIntent.ConfirmRecurring(
-                    templateId = pendingItem.templateId,
-                    period = pendingItem.period,
-                    callerAmount = callerAmount,
-                ),
-            )
-        },
-        onSkip = {
-            onIntent(
-                SeeTransactionsIntent.SkipRecurring(templateId = pendingItem.templateId, period = pendingItem.period),
-            )
-        },
-        onDismiss = onDismiss,
-    )
 }
 
 @Composable
@@ -565,100 +502,6 @@ private fun SeeTransactionsPopulatedPreview() {
                 days = listOf(previewDayGroup(txs)),
                 movementCount = 1,
                 activeCategory = ActiveCategoryInfo("4", "Ocio"),
-            ),
-            onIntent = {},
-            navigateToEdit = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun SeeTransactionsWithPendingPreview() {
-    EmmTheme {
-        val txs: List<TransactionUi> = remember {
-            listOf(
-                TransactionUi(
-                    transactionId = Uuid.random().toString(),
-                    type = TransactionType.Spend,
-                    amount = formatExpense("84.20"),
-                    description = "Mercado del lunes",
-                    occurredAt = PREVIEW_OCCURRED_AT,
-                    categoryName = "Supermercado",
-                    accountName = "BCP",
-                    category = CategoryUi(iconId = null, colorId = "green"),
-                ),
-            )
-        }
-        val pending = remember {
-            listOf(
-                PendingRecurringUi(
-                    id = "rm-1@2026-08",
-                    templateId = "rm-1",
-                    period = PREVIEW_MONTH,
-                    periodLabel = "Agosto 2026",
-                    isCatchUp = false,
-                    name = "Netflix",
-                    type = TransactionType.Spend,
-                    formattedAmount = "-S/ 18.00",
-                    isVariableAmount = false,
-                    dayOfMonth = 15,
-                    accountId = "acc-1",
-                    categoryId = null,
-                    description = "",
-                    fixedAmountCents = 1800L,
-                ),
-            )
-        }
-        SeeTransactionsContent(
-            state = SeeTransactionsUiState(
-                month = PREVIEW_MONTH,
-                days = listOf(previewDayGroup(txs)),
-                movementCount = 1,
-                pendingRecurringMovements = pending,
-            ),
-            onIntent = {},
-            navigateToEdit = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun SeeTransactionsPendingWithEmptyMonthPreview() {
-    EmmTheme {
-        val pending = remember {
-            listOf(
-                "Netflix" to "-S/ 18.00",
-                "Spotify" to "-S/ 15.00",
-                "Gimnasio" to "-S/ 89.00",
-                "Internet" to "-S/ 99.00",
-                "Seguro" to "-S/ 45.00",
-            ).mapIndexed { index, (name, amount) ->
-                PendingRecurringUi(
-                    id = "rm-$index@2026-08",
-                    templateId = "rm-$index",
-                    period = PREVIEW_MONTH,
-                    periodLabel = "Agosto 2026",
-                    isCatchUp = false,
-                    name = name,
-                    type = TransactionType.Spend,
-                    formattedAmount = amount,
-                    isVariableAmount = false,
-                    dayOfMonth = 15,
-                    accountId = "acc-1",
-                    categoryId = null,
-                    description = "",
-                    fixedAmountCents = 1800L,
-                )
-            }
-        }
-        SeeTransactionsContent(
-            state = SeeTransactionsUiState(
-                month = PREVIEW_MONTH,
-                days = emptyList(),
-                movementCount = 3,
-                pendingRecurringMovements = pending,
             ),
             onIntent = {},
             navigateToEdit = {},

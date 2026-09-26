@@ -7,9 +7,6 @@ import com.emm.justchill.core.domain.auth.SessionStatus
 import com.emm.justchill.core.domain.auth.SignOutResult
 import com.emm.justchill.core.domain.auth.SignOutUseCase
 import com.emm.justchill.core.domain.category.CategoryRepository
-import com.emm.justchill.core.domain.recurring.GetRecurringMonthlySummaryUseCase
-import com.emm.justchill.core.domain.recurring.RecurringMonthlySummary
-import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupEvent
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
@@ -77,10 +74,6 @@ class ProfileViewModelBackupRowTest {
     private val categoryRepository = mockk<CategoryRepository> {
         every { all() } returns flowOf(emptyList())
     }
-    private val getRecurringMonthlySummary = mockk<GetRecurringMonthlySummaryUseCase> {
-        every { this@mockk.invoke() } returns
-            flowOf(RecurringMonthlySummary(activeCount = 0, monthlyOutflow = Money.Zero))
-    }
     private val localExportHistory = mockk<ExportHistory>(relaxed = true) {
         every { daysSinceLastExport(any()) } returns null
     }
@@ -107,7 +100,6 @@ class ProfileViewModelBackupRowTest {
             categoryRepository = categoryRepository,
             localExportHistory = localExportHistory,
             todayFlow = todayFlow,
-            getRecurringMonthlySummary = getRecurringMonthlySummary,
             getSessionStatus = getSessionStatus,
             backupAvailability = FakeBackupAvailability(isAvailable = false),
             exportTransactionsCsv = mockk(),

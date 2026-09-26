@@ -10,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionsCsvScope
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.theme.EmmColors
@@ -26,7 +25,6 @@ fun ProfileScreen(
     appVersion: String = "",
     commitHash: String = "",
     onCategoriesClick: () -> Unit = {},
-    onRecurringClick: () -> Unit = {},
     onLoansClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
     onExportClick: () -> Unit = {},
@@ -74,11 +72,8 @@ fun ProfileScreen(
         DestinationsSection(
             categoryCount = state.categoryCount,
             incomeCategoryCount = state.incomeCategoryCount,
-            recurringCount = state.recurringCount,
-            recurringMonthlyOutflow = state.recurringMonthlyOutflow,
             destinations = ProfileDestinationActions(
                 onCategoriesClick = onCategoriesClick,
-                onRecurringClick = onRecurringClick,
                 onLoansClick = onLoansClick,
             ),
         )
@@ -121,8 +116,6 @@ private fun ProfileScreenPreview() {
             state = ProfileUiState(
                 categoryCount = 24,
                 incomeCategoryCount = 7,
-                recurringCount = 3,
-                recurringMonthlyOutflow = Money(9_000L),
                 lastExport = LastExportUi.DaysAgo(3),
                 session = SessionUiState.SignedOut,
             ),

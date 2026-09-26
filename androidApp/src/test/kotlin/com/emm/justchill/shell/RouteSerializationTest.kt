@@ -26,9 +26,6 @@ import com.emm.justchill.feature.onboarding.onboardingRoutes
 import com.emm.justchill.feature.profile.ProfileRoute
 import com.emm.justchill.feature.profile.privacy.PrivacyPolicyRoute
 import com.emm.justchill.feature.profile.profileRoutes
-import com.emm.justchill.feature.recurring.AddEditRecurringMovementRoute
-import com.emm.justchill.feature.recurring.RecurringMovementsRoute
-import com.emm.justchill.feature.recurring.recurringRoutes
 import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.report.reportRoutes
 import com.emm.justchill.feature.transaction.AddTransactionRoute
@@ -95,7 +92,6 @@ class RouteSerializationTest {
             accountRoutes,
             authRoutes,
             categoryRoutes,
-            recurringRoutes,
             reportRoutes,
             loanRoutes,
             onboardingRoutes,
@@ -127,8 +123,6 @@ class RouteSerializationTest {
             initialName = "Sueldo",
             propagateToTransaction = true,
         ),
-        RecurringMovementsRoute,
-        AddEditRecurringMovementRoute(id = "rec-1"),
         ReportRoute,
         LoansRoute,
         PersonLoansRoute(personKey = "person-1"),

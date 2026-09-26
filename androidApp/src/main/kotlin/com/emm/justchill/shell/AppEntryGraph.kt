@@ -17,8 +17,6 @@ import com.emm.justchill.feature.loan.loanEntries
 import com.emm.justchill.feature.onboarding.ManifestoRoute
 import com.emm.justchill.feature.onboarding.onboardingEntries
 import com.emm.justchill.feature.profile.profileEntries
-import com.emm.justchill.feature.recurring.RecurringMovementsRoute
-import com.emm.justchill.feature.recurring.recurringEntries
 import com.emm.justchill.feature.report.reportEntries
 import com.emm.justchill.feature.transaction.AddTransactionRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
@@ -68,14 +66,6 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
         bindings = bindings,
         onAddTransaction = { nav -> nav.push(AddTransactionRoute()) },
     )
-    recurringEntries(
-        bindings = bindings,
-        pendingCategory = channels.pendingCategory,
-        onPendingCategoryConsumed = channels.onPendingCategoryConsumed,
-        onAddNewCategory = { nav, categoryType ->
-            nav.push(CategoryRoute(initialType = categoryType, propagateToTransaction = true))
-        },
-    )
     profileEntries(
         bindings = bindings,
         appVersion = appVersion,
@@ -83,7 +73,6 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
         pendingImportJson = channels.pendingImportJson,
         onImportHandled = channels.onImportHandled,
         onCategoriesClick = { nav -> nav.pushToTop(CategoriesListRoute) },
-        onRecurringClick = { nav -> nav.pushToTop(RecurringMovementsRoute) },
         onLoansClick = { nav -> nav.pushToTop(LoansRoute) },
         onAboutClick = { nav -> nav.push(ManifestoRoute(isRevisit = true)) },
         onSignInClick = { nav -> nav.push(AuthRoute) },

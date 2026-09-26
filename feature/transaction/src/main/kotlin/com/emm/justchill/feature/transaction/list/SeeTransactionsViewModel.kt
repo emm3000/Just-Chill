@@ -4,13 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.domain.recurring.ConfirmRecurringMovementUseCase
-import com.emm.justchill.core.domain.recurring.GetPendingRecurringMovementsUseCase
-import com.emm.justchill.core.domain.recurring.PendingRecurring
-import com.emm.justchill.core.domain.recurring.SkipRecurringMovementUseCase
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.time.TodayFlow
@@ -23,7 +18,6 @@ import com.emm.justchill.core.domain.transaction.withAmountRange
 import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.mvi.MviViewModel
-import com.emm.justchill.core.ui.pending.toPendingRecurringUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,9 +36,6 @@ private const val SEARCH_DEBOUNCE_MS = 250L
 class SeeTransactionsViewModel(
     categoryRepository: CategoryRepository,
     transactionRepository: TransactionRepository,
-    private val getPendingRecurringMovements: GetPendingRecurringMovementsUseCase,
-    private val confirmRecurringMovement: ConfirmRecurringMovementUseCase,
-    private val skipRecurringMovement: SkipRecurringMovementUseCase,
     todayFlow: TodayFlow,
 ) : MviViewModel<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect>(
     // Same seed `today`'s stateIn below uses, read before that StateFlow's first collection — so
@@ -53,7 +44,7 @@ class SeeTransactionsViewModel(
 ) {
 
     // The screen's only derivation of "what day is it" — which is why no Clock reaches this class.
-    // A second one would let the pending list and the HOY/AYER headers disagree about the date.
+    // A second one would let the month selector and the HOY/AYER headers disagree about the date.
     private val today: StateFlow<LocalDate> = todayFlow()
         .stateIn(viewModelScope, SharingStarted.Eagerly, todayFlow.today())
 
@@ -128,19 +119,12 @@ class SeeTransactionsViewModel(
             .onEach { slice -> updateState { withListSlice(slice, selectedMonth.value) } }
             .launchSafeIn(onError = onDomainError)
 
-        // A separate flow on purpose: pending recurring movements never depend on the browsed month
-        // or the active filter. Driven by the shared `today` instead, so a movement that comes due
-        // at midnight appears with no user interaction.
-        today
-            .flatMapLatest { date -> getPendingRecurringMovements(date).map { pending -> date to pending } }
-            .onEach { (date, pending) -> updateState { mapToPendingUiState(pending, date) } }
-            .launchSafeIn(onError = onDomainError)
-
         today
             .map { date -> YearMonth.of(date) }
             .onEach { month ->
                 val previousCalendarMonth = calendarMonth
                 calendarMonth = month
+                updateState { copy(currentMonth = month) }
                 if (month != previousCalendarMonth && selectedMonth.value == previousCalendarMonth) selectMonth(month)
             }
             .launchSafeIn(onError = onDomainError)
@@ -176,15 +160,6 @@ class SeeTransactionsViewModel(
             }
 
             is SeeTransactionsIntent.AmountFilterIntent -> onAmountFilterIntent(intent)
-
-            is SeeTransactionsIntent.ConfirmRecurring -> onConfirmRecurring(intent)
-
-            is SeeTransactionsIntent.SkipRecurring -> onSkipRecurring(intent)
-
-            is SeeTransactionsIntent.OnPendingClicked ->
-                updateState { copy(confirmSheetPendingId = intent.pendingId) }
-
-            SeeTransactionsIntent.OnConfirmSheetDismissed -> updateState { copy(confirmSheetPendingId = null) }
 
             is SeeTransactionsIntent.ScreenChromeIntent -> onScreenChromeIntent(intent)
         }
@@ -229,27 +204,6 @@ class SeeTransactionsViewModel(
         }
     }
 
-    private fun onConfirmRecurring(intent: SeeTransactionsIntent.ConfirmRecurring) {
-        launchSafe(onError = onDomainError) {
-            confirmRecurringMovement(
-                templateId = RecurringMovementId(intent.templateId),
-                yearMonth = intent.period,
-                callerAmount = intent.callerAmount,
-            )
-            updateState { copy(confirmSheetPendingId = null) }
-        }
-    }
-
-    private fun onSkipRecurring(intent: SeeTransactionsIntent.SkipRecurring) {
-        launchSafe(onError = onDomainError) {
-            skipRecurringMovement(
-                templateId = RecurringMovementId(intent.templateId),
-                yearMonth = intent.period,
-            )
-            updateState { copy(confirmSheetPendingId = null) }
-        }
-    }
-
     private fun onScreenChromeIntent(intent: SeeTransactionsIntent.ScreenChromeIntent) {
         when (intent) {
             SeeTransactionsIntent.ScreenChromeIntent.OnFilterSheetRequested ->
@@ -278,20 +232,6 @@ class SeeTransactionsViewModel(
     private fun selectMonth(month: YearMonth) {
         selectedMonth.value = month
         updateState { copy(month = month) }
-    }
-
-    // The month comes from the date that produced pending, not from the selected one: browsing to
-    // March must not relabel March's own pending row, and it must not decide whether the section is
-    // visible either.
-    private fun SeeTransactionsUiState.mapToPendingUiState(
-        pending: List<PendingRecurring>,
-        today: LocalDate,
-    ): SeeTransactionsUiState {
-        val currentMonth = YearMonth.of(today)
-        return copy(
-            pendingRecurringMovements = pending.map { it.toPendingRecurringUi(currentMonth) },
-            currentMonth = currentMonth,
-        )
     }
 
     // Name breaks ties so two categories tied at zero usage don't swap places between emissions.
