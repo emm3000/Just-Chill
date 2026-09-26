@@ -85,66 +85,7 @@ class SeeTransactionsUiStateTest {
         assertEquals(ListDisplayState.Content, state.listDisplayState)
     }
 
-    @Test fun the_today_nudge_shows_when_the_current_month_has_nothing_dated_today() {
-        val state = SeeTransactionsUiState(
-            month = august,
-            movementCount = 12,
-            days = listOf(day),
-            today = LocalDate(2026, 8, 11),
-        )
-
-        assertTrue(state.isTodayNudgeVisible)
-    }
-
-    @Test fun the_today_nudge_hides_once_a_day_group_is_dated_today() {
-        val state = SeeTransactionsUiState(
-            month = august,
-            movementCount = 12,
-            days = listOf(day),
-            today = day.date,
-        )
-
-        assertFalse(state.isTodayNudgeVisible)
-    }
-
-    @Test fun the_today_nudge_hides_while_a_past_month_is_browsed() {
-        val state = SeeTransactionsUiState(
-            month = YearMonth(2026, Month.JULY),
-            movementCount = 12,
-            currentMonth = august,
-            today = LocalDate(2026, 8, 11),
-        )
-
-        assertFalse(state.isTodayNudgeVisible)
-    }
-
-    @Test fun the_today_nudge_hides_while_a_filter_makes_the_list_cross_month() {
-        val state = SeeTransactionsUiState(
-            month = august,
-            movementCount = 12,
-            activeCategory = ActiveCategoryInfo(id = "cat-1", name = "Comida"),
-            today = LocalDate(2026, 8, 11),
-        )
-
-        assertFalse(state.isTodayNudgeVisible)
-    }
-
-    @Test fun the_today_nudge_hides_on_an_empty_ledger_that_already_says_so_full_screen() {
-        val state = SeeTransactionsUiState(month = august, movementCount = 0, today = LocalDate(2026, 8, 11))
-
-        assertFalse(state.isTodayNudgeVisible)
-    }
-
-    @Test fun the_today_nudge_survives_an_empty_month_inside_a_stocked_ledger() {
-        val state = SeeTransactionsUiState(month = august, movementCount = 12, today = LocalDate(2026, 8, 11))
-
-        assertEquals(ListDisplayState.EmptyMonth, state.listDisplayState)
-        assertTrue(state.isTodayNudgeVisible)
-    }
-
-    @Test fun the_today_nudge_stays_hidden_until_the_clock_has_named_a_day() {
-        val state = SeeTransactionsUiState(month = august, movementCount = 12)
-
-        assertFalse(state.isTodayNudgeVisible)
+    @Test fun the_month_picker_sheet_is_closed_by_default() {
+        assertFalse(SeeTransactionsUiState(month = august).showMonthPicker)
     }
 }

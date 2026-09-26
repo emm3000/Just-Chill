@@ -1,8 +1,16 @@
 package com.emm.justchill.feature.transaction.list
 
+import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.TransactionId
+import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.domain.transaction.TransactionWithCategory
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 // Every date here is fixed, including the reference "today" — it is an input to DayGroup, not an
 // ambient clock read, so a run that crosses midnight cannot change any answer below.
@@ -37,5 +45,36 @@ class DayGroupTest {
     @Test fun monthYearCaption_is_lowercase_month_plus_year() {
         assertEquals("agosto 2026", group(LocalDate(2026, 8, 5)).monthYearCaption)
         assertEquals("diciembre 2025", group(LocalDate(2025, 12, 31)).monthYearCaption)
+    }
+
+    private fun tx(id: String, type: TransactionType, cents: Long) = TransactionWithCategory(
+        transactionId = TransactionId(id),
+        type = type,
+        amount = Money(cents),
+        description = "movimiento $id",
+        occurredAt = LocalDateTime(today, LocalTime(9, 0)),
+        accountId = AccountId("acc-1"),
+        accountName = "Efectivo",
+        category = null,
+    )
+
+    @Test fun toDayGroups_sums_only_the_spend_rows_into_spendTotal() {
+        val transactions = listOf(
+            tx("t-1", TransactionType.Spend, 500L),
+            tx("t-2", TransactionType.Income, 10_000L),
+            tx("t-3", TransactionType.Spend, 300L),
+        )
+
+        val groups = transactions.toDayGroups(today)
+
+        assertEquals(Money(800L), groups.single().spendTotal)
+    }
+
+    @Test fun toDayGroups_with_no_spend_rows_has_no_total() {
+        val transactions = listOf(tx("t-1", TransactionType.Income, 10_000L))
+
+        val groups = transactions.toDayGroups(today)
+
+        assertNull(groups.single().spendTotal)
     }
 }

@@ -18,10 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
-import com.emm.justchill.core.ui.format.monthYearLabel
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -30,17 +27,11 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 
 @Composable
-internal fun ScreenHeader(
-    month: YearMonth?,
-    isCategoryOrAmountFilterActive: Boolean,
-    onBack: () -> Unit,
-    onIntent: (SeeTransactionsIntent) -> Unit,
-) {
+internal fun ScreenHeader(isCategoryOrAmountFilterActive: Boolean, onIntent: (SeeTransactionsIntent) -> Unit) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     JcTopBar(
-        title = month?.monthYearLabel() ?: "Movimientos",
-        left = { BackBtn(onClick = onBack) },
+        title = "Movimientos",
         right = {
             Row(horizontalArrangement = Arrangement.spacedBy(spacing.s2)) {
                 HeaderAction(

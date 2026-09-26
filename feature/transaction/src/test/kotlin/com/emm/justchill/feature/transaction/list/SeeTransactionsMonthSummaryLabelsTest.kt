@@ -50,8 +50,6 @@ class SeeTransactionsMonthSummaryLabelsTest {
                     state = state,
                     onIntent = {},
                     navigateToEdit = {},
-                    navigateToAdd = {},
-                    onBack = {},
                 )
             }
         }

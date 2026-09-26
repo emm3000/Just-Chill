@@ -1,28 +1,39 @@
 package com.emm.justchill.feature.transaction.list
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
+import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.Eyebrow
-import com.emm.justchill.core.ui.atoms.MonthChevron
-import com.emm.justchill.core.ui.atoms.MonthChevronDirection
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.ui.format.monthLabel
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -31,13 +42,10 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
-import com.emm.justchill.core.ui.theme.edgeGiveback
-
-private const val CENTS_PER_SOL = 100.0
 
 @Composable
-internal fun MonthStrip(
-    isMonthNavigationVisible: Boolean,
+internal fun MonthHeader(
+    month: YearMonth,
     summary: MonthSummaryUi?,
     onIntent: (SeeTransactionsIntent) -> Unit,
     modifier: Modifier = Modifier,
@@ -45,14 +53,10 @@ internal fun MonthStrip(
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = spacing.s8),
+        modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        if (isMonthNavigationVisible) {
-            MonthNavigationRow(onIntent = onIntent)
-        }
+        MonthEyebrowRow(month = month, onIntent = onIntent)
 
         if (summary != null) {
             MonthTotals(summary = summary)
@@ -61,24 +65,32 @@ internal fun MonthStrip(
 }
 
 @Composable
-private fun MonthNavigationRow(onIntent: (SeeTransactionsIntent) -> Unit) {
+private fun MonthEyebrowRow(month: YearMonth, onIntent: (SeeTransactionsIntent) -> Unit) {
+    val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
+    val background: Color = if (isPressed) colors.surface1 else Color.Transparent
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = spacing.s6, end = spacing.s6 - spacing.edgeGiveback(spacing.s5)),
+            .heightIn(min = spacing.s12)
+            .background(background)
+            .clickable(interactionSource = interactionSource, indication = null) {
+                onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
+            }
+            .padding(horizontal = spacing.s6)
+            // The chevron marks a sheet, not a pushed screen (ADR 022): the eyebrow row is the one
+            // door into the month picker, so it keeps the affordance the row-chevron rule reserves
+            // for navigation.
+            .semantics { contentDescription = "Cambiar de mes, mes actual ${month.monthLabel()}" },
     ) {
-        Spacer(Modifier.weight(1f))
-        MonthChevron(
-            direction = MonthChevronDirection.Previous,
-            onClick = { onIntent(SeeTransactionsIntent.OnPreviousMonth) },
-        )
-        MonthChevron(
-            direction = MonthChevronDirection.Next,
-            onClick = { onIntent(SeeTransactionsIntent.OnNextMonth) },
-        )
+        Eyebrow(text = "Gastado en ${month.monthLabel()}")
+        Spacer(Modifier.width(spacing.s1))
+        ChevronTrailing()
     }
 }
 
@@ -90,11 +102,10 @@ private fun MonthTotals(summary: MonthSummaryUi) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = spacing.s6, end = spacing.s6),
+            .padding(horizontal = spacing.s6),
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        Eyebrow(text = "Gastaste este mes")
-        AmountHero(value = summary.spend.cents / CENTS_PER_SOL, size = type.amountHero.fontSize)
+        AmountHero(value = summary.spend.cents / CENTS_PER_SOL, size = type.amountL.fontSize)
         SecondaryLine(summary = summary)
     }
 }
@@ -104,7 +115,6 @@ private fun SecondaryLine(summary: MonthSummaryUi) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     FlowRow(
-        modifier = Modifier.padding(top = spacing.s1),
         horizontalArrangement = Arrangement.spacedBy(spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s1),
     ) {
@@ -137,3 +147,5 @@ private fun SecondaryAmount(label: String, value: String, tone: AmountTone = Amo
         maxLines = 1,
     )
 }
+
+private const val CENTS_PER_SOL = 100.0

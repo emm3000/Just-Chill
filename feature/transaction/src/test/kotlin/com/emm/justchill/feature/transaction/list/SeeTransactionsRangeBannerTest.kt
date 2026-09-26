@@ -41,8 +41,6 @@ class SeeTransactionsRangeBannerTest {
                         if (intent == SeeTransactionsIntent.OnClearCategoryFilter) cleared = true
                     },
                     navigateToEdit = {},
-                    navigateToAdd = {},
-                    onBack = {},
                 )
             }
         }

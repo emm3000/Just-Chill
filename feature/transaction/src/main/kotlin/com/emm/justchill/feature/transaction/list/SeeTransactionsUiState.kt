@@ -55,6 +55,7 @@ data class SeeTransactionsUiState(
     val showFilterSheet: Boolean = false,
     // Closing this is isSearchOpen's other half, alongside a non-blank query (ADR 012 Decision 2).
     val searchRequested: Boolean = false,
+    val showMonthPicker: Boolean = false,
 ) : UiState {
 
     val isCategoryOrAmountFilterActive: Boolean
@@ -79,14 +80,6 @@ data class SeeTransactionsUiState(
             isFilterActive -> ListDisplayState.NoSearchResults
             else -> ListDisplayState.EmptyMonth
         }
-
-    // ListDisplayState.EmptyLedger already fills the screen with the same invitation.
-    val isTodayNudgeVisible: Boolean
-        get() = !isFilterActive &&
-            month == currentMonth &&
-            today != null &&
-            listDisplayState != ListDisplayState.EmptyLedger &&
-            days.none { it.date == today }
 
     // Pending recurring movements are about "now": a filtered list stays filtered, and browsing a
     // past or future month must not surface today's pending row under a month it doesn't belong to.
