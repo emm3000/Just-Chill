@@ -59,11 +59,6 @@ data class SeeTransactionsUiState(
     val isSearchOpen: Boolean
         get() = searchRequested || query.isNotBlank()
 
-    // A filter turns the list into a cross-month search, so the month selector steps aside; in
-    // month mode it is always there, including before the ledger count is known.
-    val isMonthSelectorVisible: Boolean
-        get() = !isFilterActive
-
     val listDisplayState: ListDisplayState
         get() = when {
             days.isNotEmpty() -> ListDisplayState.Content
@@ -72,4 +67,8 @@ data class SeeTransactionsUiState(
             isFilterActive -> ListDisplayState.NoSearchResults
             else -> ListDisplayState.EmptyMonth
         }
+
+    // An eyebrow naming a spend that does not exist says nothing (PRD §3, ADR 022).
+    val isEyebrowVisible: Boolean
+        get() = !isFilterActive && !isSearchOpen && listDisplayState != ListDisplayState.EmptyLedger
 }

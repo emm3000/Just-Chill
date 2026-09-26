@@ -122,8 +122,7 @@ internal fun SeeTransactionsContent(
 
         val summary: MonthSummaryUi? = state.summary
             ?.takeIf { state.listDisplayState == ListDisplayState.Content }
-        val isEyebrowVisible: Boolean = state.isMonthSelectorVisible && !state.isSearchOpen
-        if (isEyebrowVisible) {
+        if (state.isEyebrowVisible) {
             MonthHeader(
                 month = state.month,
                 currentYear = state.currentMonth.year,
