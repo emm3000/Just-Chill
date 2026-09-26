@@ -25,6 +25,7 @@ decisión se firma en un ADR.
 | W-09 | **Suscripción premium / paywall** | Gratis, sin paywall. Un muro sobre features básicas es traición al posicionamiento. |
 | W-10 | **Anuncios** | Sin ads. La declaración de advertising ID en Play Console tiene que decir "No" (`docs/play/advertising-id.md`). |
 | W-12 | **OCR / lectura automática de notificaciones Yape** | Se eligió el mensaje radical (manual, 30 segundos) por sobre la integración audaz. |
+| W-13 | **Movimientos recurrentes / autocobros programados** | Retirados por ADR 023: una plantilla mensual que igual había que confirmar a mano no ahorraba tiempo. La tabla y la sección del snapshot se conservan. |
 
 ### Revisados como opcionales opt-in (ADR 001)
 
