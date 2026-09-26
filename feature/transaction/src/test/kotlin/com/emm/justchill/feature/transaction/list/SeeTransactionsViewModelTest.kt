@@ -403,15 +403,13 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `before any emission the screen claims nothing and still offers the month selector`() =
-        runTest(testDispatcher) {
-            val vm = buildViewModel()
+    fun `before any emission the screen claims nothing and still offers the eyebrow`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
 
-            // Deliberately not advanced: this is the very first composition.
-            val state = vm.state.value
-            assertEquals(ListDisplayState.Loading, state.listDisplayState)
-            assertTrue(state.isMonthSelectorVisible)
-        }
+        val state = vm.state.value
+        assertEquals(ListDisplayState.Loading, state.listDisplayState)
+        assertTrue(state.isEyebrowVisible)
+    }
 
     @Test
     fun `a failing totals aggregate leaves the count unknown instead of claiming an empty ledger`() =

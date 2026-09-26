@@ -1,5 +1,6 @@
 package com.emm.justchill.feature.transaction.list
 
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -28,14 +29,52 @@ class SeeTransactionsUiStateTest {
         assertEquals(ListDisplayState.Loading, state.listDisplayState)
     }
 
-    @Test fun the_month_selector_shows_while_the_count_is_still_unknown() {
-        assertTrue(SeeTransactionsUiState(month = august).isMonthSelectorVisible)
+    @Test fun the_eyebrow_shows_while_the_count_is_still_unknown() {
+        assertTrue(SeeTransactionsUiState(month = august).isEyebrowVisible)
     }
 
-    @Test fun the_month_selector_hides_once_a_filter_makes_the_list_cross_month() {
-        val state = SeeTransactionsUiState(month = august, movementCount = 3, query = "café")
+    @Test fun the_eyebrow_hides_on_an_empty_ledger() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 0)
 
-        assertFalse(state.isMonthSelectorVisible)
+        assertFalse(state.isEyebrowVisible)
+    }
+
+    @Test fun the_eyebrow_shows_on_an_empty_month() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12)
+
+        assertTrue(state.isEyebrowVisible)
+    }
+
+    @Test fun the_eyebrow_shows_over_content() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 12, days = listOf(day))
+
+        assertTrue(state.isEyebrowVisible)
+    }
+
+    @Test fun the_eyebrow_hides_once_a_category_filter_makes_the_list_cross_month() {
+        val state = SeeTransactionsUiState(
+            month = august,
+            movementCount = 3,
+            activeCategory = ActiveCategoryInfo(id = "cat-1", name = "Comida"),
+        )
+
+        assertFalse(state.isEyebrowVisible)
+    }
+
+    @Test fun the_eyebrow_hides_once_an_amount_bound_makes_the_list_cross_month() {
+        val state = SeeTransactionsUiState(
+            month = august,
+            movementCount = 3,
+            minAmount = Money(1000),
+        )
+
+        assertFalse(state.isEyebrowVisible)
+    }
+
+    @Test fun the_eyebrow_hides_while_search_is_open() {
+        val state = SeeTransactionsUiState(month = august, movementCount = 3, searchRequested = true)
+
+        assertFalse(state.isEyebrowVisible)
     }
 
     @Test fun a_count_known_to_be_zero_is_an_empty_ledger() {

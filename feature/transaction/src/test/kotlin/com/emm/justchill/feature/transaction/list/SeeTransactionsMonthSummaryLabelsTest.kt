@@ -64,7 +64,7 @@ class SeeTransactionsMonthSummaryLabelsTest {
         val state = SeeTransactionsUiState(
             month = YearMonth(2026, Month.MAY),
             currentMonth = YearMonth(2026, Month.MAY),
-            movementCount = 0L,
+            movementCount = 12L,
         )
 
         composeRule.setContent {
@@ -83,7 +83,7 @@ class SeeTransactionsMonthSummaryLabelsTest {
         val state = SeeTransactionsUiState(
             month = YearMonth(2025, Month.MAY),
             currentMonth = YearMonth(2026, Month.MAY),
-            movementCount = 0L,
+            movementCount = 12L,
         )
 
         composeRule.setContent {

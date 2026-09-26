@@ -31,6 +31,6 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 
 - Filter at read time over clearing at write time: a list derived per `transactionType` cannot go stale; a list a reducer must remember to clear always can.
 - The browsed month follows a midnight rollover only while it equals the month the rollover leaves. Report's month never moves; `currentMonth` follows `today` unconditionally. `SeeTransactionsViewModelTest` pins all three.
-- A category filter, or an amount range, turns the list into a cross-month search, so the month selector steps aside; in month mode it is always there, including before the ledger count is known.
+- A category filter, or an amount range, turns the list into a cross-month search, so the month selector steps aside; in month mode `SeeTransactionsUiState.isEyebrowVisible` keeps it, before the ledger count is known included, except on `EmptyLedger`, where a spend eyebrow naming nothing would say nothing (#452).
 - `SeeTransactionsViewModel` takes three constructor parameters and review holds it to six: a datum joins through the query or an existing flow before it earns a new parameter.
 - This screen owns the transaction list and its own month header: the spend hero, `Entró` and `Neto` (ADR 022). Income detail and savings rate still belong to `:feature:report`; before adding a section beyond that header, find the owner.
