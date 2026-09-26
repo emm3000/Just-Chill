@@ -5,7 +5,6 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.mvi.UiState
 import com.emm.justchill.core.ui.pending.PendingRecurringUi
-import kotlinx.datetime.LocalDate
 
 data class CategorySheetItem(
     val id: String,
@@ -48,8 +47,6 @@ data class SeeTransactionsUiState(
     val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
     // The clock's real month, refreshed each time pendingRecurringMovements re-emits.
     val currentMonth: YearMonth = month,
-    // The clock's day, straight off TodayFlow; null before its first emission.
-    val today: LocalDate? = null,
     // null means the confirm sheet is closed (ADR 012 Decision 2).
     val confirmSheetPendingId: String? = null,
     val showFilterSheet: Boolean = false,

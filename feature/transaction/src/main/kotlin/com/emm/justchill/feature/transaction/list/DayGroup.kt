@@ -16,7 +16,6 @@ data class DayGroup(
     val date: LocalDate,
     val today: LocalDate,
     val transactions: List<TransactionUi>,
-    // null means the day carries no Spend row; a day of Income-only movements shows no total.
     val spendTotal: Money? = null,
 ) {
 
@@ -52,7 +51,7 @@ internal fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<D
         }
 
 private fun List<TransactionWithCategory>.spendTotal(): Money? {
-    val spendTransactions = filter { it.type == TransactionType.Spend }
+    val spendTransactions: List<TransactionWithCategory> = filter { it.type == TransactionType.Spend }
     if (spendTransactions.isEmpty()) return null
     return Money(spendTransactions.sumOf { it.amount.cents })
 }

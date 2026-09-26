@@ -1,13 +1,11 @@
 package com.emm.justchill.feature.transaction.list
 
-import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.domain.shared.TransactionId
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
+import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -47,33 +45,25 @@ class DayGroupTest {
         assertEquals("diciembre 2025", group(LocalDate(2025, 12, 31)).monthYearCaption)
     }
 
-    private fun tx(id: String, type: TransactionType, cents: Long) = TransactionWithCategory(
-        transactionId = TransactionId(id),
-        type = type,
-        amount = Money(cents),
-        description = "movimiento $id",
-        occurredAt = LocalDateTime(today, LocalTime(9, 0)),
-        accountId = AccountId("acc-1"),
-        accountName = "Efectivo",
-        category = null,
-    )
+    private val august: YearMonth = YearMonth(2026, Month.AUGUST)
 
-    @Test fun toDayGroups_sums_only_the_spend_rows_into_spendTotal() {
-        val transactions = listOf(
-            tx("t-1", TransactionType.Spend, 500L),
-            tx("t-2", TransactionType.Income, 10_000L),
-            tx("t-3", TransactionType.Spend, 300L),
+    @Test fun `toDayGroups sums only the spend rows into spendTotal`() {
+        val transactions: List<TransactionWithCategory> = listOf(
+            transactionFixture("t-1", TransactionType.Spend, 500L, august, daysIntoMonth = 10),
+            transactionFixture("t-2", TransactionType.Income, 10_000L, august, daysIntoMonth = 10),
+            transactionFixture("t-3", TransactionType.Spend, 300L, august, daysIntoMonth = 10),
         )
 
-        val groups = transactions.toDayGroups(today)
+        val groups: List<DayGroup> = transactions.toDayGroups(today)
 
         assertEquals(Money(800L), groups.single().spendTotal)
     }
 
-    @Test fun toDayGroups_with_no_spend_rows_has_no_total() {
-        val transactions = listOf(tx("t-1", TransactionType.Income, 10_000L))
+    @Test fun `toDayGroups with no spend rows has no total`() {
+        val transactions: List<TransactionWithCategory> =
+            listOf(transactionFixture("t-1", TransactionType.Income, 10_000L, august, daysIntoMonth = 10))
 
-        val groups = transactions.toDayGroups(today)
+        val groups: List<DayGroup> = transactions.toDayGroups(today)
 
         assertNull(groups.single().spendTotal)
     }

@@ -266,8 +266,8 @@ class SeeTransactionsPendingRecurringViewModelTest {
 
     @Test
     fun `pending recurring does not re-query when only the browsed month changes`() = runTest(testDispatcher) {
-        // Pendings never depended on the browsed month — driven by todayFlow instead, so arrowing
-        // through months must not cancel and re-subscribe the pending source.
+        // Pendings never depended on the browsed month — driven by todayFlow instead, so browsing
+        // to another month must not cancel and re-subscribe the pending source.
         val vm = buildViewModel()
         advanceUntilIdle()
         verify(exactly = 1) { getPendingRecurringMovements(any()) }

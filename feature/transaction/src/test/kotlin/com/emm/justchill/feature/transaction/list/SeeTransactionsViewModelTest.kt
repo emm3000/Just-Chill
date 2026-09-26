@@ -7,10 +7,8 @@ import com.emm.justchill.core.domain.recurring.ConfirmRecurringMovementUseCase
 import com.emm.justchill.core.domain.recurring.GetPendingRecurringMovementsUseCase
 import com.emm.justchill.core.domain.recurring.PendingRecurring
 import com.emm.justchill.core.domain.recurring.SkipRecurringMovementUseCase
-import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.domain.shared.TransactionId
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionFilter
 import com.emm.justchill.core.domain.transaction.TransactionRepository
@@ -24,17 +22,17 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import org.junit.Rule
 import org.junit.Test
@@ -42,9 +40,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-
-// Midday, so nothing in these tests depends on where a day boundary falls.
-private val NOON = LocalTime(12, 0)
 
 // Mid-month, so nothing in these tests depends on where a month boundary falls.
 private val TODAY = LocalDate(2026, 8, 15)
@@ -99,34 +94,13 @@ class SeeTransactionsViewModelTest {
         FakeTodayFlow(today),
     )
 
-    @Test
-    fun `today reaches the state even when the pending flow never emits`() = runTest(testDispatcher) {
-        // The nudge card reads state.today. Sourcing it from the pending stream made a broken
-        // recurring query silently hide the nudge instead of only the pending rows.
-        every { getPendingRecurringMovements(any()) } returns emptyFlow()
-
-        val viewModel = buildViewModel()
-        advanceUntilIdle()
-
-        assertEquals(TODAY, viewModel.state.value.today)
-    }
-
     private fun tx(
         id: String,
         type: TransactionType,
         cents: Long,
         daysIntoMonth: Int = 5,
         month: YearMonth = currentMonth,
-    ) = TransactionWithCategory(
-        transactionId = TransactionId(id),
-        type = type,
-        amount = Money(cents),
-        description = "movimiento $id",
-        occurredAt = LocalDateTime(LocalDate(month.year, month.month, daysIntoMonth), NOON),
-        accountId = AccountId("acc-1"),
-        accountName = "BCP",
-        category = null,
-    )
+    ): TransactionWithCategory = transactionFixture(id, type, cents, month, daysIntoMonth)
 
     private fun stubRange(month: YearMonth, flow: Flow<List<TransactionWithCategory>>) {
         every {
@@ -216,31 +190,34 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnMonthSelected closes the month picker sheet`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
+        val states: MutableList<Boolean> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.showMonthPicker }.distinctUntilChanged().collect { states += it }
+        }
         advanceUntilIdle()
-        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.showMonthPicker)
 
+        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
         vm.onIntent(SeeTransactionsIntent.OnMonthSelected(currentMonth.next()))
         advanceUntilIdle()
 
-        assertFalse(vm.state.value.showMonthPicker)
+        assertEquals(listOf(false, true, false), states)
     }
 
     @Test
     fun `OnMonthPickerRequested opens the sheet and OnMonthPickerDismissed closes it`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
+        val states: MutableList<Boolean> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.showMonthPicker }.distinctUntilChanged().collect { states += it }
+        }
         advanceUntilIdle()
-        assertFalse(vm.state.value.showMonthPicker)
 
         vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
-        advanceUntilIdle()
-        assertTrue(vm.state.value.showMonthPicker)
-
         vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerDismissed)
         advanceUntilIdle()
-        assertFalse(vm.state.value.showMonthPicker)
+
+        assertEquals(listOf(false, true, false), states)
     }
 
     @Test
