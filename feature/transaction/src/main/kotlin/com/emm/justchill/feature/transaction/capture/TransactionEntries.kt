@@ -20,7 +20,6 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     onPendingCategoryConsumed: () -> Unit,
     onAddNewAccount: (AppNavigator) -> Unit,
     onAddNewCategory: (AppNavigator, CategoryType) -> Unit,
-    onOpenMenu: (AppNavigator) -> Unit,
 ) {
     entry<AddTransactionRoute> { key ->
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
@@ -45,9 +44,9 @@ fun EntryProviderScope<NavKey>.transactionEntries(
 
         AddTransactionScreen(
             vm = vm,
-            popBackStack = { nav.pop() },
+            onClose = { nav.pop() },
+            onSaveSuccess = { nav.pushToTop(SeeTransactionRoute) },
             snackbarHostState = bindings.snackbarHostState,
-            onOpenMenu = { onOpenMenu(nav) },
             onOpenTransactions = { nav.pushToTop(SeeTransactionRoute) },
             onAddNewCategory = { categoryType -> onAddNewCategory(nav, categoryType) },
             onAddNewAccount = { onAddNewAccount(nav) },

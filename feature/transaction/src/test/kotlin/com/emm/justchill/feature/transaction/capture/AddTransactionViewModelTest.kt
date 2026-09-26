@@ -325,7 +325,7 @@ class AddTransactionViewModelTest {
             advanceUntilIdle()
 
             val state: AddTransactionUiState = vm.state.value
-            assertEquals("", state.amount, "the pad is the home screen: a saved amount that stays gets saved twice")
+            assertEquals("", state.amount)
             assertEquals("", state.description)
             assertNull(state.date)
             assertEquals(account2, state.accountSelected, "the next movement lost the account the user had picked")
@@ -344,7 +344,7 @@ class AddTransactionViewModelTest {
 
         assertFalse(
             vm.state.value.isSaving,
-            "nothing pops the home pad any more, so a saving flag left raised freezes it for good",
+            "a saving flag left raised keeps the CTA spinning after the write succeeded",
         )
     }
 

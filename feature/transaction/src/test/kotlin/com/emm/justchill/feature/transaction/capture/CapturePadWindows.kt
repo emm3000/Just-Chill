@@ -45,7 +45,7 @@ internal fun ComposeContentTestRule.showPad(
                     AddTransactionScreenContent(
                         state = state(),
                         onIntent = {},
-                        onOpenMenu = {},
+                        onClose = {},
                         onOpenTransactions = {},
                         onSave = {},
                     )

@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -100,15 +100,15 @@ private val INCOME_KIND = TransactionKindContent(
 @Composable
 fun AddTransactionScreen(
     vm: AddTransactionViewModel,
-    popBackStack: () -> Unit,
+    onClose: () -> Unit,
+    onSaveSuccess: () -> Unit,
     snackbarHostState: SnackbarHostState,
-    onOpenMenu: () -> Unit,
     onOpenTransactions: () -> Unit,
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val currentPopBackStack by rememberUpdatedState(popBackStack)
+    val currentOnSaveSuccess: () -> Unit by rememberUpdatedState(onSaveSuccess)
     val motion: SaveMotion = rememberSaveMotion()
 
     LaunchedEffect(vm) {
@@ -116,7 +116,7 @@ fun AddTransactionScreen(
         vm.effect.collect { effect ->
             when (effect) {
                 is AddTransactionEffect.TransactionSaved -> {
-                    currentPopBackStack()
+                    currentOnSaveSuccess()
                     flight?.cancelAndJoin()
                     flight = launch { motion.fly(effect.amount) }
                 }
@@ -137,7 +137,7 @@ fun AddTransactionScreen(
             vm.onIntent(AddTransactionIntent.OnSave)
         },
         motion = motion,
-        onOpenMenu = onOpenMenu,
+        onClose = onClose,
         onOpenTransactions = onOpenTransactions,
         onAddNewCategory = onAddNewCategory,
         onAddNewAccount = onAddNewAccount,
@@ -148,7 +148,7 @@ fun AddTransactionScreen(
 internal fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
-    onOpenMenu: () -> Unit,
+    onClose: () -> Unit,
     onOpenTransactions: () -> Unit,
     onSave: () -> Unit,
     motion: SaveMotion = rememberSaveMotion(),
@@ -172,7 +172,7 @@ internal fun AddTransactionScreenContent(
         ctaLabel = ctaLabel,
         amountDescription = amountDescription,
         motion = motion,
-        actions = PadActions(onIntent, onOpenMenu, onOpenTransactions, onSave, onAddNewAccount),
+        actions = PadActions(onIntent, onClose, onOpenTransactions, onSave, onAddNewAccount),
         modifier = Modifier
             .fillMaxSize()
             .background(colors.bg),
@@ -188,7 +188,7 @@ internal fun AddTransactionScreenContent(
 
 private class PadActions(
     val onIntent: (AddTransactionIntent) -> Unit,
-    val onOpenMenu: () -> Unit,
+    val onClose: () -> Unit,
     val onOpenTransactions: () -> Unit,
     val onSave: () -> Unit,
     val onAddNewAccount: () -> Unit,
@@ -212,7 +212,7 @@ private fun PadColumn(
             modifier = Modifier.padding(start = spacing.s4),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconBtn(icon = Icons.Outlined.Menu, onClick = actions.onOpenMenu, contentDescription = "Abrir el menú")
+            IconBtn(icon = Icons.Outlined.Close, onClick = actions.onClose, contentDescription = "Cerrar")
             MonthSpendLine(
                 label = state.monthSpendLabel,
                 amount = motion.displayedTotal(state.monthSpendAmount),
@@ -372,7 +372,7 @@ private fun AddTransactionPreview() {
                 transactionType = TransactionType.Spend,
             ),
             onIntent = {},
-            onOpenMenu = {},
+            onClose = {},
             onOpenTransactions = {},
             onSave = {},
         )
@@ -387,7 +387,7 @@ private fun AddTransactionPopulatedPreview() {
         AddTransactionScreenContent(
             state = populatedCaptureState(),
             onIntent = {},
-            onOpenMenu = {},
+            onClose = {},
             onOpenTransactions = {},
             onSave = {},
         )
