@@ -23,9 +23,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause |
 |---|---|---|---|---|---|
-| #416 | #414 | 3 | opus:medium | FIX FIRST | spec |
-| #417 | #415 | 3 | opus:medium | FIX FIRST | judgment |
-| #419 | #418 | 3 | opus:medium | FIX FIRST | spec |
 | #422 | #420 | 3 | opus:medium | MERGE | - |
 | #424 | #423 | 3 | opus:medium | FIX FIRST | spec |
 | #426 | #425 | 3 | opus:medium | FIX FIRST | judgment |
