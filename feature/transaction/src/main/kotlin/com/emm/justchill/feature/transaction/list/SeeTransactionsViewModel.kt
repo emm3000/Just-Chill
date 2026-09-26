@@ -102,7 +102,7 @@ class SeeTransactionsViewModel(
             .distinctUntilChanged()
             .flatMapLatest { (month, currentFilter) ->
                 // Both branches catch their own failures: a top-level .catch would kill the whole
-                // collector on the first database error, leaving the month arrows dead until the
+                // collector on the first database error, leaving the month selector dead until the
                 // ViewModel is recreated.
                 if (currentFilter.isEmpty) {
                     combine(
@@ -137,7 +137,6 @@ class SeeTransactionsViewModel(
             .launchSafeIn(onError = onDomainError)
 
         today
-            .onEach { date -> updateState { copy(today = date) } }
             .map { date -> YearMonth.of(date) }
             .onEach { month ->
                 val previousCalendarMonth = calendarMonth

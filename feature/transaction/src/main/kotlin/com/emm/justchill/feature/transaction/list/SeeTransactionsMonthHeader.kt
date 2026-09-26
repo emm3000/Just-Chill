@@ -20,7 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -34,6 +36,7 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.format.monthLabel
+import com.emm.justchill.core.ui.format.monthYearLabel
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -46,6 +49,7 @@ import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 @Composable
 internal fun MonthHeader(
     month: YearMonth,
+    currentYear: Int,
     summary: MonthSummaryUi?,
     onIntent: (SeeTransactionsIntent) -> Unit,
     modifier: Modifier = Modifier,
@@ -56,7 +60,7 @@ internal fun MonthHeader(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        MonthEyebrowRow(month = month, onIntent = onIntent)
+        MonthEyebrowRow(month = month, currentYear = currentYear, onIntent = onIntent)
 
         if (summary != null) {
             MonthTotals(summary = summary)
@@ -64,14 +68,21 @@ internal fun MonthHeader(
     }
 }
 
+// The chevron marks a sheet, not a pushed screen (ADR 022): the eyebrow row is the one door into
+// the month picker, so it keeps the affordance the row-chevron rule reserves for navigation.
 @Composable
-private fun MonthEyebrowRow(month: YearMonth, onIntent: (SeeTransactionsIntent) -> Unit) {
+private fun MonthEyebrowRow(month: YearMonth, currentYear: Int, onIntent: (SeeTransactionsIntent) -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val background: Color = if (isPressed) colors.surface1 else Color.Transparent
+    val eyebrowText: String = if (month.year == currentYear) {
+        "Gastado en ${month.monthLabel()}"
+    } else {
+        "Gastado en ${month.monthLabel()} ${month.year}"
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -83,12 +94,12 @@ private fun MonthEyebrowRow(month: YearMonth, onIntent: (SeeTransactionsIntent) 
                 onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
             }
             .padding(horizontal = spacing.s6)
-            // The chevron marks a sheet, not a pushed screen (ADR 022): the eyebrow row is the one
-            // door into the month picker, so it keeps the affordance the row-chevron rule reserves
-            // for navigation.
-            .semantics { contentDescription = "Cambiar de mes, mes actual ${month.monthLabel()}" },
+            .semantics {
+                contentDescription = "Gastado en ${month.monthYearLabel()}. Cambiar de mes"
+                role = Role.Button
+            },
     ) {
-        Eyebrow(text = "Gastado en ${month.monthLabel()}")
+        Eyebrow(text = eyebrowText)
         Spacer(Modifier.width(spacing.s1))
         ChevronTrailing()
     }

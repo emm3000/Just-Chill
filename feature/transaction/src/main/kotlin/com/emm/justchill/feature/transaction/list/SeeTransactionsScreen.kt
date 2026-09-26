@@ -57,6 +57,7 @@ import com.emm.justchill.core.ui.category.CategoryUi
 import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
+import com.emm.justchill.core.ui.format.formatNeutral
 import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.pending.ConfirmRecurringSheet
 import com.emm.justchill.core.ui.pending.PendingRecurringHeader
@@ -133,6 +134,7 @@ internal fun SeeTransactionsContent(
         if (isEyebrowVisible) {
             MonthHeader(
                 month = state.month,
+                currentYear = state.currentMonth.year,
                 summary = summary,
                 onIntent = onIntent,
                 modifier = Modifier.padding(top = LocalEmmSpacing.current.s2),
@@ -179,11 +181,6 @@ internal fun SeeTransactionsContent(
     )
 }
 
-/**
- * One `LazyColumn` for everything below the filters, pendings included — never gated behind
- * `Content`. `EmptyMonth`/`EmptyLedger` are real states for an account with dues but no bookings
- * yet, and the pending row is often the only door that lets the author create the first one.
- */
 @Composable
 private fun TransactionListColumn(
     state: SeeTransactionsUiState,
@@ -462,7 +459,7 @@ private fun LazyListScope.dayGroupedItems(
                 } else {
                     dayGroup.spendTotal?.let { spendTotal ->
                         Text(
-                            text = formatExpense(spendTotal.format()),
+                            text = formatNeutral(spendTotal.format()),
                             style = type.amountS,
                             color = colors.textTertiary,
                         )
@@ -662,7 +659,6 @@ private fun SeeTransactionsPendingWithEmptyMonthPreview() {
                 days = emptyList(),
                 movementCount = 3,
                 pendingRecurringMovements = pending,
-                today = LocalDate(2026, 8, 10),
             ),
             onIntent = {},
             navigateToEdit = {},
@@ -696,7 +692,6 @@ private fun SeeTransactionsLongMonthPreview() {
             state = SeeTransactionsUiState(
                 month = YearMonth(2026, Month.SEPTEMBER),
                 movementCount = 12,
-                today = LocalDate(2026, 9, 10),
             ),
             onIntent = {},
             navigateToEdit = {},
