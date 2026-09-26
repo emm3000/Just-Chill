@@ -51,6 +51,7 @@ private fun JustChillDatabase.readLive(): LocalSnapshot = LocalSnapshot(
 )
 
 private fun JustChillDatabase.replaceWith(snapshot: LocalSnapshot, now: Long): ImportStats {
+    var restoredTemplates: Int = 0
     var restoredLoanPayments: Int = 0
     transaction {
         transactionsQueries.softDeleteAllLive(deletedAt = now, updatedAt = now)
@@ -69,7 +70,7 @@ private fun JustChillDatabase.replaceWith(snapshot: LocalSnapshot, now: Long): I
         snapshot.accounts.forEach { account -> restore(account, now) }
         snapshot.categories.forEach { category -> restore(category, now) }
         snapshot.transactions.forEach { transaction -> restore(transaction, now) }
-        snapshot.recurringMovements?.forEach { template -> restore(template, now) }
+        restoredTemplates = snapshot.recurringMovements?.count { template -> restore(template, now) } ?: 0
         snapshot.loans?.forEach { loan -> restore(loan, now) }
         restoredLoanPayments = snapshot.loanPayments?.count { payment -> restore(payment, now) } ?: 0
     }
@@ -78,7 +79,7 @@ private fun JustChillDatabase.replaceWith(snapshot: LocalSnapshot, now: Long): I
         accounts = snapshot.accounts.size,
         categories = snapshot.categories.size,
         transactions = snapshot.transactions.size,
-        recurring = snapshot.recurringMovements?.size ?: 0,
+        recurring = restoredTemplates,
         loans = snapshot.loans?.size ?: 0,
         loanPayments = restoredLoanPayments,
     )

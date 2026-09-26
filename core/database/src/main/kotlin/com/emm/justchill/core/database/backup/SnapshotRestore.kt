@@ -86,7 +86,8 @@ internal fun JustChillDatabase.restore(transaction: Transaction, now: Long) {
     )
 }
 
-internal fun JustChillDatabase.restore(template: RecurringMovement, now: Long) {
+internal fun JustChillDatabase.restore(template: RecurringMovement, now: Long): Boolean {
+    if (!holdsLiveAccount(template.accountId.value)) return false
     val type: String = template.type.name
     val categoryId: String? = usableCategoryId(template.categoryId?.value, type)
     recurring_movementsQueries.insertOrIgnoreFromBackup(
@@ -119,6 +120,7 @@ internal fun JustChillDatabase.restore(template: RecurringMovement, now: Long) {
         updatedAt = now,
         id = template.id.value,
     )
+    return true
 }
 
 internal fun JustChillDatabase.restore(loan: Loan, now: Long) {
@@ -171,15 +173,4 @@ internal fun JustChillDatabase.restore(payment: LoanPayment, now: Long): Boolean
         paymentId = payment.id.value,
     )
     return true
-}
-
-// `loan_payments.loanId` is NOT NULL, so a payment whose loan is absent cannot be detached the way
-// a transaction's category is — inserting it would abort the whole restore on the foreign key.
-internal fun JustChillDatabase.holdsLiveLoan(loanId: String): Boolean =
-    loansQueries.byId(loanId).executeAsOneOrNull() != null
-
-internal fun JustChillDatabase.usableCategoryId(categoryId: String?, type: String): String? {
-    if (categoryId == null) return null
-    val storedType: String? = categoriesQueries.typeOf(categoryId).executeAsOneOrNull()
-    return if (storedType == type) categoryId else null
 }
