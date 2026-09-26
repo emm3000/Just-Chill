@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 
 private data object HomeRoute : AppRoute
 
@@ -22,6 +23,12 @@ private data object ListRoute : AppRoute
 private data object DeepRoute : AppRoute
 
 private data class DeepDetailRoute(val key: String) : AppRoute
+
+private data object ListTab : BottomBarRoute
+
+private data object ReportTab : BottomBarRoute
+
+private data object AccountsTab : BottomBarRoute
 
 class AppNavigatorTest {
 
@@ -109,6 +116,8 @@ class AppNavigatorTest {
         assertEquals(frozen, backStack.toList(), "popToCapture ran mid-transition")
         navigator.pushToTop(DeepRoute)
         assertEquals(frozen, backStack.toList(), "pushToTop ran mid-transition")
+        navigator.selectTab(AccountsTab)
+        assertEquals(frozen, backStack.toList(), "selectTab ran mid-transition")
     }
 
     @Test
@@ -266,5 +275,40 @@ class AppNavigatorTest {
             backStack.toList(),
             "a different combo replaces the stale one instead of stacking a second CaptureFormRoute",
         )
+    }
+
+    @Test
+    fun `selecting another tab swaps the tab above the root`() {
+        val tabStack: NavBackStack<NavKey> = NavBackStack(ListTab, ReportTab)
+        val tabNavigator = AppNavigator(backStack = tabStack, isReady = { ready })
+        val root: NavKey = tabStack.first()
+
+        tabNavigator.selectTab(AccountsTab)
+
+        assertEquals(listOf<NavKey>(ListTab, AccountsTab), tabStack.toList())
+        assertSame(root, tabStack.first(), "the root entry was cleared and re-added, so its state died")
+    }
+
+    @Test
+    fun `selecting the root tab drops back to the root alone`() {
+        val tabStack: NavBackStack<NavKey> = NavBackStack(ListTab, ReportTab)
+        val tabNavigator = AppNavigator(backStack = tabStack, isReady = { ready })
+        val root: NavKey = tabStack.first()
+
+        tabNavigator.selectTab(ListTab)
+
+        assertEquals(listOf<NavKey>(ListTab), tabStack.toList())
+        assertSame(root, tabStack.first(), "the root entry was cleared and re-added, so its state died")
+    }
+
+    @Test
+    fun `selecting the active tab changes nothing`() {
+        val tabStack: NavBackStack<NavKey> = NavBackStack(ListTab, ReportTab)
+        val tabNavigator = AppNavigator(backStack = tabStack, isReady = { ready })
+        val frozen: List<NavKey> = tabStack.toList()
+
+        tabNavigator.selectTab(ReportTab)
+
+        assertEquals(frozen, tabStack.toList())
     }
 }

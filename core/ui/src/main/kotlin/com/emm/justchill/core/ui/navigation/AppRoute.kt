@@ -16,3 +16,9 @@ interface AppRoute : NavKey
  * past it down to whichever marked form is buried below.
  */
 interface CaptureRoute : AppRoute
+
+/**
+ * The four tab roots the bottom bar switches between (ADR 022). Five slots, no more: a new
+ * destination swaps a tab out, and every pushed screen stays unmarked so the bar hides on it.
+ */
+interface BottomBarRoute : AppRoute
