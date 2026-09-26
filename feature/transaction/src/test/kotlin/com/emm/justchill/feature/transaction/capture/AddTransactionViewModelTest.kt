@@ -379,6 +379,84 @@ class AddTransactionViewModelTest {
     }
 
     @Test
+    fun `a resume after a completed save re-sends the exit with the saved month`() = runTest(testDispatcher) {
+        val vm: AddTransactionViewModel = buildViewModel()
+        advanceUntilIdle()
+        val effects: MutableList<AddTransactionEffect> = mutableListOf()
+        val collector: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnResumed)
+        advanceUntilIdle()
+        collector.cancel()
+
+        val saved = AddTransactionEffect.TransactionSaved(YearMonth(2026, Month.JUNE))
+        assertEquals(listOf<AddTransactionEffect>(saved, saved), effects)
+        coVerify(exactly = 1) { createTransaction.invoke(any()) }
+    }
+
+    @Test
+    fun `a resume before any save sends nothing`() = runTest(testDispatcher) {
+        val vm: AddTransactionViewModel = buildViewModel()
+        advanceUntilIdle()
+        val effects: MutableList<AddTransactionEffect> = mutableListOf()
+        val collector: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        vm.onIntent(AddTransactionIntent.OnResumed)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertEquals(emptyList(), effects)
+    }
+
+    @Test
+    fun `a resume while the write is still running sends nothing`() = runTest(testDispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { createTransaction.invoke(any()) } coAnswers { gate.await() }
+        val vm: AddTransactionViewModel = buildViewModel()
+        advanceUntilIdle()
+        val effects: MutableList<AddTransactionEffect> = mutableListOf()
+        val collector: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+        vm.onIntent(AddTransactionIntent.OnResumed)
+        advanceUntilIdle()
+        val beforeTheWriteReturns: List<AddTransactionEffect> = effects.toList()
+        gate.complete(Unit)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertEquals(emptyList(), beforeTheWriteReturns)
+        assertEquals(listOf<AddTransactionEffect>(AddTransactionEffect.TransactionSaved(augustSaved)), effects)
+    }
+
+    @Test
+    fun `a resume after a failed save sends nothing`() = runTest(testDispatcher) {
+        coEvery { createTransaction.invoke(any()) } throws DomainException.Busy("database locked")
+        val vm: AddTransactionViewModel = buildViewModel()
+        advanceUntilIdle()
+        val effects: MutableList<AddTransactionEffect> = mutableListOf()
+        val collector: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
+        vm.onIntent(AddTransactionIntent.OnSave)
+        advanceUntilIdle()
+        val afterTheFailure: List<AddTransactionEffect> = effects.toList()
+        vm.onIntent(AddTransactionIntent.OnResumed)
+        advanceUntilIdle()
+        collector.cancel()
+
+        assertTrue(afterTheFailure.single() is AddTransactionEffect.ShowError)
+        assertEquals(afterTheFailure, effects)
+    }
+
+    @Test
     fun `a second OnSave sent before the write resolves does not call createTransaction again`() =
         runTest(testDispatcher) {
             val gate = CompletableDeferred<Unit>()

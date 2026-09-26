@@ -27,6 +27,8 @@ sealed interface AddTransactionIntent : UiIntent {
 
     data object OnSave : AddTransactionIntent
 
+    data object OnResumed : AddTransactionIntent
+
     data class OnSheetRequested(val sheet: TransactionSheet) : AddTransactionIntent
 
     data object OnSheetDismissed : AddTransactionIntent

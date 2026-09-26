@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.category.CategoryType
@@ -115,6 +117,8 @@ fun AddTransactionScreen(
             }
         }
     }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.onIntent(AddTransactionIntent.OnResumed) }
 
     AddTransactionScreenContent(
         state = state,

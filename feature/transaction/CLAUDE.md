@@ -25,7 +25,7 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 - The month total is `GetMonthSpendUseCase` `flatMapLatest`ed on `todayFlow()`, so a pad left open across midnight re-queries the month it lands in; the label and the amount ride one `MonthSpend` field so they can never name different months.
 - The pad is portrait-only and shares `EditTransaction`'s layout (ADR 021): one column, no window measurement. The hero and its gaps are the only part that gives way, auto-sizing down below about 640dp. Robolectric measures text without real fonts, so hero room on short windows is checked on the screenshot references only.
 - The date is `null` until the save, and `null` is not "no date" — it is the day the movement gets written on. `TodayFlow` decides that day, the injected `Clock` only supplies the time.
-- A successful save leaves `isSaving` raised and the entry pops: a lowered flag lets a double tap write the movement twice. Only a failed save lowers it (ADR 022, amendments).
+- A successful save leaves `isSaving` raised and the entry pops: a lowered flag lets a double tap write the movement twice. Only a failed save lowers it (ADR 022, amendments). A save that finishes in the background loses its exit, because `pushToTop` refuses an entry that is not RESUMED; the completed save stays in `savedMonth`, and the exit is re-sent when the pad resumes with a completed save (`OnResumed`, from the entry's own lifecycle inside `AddTransactionScreen`). Resume also fires on the first composition and on popping back from the category screen, so without a completed save it sends nothing.
 
 ## List
 
