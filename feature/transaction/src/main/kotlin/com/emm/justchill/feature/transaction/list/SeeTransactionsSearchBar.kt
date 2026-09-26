@@ -51,7 +51,7 @@ internal fun SearchBar(query: String, onQueryChange: (String) -> Unit, onClose: 
             .padding(
                 top = spacing.s3,
                 start = spacing.s6,
-                end = spacing.s4,
+                end = spacing.s6,
                 bottom = spacing.s4,
             ),
     ) {
