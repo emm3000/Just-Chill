@@ -1,5 +1,6 @@
 package com.emm.justchill.core.database.backup
 
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.justchill.core.database.JustChillDatabase
@@ -195,6 +196,33 @@ class SqlDelightSnapshotStoreTest {
     }
 
     @Test
+    fun `a template whose account the snapshot dropped is neither written nor counted`() = runTest {
+        val orphanTemplate: RecurringMovement =
+            rent.copy(id = RecurringMovementId("rec-gone"), accountId = AccountId("acc-gone"))
+
+        val stats: ImportStats = store.restore(fullSnapshot().copy(recurringMovements = listOf(rent, orphanTemplate)))
+
+        assertEquals(1, stats.recurring)
+        assertEquals(listOf(rent), store.export().recurringMovements)
+        assertEquals(0L, recurringRowCount(orphanTemplate.id))
+    }
+
+    @Test
+    fun `a template on an account the device tombstoned stays deleted when the snapshot drops it`() = runTest {
+        val goneAccount: Account = cashAccount.copy(accountId = AccountId("acc-gone"), name = "BCP")
+        val orphanTemplate: RecurringMovement =
+            rent.copy(id = RecurringMovementId("rec-gone"), accountId = goneAccount.accountId)
+        val snapshotWithOrphan: LocalSnapshot =
+            fullSnapshot().copy(recurringMovements = listOf(rent, orphanTemplate))
+        store.restore(snapshotWithOrphan.copy(accounts = listOf(cashAccount, goneAccount)))
+        db.accountsQueries.softDelete(deletedAt = 1L, updatedAt = 1L, accountId = goneAccount.accountId.value)
+
+        store.restore(snapshotWithOrphan)
+
+        assertNull(db.recurring_movementsQueries.find(orphanTemplate.id.value).executeAsOneOrNull())
+    }
+
+    @Test
     fun `restore stamps every row with the injected clock`() = runTest {
         store.restore(fullSnapshot())
 
@@ -237,4 +265,12 @@ class SqlDelightSnapshotStoreTest {
         loans = listOf(loanToRosa),
         loanPayments = listOf(rosaPayment),
     )
+
+    private fun recurringRowCount(id: RecurringMovementId): Long = driver.executeQuery(
+        identifier = null,
+        sql = "SELECT COUNT(*) FROM recurring_movements WHERE id = ?",
+        mapper = { cursor -> QueryResult.Value(if (cursor.next().value) cursor.getLong(0) else null) },
+        parameters = 1,
+        binders = { bindString(0, id.value) },
+    ).value ?: 0L
 }
