@@ -48,8 +48,8 @@ fun EntryProviderScope<NavKey>.transactionEntries(
             vm = vm,
             onClose = { nav.pop() },
             onSaveSuccess = { month ->
-                onMovementSaved(month)
                 nav.pushToTop(SeeTransactionRoute)
+                if (bindings.backStack.lastOrNull() == SeeTransactionRoute) onMovementSaved(month)
             },
             snackbarHostState = bindings.snackbarHostState,
             onOpenTransactions = { nav.pushToTop(SeeTransactionRoute) },
