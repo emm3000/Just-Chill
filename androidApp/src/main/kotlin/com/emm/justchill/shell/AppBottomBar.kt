@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
@@ -184,14 +183,15 @@ private fun TabSlot(
 private fun AttentionDot(modifier: Modifier = Modifier) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Box(
         modifier = modifier
-            .size(spacing.s2)
-            .clip(CircleShape)
+            .size(spacing.s2 + spacing.hairline * 2)
+            .clip(radii.rFull)
             .background(colors.bg)
             .padding(spacing.hairline)
-            .clip(CircleShape)
+            .clip(radii.rFull)
             .background(colors.warning),
     )
 }
