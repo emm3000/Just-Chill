@@ -17,7 +17,6 @@ import com.emm.justchill.feature.loan.LoansRoute
 import com.emm.justchill.feature.loan.loanEntries
 import com.emm.justchill.feature.onboarding.ManifestoRoute
 import com.emm.justchill.feature.onboarding.onboardingEntries
-import com.emm.justchill.feature.profile.ProfileRoute
 import com.emm.justchill.feature.profile.profileEntries
 import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringEntries
@@ -66,7 +65,6 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
         onAddNewCategory = { nav, categoryType ->
             nav.push(CategoryRoute(initialType = categoryType, propagateToTransaction = true))
         },
-        onOpenMenu = { nav -> nav.selectTab(ProfileRoute) },
     )
     reportEntries(
         bindings = bindings,

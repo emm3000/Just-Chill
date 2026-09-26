@@ -171,7 +171,6 @@ class AddTransactionViewModel(
     }
 }
 
-// The pad is the home screen and nothing pops it, so the movement has to leave the state instead.
 private fun AddTransactionUiState.emptiedForTheNextMovement(): AddTransactionUiState = copy(
     amount = "",
     description = "",

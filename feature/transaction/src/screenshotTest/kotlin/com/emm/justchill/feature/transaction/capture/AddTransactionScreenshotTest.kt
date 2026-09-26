@@ -14,7 +14,7 @@ internal fun AddTransactionPopulatedScreenshot() {
         AddTransactionScreenContent(
             state = populatedCaptureState(),
             onIntent = {},
-            onOpenMenu = {},
+            onClose = {},
             onOpenTransactions = {},
             onSave = {},
         )
@@ -29,7 +29,7 @@ internal fun AddTransactionNoAccountsScreenshot() {
         AddTransactionScreenContent(
             state = noAccountsCaptureState(),
             onIntent = {},
-            onOpenMenu = {},
+            onClose = {},
             onOpenTransactions = {},
             onSave = {},
         )

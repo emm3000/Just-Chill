@@ -28,7 +28,7 @@ class MonthSpendLineTapTest {
                 AddTransactionScreenContent(
                     state = AddTransactionUiState(today = LocalDate(2026, Month.AUGUST, 10)),
                     onIntent = {},
-                    onOpenMenu = {},
+                    onClose = {},
                     onOpenTransactions = { opened += 1 },
                     onSave = {},
                 )
