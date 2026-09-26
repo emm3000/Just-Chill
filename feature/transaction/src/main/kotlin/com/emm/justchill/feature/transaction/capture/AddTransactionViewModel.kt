@@ -158,19 +158,10 @@ class AddTransactionViewModel(
             val timeOfDay: LocalTime = clock.now().toLocalDateTime(zone).time
             val insert: TransactionInsert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
             createTransaction(insert)
-            updateState { emptiedForTheNextMovement() }
-            sendEffect(AddTransactionEffect.TransactionSaved(insert.amount))
+            sendEffect(AddTransactionEffect.TransactionSaved)
         }
     }
 }
-
-private fun AddTransactionUiState.emptiedForTheNextMovement(): AddTransactionUiState = copy(
-    amount = "",
-    description = "",
-    date = null,
-    isSaving = false,
-    openSheet = null,
-)
 
 private fun AddTransactionUiState.toInsert(day: LocalDate, time: LocalTime): TransactionInsert = TransactionInsert(
     type = transactionType,

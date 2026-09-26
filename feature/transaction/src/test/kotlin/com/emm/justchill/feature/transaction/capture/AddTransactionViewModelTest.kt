@@ -9,6 +9,7 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
@@ -292,46 +293,36 @@ class AddTransactionViewModelTest {
     }
 
     @Test
-    fun `a save empties the amount, the note and the date and leaves the defaults standing`() =
+    fun `a save keeps the CTA saving until the pad leaves, so a second OnSave writes nothing`() =
         runTest(testDispatcher) {
             val vm: AddTransactionViewModel = buildViewModel()
             advanceUntilIdle()
 
             vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
-            vm.onIntent(AddTransactionIntent.OnDescriptionChange("Almuerzo"))
-            vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
-            vm.onIntent(AddTransactionIntent.OnAccountSelected(account2))
+            vm.onIntent(AddTransactionIntent.OnSave)
             advanceUntilIdle()
-
             vm.onIntent(AddTransactionIntent.OnSave)
             advanceUntilIdle()
 
-            val state: AddTransactionUiState = vm.state.value
-            assertEquals("", state.amount)
-            assertEquals("", state.description)
-            assertNull(state.date)
-            assertEquals(account2, state.accountSelected, "the next movement lost the account the user had picked")
+            coVerify(exactly = 1) { createTransaction.invoke(any()) }
+            assertTrue(vm.state.value.isSaving, "a lowered saving flag lets a double tap write the movement twice")
         }
 
     @Test
-    fun `a save leaves the CTA live for the next movement`() = runTest(testDispatcher) {
+    fun `a failed save frees the CTA for another try`() = runTest(testDispatcher) {
+        coEvery { createTransaction.invoke(any()) } throws DomainException.Busy("database locked")
         val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
-        advanceUntilIdle()
-
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
 
-        assertFalse(
-            vm.state.value.isSaving,
-            "a saving flag left raised keeps the CTA spinning after the write succeeded",
-        )
+        assertFalse(vm.state.value.isSaving, "a saving flag left raised after a failure locks the CTA for good")
     }
 
     @Test
-    fun `each save emits exactly one Saved effect carrying the amount it wrote`() = runTest(testDispatcher) {
+    fun `a save emits exactly one Saved effect`() = runTest(testDispatcher) {
         val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val effects: MutableList<AddTransactionEffect> = mutableListOf()
@@ -340,18 +331,11 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
-        vm.onIntent(AddTransactionIntent.OnAmountChange("1200"))
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
         collector.cancel()
 
-        assertEquals(
-            listOf<AddTransactionEffect>(
-                AddTransactionEffect.TransactionSaved(Money(8540L)),
-                AddTransactionEffect.TransactionSaved(Money(1200L)),
-            ),
-            effects,
-        )
+        assertEquals(listOf<AddTransactionEffect>(AddTransactionEffect.TransactionSaved), effects)
     }
 
     @Test
