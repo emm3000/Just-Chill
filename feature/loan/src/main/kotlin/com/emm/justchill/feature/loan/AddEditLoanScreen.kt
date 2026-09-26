@@ -189,10 +189,7 @@ private fun AddEditLoanContent(
     if (state.openSheet == LoanFormSheet.Date) {
         DatePickerSheet(
             currentDate = state.pickerDate,
-            onConfirm = { date ->
-                onIntent(AddEditLoanIntent.OnDateSelected(date))
-                onIntent(AddEditLoanIntent.OnSheetDismissed)
-            },
+            onConfirm = { date -> onIntent(AddEditLoanIntent.OnDateSelected(date)) },
             onDismiss = { onIntent(AddEditLoanIntent.OnSheetDismissed) },
         )
     }
