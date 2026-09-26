@@ -63,7 +63,7 @@ A finding is fixed in code or its rule is changed in that file; there is no base
 
 ### Compose sizing
 
-Function length is a weak signal in Compose: a flat 200-line layout reads fine, a 60-line one with remembered state and nested conditionals does not. The repo measures **decomposition, not length**: one file carrying state, layout *and* N sub-components fails review. Both routes count equally, a component package (`feature/report/components/`, `feature/transaction/capture/sheets/`) or sibling files in the feature package (`feature/profile/`, `feature/recurring/`).
+Function length is a weak signal in Compose: a flat 200-line layout reads fine, a 60-line one with remembered state and nested conditionals does not. The repo measures **decomposition, not length**: one file carrying state, layout *and* N sub-components fails review. Both routes count equally, a component package (`feature/report/components/`, `feature/transaction/capture/sheets/`) or sibling files in the feature package (`feature/profile/`, `feature/account/`).
 
 A parameter carrying a default does not count toward coupling: the number that matters is what every caller must supply, which is Compose's own idiom. The flag does not launder a real overage; the length and decomposition limits own what a composable builds out of what it receives.
 
