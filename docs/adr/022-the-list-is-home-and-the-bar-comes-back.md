@@ -66,6 +66,20 @@ a flat list screen" are superseded by this ADR; its Considered options row
 with the reason it gave against it, one tap between opening and typing,
 accepted: the tap costs under half a second and buys the map.
 
+## Amendments (2026-09-26)
+
+- **The save leaves the pad with no flight.** A successful save pushes the
+  list at once, so the amount never had a pad to fly across: the flight and
+  the held month total are gone, and the new row on the list is the only
+  feedback. This supersedes "the save motion still lands on it" in the third
+  `## Decision` bullet and "the save motion" in the last one, and ADR 017's
+  "One signature motion" bullet with them. The month line stays on the pad
+  as a read and a door.
+- **The CTA stays saving until the pad leaves.** A successful save keeps
+  `isSaving` raised, so a second tap before the pop writes nothing; only a
+  failed save lowers it. The pad no longer empties itself for a next
+  movement it will never show.
+
 ## Considered options
 
 - **Revert to the 2026-09-19 shell.** Loses the ADR 021 pad, the one part
