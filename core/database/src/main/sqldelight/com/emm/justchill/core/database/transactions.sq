@@ -169,7 +169,11 @@ FROM transactions t
 LEFT JOIN categories c ON t.categoryId = c.categoryId AND c.deletedAt IS NULL
 LEFT JOIN accounts a ON t.accountId = a.accountId
 WHERE t.deletedAt IS NULL
-  AND (:queryEmpty = 1 OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%')
+  AND (
+    :queryEmpty = 1
+    OR LOWER(t.description) LIKE '%' || LOWER(:query) || '%'
+    OR (:amountQueryUnbounded = 0 AND t.amount = :amountQuery)
+  )
   AND (:categoryFilterEmpty = 1 OR t.categoryId IN :categoryIds)
   AND (:minUnbounded = 1 OR t.amount >= :minAmount)
   AND (:maxUnbounded = 1 OR t.amount <= :maxAmount)

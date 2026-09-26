@@ -88,4 +88,49 @@ class TransactionFilterTest {
 
         assertTrue(cleared.isEmpty)
     }
+
+    @Test
+    fun `plain digits parse as an amount query`() {
+        assertEquals(Money(320_000L), TransactionFilter(query = "3200").amountQuery)
+    }
+
+    @Test
+    fun `comma group separators are dropped`() {
+        assertEquals(Money(320_000L), TransactionFilter(query = "3,200").amountQuery)
+    }
+
+    @Test
+    fun `a two-decimal amount parses exactly`() {
+        assertEquals(Money(320_000L), TransactionFilter(query = "3200.00").amountQuery)
+    }
+
+    @Test
+    fun `a leading S over and its space are dropped`() {
+        assertEquals(Money(320_000L), TransactionFilter(query = "S/ 3,200.00").amountQuery)
+    }
+
+    @Test
+    fun `a one-decimal amount pads to cents`() {
+        assertEquals(Money(320_050L), TransactionFilter(query = "3200.5").amountQuery)
+    }
+
+    @Test
+    fun `a dot as the group separator is not an amount`() {
+        assertEquals(null, TransactionFilter(query = "3.200,00").amountQuery)
+    }
+
+    @Test
+    fun `three decimals is not an amount`() {
+        assertEquals(null, TransactionFilter(query = "3200.001").amountQuery)
+    }
+
+    @Test
+    fun `text is not an amount`() {
+        assertEquals(null, TransactionFilter(query = "sueldo").amountQuery)
+    }
+
+    @Test
+    fun `an empty query is not an amount`() {
+        assertEquals(null, TransactionFilter(query = "").amountQuery)
+    }
 }
