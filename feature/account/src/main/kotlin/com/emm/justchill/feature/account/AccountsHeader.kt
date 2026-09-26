@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.JcTopBar
@@ -43,13 +42,12 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 private val SummaryDividerHeight: Dp = 36.dp
 
 @Composable
-internal fun AccountsHeader(state: AccountsUiState, addAccount: () -> Unit, onBack: () -> Unit) {
+internal fun AccountsHeader(state: AccountsUiState, addAccount: () -> Unit) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
         JcTopBar(
             title = "Cuentas",
-            left = { BackBtn(onClick = onBack) },
             right = { NewAccountButton(onClick = addAccount) },
             column = spacing.s6,
         )

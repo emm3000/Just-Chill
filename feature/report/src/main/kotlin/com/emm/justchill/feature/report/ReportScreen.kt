@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.MonthSelector
@@ -72,7 +71,6 @@ private val EmptyStateTileSize: Dp = 44.dp
 
 @Composable
 fun ReportScreen(
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onAddTransaction: () -> Unit = {},
     vm: ReportViewModel = koinViewModel(),
@@ -83,7 +81,6 @@ fun ReportScreen(
         state = state,
         onAddTransaction = onAddTransaction,
         onIntent = vm::onIntent,
-        onBack = onBack,
         modifier = modifier,
     )
 }
@@ -93,7 +90,6 @@ internal fun ReportScreen(
     state: ReportUiState,
     onAddTransaction: () -> Unit,
     onIntent: (ReportIntent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEmmColors.current
@@ -104,10 +100,7 @@ internal fun ReportScreen(
             .fillMaxSize()
             .background(colors.bg),
     ) {
-        ReportTopBar(
-            onShare = { onIntent(ReportIntent.ShareReport) },
-            onBack = onBack,
-        )
+        ReportTopBar(onShare = { onIntent(ReportIntent.ShareReport) })
 
         val tabOptions = listOf(
             SegmentOption(ReportTab.Month, "Mes"),
@@ -251,10 +244,9 @@ private fun TotalHeroBlock(state: ReportUiState) {
 }
 
 @Composable
-private fun ReportTopBar(onShare: () -> Unit, onBack: () -> Unit) {
+private fun ReportTopBar(onShare: () -> Unit) {
     JcTopBar(
         title = "Reporte",
-        left = { BackBtn(onClick = onBack) },
         right = {
             TopBarTile(
                 icon = Icons.Outlined.IosShare,
@@ -443,7 +435,6 @@ private fun ReportScreenMonthPreview() {
             ),
             onAddTransaction = {},
             onIntent = {},
-            onBack = {},
         )
     }
 }
@@ -478,7 +469,6 @@ private fun ReportScreenMonthSpendPreview() {
             ),
             onAddTransaction = {},
             onIntent = {},
-            onBack = {},
         )
     }
 }
@@ -498,7 +488,6 @@ private fun ReportScreenEmptyPreview() {
             ),
             onAddTransaction = {},
             onIntent = {},
-            onBack = {},
         )
     }
 }

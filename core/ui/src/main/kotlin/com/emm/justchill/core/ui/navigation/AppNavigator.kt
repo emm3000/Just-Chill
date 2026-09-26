@@ -43,6 +43,12 @@ class AppNavigator internal constructor(
         backStack.add(route)
     }
 
+    fun selectTab(tab: BottomBarRoute) {
+        if (!isReady() || backStack.lastOrNull() == tab) return
+        while (backStack.size > 1) backStack.removeLastOrNull()
+        if (backStack.first() != tab) backStack.add(tab)
+    }
+
     fun popToCapture() {
         if (!isReady()) return
         val target: Int = backStack.indexOfLast { it is CaptureRoute }

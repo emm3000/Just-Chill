@@ -46,7 +46,7 @@ class OnboardingEntriesTest {
     private var firstLaunchSeenWrites: Int = 0
 
     @Test
-    fun `starting from the first launch marks the manifesto seen and roots the stack at the home pad`() {
+    fun `starting from the first launch marks the manifesto seen and roots the stack at the home list`() {
         val backStack: NavBackStack<NavKey> = NavBackStack(ManifestoRoute())
         renderManifestoEntry(backStack)
 

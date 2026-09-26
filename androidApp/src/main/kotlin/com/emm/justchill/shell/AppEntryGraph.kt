@@ -28,7 +28,7 @@ import com.emm.justchill.feature.transaction.SeeTransactionRoute
 import com.emm.justchill.feature.transaction.capture.transactionEntries
 import com.emm.justchill.feature.transaction.list.seeTransactionsEntries
 
-internal val HOME_ROUTE: AddTransactionRoute = AddTransactionRoute()
+internal val HOME_ROUTE: SeeTransactionRoute = SeeTransactionRoute
 
 @Stable
 internal class HostResultChannels(
@@ -66,11 +66,11 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
         onAddNewCategory = { nav, categoryType ->
             nav.push(CategoryRoute(initialType = categoryType, propagateToTransaction = true))
         },
-        onOpenMenu = { nav -> nav.push(ProfileRoute) },
+        onOpenMenu = { nav -> nav.selectTab(ProfileRoute) },
     )
     reportEntries(
         bindings = bindings,
-        onAddTransaction = { nav -> nav.pushToTop(HOME_ROUTE) },
+        onAddTransaction = { nav -> nav.push(AddTransactionRoute()) },
     )
     recurringEntries(
         bindings = bindings,
@@ -86,9 +86,9 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
         commitHash = commitHash,
         pendingImportJson = channels.pendingImportJson,
         onImportHandled = channels.onImportHandled,
-        onTransactionsClick = { nav -> nav.pushToTop(SeeTransactionRoute) },
-        onReportClick = { nav -> nav.pushToTop(ReportRoute) },
-        onAccountsClick = { nav -> nav.pushToTop(AccountsRoute) },
+        onTransactionsClick = { nav -> nav.selectTab(SeeTransactionRoute) },
+        onReportClick = { nav -> nav.selectTab(ReportRoute) },
+        onAccountsClick = { nav -> nav.selectTab(AccountsRoute) },
         onCategoriesClick = { nav -> nav.pushToTop(CategoriesListRoute) },
         onRecurringClick = { nav -> nav.pushToTop(RecurringMovementsRoute) },
         onLoansClick = { nav -> nav.pushToTop(LoansRoute) },

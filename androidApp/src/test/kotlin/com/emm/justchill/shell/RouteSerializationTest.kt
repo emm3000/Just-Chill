@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.serialization.NavKeySerializer
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.navigation.AppRoute
+import com.emm.justchill.core.ui.navigation.BottomBarRoute
 import com.emm.justchill.feature.account.AccountsRoute
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountRoutes
@@ -54,6 +55,19 @@ class RouteSerializationTest {
             "samples must hold exactly one instance per registered AppRoute.\n" +
                 "  missing (in a route registry but not sampled here): ${missing.render()}\n" +
                 "  extra (sampled here but in no route registry): ${extra.render()}",
+        )
+    }
+
+    @Test
+    fun `exactly the four tab roots carry the bottom bar`() {
+        val tabRoots: Set<KClass<out AppRoute>> = registries.flatten()
+            .filter { BottomBarRoute::class.java.isAssignableFrom(it.java) }
+            .toSet()
+
+        assertEquals(
+            setOf(SeeTransactionRoute::class, ReportRoute::class, AccountsRoute::class, ProfileRoute::class),
+            tabRoots,
+            "the bar has five slots, four of them tabs: a new BottomBarRoute swaps a tab out or it is a pushed screen",
         )
     }
 

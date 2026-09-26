@@ -4,18 +4,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -29,6 +33,7 @@ import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.AppNavigator
+import com.emm.justchill.core.ui.navigation.BottomBarRoute
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.PlatformHostActions
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
@@ -36,6 +41,7 @@ import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.feature.onboarding.ManifestoRoute
+import com.emm.justchill.feature.transaction.AddTransactionRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -84,9 +90,25 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
             onImportHandled = { pendingImportJson = null },
         )
 
+        val density: Density = LocalDensity.current
+        val imeInsets: WindowInsets = WindowInsets.ime
+        val imeVisible: Boolean by remember(density, imeInsets) {
+            derivedStateOf { imeInsets.getBottom(density) > 0 }
+        }
+        val currentTab: BottomBarRoute? = backStack.lastOrNull() as? BottomBarRoute
+
         Scaffold(
             modifier = modifier.background(colors.bg),
             snackbarHost = { EmmSnackbarHost(hostState = snackbarHostState) },
+            bottomBar = {
+                if (currentTab != null && !imeVisible) {
+                    AppBottomBar(
+                        current = currentTab,
+                        onSelectTab = hostNav::selectTab,
+                        onAdd = { hostNav.push(AddTransactionRoute()) },
+                    )
+                }
+            },
             contentWindowInsets = WindowInsets.safeDrawing,
         ) { padding ->
 
