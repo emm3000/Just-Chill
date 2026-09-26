@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
@@ -34,6 +35,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -71,6 +75,7 @@ private val TRAILING_TABS: List<BarTab> = listOf(
 @Composable
 fun AppBottomBar(
     current: BottomBarRoute,
+    profileNeedsAttention: Boolean,
     onSelectTab: (BottomBarRoute) -> Unit,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
@@ -86,30 +91,50 @@ fun AppBottomBar(
         Hairline()
         Row(verticalAlignment = Alignment.CenterVertically) {
             LEADING_TABS.forEach { tab ->
-                TabSlot(tab, tab.route == current, { onSelectTab(tab.route) }, Modifier.weight(1f))
+                TabSlot(
+                    tab = tab,
+                    selected = tab.route == current,
+                    needsAttention = false,
+                    onClick = { onSelectTab(tab.route) },
+                    modifier = Modifier.weight(1f),
+                )
             }
             AddKey(onClick = onAdd, modifier = Modifier.weight(1f))
             TRAILING_TABS.forEach { tab ->
-                TabSlot(tab, tab.route == current, { onSelectTab(tab.route) }, Modifier.weight(1f))
+                TabSlot(
+                    tab = tab,
+                    selected = tab.route == current,
+                    needsAttention = tab.route == ProfileRoute && profileNeedsAttention,
+                    onClick = { onSelectTab(tab.route) },
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TabSlot(tab: BarTab, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun TabSlot(
+    tab: BarTab,
+    selected: Boolean,
+    needsAttention: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
     val type: EmmType = LocalEmmType.current
     val tint: Color = if (selected) colors.textPrimary else colors.textTertiary
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val accessibleName: String = if (needsAttention) "${tab.label}, requiere tu atención" else tab.label
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .heightIn(min = spacing.s16)
+            .semantics { contentDescription = accessibleName }
             .selectable(
                 selected = selected,
                 interactionSource = interactionSource,
@@ -119,19 +144,24 @@ private fun TabSlot(tab: BarTab, selected: Boolean, onClick: () -> Unit, modifie
             )
             .padding(vertical = spacing.s2),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .clip(radii.rFull)
-                .indication(interactionSource, ripple(color = colors.textPrimary))
-                .padding(horizontal = spacing.s4, vertical = spacing.s1),
-        ) {
-            Icon(
-                imageVector = tab.icon,
-                contentDescription = null,
-                tint = tint,
-                modifier = Modifier.size(spacing.s6),
-            )
+        Box {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .clip(radii.rFull)
+                    .indication(interactionSource, ripple(color = colors.textPrimary))
+                    .padding(horizontal = spacing.s4, vertical = spacing.s1),
+            ) {
+                Icon(
+                    imageVector = tab.icon,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.size(spacing.s6),
+                )
+            }
+            if (needsAttention) {
+                AttentionDot(modifier = Modifier.align(Alignment.TopEnd).padding(end = spacing.s3))
+            }
         }
         Text(
             text = tab.label,
@@ -143,9 +173,27 @@ private fun TabSlot(tab: BarTab, selected: Boolean, onClick: () -> Unit, modifie
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = spacing.s1),
+            modifier = Modifier
+                .padding(top = spacing.s1)
+                .clearAndSetSemantics {},
         )
     }
+}
+
+@Composable
+private fun AttentionDot(modifier: Modifier = Modifier) {
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    Box(
+        modifier = modifier
+            .size(spacing.s2)
+            .clip(CircleShape)
+            .background(colors.bg)
+            .padding(spacing.hairline)
+            .clip(CircleShape)
+            .background(colors.warning),
+    )
 }
 
 @Composable
@@ -187,6 +235,15 @@ private fun AddKey(onClick: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun AppBottomBarPreview() {
     EmmTheme {
-        AppBottomBar(current = SeeTransactionRoute, onSelectTab = {}, onAdd = {})
+        AppBottomBar(current = SeeTransactionRoute, profileNeedsAttention = false, onSelectTab = {}, onAdd = {})
+    }
+}
+
+@Preview
+@PreviewRedmi15CWidth
+@Composable
+private fun AppBottomBarAttentionPreview() {
+    EmmTheme {
+        AppBottomBar(current = SeeTransactionRoute, profileNeedsAttention = true, onSelectTab = {}, onAdd = {})
     }
 }
