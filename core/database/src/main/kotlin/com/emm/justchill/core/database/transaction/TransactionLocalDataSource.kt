@@ -13,6 +13,7 @@ import com.emm.justchill.core.database.shared.toOccurredAtText
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionInsert
 import com.emm.justchill.core.domain.transaction.TransactionUpdate
+import com.emm.justchill.core.domain.transaction.parseAmountQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -21,6 +22,7 @@ import kotlin.time.Clock
 // Search is global (cross-month) by design, so this is the only read path without a date window;
 // the cap keeps its worst case at a fixed size.
 private const val SEARCH_RESULT_CAP = 200L
+private const val CENTS_PER_UNIT = 100L
 
 class TransactionLocalDataSource(private val tq: TransactionsQueries, private val clock: Clock) {
 
@@ -81,10 +83,14 @@ class TransactionLocalDataSource(private val tq: TransactionsQueries, private va
         val categoryFilterEmpty: Long = if (categoryIds.isEmpty()) 1L else 0L
         val safeCategoryIds: Collection<String> =
             if (categoryIds.isEmpty()) listOf("") else categoryIds
+        val amountQueryCents: Long? = parseAmountQuery(query)?.cents
+        val textQuery: String = amountQueryCents?.let { (it / CENTS_PER_UNIT).toString() } ?: query.trim()
 
         return tq.searchTransactions(
             queryEmpty = queryEmpty,
-            query = query.trim(),
+            query = textQuery,
+            amountQueryUnbounded = if (amountQueryCents == null) 1L else 0L,
+            amountQuery = amountQueryCents ?: 0L,
             categoryFilterEmpty = categoryFilterEmpty,
             categoryIds = safeCategoryIds,
             minUnbounded = if (minAmountCents == null) 1L else 0L,
