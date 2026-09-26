@@ -140,10 +140,7 @@ internal fun ReportScreen(
     if (state.showMonthSheet) {
         MonthPickerSheet(
             current = state.month,
-            onSelect = { selected ->
-                onIntent(ReportIntent.SelectMonth(selected))
-                onIntent(ReportIntent.OnMonthSheetDismissed)
-            },
+            onSelect = { selected -> onIntent(ReportIntent.SelectMonth(selected)) },
             onDismiss = { onIntent(ReportIntent.OnMonthSheetDismissed) },
         )
     }

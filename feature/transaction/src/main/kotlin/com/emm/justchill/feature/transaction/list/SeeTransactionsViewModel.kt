@@ -132,10 +132,7 @@ class SeeTransactionsViewModel(
 
     override fun onIntent(intent: SeeTransactionsIntent) {
         when (intent) {
-            is SeeTransactionsIntent.OnMonthSelected -> {
-                selectMonth(intent.month)
-                updateState { copy(showMonthPicker = false) }
-            }
+            is SeeTransactionsIntent.OnMonthSelected -> selectMonth(intent.month)
 
             is SeeTransactionsIntent.OnQueryChanged -> {
                 filter.value = filter.value.copy(query = intent.query)

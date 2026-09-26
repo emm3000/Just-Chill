@@ -21,8 +21,11 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -497,5 +500,27 @@ class ReportViewModelTest {
         vm.onIntent(ReportIntent.OnMonthSheetDismissed)
         advanceUntilIdle()
         assertFalse(vm.state.value.showMonthSheet)
+    }
+
+    @Test
+    fun `a month pick leaves the month sheet open until the sheet dismisses itself`() = runTest(testDispatcher) {
+        stubEmptyReport()
+        val vm: ReportViewModel = buildViewModel()
+        val states: MutableList<Boolean> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.showMonthSheet }.distinctUntilChanged().collect { states += it }
+        }
+        advanceUntilIdle()
+
+        vm.onIntent(ReportIntent.OnMonthSheetRequested)
+        vm.onIntent(ReportIntent.SelectMonth(YearMonth(2025, Month.MARCH)))
+        advanceUntilIdle()
+
+        assertEquals(listOf(false, true), states)
+
+        vm.onIntent(ReportIntent.OnMonthSheetDismissed)
+        advanceUntilIdle()
+
+        assertEquals(listOf(false, true, false), states)
     }
 }

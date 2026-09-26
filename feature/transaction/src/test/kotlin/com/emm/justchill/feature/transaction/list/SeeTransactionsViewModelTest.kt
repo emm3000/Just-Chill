@@ -176,7 +176,7 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `OnMonthSelected closes the month picker sheet`() = runTest(testDispatcher) {
+    fun `a month pick leaves the sheet open until the sheet dismisses itself`() = runTest(testDispatcher) {
         val vm: SeeTransactionsViewModel = buildViewModel()
         val states: MutableList<Boolean> = mutableListOf()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
@@ -186,6 +186,11 @@ class SeeTransactionsViewModelTest {
 
         vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
         vm.onIntent(SeeTransactionsIntent.OnMonthSelected(currentMonth.next()))
+        advanceUntilIdle()
+
+        assertEquals(listOf(false, true), states)
+
+        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerDismissed)
         advanceUntilIdle()
 
         assertEquals(listOf(false, true, false), states)
