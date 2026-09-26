@@ -87,7 +87,6 @@ dependencies {
     implementation(projects.feature.transaction)
     implementation(projects.feature.account)
     implementation(projects.feature.category)
-    implementation(projects.feature.recurring)
     implementation(projects.feature.report)
     implementation(projects.feature.loan)
     implementation(projects.feature.profile)

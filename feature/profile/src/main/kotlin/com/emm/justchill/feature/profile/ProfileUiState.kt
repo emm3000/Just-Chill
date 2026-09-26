@@ -1,6 +1,5 @@
 package com.emm.justchill.feature.profile
 
-import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.ui.mvi.UiState
 
@@ -79,8 +78,6 @@ data class ProfileUiState(
     val dialog: ProfileDialog = ProfileDialog.None,
     val categoryCount: Int = 0,
     val incomeCategoryCount: Int = 0,
-    val recurringCount: Int = 0,
-    val recurringMonthlyOutflow: Money = Money.Zero,
     val lastExport: LastExportUi = LastExportUi.Never,
     val session: SessionUiState = SessionUiState.Initializing,
     val backupRow: BackupRowUi = BackupRowUi.NeedsAccount,

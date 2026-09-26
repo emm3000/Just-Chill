@@ -4,7 +4,6 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.mvi.UiState
-import com.emm.justchill.core.ui.pending.PendingRecurringUi
 
 data class CategorySheetItem(
     val id: String,
@@ -44,11 +43,7 @@ data class SeeTransactionsUiState(
     val maxAmount: Money? = null,
     // null means the amount sheet is closed (ADR 012 Decision 2).
     val amountSheetTarget: AmountRangeTarget? = null,
-    val pendingRecurringMovements: List<PendingRecurringUi> = emptyList(),
-    // The clock's real month, refreshed each time pendingRecurringMovements re-emits.
     val currentMonth: YearMonth = month,
-    // null means the confirm sheet is closed (ADR 012 Decision 2).
-    val confirmSheetPendingId: String? = null,
     val showFilterSheet: Boolean = false,
     // Closing this is isSearchOpen's other half, alongside a non-blank query (ADR 012 Decision 2).
     val searchRequested: Boolean = false,
@@ -77,9 +72,4 @@ data class SeeTransactionsUiState(
             isFilterActive -> ListDisplayState.NoSearchResults
             else -> ListDisplayState.EmptyMonth
         }
-
-    // Pending recurring movements are about "now": a filtered list stays filtered, and browsing a
-    // past or future month must not surface today's pending row under a month it doesn't belong to.
-    val isPendingSectionVisible: Boolean
-        get() = !isFilterActive && month == currentMonth && pendingRecurringMovements.isNotEmpty()
 }
