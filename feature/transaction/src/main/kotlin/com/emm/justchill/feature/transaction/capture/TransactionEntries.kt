@@ -4,6 +4,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
@@ -18,6 +19,7 @@ fun EntryProviderScope<NavKey>.transactionEntries(
     bindings: NavHostBindings,
     pendingCategory: () -> SelectableCategory?,
     onPendingCategoryConsumed: () -> Unit,
+    onMovementSaved: (YearMonth) -> Unit,
     onAddNewAccount: (AppNavigator) -> Unit,
     onAddNewCategory: (AppNavigator, CategoryType) -> Unit,
 ) {
@@ -45,7 +47,10 @@ fun EntryProviderScope<NavKey>.transactionEntries(
         AddTransactionScreen(
             vm = vm,
             onClose = { nav.pop() },
-            onSaveSuccess = { nav.pushToTop(SeeTransactionRoute) },
+            onSaveSuccess = { month ->
+                onMovementSaved(month)
+                nav.pushToTop(SeeTransactionRoute)
+            },
             snackbarHostState = bindings.snackbarHostState,
             onOpenTransactions = { nav.pushToTop(SeeTransactionRoute) },
             onAddNewCategory = { categoryType -> onAddNewCategory(nav, categoryType) },

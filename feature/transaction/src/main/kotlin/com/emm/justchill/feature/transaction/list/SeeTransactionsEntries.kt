@@ -3,6 +3,7 @@ package com.emm.justchill.feature.transaction.list
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.navigation.AppNavigator
@@ -12,7 +13,11 @@ import com.emm.justchill.feature.transaction.EditTransactionRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
 import org.koin.compose.viewmodel.koinViewModel
 
-fun EntryProviderScope<NavKey>.seeTransactionsEntries(bindings: NavHostBindings) {
+fun EntryProviderScope<NavKey>.seeTransactionsEntries(
+    bindings: NavHostBindings,
+    savedMonth: () -> YearMonth?,
+    onSavedMonthConsumed: () -> Unit,
+) {
     entry<SeeTransactionRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         val vm: SeeTransactionsViewModel = koinViewModel()
@@ -25,6 +30,13 @@ fun EntryProviderScope<NavKey>.seeTransactionsEntries(bindings: NavHostBindings)
                         tone = EmmSnackbarTone.Error,
                     )
                 }
+            }
+        }
+
+        LaunchedEffect(savedMonth()) {
+            savedMonth()?.let { month ->
+                vm.onIntent(SeeTransactionsIntent.OnMonthSelected(month))
+                onSavedMonthConsumed()
             }
         }
 
