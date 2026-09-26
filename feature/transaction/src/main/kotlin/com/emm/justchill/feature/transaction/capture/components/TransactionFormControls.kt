@@ -37,10 +37,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 // moves; sizing each to its own label would shift "Ingreso"/"Gasto" sideways on every tap.
 private val SignSegmentWidth: Dp = 96.dp
 
-/**
- * Selection reads through the text ladder and one surface step — never a tint. An expense is not
- * red and an income is not green here; the amount above carries that.
- */
 @Composable
 internal fun SignToggle(
     isSpend: Boolean,

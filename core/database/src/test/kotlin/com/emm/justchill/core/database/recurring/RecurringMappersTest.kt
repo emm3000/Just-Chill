@@ -57,19 +57,20 @@ class RecurringMappersTest {
         assertEquals("rm-1", result[0].id.value)
     }
 
-    private fun recurringEntity(id: String, type: String, frequency: String) = RecurringMovementEntity(
-        id = id,
-        name = "Test movement",
-        type = type,
-        amount = 100_00L,
-        description = "desc",
-        categoryId = null,
-        accountId = "acc-1",
-        frequency = frequency,
-        dayOfMonth = 15L,
-        isActive = 1L,
-        lastConfirmedPeriod = null,
-        createdAt = 0L,
-        updatedAt = 0L,
-    )
+    private fun recurringEntity(id: String, type: String, frequency: String): RecurringMovementEntity =
+        RecurringMovementEntity(
+            id = id,
+            name = "Test movement",
+            type = type,
+            amount = 100_00L,
+            description = "desc",
+            categoryId = null,
+            accountId = "acc-1",
+            frequency = frequency,
+            dayOfMonth = 15L,
+            isActive = 1L,
+            lastConfirmedPeriod = null,
+            createdAt = 0L,
+            updatedAt = 0L,
+        )
 }

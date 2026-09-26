@@ -53,11 +53,9 @@ import com.emm.justchill.core.ui.theme.PlexMonoFontFamily
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
-/**
- * [showCaret] draws a caret that never moves: every caller that shows one feeds a cents
- * accumulator, where digits only ever enter at the right edge, so there is no other position for
- * it to be in.
- */
+// showCaret draws a caret that never moves: every caller that shows one feeds a cents
+// accumulator, where digits only ever enter at the right edge, so there is no other position for
+// it to be in.
 @Composable
 fun AmountHero(
     value: Double,

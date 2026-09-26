@@ -61,7 +61,7 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
     ): List<FrequentCombo> = safeDbCall {
         localDataSource.topUsedCombos(type, startInclusive, limit.toLong())
             .mapNotNull { row ->
-                val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
+                val parsedType: TransactionType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
                 FrequentCombo(
                     accountId = AccountId(row.accountId),
                     categoryId = CategoryId(row.categoryId),
@@ -74,7 +74,8 @@ class DefaultTransactionStatsRepository(private val localDataSource: Transaction
         safeDbCall {
             localDataSource.comboOccurrences(type, startInclusive)
                 .mapNotNull { row ->
-                    val parsedType = enumValueOrNull<TransactionType>(row.type) ?: return@mapNotNull null
+                    val parsedType: TransactionType = enumValueOrNull<TransactionType>(row.type)
+                        ?: return@mapNotNull null
                     ComboOccurrence(
                         accountId = AccountId(row.accountId),
                         categoryId = CategoryId(row.categoryId),
