@@ -44,7 +44,6 @@ import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.ui.format.balanceFormatted
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.format.centsToSoles
-import com.emm.justchill.core.ui.format.moneyCentsString
 import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 import com.emm.justchill.core.ui.preview.PreviewWindowEdges
@@ -61,13 +60,8 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
 import com.emm.justchill.feature.transaction.capture.components.PadForm
-import com.emm.justchill.feature.transaction.capture.components.SaveMotion
 import com.emm.justchill.feature.transaction.capture.components.SignToggle
-import com.emm.justchill.feature.transaction.capture.components.rememberSaveMotion
 import com.emm.justchill.feature.transaction.capture.sheets.NoteSheet
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 
@@ -109,22 +103,14 @@ fun AddTransactionScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val currentOnSaveSuccess: () -> Unit by rememberUpdatedState(onSaveSuccess)
-    val motion: SaveMotion = rememberSaveMotion()
 
     LaunchedEffect(vm) {
-        var flight: Job? = null
         vm.effect.collect { effect ->
             when (effect) {
-                is AddTransactionEffect.TransactionSaved -> {
-                    currentOnSaveSuccess()
-                    flight?.cancelAndJoin()
-                    flight = launch { motion.fly(effect.amount) }
-                }
+                AddTransactionEffect.TransactionSaved -> currentOnSaveSuccess()
 
-                is AddTransactionEffect.ShowError -> {
-                    motion.releaseTotal()
+                is AddTransactionEffect.ShowError ->
                     snackbarHostState.showEmmSnackbar(message = effect.message, tone = EmmSnackbarTone.Error)
-                }
             }
         }
     }
@@ -132,11 +118,7 @@ fun AddTransactionScreen(
     AddTransactionScreenContent(
         state = state,
         onIntent = vm::onIntent,
-        onSave = {
-            motion.holdTotal(state.monthSpendAmount)
-            vm.onIntent(AddTransactionIntent.OnSave)
-        },
-        motion = motion,
+        onSave = { vm.onIntent(AddTransactionIntent.OnSave) },
         onClose = onClose,
         onOpenTransactions = onOpenTransactions,
         onAddNewCategory = onAddNewCategory,
@@ -151,7 +133,6 @@ internal fun AddTransactionScreenContent(
     onClose: () -> Unit,
     onOpenTransactions: () -> Unit,
     onSave: () -> Unit,
-    motion: SaveMotion = rememberSaveMotion(),
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -171,7 +152,6 @@ internal fun AddTransactionScreenContent(
         kind = kind,
         ctaLabel = ctaLabel,
         amountDescription = amountDescription,
-        motion = motion,
         actions = PadActions(onIntent, onClose, onOpenTransactions, onSave, onAddNewAccount),
         modifier = Modifier
             .fillMaxSize()
@@ -200,7 +180,6 @@ private fun PadColumn(
     kind: TransactionKindContent,
     ctaLabel: String,
     amountDescription: String,
-    motion: SaveMotion,
     actions: PadActions,
     modifier: Modifier = Modifier,
 ) {
@@ -215,9 +194,9 @@ private fun PadColumn(
             IconBtn(icon = Icons.Outlined.Close, onClick = actions.onClose, contentDescription = "Cerrar")
             MonthSpendLine(
                 label = state.monthSpendLabel,
-                amount = motion.displayedTotal(state.monthSpendAmount),
+                amount = state.monthSpendAmount,
                 onClick = actions.onOpenTransactions,
-                modifier = with(motion) { Modifier.weight(1f).monthLineTarget() },
+                modifier = Modifier.weight(1f),
             )
         }
         Row(
@@ -245,7 +224,6 @@ private fun PadColumn(
             PadHero(
                 amount = state.amount,
                 kind = kind,
-                motion = motion,
                 modifier = Modifier
                     .weight(HERO_WEIGHT, fill = false)
                     .fillMaxWidth()
@@ -302,7 +280,7 @@ private fun OpenSheet(
 }
 
 @Composable
-private fun PadHero(amount: String, kind: TransactionKindContent, motion: SaveMotion, modifier: Modifier = Modifier) {
+private fun PadHero(amount: String, kind: TransactionKindContent, modifier: Modifier = Modifier) {
     val type: EmmType = LocalEmmType.current
 
     Box(contentAlignment = Alignment.Center, modifier = modifier) {
@@ -311,16 +289,7 @@ private fun PadHero(amount: String, kind: TransactionKindContent, motion: SaveMo
             size = type.amountHero.fontSize,
             tone = kind.amountTone,
             showCaret = true,
-            modifier = with(motion) { Modifier.restingHero() },
         )
-        motion.flyingAmount?.let { saved ->
-            AmountHero(
-                value = centsToSoles(moneyCentsString(saved)),
-                size = type.amountHero.fontSize,
-                tone = kind.amountTone,
-                modifier = with(motion) { Modifier.inFlight() },
-            )
-        }
     }
 }
 
