@@ -45,8 +45,8 @@ object SpanishDateFormat {
     fun dayShortMonth(date: LocalDate): String = "${date.dayOfMonth} ${shortMonth(date.month)}"
 
     fun time(time: LocalTime): String {
-        val hour = time.hour.toString().padStart(2, '0')
-        val minute = time.minute.toString().padStart(2, '0')
+        val hour: String = time.hour.toString().padStart(2, '0')
+        val minute: String = time.minute.toString().padStart(2, '0')
         return "$hour:$minute"
     }
 
