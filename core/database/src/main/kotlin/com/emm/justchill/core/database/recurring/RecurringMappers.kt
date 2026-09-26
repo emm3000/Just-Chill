@@ -29,8 +29,8 @@ fun Recurring_movements.asEntity(): RecurringMovementEntity = RecurringMovementE
 fun List<Recurring_movements>.asEntity(): List<RecurringMovementEntity> = map(Recurring_movements::asEntity)
 
 fun RecurringMovementEntity.asExternalModelOrNull(): RecurringMovement? {
-    val parsedType = enumValueOrNull<TransactionType>(type)
-    val parsedFrequency = enumValueOrNull<Frequency>(frequency)
+    val parsedType: TransactionType? = enumValueOrNull<TransactionType>(type)
+    val parsedFrequency: Frequency? = enumValueOrNull<Frequency>(frequency)
     if (parsedType == null || parsedFrequency == null) return null
     return RecurringMovement(
         id = RecurringMovementId(id),

@@ -109,7 +109,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `initial month is today's month and the list queries its exact bounds`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(currentMonth, vm.state.value.month)
@@ -147,7 +147,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnMonthSelected requeries with the picked month's bounds`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         val next = currentMonth.next()
@@ -165,7 +165,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnMonthSelected moves the label without waiting for the database`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnMonthSelected(currentMonth.next()))
@@ -218,7 +218,7 @@ class SeeTransactionsViewModelTest {
         stubRange(currentMonth, MutableStateFlow(listOf(tx("t-aug", TransactionType.Spend, 1_000))))
         stubRange(next, MutableStateFlow(listOf(tx("t-sep", TransactionType.Spend, 2_000, month = next))))
 
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(SeeTransactionsIntent.OnMonthSelected(next))
         advanceUntilIdle()
@@ -231,7 +231,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `the browsed month follows a midnight rollover when the user never moved it`() = runTest(testDispatcher) {
         val today = MutableStateFlow(LocalDate(2026, 8, 31))
-        val vm = buildViewModel(today)
+        val vm: SeeTransactionsViewModel = buildViewModel(today)
         advanceUntilIdle()
         assertEquals(currentMonth, vm.state.value.month, "August IS the month on 31 August")
 
@@ -261,7 +261,7 @@ class SeeTransactionsViewModelTest {
     fun `the browsed month does not follow a midnight rollover once the user picked another one`() =
         runTest(testDispatcher) {
             val today = MutableStateFlow(LocalDate(2026, 8, 31))
-            val vm = buildViewModel(today)
+            val vm: SeeTransactionsViewModel = buildViewModel(today)
             advanceUntilIdle()
 
             vm.onIntent(SeeTransactionsIntent.OnMonthSelected(currentMonth.previous()))
@@ -277,7 +277,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `an active filter switches the stream to global search and leaves the month window`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
+            val vm: SeeTransactionsViewModel = buildViewModel()
             advanceUntilIdle()
 
             vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -291,7 +291,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `clearing filters returns to month mode and requeries the range`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -311,7 +311,7 @@ class SeeTransactionsViewModelTest {
             tx("t-2", TransactionType.Spend, cents = 3_000),
             tx("t-3", TransactionType.Income, cents = 500),
         )
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         val summary = vm.state.value.summary
@@ -323,7 +323,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `search mode has no summary`() = runTest(testDispatcher) {
         monthTransactionsFlow.value = listOf(tx("t-1", TransactionType.Income, cents = 10_000))
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -340,7 +340,7 @@ class SeeTransactionsViewModelTest {
         stubRange(next, MutableStateFlow(listOf(tx("t-sep", TransactionType.Spend, 2_000, month = next))))
         totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
 
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertTrue(vm.state.value.days.isEmpty())
@@ -364,7 +364,7 @@ class SeeTransactionsViewModelTest {
             monthTransactionsFlow.value = listOf(tx("t-aug", TransactionType.Spend, 1_000))
             totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
 
-            val vm = buildViewModel()
+            val vm: SeeTransactionsViewModel = buildViewModel()
             advanceUntilIdle()
 
             vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -397,7 +397,7 @@ class SeeTransactionsViewModelTest {
     fun `HOY relabels to AYER across a midnight rollover with no user interaction`() = runTest(testDispatcher) {
         monthTransactionsFlow.value = listOf(tx("t-1", TransactionType.Spend, 1_000, daysIntoMonth = 15))
         val today = MutableStateFlow(LocalDate(2026, 8, 15))
-        val vm = buildViewModel(today)
+        val vm: SeeTransactionsViewModel = buildViewModel(today)
         advanceUntilIdle()
         assertEquals("HOY", vm.state.value.days.single().primaryLabel)
 
@@ -409,7 +409,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `before any emission the screen claims nothing and still offers the eyebrow`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
 
         val state = vm.state.value
         assertEquals(ListDisplayState.Loading, state.listDisplayState)
@@ -420,7 +420,7 @@ class SeeTransactionsViewModelTest {
     fun `a failing totals aggregate leaves the count unknown instead of claiming an empty ledger`() =
         runTest(testDispatcher) {
             every { transactionRepository.observeTotals() } returns flow { error("totals exploded") }
-            val vm = buildViewModel()
+            val vm: SeeTransactionsViewModel = buildViewModel()
             advanceUntilIdle()
 
             val state = vm.state.value
@@ -430,7 +430,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `empty DB with no filter shows the empty ledger`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(ListDisplayState.EmptyLedger, vm.state.value.listDisplayState)
@@ -440,7 +440,7 @@ class SeeTransactionsViewModelTest {
     fun `an empty month with movements elsewhere shows the empty month, not the empty ledger`() =
         runTest(testDispatcher) {
             totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
-            val vm = buildViewModel()
+            val vm: SeeTransactionsViewModel = buildViewModel()
             advanceUntilIdle()
 
             assertEquals(ListDisplayState.EmptyMonth, vm.state.value.listDisplayState)
@@ -449,7 +449,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `empty results with active filter shows no search results`() = runTest(testDispatcher) {
         totalsFlow.value = TransactionTotals(balance = Money(10_000), movementCount = 3)
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("nada"))
@@ -461,7 +461,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `searching a ledger that holds nothing stays on the empty ledger`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("nada"))
@@ -477,7 +477,7 @@ class SeeTransactionsViewModelTest {
         // only a usage-ranked sort answers b, c, a.
         categoriesFlow.value = listOf(category("cat-a"), category("cat-b"), category("cat-c"))
         usageCountsFlow.value = mapOf(CategoryId("cat-b") to 5, CategoryId("cat-c") to 2)
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(listOf("cat-b", "cat-c", "cat-a"), vm.state.value.sheetItems.map { it.id })
@@ -498,7 +498,7 @@ class SeeTransactionsViewModelTest {
             CategoryId("cat-2") to 4,
             CategoryId("cat-3") to 9,
         )
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(listOf("Mercado", "Almuerzo", "Zapatos"), vm.state.value.sheetItems.map { it.name })
@@ -510,7 +510,7 @@ class SeeTransactionsViewModelTest {
         // at all, and dropping it would make it unreachable from the only filter entry point.
         categoriesFlow.value = listOf(category("used"), category("never-used"))
         usageCountsFlow.value = mapOf(CategoryId("used") to 3)
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         val sheetItems = vm.state.value.sheetItems
@@ -520,7 +520,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `initial state has empty days, empty query, and filter not active`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         val state = vm.state.value
@@ -532,7 +532,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnQueryChanged updates query in state immediately`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -542,7 +542,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnQueryChanged after debounce calls search use case`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -554,7 +554,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `rapid OnQueryChanged calls only fire last query after debounce`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("c"))
@@ -572,7 +572,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnCategoryToggled adds category to filter immediately`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
@@ -590,7 +590,7 @@ class SeeTransactionsViewModelTest {
         // The category must exist, or the deleted-category auto-reset clears the filter
         // between the two toggles and the second one re-activates instead of toggling off.
         categoriesFlow.value = listOf(category("cat-1"))
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnCategoryToggled("cat-1"))
@@ -604,7 +604,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnClearFilters resets query and filter`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
@@ -622,7 +622,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `OnFilterSheetRequested opens the filter sheet and OnFilterSheetDismissed closes it`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
+            val vm: SeeTransactionsViewModel = buildViewModel()
             advanceUntilIdle()
             assertFalse(vm.state.value.showFilterSheet)
 
@@ -637,7 +637,7 @@ class SeeTransactionsViewModelTest {
 
     @Test
     fun `OnSearchRequested opens search and OnSearchClosed closes it again`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: SeeTransactionsViewModel = buildViewModel()
         advanceUntilIdle()
         assertFalse(vm.state.value.isSearchOpen)
 
@@ -758,7 +758,7 @@ class SeeTransactionsViewModelTest {
     @Test
     fun `OnSearchClosed clears the query as well as searchRequested, and requeries the month range`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
+            val vm: SeeTransactionsViewModel = buildViewModel()
             advanceUntilIdle()
 
             vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchRequested)

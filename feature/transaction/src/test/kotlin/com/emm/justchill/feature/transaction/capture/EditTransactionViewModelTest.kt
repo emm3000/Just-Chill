@@ -125,7 +125,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `state carries the transaction's own day after load`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(marchDay, vm.state.value.date)
@@ -133,7 +133,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `the date label is the transaction's day, not today`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals("4 mar", vm.state.value.dateLabel)
@@ -141,7 +141,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `today comes from the injected TodayFlow`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(today, vm.state.value.today)
@@ -152,7 +152,7 @@ class EditTransactionViewModelTest {
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns
             storedTransaction.copy(occurredAt = LocalDateTime(today, LocalTime(9, 15)))
 
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals("Hoy", vm.state.value.dateLabel)
 
@@ -169,7 +169,7 @@ class EditTransactionViewModelTest {
         val evening = storedTransaction.copy(occurredAt = LocalDateTime(marchDay, LocalTime(23, 30)))
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns evening
 
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(marchDay, vm.state.value.date)
@@ -177,7 +177,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `OnDateSelected replaces the day in the state`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
@@ -189,7 +189,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `picking a different day enables save`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
@@ -200,7 +200,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `re-picking the day already loaded leaves save disabled`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnDateSelected(marchDay))
@@ -211,7 +211,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `moving the transaction to another day carries its recorded hour across`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         val newDay = LocalDate(2026, Month.JUNE, 13)
@@ -228,7 +228,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `an edit that does not touch the date sends back the stored value, byte for byte`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnAmountChange("9000"))
@@ -244,7 +244,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `the loaded movement's own account is selected, not the catalog's first`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(account.accountId, vm.state.value.accountSelected?.accountId)
@@ -253,7 +253,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `the account the user picks is the account the update carries`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         // Neither stored nor first in the catalog, so nothing but the id lookup can answer with it.
@@ -271,7 +271,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `a picked category of the current type wins over the stored one`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals(category.categoryId, vm.state.value.categorySelected?.categoryId, "stored, before any pick")
 
@@ -301,7 +301,7 @@ class EditTransactionViewModelTest {
         )
         every { categoryRepository.all() } returns flowOf(categories + incomeCategory)
 
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
@@ -323,7 +323,7 @@ class EditTransactionViewModelTest {
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns
             storedTransaction.copy(categoryId = null)
 
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertNull(vm.state.value.categorySelected, "nobody picked this")
@@ -334,7 +334,7 @@ class EditTransactionViewModelTest {
     fun `editing an uncategorized movement saves it still uncategorized`() = runTest(testDispatcher) {
         val uncategorized = storedTransaction.copy(categoryId = null)
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns uncategorized
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnAmountChange("9000"))
@@ -361,7 +361,7 @@ class EditTransactionViewModelTest {
         every { categoryRepository.all() } returns flowOf(listOf(category, incomeCategory))
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns
             storedTransaction.copy(categoryId = null)
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
@@ -377,7 +377,7 @@ class EditTransactionViewModelTest {
         every { categoryRepository.all() } returns categories
         categories.emit(listOf(category))
 
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals(category.categoryId, vm.state.value.categorySelected?.categoryId)
 
@@ -393,7 +393,7 @@ class EditTransactionViewModelTest {
         // `deletedAt IS NULL`, so the row keeps a categoryId nothing in the catalog resolves.
         every { categoryRepository.all() } returns flowOf(emptyList())
 
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertNull(vm.state.value.categorySelected, "the row it pointed at is gone")
@@ -404,7 +404,7 @@ class EditTransactionViewModelTest {
     fun `deleting targets the route's transaction even when the row never loaded`() = runTest(testDispatcher) {
         coEvery { transactionRepository.find(TransactionId("tx-1")) } returns null
 
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(EditTransactionIntent.OnDeleteConfirm)
         advanceUntilIdle()
@@ -422,7 +422,7 @@ class EditTransactionViewModelTest {
             categoryType = CategoryType.Income,
         )
         every { categoryRepository.all() } returns flowOf(listOf(category, incomeCategory))
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
@@ -434,7 +434,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `OnSheetRequested opens the requested sheet and OnSheetDismissed closes it`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
 
@@ -449,7 +449,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `the delete dialog opens and closes through intents`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnDeleteClick)
@@ -463,7 +463,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `confirming the deletion closes the dialog`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(EditTransactionIntent.OnDeleteClick)
@@ -475,7 +475,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `a category created from the edit screen is selected and offered first`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val created = SelectableCategory(
             categoryId = CategoryId("subscriptions"),
@@ -496,7 +496,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `a category created from the edit screen arms the save CTA`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertFalse(vm.state.value.isEnabled)
 
@@ -518,7 +518,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `saving writes the category created from the edit screen`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val update = slot<TransactionUpdate>()
         coEvery { updateTransaction.invoke(any(), capture(update)) } returns Unit
@@ -542,7 +542,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `the catalog's row supersedes the one created here, without duplicating it`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val created = SelectableCategory(
             categoryId = CategoryId("subscriptions"),
@@ -572,7 +572,7 @@ class EditTransactionViewModelTest {
 
     @Test
     fun `a category of the other type is not attached to the edited movement`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: EditTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val before: EditTransactionUiState = vm.state.value
 

@@ -50,7 +50,6 @@ class SeeTransactionsViewModel(
 
     private val filter = MutableStateFlow(TransactionFilter.None)
     private val selectedMonth = MutableStateFlow(initialState.month)
-    private var calendarMonth = initialState.month
     private val onDomainError: (DomainException) -> SeeTransactionsEffect = { error ->
         SeeTransactionsEffect.ShowError(error.toUserMessage())
     }
@@ -122,8 +121,7 @@ class SeeTransactionsViewModel(
         today
             .map { date -> YearMonth.of(date) }
             .onEach { month ->
-                val previousCalendarMonth = calendarMonth
-                calendarMonth = month
+                val previousCalendarMonth = state.value.currentMonth
                 updateState { copy(currentMonth = month) }
                 if (month != previousCalendarMonth && selectedMonth.value == previousCalendarMonth) selectMonth(month)
             }
