@@ -21,9 +21,12 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -254,5 +257,28 @@ class AddEditLoanViewModelTest {
         vm.onIntent(AddEditLoanIntent.OnSheetDismissed)
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
+    }
+
+    @Test
+    fun `a date pick leaves the date sheet open until the sheet dismisses itself`() = runTest {
+        val vm: AddEditLoanViewModel = viewModel()
+        val sheets: MutableList<LoanFormSheet?> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.openSheet }.distinctUntilChanged().collect { sheets += it }
+        }
+        advanceUntilIdle()
+        val pickedDay: LocalDate = LocalDate(2026, Month.AUGUST, 3)
+
+        vm.onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Date))
+        vm.onIntent(AddEditLoanIntent.OnDateSelected(pickedDay))
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, LoanFormSheet.Date), sheets)
+        assertEquals(pickedDay, vm.state.value.date)
+
+        vm.onIntent(AddEditLoanIntent.OnSheetDismissed)
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, LoanFormSheet.Date, null), sheets)
     }
 }
