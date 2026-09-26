@@ -50,7 +50,7 @@ internal fun BackupSection(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        SectionHeader(text = "Respaldo")
+        SectionHeader(text = "Datos")
         ProfileGroup {
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.FileDownload,
