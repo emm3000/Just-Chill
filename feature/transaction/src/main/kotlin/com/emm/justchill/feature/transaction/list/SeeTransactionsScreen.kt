@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,6 +38,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -98,14 +99,23 @@ internal fun SeeTransactionsContent(
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
 ) {
-    val colors = LocalEmmColors.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val listState: LazyListState = rememberLazyListState()
+    val collapseState: CollapsingHeaderState = remember { CollapsingHeaderState() }
+    val collapseConnection: NestedScrollConnection = rememberCollapsingHeaderConnection(
+        state = collapseState,
+        listState = listState,
+        isHeaderShown = state.isEyebrowVisible,
+    )
 
     BackHandler(enabled = state.isSearchOpen) { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bg),
+            .background(colors.bg)
+            .nestedScroll(collapseConnection),
     ) {
         if (state.isSearchOpen) {
             SearchBar(
@@ -128,12 +138,11 @@ internal fun SeeTransactionsContent(
                 currentYear = state.currentMonth.year,
                 summary = summary,
                 onIntent = onIntent,
-                modifier = Modifier.padding(top = LocalEmmSpacing.current.s2),
+                modifier = Modifier
+                    .collapsingHeader(state = collapseState, scrollableState = listState)
+                    .padding(top = spacing.s2)
+                    .then(if (summary != null) Modifier.padding(bottom = spacing.s2) else Modifier),
             )
-        }
-
-        if (summary != null) {
-            Spacer(Modifier.height(LocalEmmSpacing.current.s2))
         }
 
         val activeCategory: ActiveCategoryInfo? = state.activeCategory
@@ -149,6 +158,8 @@ internal fun SeeTransactionsContent(
 
         TransactionListColumn(
             state = state,
+            listState = listState,
+            collapseState = collapseState,
             onIntent = onIntent,
             navigateToEdit = navigateToEdit,
         )
@@ -168,14 +179,24 @@ internal fun SeeTransactionsContent(
 @Composable
 private fun TransactionListColumn(
     state: SeeTransactionsUiState,
+    listState: LazyListState,
+    collapseState: CollapsingHeaderState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
 ) {
-    val listState: LazyListState = rememberLazyListState()
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    LaunchedEffect(state.days.size) {
+    LaunchedEffect(
+        state.month,
+        state.days.size,
+        state.query,
+        state.activeCategory,
+        state.minAmount,
+        state.maxAmount,
+        state.isSearchOpen,
+    ) {
         listState.scrollToItem(0)
+        collapseState.open()
     }
 
     LazyColumn(
