@@ -24,7 +24,6 @@ import com.emm.justchill.core.ui.error.toUserMessage
 import com.emm.justchill.core.ui.format.centsToMoney
 import com.emm.justchill.core.ui.mvi.MviViewModel
 import com.emm.justchill.core.ui.pending.toPendingRecurringUi
-import com.emm.justchill.core.ui.transaction.toUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -150,9 +149,10 @@ class SeeTransactionsViewModel(
 
     override fun onIntent(intent: SeeTransactionsIntent) {
         when (intent) {
-            SeeTransactionsIntent.OnPreviousMonth -> selectMonth(selectedMonth.value.previous())
-
-            SeeTransactionsIntent.OnNextMonth -> selectMonth(selectedMonth.value.next())
+            is SeeTransactionsIntent.OnMonthSelected -> {
+                selectMonth(intent.month)
+                updateState { copy(showMonthPicker = false) }
+            }
 
             is SeeTransactionsIntent.OnQueryChanged -> {
                 filter.value = filter.value.copy(query = intent.query)
@@ -265,6 +265,12 @@ class SeeTransactionsViewModel(
                 filter.value = filter.value.copy(query = "")
                 updateState { copy(searchRequested = false, query = "") }
             }
+
+            SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested ->
+                updateState { copy(showMonthPicker = true) }
+
+            SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerDismissed ->
+                updateState { copy(showMonthPicker = false) }
         }
     }
 
@@ -347,14 +353,6 @@ internal fun SeeTransactionsUiState.withListSlice(slice: ListSlice, selectedMont
     val isStale = slice.month != null && slice.month != selectedMonth
     return if (isStale) this else copy(days = slice.days, summary = slice.summary)
 }
-
-// The day a row belongs under is the day it carries. No zone, no conversion, nothing that can put
-// the same transaction under a different header on a different device.
-private fun List<TransactionWithCategory>.toDayGroups(today: LocalDate): List<DayGroup> =
-    groupBy { transaction -> transaction.occurredAt.date }
-        .map { (date, transactions) ->
-            DayGroup(date = date, today = today, transactions = transactions.toUi())
-        }
 
 private fun List<TransactionWithCategory>.toMonthSummary(): MonthSummaryUi {
     var incomeCents = 0L

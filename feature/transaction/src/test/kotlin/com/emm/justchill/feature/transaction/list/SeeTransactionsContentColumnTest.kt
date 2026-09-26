@@ -3,7 +3,6 @@ package com.emm.justchill.feature.transaction.list
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Dp
@@ -35,13 +34,13 @@ class SeeTransactionsContentColumnTest {
     private val amountLabel: String = "S/ 12"
 
     @Test
-    fun `keeps the back glyph and the first row on the same content column`() {
+    fun `keeps the title and the first row on the same content column`() {
         renderMonthWithOneMovement()
 
         val rootBoundsLeft: Dp = composeRule.onRoot().getUnclippedBoundsInRoot().left
         val rootBoundsRight: Dp = composeRule.onRoot().getUnclippedBoundsInRoot().right
-        val backGlyphLeft: Dp = composeRule
-            .onNodeWithContentDescription("Volver", useUnmergedTree = true)
+        val titleLeft: Dp = composeRule
+            .onNodeWithText("Movimientos", useUnmergedTree = true)
             .getUnclippedBoundsInRoot()
             .left
         val rowAmountRight: Dp = composeRule
@@ -49,7 +48,7 @@ class SeeTransactionsContentColumnTest {
             .getUnclippedBoundsInRoot()
             .right
 
-        assertEquals(contentColumn.value, (backGlyphLeft - rootBoundsLeft).value, roundingTolerance)
+        assertEquals(contentColumn.value, (titleLeft - rootBoundsLeft).value, roundingTolerance)
         assertEquals(contentColumn.value, (rootBoundsRight - rowAmountRight).value, roundingTolerance)
     }
 
@@ -77,8 +76,6 @@ class SeeTransactionsContentColumnTest {
                     state = state,
                     onIntent = {},
                     navigateToEdit = {},
-                    navigateToAdd = {},
-                    onBack = {},
                 )
             }
         }

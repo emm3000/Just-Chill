@@ -33,4 +33,4 @@ Everything a movement is: `capture/` holds the add, edit and delete form with it
 - Pending recurring movements are about "now": a filtered list stays filtered, and browsing another month never surfaces today's pending row under a month it does not belong to.
 - A category filter, or an amount range, turns the list into a cross-month search, so the month selector steps aside; in month mode it is always there, including before the ledger count is known.
 - `SeeTransactionsViewModel` takes six constructor parameters, the ceiling review holds it to: a datum either needs new joins through the query or an existing flow, not a seventh parameter.
-- This screen owns the transaction list and nothing else. Income, spend and balance belong to `:feature:report`; before adding a section, find the owner.
+- This screen owns the transaction list and its own month header: the spend hero, `Entró` and `Neto` (ADR 022). Income detail and savings rate still belong to `:feature:report`; before adding a section beyond that header, find the owner.

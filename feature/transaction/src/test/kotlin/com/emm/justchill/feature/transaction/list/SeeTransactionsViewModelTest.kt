@@ -185,14 +185,14 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `OnNextMonth requeries with the next month's bounds`() = runTest(testDispatcher) {
+    fun `OnMonthSelected requeries with the picked month's bounds`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        val next = currentMonth.next()
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(next))
         advanceUntilIdle()
 
-        val next = currentMonth.next()
         assertEquals(next, vm.state.value.month)
         verify {
             transactionRepository.fetchAllWithCategoryInRange(
@@ -203,25 +203,44 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `OnNextMonth moves the label without waiting for the database`() = runTest(testDispatcher) {
+    fun `OnMonthSelected moves the label without waiting for the database`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(currentMonth.next()))
 
         // No advanceUntilIdle on purpose: nothing has been collected and no query has answered,
-        // yet the arrow the user tapped must already be reflected in the selector's label.
+        // yet the month the user picked must already be reflected in the eyebrow's label.
         assertEquals(currentMonth.next(), vm.state.value.month)
     }
 
     @Test
-    fun `OnPreviousMonth moves the label without waiting for the database`() = runTest(testDispatcher) {
+    fun `OnMonthSelected closes the month picker sheet`() = runTest(testDispatcher) {
         val vm = buildViewModel()
         advanceUntilIdle()
+        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.showMonthPicker)
 
-        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(currentMonth.next()))
+        advanceUntilIdle()
 
-        assertEquals(currentMonth.previous(), vm.state.value.month)
+        assertFalse(vm.state.value.showMonthPicker)
+    }
+
+    @Test
+    fun `OnMonthPickerRequested opens the sheet and OnMonthPickerDismissed closes it`() = runTest(testDispatcher) {
+        val vm = buildViewModel()
+        advanceUntilIdle()
+        assertFalse(vm.state.value.showMonthPicker)
+
+        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerRequested)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.showMonthPicker)
+
+        vm.onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerDismissed)
+        advanceUntilIdle()
+        assertFalse(vm.state.value.showMonthPicker)
     }
 
     @Test
@@ -232,30 +251,12 @@ class SeeTransactionsViewModelTest {
 
         val vm = buildViewModel()
         advanceUntilIdle()
-        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(next))
         advanceUntilIdle()
 
         val state = vm.state.value
         assertEquals(next, state.month)
         assertEquals(listOf("t-sep"), state.days.flatMap { day -> day.transactions.map { it.transactionId } })
-    }
-
-    @Test
-    fun `OnPreviousMonth requeries with the previous month's bounds`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
-        advanceUntilIdle()
-
-        val previous = currentMonth.previous()
-        assertEquals(previous, vm.state.value.month)
-        verify {
-            transactionRepository.fetchAllWithCategoryInRange(
-                previous.startInclusiveDay(),
-                previous.endExclusiveDay(),
-            )
-        }
     }
 
     @Test
@@ -272,20 +273,21 @@ class SeeTransactionsViewModelTest {
     }
 
     @Test
-    fun `the browsed month does not follow a midnight rollover once the user arrowed away`() = runTest(testDispatcher) {
-        val today = MutableStateFlow(LocalDate(2026, 8, 31))
-        val vm = buildViewModel(today)
-        advanceUntilIdle()
+    fun `the browsed month does not follow a midnight rollover once the user picked another one`() =
+        runTest(testDispatcher) {
+            val today = MutableStateFlow(LocalDate(2026, 8, 31))
+            val vm = buildViewModel(today)
+            advanceUntilIdle()
 
-        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
-        advanceUntilIdle()
-        assertEquals(currentMonth.previous(), vm.state.value.month)
+            vm.onIntent(SeeTransactionsIntent.OnMonthSelected(currentMonth.previous()))
+            advanceUntilIdle()
+            assertEquals(currentMonth.previous(), vm.state.value.month)
 
-        today.value = LocalDate(2026, 9, 1)
-        advanceUntilIdle()
+            today.value = LocalDate(2026, 9, 1)
+            advanceUntilIdle()
 
-        assertEquals(currentMonth.previous(), vm.state.value.month, "a deliberately browsed month must not move")
-    }
+            assertEquals(currentMonth.previous(), vm.state.value.month, "a deliberately browsed month must not move")
+        }
 
     @Test
     fun `an active filter switches the stream to global search and leaves the month window`() =
@@ -358,7 +360,7 @@ class SeeTransactionsViewModelTest {
 
         assertTrue(vm.state.value.days.isEmpty())
 
-        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(next))
         advanceUntilIdle()
 
         verify {

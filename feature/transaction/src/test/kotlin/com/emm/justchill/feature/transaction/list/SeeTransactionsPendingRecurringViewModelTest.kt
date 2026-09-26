@@ -183,7 +183,7 @@ class SeeTransactionsPendingRecurringViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(period.previous()))
 
         assertFalse(vm.state.value.isPendingSectionVisible)
     }
@@ -205,7 +205,7 @@ class SeeTransactionsPendingRecurringViewModelTest {
         val vm = buildViewModel()
         advanceUntilIdle()
 
-        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(period.previous()))
         vm.onIntent(SeeTransactionsIntent.OnQueryChanged("café"))
 
         assertFalse(vm.state.value.isPendingSectionVisible)
@@ -272,9 +272,9 @@ class SeeTransactionsPendingRecurringViewModelTest {
         advanceUntilIdle()
         verify(exactly = 1) { getPendingRecurringMovements(any()) }
 
-        vm.onIntent(SeeTransactionsIntent.OnNextMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(period.next()))
         advanceUntilIdle()
-        vm.onIntent(SeeTransactionsIntent.OnPreviousMonth)
+        vm.onIntent(SeeTransactionsIntent.OnMonthSelected(period))
         advanceUntilIdle()
 
         verify(exactly = 1) { getPendingRecurringMovements(any()) }

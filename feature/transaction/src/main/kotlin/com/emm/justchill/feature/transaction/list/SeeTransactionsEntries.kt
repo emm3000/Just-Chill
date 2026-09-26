@@ -8,7 +8,6 @@ import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
-import com.emm.justchill.feature.transaction.AddTransactionRoute
 import com.emm.justchill.feature.transaction.EditTransactionRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,8 +32,6 @@ fun EntryProviderScope<NavKey>.seeTransactionsEntries(bindings: NavHostBindings)
             onEditTransaction = { id ->
                 nav.push(EditTransactionRoute(id))
             },
-            onAddTransaction = { nav.pushToTop(AddTransactionRoute()) },
-            onBack = { nav.pop() },
             vm = vm,
         )
     }

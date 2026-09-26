@@ -120,7 +120,7 @@ internal fun EmptyMonth(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(spacing.s2))
         Text(
-            text = "Cambia de mes con las flechas de arriba.",
+            text = "Toca el mes de arriba para cambiarlo.",
             style = type.caption,
             color = colors.textTertiary,
             textAlign = TextAlign.Center,

@@ -54,6 +54,7 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.category.CategoryUi
+import com.emm.justchill.core.ui.format.format
 import com.emm.justchill.core.ui.format.formatExpense
 import com.emm.justchill.core.ui.format.formatIncome
 import com.emm.justchill.core.ui.format.moneyCentsString
@@ -62,6 +63,7 @@ import com.emm.justchill.core.ui.pending.PendingRecurringHeader
 import com.emm.justchill.core.ui.pending.PendingRecurringRow
 import com.emm.justchill.core.ui.pending.PendingRecurringUi
 import com.emm.justchill.core.ui.sheets.AmountInputSheet
+import com.emm.justchill.core.ui.sheets.MonthPickerSheet
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -83,20 +85,13 @@ import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 @Composable
-fun SeeTransactionsScreen(
-    onEditTransaction: (String) -> Unit,
-    onAddTransaction: () -> Unit,
-    onBack: () -> Unit,
-    vm: SeeTransactionsViewModel,
-) {
+fun SeeTransactionsScreen(onEditTransaction: (String) -> Unit, vm: SeeTransactionsViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
 
     SeeTransactionsContent(
         state = state,
         onIntent = vm::onIntent,
         navigateToEdit = onEditTransaction,
-        navigateToAdd = onAddTransaction,
-        onBack = onBack,
     )
 }
 
@@ -105,8 +100,6 @@ internal fun SeeTransactionsContent(
     state: SeeTransactionsUiState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
-    navigateToAdd: () -> Unit,
-    onBack: () -> Unit,
 ) {
     val colors = LocalEmmColors.current
 
@@ -129,29 +122,24 @@ internal fun SeeTransactionsContent(
             )
         } else {
             ScreenHeader(
-                month = state.month.takeIf { state.isMonthSelectorVisible },
                 isCategoryOrAmountFilterActive = state.isCategoryOrAmountFilterActive,
-                onBack = onBack,
                 onIntent = onIntent,
             )
         }
 
         val summary: MonthSummaryUi? = state.summary
             ?.takeIf { state.listDisplayState == ListDisplayState.Content }
-        val isMonthNavigationVisible: Boolean = state.isMonthSelectorVisible && !state.isSearchOpen
-        if (isMonthNavigationVisible || summary != null) {
-            MonthStrip(
-                isMonthNavigationVisible = isMonthNavigationVisible,
+        val isEyebrowVisible: Boolean = state.isMonthSelectorVisible && !state.isSearchOpen
+        if (isEyebrowVisible) {
+            MonthHeader(
+                month = state.month,
                 summary = summary,
                 onIntent = onIntent,
+                modifier = Modifier.padding(top = LocalEmmSpacing.current.s2),
             )
         }
 
-        if (state.isTodayNudgeVisible) {
-            TodayNudgeCard(onClick = navigateToAdd)
-        }
-
-        if (summary != null || state.isTodayNudgeVisible) {
+        if (summary != null) {
             Spacer(Modifier.height(LocalEmmSpacing.current.s2))
         }
 
@@ -175,6 +163,14 @@ internal fun SeeTransactionsContent(
     }
 
     FilterSheets(state = state, onIntent = onIntent)
+
+    if (state.showMonthPicker) {
+        MonthPickerSheet(
+            current = state.month,
+            onSelect = { onIntent(SeeTransactionsIntent.OnMonthSelected(it)) },
+            onDismiss = { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnMonthPickerDismissed) },
+        )
+    }
 
     PendingConfirmSheetHost(
         pendingItem = state.confirmSheetPendingId?.let(pendingMap::get),
@@ -463,6 +459,14 @@ private fun LazyListScope.dayGroupedItems(
                         style = type.caption,
                         color = colors.textDisabled,
                     )
+                } else {
+                    dayGroup.spendTotal?.let { spendTotal ->
+                        Text(
+                            text = formatExpense(spendTotal.format()),
+                            style = type.amountS,
+                            color = colors.textTertiary,
+                        )
+                    }
                 }
             }
         }
@@ -485,8 +489,6 @@ private fun SeeTransactionsEmptyPreview() {
             state = SeeTransactionsUiState(month = PREVIEW_MONTH, movementCount = 0L),
             onIntent = {},
             navigateToEdit = {},
-            navigateToAdd = {},
-            onBack = {},
         )
     }
 }
@@ -538,8 +540,6 @@ private fun SeeTransactionsMonthPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
-            navigateToAdd = {},
-            onBack = {},
         )
     }
 }
@@ -571,8 +571,6 @@ private fun SeeTransactionsPopulatedPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
-            navigateToAdd = {},
-            onBack = {},
         )
     }
 }
@@ -624,8 +622,6 @@ private fun SeeTransactionsWithPendingPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
-            navigateToAdd = {},
-            onBack = {},
         )
     }
 }
@@ -670,8 +666,6 @@ private fun SeeTransactionsPendingWithEmptyMonthPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
-            navigateToAdd = {},
-            onBack = {},
         )
     }
 }
@@ -690,8 +684,6 @@ private fun SeeTransactionsNoResultsPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
-            navigateToAdd = {},
-            onBack = {},
         )
     }
 }
@@ -708,8 +700,6 @@ private fun SeeTransactionsLongMonthPreview() {
             ),
             onIntent = {},
             navigateToEdit = {},
-            navigateToAdd = {},
-            onBack = {},
         )
     }
 }
