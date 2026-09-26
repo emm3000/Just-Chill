@@ -32,8 +32,7 @@ import kotlin.math.roundToInt
 
 @Stable
 internal class CollapsingHeaderState {
-    var fullHeightPx: Float by mutableFloatStateOf(0f)
-        private set
+    private var fullHeightPx: Float by mutableFloatStateOf(0f)
 
     var heightOffsetPx: Float by mutableFloatStateOf(0f)
         private set
@@ -126,7 +125,7 @@ internal fun Modifier.collapsingHeader(state: CollapsingHeaderState, scrollableS
         transformOrigin = TransformOrigin(0f, 0f)
     }
 
-private const val SETTLE_THRESHOLD = 0.5f
-private const val PARALLAX = 0.5f
-private const val FADE_SPEED = 1.4f
-private const val COLLAPSED_SCALE = 0.92f
+private const val SETTLE_THRESHOLD: Float = 0.5f
+private const val PARALLAX: Float = 0.5f
+private const val FADE_SPEED: Float = 1.4f
+private const val COLLAPSED_SCALE: Float = 0.92f
