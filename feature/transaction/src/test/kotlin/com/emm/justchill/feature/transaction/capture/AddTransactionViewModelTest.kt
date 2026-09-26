@@ -12,15 +12,13 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
-import com.emm.justchill.core.domain.transaction.GetMonthSpendUseCase
 import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionInsert
-import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
 import com.emm.justchill.core.ui.category.SelectableCategory
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -33,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -43,7 +42,6 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -55,14 +53,14 @@ import kotlin.time.Instant
 
 class AddTransactionViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     @get:Rule
-    val mainDispatcherRule = MainDispatcherRule(testDispatcher)
+    val mainDispatcherRule: MainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val lima = TimeZone.of("America/Lima")
-    private val today = LocalDate(2026, Month.AUGUST, 10)
-    private val tomorrow = LocalDate(2026, Month.AUGUST, 11)
+    private val lima: TimeZone = TimeZone.of("America/Lima")
+    private val today: LocalDate = LocalDate(2026, Month.AUGUST, 10)
+    private val tomorrow: LocalDate = LocalDate(2026, Month.AUGUST, 11)
 
     private class MovableClock(var instant: Instant) : Clock {
         override fun now(): Instant = instant
@@ -73,7 +71,7 @@ class AddTransactionViewModelTest {
     )
 
     private val fixedClock = MovableClock(instantAt(today, hour = 14, minute = 30))
-    private val todayDates = MutableStateFlow(today)
+    private val todayDates: MutableStateFlow<LocalDate> = MutableStateFlow(today)
 
     // A real midnight: the clock's hour and TodayFlow's day move together, the way a device does,
     // which is exactly why a test using this cannot tell the two sources apart on its own.
@@ -111,51 +109,37 @@ class AddTransactionViewModelTest {
         categoryType = CategoryType.Income,
     )
 
-    private val accountRepository = mockk<AccountRepository> {
+    private val accountRepository: AccountRepository = mockk {
         every { all() } returns flowOf(listOf(account1, account2), listOf(account1, account2))
     }
 
-    private val categoryRepository = mockk<CategoryRepository> {
+    private val categoryRepository: CategoryRepository = mockk {
         every { all() } returns flowOf(
             listOf(category1, category3, category2),
             listOf(category1, category3, category2),
         )
     }
 
-    private val createTransaction = mockk<CreateTransactionUseCase>(relaxed = true)
-    private val getTopUsedCategoryIds = mockk<GetTopUsedCategoryIdsUseCase>()
-    private val getFrequentCombos = mockk<GetFrequentCombosUseCase>()
-    private val transactionStatsRepository = mockk<TransactionStatsRepository>()
-    private val transactionRepository = mockk<TransactionRepository> {
-        every { allInRange(any(), any()) } returns flowOf(emptyList())
-    }
+    private val createTransaction: CreateTransactionUseCase = mockk(relaxed = true)
+    private val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase = getTopUsedCategoryIdsWithNoHistory()
+    private val getFrequentCombos: GetFrequentCombosUseCase = getFrequentCombosWithNoHistory()
+    private val transactionStatsRepository: TransactionStatsRepository = transactionStatsWithNoLastUsedAccount()
 
-    @Before
-    fun setupDefaults() {
-        coEvery { getTopUsedCategoryIds.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
-        coEvery { getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
-        coEvery {
-            getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any<Money>())
-        } returns emptyList()
-        coEvery { transactionStatsRepository.lastUsedAccountId() } returns null
-    }
-
-    private fun buildViewModel(): AddTransactionViewModel = AddTransactionViewModel(
+    private fun buildViewModel(): AddTransactionViewModel = addTransactionViewModel(
+        todayDates = todayDates,
+        clock = fixedClock,
+        zone = lima,
+        accountRepository = accountRepository,
+        categoryRepository = categoryRepository,
         createTransaction = createTransaction,
         getTopUsedCategoryIds = getTopUsedCategoryIds,
         getFrequentCombos = getFrequentCombos,
-        getMonthSpend = GetMonthSpendUseCase(transactionRepository),
         transactionStatsRepository = transactionStatsRepository,
-        accountRepository = accountRepository,
-        categoryRepository = categoryRepository,
-        todayFlow = FakeTodayFlow(todayDates),
-        clock = fixedClock,
-        zone = lima,
     )
 
     @Test
     fun `date starts unset and reads as Hoy`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertNull(vm.state.value.date)
@@ -165,7 +149,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `initial state defaults transactionType to Spend`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(TransactionType.Spend, vm.state.value.transactionType)
@@ -173,7 +157,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `an untouched date saves as the day it is saved on, not the day the screen opened`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         crossMidnightInto(tomorrow, hour = 0, minute = 5)
@@ -183,14 +167,14 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
 
-        val insert = slot<TransactionInsert>()
+        val insert: CapturingSlot<TransactionInsert> = slot()
         coVerify { createTransaction.invoke(capture(insert)) }
         assertEquals(LocalDateTime(tomorrow, LocalTime(0, 5)), insert.captured.occurredAt)
     }
 
     @Test
     fun `a picked date is not re-resolved when the clock rolls over`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         val picked = LocalDate(2026, Month.JUNE, 13)
@@ -203,7 +187,7 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
 
-        val insert = slot<TransactionInsert>()
+        val insert: CapturingSlot<TransactionInsert> = slot()
         coVerify { createTransaction.invoke(capture(insert)) }
         assertEquals(LocalDateTime(picked, LocalTime(0, 5)), insert.captured.occurredAt)
     }
@@ -213,7 +197,7 @@ class AddTransactionViewModelTest {
         val christmas = LocalDate(2026, Month.DECEMBER, 25)
         todayDates.value = christmas
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(christmas, vm.state.value.today)
@@ -221,12 +205,10 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `an interaction re-reads the day from TodayFlow, not from the clock`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals(today, vm.state.value.today)
 
-        // Only TodayFlow moves. The clock stays on the 10th, so re-deriving the day from it here
-        // answers with yesterday and this fails.
         todayDates.value = tomorrow
         vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
         advanceUntilIdle()
@@ -236,7 +218,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `an untouched date is saved as TodayFlow's day, at the clock's hour`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         todayDates.value = tomorrow
@@ -245,14 +227,14 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
 
-        val insert = slot<TransactionInsert>()
+        val insert: CapturingSlot<TransactionInsert> = slot()
         coVerify { createTransaction.invoke(capture(insert)) }
         assertEquals(LocalDateTime(tomorrow, LocalTime(14, 30)), insert.captured.occurredAt)
     }
 
     @Test
     fun `today catches up on the next interaction after midnight`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals(today, vm.state.value.today)
 
@@ -265,7 +247,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a date picked yesterday reads as Ayer once the day rolls over`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(AddTransactionIntent.OnDateSelected(today))
@@ -281,7 +263,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `OnDateSelected replaces the day in the state`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(AddTransactionIntent.OnDateSelected(LocalDate(2026, Month.JUNE, 13)))
@@ -293,7 +275,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `save sends the picked day with the hour it was recorded at`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         val picked = LocalDate(2026, Month.JUNE, 13)
@@ -304,7 +286,7 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnSave)
         advanceUntilIdle()
 
-        val insert = slot<TransactionInsert>()
+        val insert: CapturingSlot<TransactionInsert> = slot()
         coVerify { createTransaction.invoke(capture(insert)) }
         assertEquals(LocalDateTime(picked, LocalTime(14, 30)), insert.captured.occurredAt)
     }
@@ -312,7 +294,7 @@ class AddTransactionViewModelTest {
     @Test
     fun `a save empties the amount, the note and the date and leaves the defaults standing`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
+            val vm: AddTransactionViewModel = buildViewModel()
             advanceUntilIdle()
 
             vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
@@ -333,7 +315,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a save leaves the CTA live for the next movement`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
@@ -350,7 +332,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `each save emits exactly one Saved effect carrying the amount it wrote`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val effects: MutableList<AddTransactionEffect> = mutableListOf()
         val collector: Job = launch { vm.effect.collect { effects.add(it) } }
@@ -378,7 +360,7 @@ class AddTransactionViewModelTest {
             val gate = CompletableDeferred<Unit>()
             coEvery { createTransaction.invoke(any()) } coAnswers { gate.await() }
 
-            val vm = buildViewModel()
+            val vm: AddTransactionViewModel = buildViewModel()
             advanceUntilIdle()
 
             vm.onIntent(AddTransactionIntent.OnSave)
@@ -396,7 +378,7 @@ class AddTransactionViewModelTest {
         val combo = FrequentCombo(AccountId("bcp"), CategoryId("food"), TransactionType.Spend)
         coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(combo)
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
@@ -410,7 +392,7 @@ class AddTransactionViewModelTest {
         coEvery { getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>()) } returns listOf(spendCombo)
         coEvery { getFrequentCombos.invoke(TransactionType.Income, any<Int>(), any<Int>()) } returns listOf(incomeCombo)
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Income))
@@ -425,7 +407,7 @@ class AddTransactionViewModelTest {
     fun `accountSelected is last-used account on init when history exists`() = runTest(testDispatcher) {
         coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("bcp")
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
@@ -433,7 +415,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `accountSelected falls back to firstOrNull when no history`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
@@ -443,7 +425,7 @@ class AddTransactionViewModelTest {
     fun `accountSelected falls back to firstOrNull when last-used account was deleted`() = runTest(testDispatcher) {
         coEvery { transactionStatsRepository.lastUsedAccountId() } returns AccountId("deleted-account")
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
@@ -453,7 +435,7 @@ class AddTransactionViewModelTest {
     fun `accountSelected is null when account list is empty`() = runTest(testDispatcher) {
         every { accountRepository.all() } returns flowOf(emptyList())
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertNull(vm.state.value.accountSelected)
@@ -461,7 +443,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a category created from a Spend movement joins the Spend list`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val created = SelectableCategory(
             categoryId = CategoryId("subscriptions"),
@@ -486,7 +468,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a category of the other type is not attached to the movement`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val before = vm.state.value
         val incomeCategory = SelectableCategory(
@@ -506,8 +488,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `OnPreselectCombo resolves once data arrives when sent before it loads`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        // Sent before the first advanceUntilIdle(): init's combine has not emitted yet.
+        val vm: AddTransactionViewModel = buildViewModel()
         vm.onIntent(
             AddTransactionIntent.OnPreselectCombo(
                 accountId = "bcp",
@@ -525,7 +506,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `OnPreselectCombo resolves immediately when data is already loaded`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(
@@ -545,7 +526,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `OnPreselectCombo with a missing id keeps the ordinary defaults`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val defaultAccountId = vm.state.value.accountSelected?.accountId?.value
 
@@ -565,14 +546,12 @@ class AddTransactionViewModelTest {
             "the type still switches even when the ids do not resolve",
         )
         assertEquals(defaultAccountId, state.accountSelected?.accountId?.value)
-        // category3, not category2/"salary": proves this is the ordinary type-switch default, not a
-        // coincidental match against the requested (nonexistent) id.
         assertEquals(category3.categoryId.value, state.categorySelected?.categoryId?.value)
     }
 
     @Test
     fun `OnPreselectCombo with every field null touches nothing`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         val before = vm.state.value
 
@@ -587,7 +566,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a repeat OnPreselectCombo does not re-apply and clobber the user's own edit`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         val request = AddTransactionIntent.OnPreselectCombo(
             accountId = "bcp",
             categoryId = "salary",
@@ -597,8 +576,6 @@ class AddTransactionViewModelTest {
         vm.onIntent(request)
         advanceUntilIdle()
 
-        // The user picks a different account, then TransactionEntries' LaunchedEffect(key) restarts
-        // (rotation, or popping back from CategoryRoute) and resends the identical route-derived intent.
         vm.onIntent(AddTransactionIntent.OnAccountSelected(account1))
         vm.onIntent(request)
         advanceUntilIdle()
@@ -608,11 +585,10 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `a preselected id lands as soon as a later catalog emission carries it`() = runTest(testDispatcher) {
-        val accounts = MutableStateFlow(listOf(account1))
+        val accounts: MutableStateFlow<List<Account>> = MutableStateFlow(listOf(account1))
         every { accountRepository.all() } returns accounts
 
-        val vm = buildViewModel()
-        // "bcp" is not in the catalog yet, so the preselect falls back to the only account there is.
+        val vm: AddTransactionViewModel = buildViewModel()
         vm.onIntent(AddTransactionIntent.OnPreselectCombo(accountId = "bcp", categoryId = null, type = null))
         advanceUntilIdle()
         assertEquals("yape", vm.state.value.accountSelected?.accountId?.value)
@@ -620,8 +596,6 @@ class AddTransactionViewModelTest {
         accounts.value = listOf(account1, account2)
         advanceUntilIdle()
 
-        // No interaction in between: the id was never consumed, only unresolvable, so the account
-        // it names is selected the moment the catalog can name it.
         assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
     }
 
@@ -629,8 +603,7 @@ class AddTransactionViewModelTest {
     fun `the empty-account CTA condition stays false until the catalog answers`() = runTest(testDispatcher) {
         every { accountRepository.all() } returns flowOf(emptyList())
 
-        val vm = buildViewModel()
-        // Nothing has said there are no accounts yet — only that none have arrived.
+        val vm: AddTransactionViewModel = buildViewModel()
         assertFalse(vm.state.value.hasNoAccounts, "the empty-state CTA must not flash before the catalog answers")
 
         advanceUntilIdle()
@@ -649,7 +622,7 @@ class AddTransactionViewModelTest {
         )
         every { categoryRepository.all() } returns flowOf(listOf(category1, otherSpendCategory, category3, category2))
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         val picked = vm.state.value.categories.first { it.categoryId == otherSpendCategory.categoryId }
@@ -661,14 +634,13 @@ class AddTransactionViewModelTest {
         vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend))
         advanceUntilIdle()
 
-        // The pick is an id the Spend list still resolves; only the Income view of it was missing.
         assertEquals("transport", vm.state.value.categorySelected?.categoryId?.value)
     }
 
     @Test
     fun `a preselect whose category id is dangling still lands the account id that resolves`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
+            val vm: AddTransactionViewModel = buildViewModel()
 
             vm.onIntent(
                 AddTransactionIntent.OnPreselectCombo(
@@ -681,8 +653,6 @@ class AddTransactionViewModelTest {
 
             val state = vm.state.value
             assertEquals("bcp", state.accountSelected?.accountId?.value)
-            // The dangling id falls back to the Income default on its own; it does not take the
-            // account down with it.
             assertEquals(category3.categoryId.value, state.categorySelected?.categoryId?.value)
         }
 
@@ -699,7 +669,7 @@ class AddTransactionViewModelTest {
             emptyList()
         }
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
         assertEquals(listOf("food"), vm.state.value.frequentCategoryIds)
@@ -733,7 +703,7 @@ class AddTransactionViewModelTest {
             }
             val store = ViewModelStore()
 
-            val vm = buildViewModel()
+            val vm: AddTransactionViewModel = buildViewModel()
             store.put("addTransaction", vm)
             runCurrent()
             store.clear()
@@ -746,8 +716,7 @@ class AddTransactionViewModelTest {
     @Test
     fun `a type switch after a preselect keeps the account and never offers the other type's category`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
-            // Sent before data loads: registers, and the switch to Income runs immediately.
+            val vm: AddTransactionViewModel = buildViewModel()
             vm.onIntent(
                 AddTransactionIntent.OnPreselectCombo(
                     accountId = "bcp",
@@ -755,22 +724,18 @@ class AddTransactionViewModelTest {
                     type = TransactionType.Income,
                 ),
             )
-            // The user taps the type toggle themselves before accounts/categories have loaded.
             vm.onIntent(AddTransactionIntent.OnTransactionTypeChange(TransactionType.Spend))
             advanceUntilIdle()
 
             val state = vm.state.value
             assertEquals(TransactionType.Spend, state.transactionType)
-            // An account carries no type, so the preselected one survives the switch.
             assertEquals("bcp", state.accountSelected?.accountId?.value)
-            // "salary" is an Income category and is resolved inside the Spend list, where it does
-            // not exist — so the Spend default answers instead. A cross-type pair has no encoding.
             assertEquals(category1.categoryId.value, state.categorySelected?.categoryId?.value)
         }
 
     @Test
     fun `OnSheetRequested opens the requested sheet and OnSheetDismissed closes it`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
 
@@ -785,7 +750,7 @@ class AddTransactionViewModelTest {
 
     @Test
     fun `the typed amount reaches the ranking use case`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(AddTransactionIntent.OnAmountChange("5000"))
@@ -804,7 +769,7 @@ class AddTransactionViewModelTest {
             getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(5000L))
         } returns listOf(ranked)
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("5000"))
         advanceUntilIdle()
@@ -825,7 +790,7 @@ class AddTransactionViewModelTest {
             getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(50000L))
         } returns listOf(largeAmountCombo)
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
         advanceUntilIdle()
@@ -852,7 +817,7 @@ class AddTransactionViewModelTest {
             getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(50000L))
         } returns listOf(largeAmountCombo)
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
         advanceUntilIdle()
@@ -869,7 +834,7 @@ class AddTransactionViewModelTest {
     fun `the first digit typed reaches the ranking use case`() = runTest(testDispatcher) {
         val queried: MutableList<Money?> = recordedComboQueries()
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("1"))
         advanceUntilIdle()
@@ -891,7 +856,7 @@ class AddTransactionViewModelTest {
     fun `digits typed inside the debounce window issue one query, for the last amount`() = runTest(testDispatcher) {
         val queried: MutableList<Money?> = recordedComboQueries()
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("5"))
         advanceTimeBy(RERANK_DEBOUNCE_MILLIS / 3)
@@ -907,7 +872,7 @@ class AddTransactionViewModelTest {
     fun `a pause between digits issues the next query`() = runTest(testDispatcher) {
         val queried: MutableList<Money?> = recordedComboQueries()
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("5"))
         advanceUntilIdle()
@@ -927,7 +892,7 @@ class AddTransactionViewModelTest {
             emptyList()
         }
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(AddTransactionIntent.OnAmountChange("500"))
         advanceUntilIdle()
@@ -953,7 +918,7 @@ class AddTransactionViewModelTest {
                 listOf(rankedCombo)
             }
 
-            val vm = buildViewModel()
+            val vm: AddTransactionViewModel = buildViewModel()
             advanceUntilIdle()
             assertEquals("bcp", vm.state.value.accountSelected?.accountId?.value)
 
@@ -979,7 +944,7 @@ class AddTransactionViewModelTest {
             getFrequentCombos.invoke(TransactionType.Spend, any<Int>(), any<Int>(), Money(50000L))
         } returns listOf(ranked)
 
-        val vm = buildViewModel()
+        val vm: AddTransactionViewModel = buildViewModel()
         vm.onIntent(
             AddTransactionIntent.OnPreselectCombo(
                 accountId = "bcp",

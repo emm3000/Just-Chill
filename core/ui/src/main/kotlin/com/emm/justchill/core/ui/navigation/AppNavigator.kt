@@ -56,11 +56,6 @@ class AppNavigator internal constructor(
         while (backStack.lastIndex > target) backStack.removeLastOrNull()
     }
 
-    /**
-     * Unlike [push], never a silent no-op: it reveals a buried entry equal to [route] by value,
-     * preserving its ViewModel and saveable state, but replaces a buried entry of the same route
-     * type holding a different value, since the caller asked for that state, not the stale one.
-     */
     fun pushToTop(route: AppRoute) {
         if (!isReady() || backStack.lastOrNull() == route) return
         val target: Int = backStack.indexOfLast { it::class == route::class }

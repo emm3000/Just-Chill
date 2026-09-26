@@ -59,7 +59,7 @@ class AddTransactionViewModel(
         // Nested on purpose: hoisting accountRepository.all() would read the catalog while the
         // last-used account is still pending, flashing accounts.first() before it lands.
         launchSafe(onError = { AddTransactionEffect.ShowError(it.toUserMessage()) }) {
-            val lastUsedAccountId = loadOrNull { transactionStatsRepository.lastUsedAccountId() }
+            val lastUsedAccountId: AccountId? = loadOrNull { transactionStatsRepository.lastUsedAccountId() }
             updateState { copy(lastUsedAccountId = lastUsedAccountId) }
 
             combine(
@@ -90,9 +90,6 @@ class AddTransactionViewModel(
     }
 
     override fun onIntent(intent: AddTransactionIntent) {
-        // Every interaction re-reads the date, so a screen left open overnight stops claiming that
-        // yesterday is "Hoy". StateFlow drops the emission when the day has not changed, which is
-        // every intent but the handful that cross midnight.
         updateState { copy(today = todayFlow.today()) }
         when (intent) {
             is AddTransactionIntent.OnAmountChange -> updateState { copy(amount = intent.value) }
@@ -121,18 +118,14 @@ class AddTransactionViewModel(
         }
     }
 
-    // The schema refuses a cross-type (categoryId, type) pair; the route always carries the
-    // movement's type, so this guard should never fire.
     private fun addCategoryFromOthers(category: SelectableCategory) {
         if (category.categoryType != currentState.transactionType.categoryType) return
         updateState {
-            val others = extraCategories.filterNot { it.categoryId == category.categoryId }
+            val others: List<SelectableCategory> = extraCategories.filterNot { it.categoryId == category.categoryId }
             copy(extraCategories = listOf(category) + others, categoryId = category.categoryId)
         }
     }
 
-    // An empty pad ranks at once; a typed amount waits out the burst of digits, so a movement is
-    // never ranked against an amount the user was still in the middle of writing.
     private fun typedAmounts(): Flow<Money?> = state
         .map { centsToMoney(it.amount).takeIf { typed -> typed != Money.Zero } }
         .distinctUntilChanged()
@@ -162,8 +155,8 @@ class AddTransactionViewModel(
                 AddTransactionEffect.ShowError(it.toUserMessage())
             },
         ) {
-            val timeOfDay = clock.now().toLocalDateTime(zone).time
-            val insert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
+            val timeOfDay: LocalTime = clock.now().toLocalDateTime(zone).time
+            val insert: TransactionInsert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
             createTransaction(insert)
             updateState { emptiedForTheNextMovement() }
             sendEffect(AddTransactionEffect.TransactionSaved(insert.amount))
@@ -179,8 +172,6 @@ private fun AddTransactionUiState.emptiedForTheNextMovement(): AddTransactionUiS
     openSheet = null,
 )
 
-// The day is the user's pick or, untouched, TodayFlow's answer — never a second derivation from
-// the clock, which is here only for the hour the save actually happens at.
 private fun AddTransactionUiState.toInsert(day: LocalDate, time: LocalTime): TransactionInsert = TransactionInsert(
     type = transactionType,
     description = description,

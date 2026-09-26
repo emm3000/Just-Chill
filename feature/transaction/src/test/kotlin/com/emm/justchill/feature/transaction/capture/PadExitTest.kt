@@ -6,20 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import com.emm.justchill.core.domain.account.Account
-import com.emm.justchill.core.domain.account.AccountRepository
-import com.emm.justchill.core.domain.category.CategoryRepository
 import com.emm.justchill.core.domain.shared.AccountId
-import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.domain.transaction.CreateTransactionUseCase
-import com.emm.justchill.core.domain.transaction.GetFrequentCombosUseCase
-import com.emm.justchill.core.domain.transaction.GetMonthSpendUseCase
-import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
-import com.emm.justchill.core.domain.transaction.TransactionRepository
-import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
-import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.ui.theme.EmmTheme
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +34,7 @@ class PadExitTest {
 
     private val lima: TimeZone = TimeZone.of("America/Lima")
     private val today: LocalDate = LocalDate(2026, Month.AUGUST, 10)
-    private val account: Account = Account(AccountId("yape"), "Yape")
+    private val onlyAccount: Account = Account(AccountId("yape"), "Yape")
 
     private val fixedClock: Clock = object : Clock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(
@@ -54,38 +42,13 @@ class PadExitTest {
         )
     }
 
-    private fun padViewModel(): AddTransactionViewModel {
-        val getTopUsedCategoryIds: GetTopUsedCategoryIdsUseCase = mockk()
-        coEvery { getTopUsedCategoryIds.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
-        val getFrequentCombos: GetFrequentCombosUseCase = mockk()
-        coEvery { getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>()) } returns emptyList()
-        coEvery {
-            getFrequentCombos.invoke(any<TransactionType>(), any<Int>(), any<Int>(), any<Money>())
-        } returns emptyList()
-        val transactionStatsRepository: TransactionStatsRepository = mockk()
-        coEvery { transactionStatsRepository.lastUsedAccountId() } returns null
-        val transactionRepository: TransactionRepository = mockk {
-            every { allInRange(any(), any()) } returns flowOf(emptyList())
-        }
-        val accountRepository: AccountRepository = mockk {
-            every { all() } returns flowOf(listOf(account))
-        }
-        val categoryRepository: CategoryRepository = mockk {
-            every { all() } returns flowOf(emptyList())
-        }
-        return AddTransactionViewModel(
-            createTransaction = mockk<CreateTransactionUseCase>(relaxed = true),
-            getTopUsedCategoryIds = getTopUsedCategoryIds,
-            getFrequentCombos = getFrequentCombos,
-            getMonthSpend = GetMonthSpendUseCase(transactionRepository),
-            transactionStatsRepository = transactionStatsRepository,
-            accountRepository = accountRepository,
-            categoryRepository = categoryRepository,
-            todayFlow = FakeTodayFlow(MutableStateFlow(today)),
-            clock = fixedClock,
-            zone = lima,
-        )
-    }
+    private fun padViewModel(): AddTransactionViewModel = addTransactionViewModel(
+        todayDates = MutableStateFlow(today),
+        clock = fixedClock,
+        zone = lima,
+        accountRepository = mockk { every { all() } returns flowOf(listOf(onlyAccount)) },
+        categoryRepository = mockk { every { all() } returns flowOf(emptyList()) },
+    )
 
     @Test
     fun `the close key leaves the pad once`() {
@@ -124,7 +87,7 @@ class PadExitTest {
                 )
             }
         }
-        composeRule.waitUntil { vm.state.value.accountSelected == account }
+        composeRule.waitUntil { vm.state.value.accountSelected == onlyAccount }
 
         vm.onIntent(AddTransactionIntent.OnAmountChange("8540"))
         vm.onIntent(AddTransactionIntent.OnSave)
