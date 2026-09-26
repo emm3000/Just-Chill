@@ -5,7 +5,6 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.NavHostBindings
-import com.emm.justchill.feature.account.AccountsRoute
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountEntries
 import com.emm.justchill.feature.auth.AuthRoute
@@ -20,7 +19,6 @@ import com.emm.justchill.feature.onboarding.onboardingEntries
 import com.emm.justchill.feature.profile.profileEntries
 import com.emm.justchill.feature.recurring.RecurringMovementsRoute
 import com.emm.justchill.feature.recurring.recurringEntries
-import com.emm.justchill.feature.report.ReportRoute
 import com.emm.justchill.feature.report.reportEntries
 import com.emm.justchill.feature.transaction.AddTransactionRoute
 import com.emm.justchill.feature.transaction.SeeTransactionRoute
@@ -84,9 +82,6 @@ internal fun EntryProviderScope<NavKey>.appEntryGraph(
         commitHash = commitHash,
         pendingImportJson = channels.pendingImportJson,
         onImportHandled = channels.onImportHandled,
-        onTransactionsClick = { nav -> nav.selectTab(SeeTransactionRoute) },
-        onReportClick = { nav -> nav.selectTab(ReportRoute) },
-        onAccountsClick = { nav -> nav.selectTab(AccountsRoute) },
         onCategoriesClick = { nav -> nav.pushToTop(CategoriesListRoute) },
         onRecurringClick = { nav -> nav.pushToTop(RecurringMovementsRoute) },
         onLoansClick = { nav -> nav.pushToTop(LoansRoute) },

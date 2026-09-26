@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionsCsvScope
-import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -23,13 +22,9 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 @Composable
 fun ProfileScreen(
     state: ProfileUiState,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     appVersion: String = "",
     commitHash: String = "",
-    onTransactionsClick: () -> Unit = {},
-    onReportClick: () -> Unit = {},
-    onAccountsClick: () -> Unit = {},
     onCategoriesClick: () -> Unit = {},
     onRecurringClick: () -> Unit = {},
     onLoansClick: () -> Unit = {},
@@ -61,7 +56,6 @@ fun ProfileScreen(
     ) {
         JcTopBar(
             title = "Más",
-            left = { BackBtn(onClick = onBack) },
             column = spacing.s6,
         )
 
@@ -83,9 +77,6 @@ fun ProfileScreen(
             recurringCount = state.recurringCount,
             recurringMonthlyOutflow = state.recurringMonthlyOutflow,
             destinations = ProfileDestinationActions(
-                onTransactionsClick = onTransactionsClick,
-                onReportClick = onReportClick,
-                onAccountsClick = onAccountsClick,
                 onCategoriesClick = onCategoriesClick,
                 onRecurringClick = onRecurringClick,
                 onLoansClick = onLoansClick,
@@ -135,7 +126,6 @@ private fun ProfileScreenPreview() {
                 lastExport = LastExportUi.DaysAgo(3),
                 session = SessionUiState.SignedOut,
             ),
-            onBack = {},
             appVersion = "1.0.0",
             commitHash = "4e47828d1f2a3b4c5d6e7f8091a2b3c4d5e6f708",
         )
