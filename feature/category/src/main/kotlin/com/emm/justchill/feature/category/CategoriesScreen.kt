@@ -84,6 +84,7 @@ fun CategoriesScreen(
                     contentDescription = "Nueva categoría",
                 )
             },
+            column = spacing.s5,
         )
 
         if (state.categories.isEmpty()) {
