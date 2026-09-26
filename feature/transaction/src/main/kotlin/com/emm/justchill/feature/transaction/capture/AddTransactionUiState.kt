@@ -33,6 +33,7 @@ data class AddTransactionUiState(
     val description: String = "",
     val transactionType: TransactionType = TransactionType.Spend,
     val isSaving: Boolean = false,
+    val savedMonth: YearMonth? = null,
     val catalog: Catalog = Catalog.Loading,
     val lastUsedAccountId: AccountId? = null,
     val accountId: AccountId? = null,

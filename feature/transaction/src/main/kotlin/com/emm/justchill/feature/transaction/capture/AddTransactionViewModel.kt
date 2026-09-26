@@ -97,6 +97,7 @@ class AddTransactionViewModel(
             is AddTransactionIntent.OnTransactionTypeChange -> updateState { copy(transactionType = intent.value) }
             is AddTransactionIntent.OnDateSelected -> updateState { copy(date = intent.value) }
             AddTransactionIntent.OnSave -> addTransaction()
+            AddTransactionIntent.OnResumed -> resendExit()
             is AddTransactionIntent.OnAccountSelected -> updateState { copy(accountId = intent.value.accountId) }
             is AddTransactionIntent.OnCategorySelected -> updateState { copy(categoryId = intent.value.categoryId) }
             is AddTransactionIntent.OnPreselectCombo -> registerPreselect(intent)
@@ -158,8 +159,15 @@ class AddTransactionViewModel(
             val timeOfDay: LocalTime = clock.now().toLocalDateTime(zone).time
             val insert: TransactionInsert = currentState.toInsert(day = todayFlow.today(), time = timeOfDay)
             createTransaction(insert)
-            sendEffect(AddTransactionEffect.TransactionSaved(YearMonth.of(insert.occurredAt.date)))
+            val savedMonth: YearMonth = YearMonth.of(insert.occurredAt.date)
+            updateState { copy(savedMonth = savedMonth) }
+            sendEffect(AddTransactionEffect.TransactionSaved(savedMonth))
         }
+    }
+
+    private fun resendExit() {
+        val savedMonth: YearMonth = currentState.savedMonth ?: return
+        sendEffect(AddTransactionEffect.TransactionSaved(savedMonth))
     }
 }
 
