@@ -1,6 +1,5 @@
 package com.emm.justchill.core.database.recurring
 
-import com.emm.justchill.core.database.SelectAllWithDetails
 import com.emm.justchill.core.domain.recurring.Frequency
 import com.emm.justchill.core.domain.transaction.TransactionType
 import org.junit.Test
@@ -58,23 +57,6 @@ class RecurringMappersTest {
         assertEquals("rm-1", result[0].id.value)
     }
 
-    @Test
-    fun `SelectAllWithDetails asExternalModelOrNull - valid type returns RecurringMovementDetails`() {
-        val result = detailsRow("Spend").asExternalModelOrNull()
-        assertNotNull(result)
-        assertEquals(TransactionType.Spend, result.type)
-    }
-
-    @Test
-    fun `SelectAllWithDetails asExternalModelOrNull - unknown type returns null`() {
-        assertNull(detailsRow("SPEND").asExternalModelOrNull())
-    }
-
-    @Test
-    fun `SelectAllWithDetails asExternalModelOrNull - unknown type Transfer returns null`() {
-        assertNull(detailsRow("Transfer").asExternalModelOrNull())
-    }
-
     private fun recurringEntity(id: String, type: String, frequency: String) = RecurringMovementEntity(
         id = id,
         name = "Test movement",
@@ -89,27 +71,5 @@ class RecurringMappersTest {
         lastConfirmedPeriod = null,
         createdAt = 0L,
         updatedAt = 0L,
-    )
-
-    private fun detailsRow(type: String) = SelectAllWithDetails(
-        id = "rm-details-1",
-        name = "Rent",
-        type = type,
-        amount = 500_00L,
-        description = "desc",
-        categoryId = null,
-        accountId = "acc-1",
-        frequency = "Monthly",
-        dayOfMonth = 1L,
-        isActive = 1L,
-        lastConfirmedPeriod = null,
-        createdAt = 0L,
-        updatedAt = 0L,
-        userId = null,
-        deletedAt = null,
-        syncState = "Pending",
-        categoryName = null,
-        categoryColor = null,
-        accountName = "BCP",
     )
 }

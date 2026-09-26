@@ -332,7 +332,7 @@ class BackupRoundTripTest {
 
     private fun wipePhysically() {
         driver.execute(null, "DELETE FROM transactions", 0)
-        db.recurring_movementsQueries.deleteAll()
+        driver.execute(null, "DELETE FROM recurring_movements", 0)
         driver.execute(null, "DELETE FROM categories", 0)
         driver.execute(null, "DELETE FROM accounts", 0)
         assertEquals(0L, totalRows("transactions"))
@@ -552,11 +552,19 @@ class BackupRoundTripTest {
         db.accountsQueries.claimAll(USER_ID)
         db.categoriesQueries.claimAll(USER_ID)
         db.transactionsQueries.claimAll(USER_ID)
-        db.recurring_movementsQueries.claimAll(USER_ID)
+        driver.execute(
+            null,
+            "UPDATE recurring_movements SET userId = '$USER_ID', syncState = 'Pending' WHERE userId IS NULL",
+            0,
+        )
         db.accountsQueries.markSynced(accountId = "acc-wallet", updatedAt = SEEDED_AT)
         db.categoriesQueries.markSynced(categoryId = "cat-income", updatedAt = SEEDED_AT)
         db.transactionsQueries.markSynced(transactionId = "tx-income", updatedAt = SEEDED_AT)
-        db.recurring_movementsQueries.markSynced(id = "rec-active", updatedAt = SEEDED_AT)
+        driver.execute(
+            null,
+            "UPDATE recurring_movements SET syncState = 'Synced' WHERE id = 'rec-active' AND updatedAt = $SEEDED_AT",
+            0,
+        )
     }
 
     private fun insertAccount(accountId: String, name: String, type: String, currency: String = "PEN") {

@@ -1,7 +1,4 @@
--- A template is a movement that has not happened yet, so it carries the same invariant as the
--- movement it will produce: its category must be of its own type. Without it,
--- ConfirmRecurringMovementUseCase copies the template's categoryId onto a transaction of the
--- template's type — a mismatched template mints a mismatched movement every month, forever.
+-- A template carries the same invariant as a movement: its category must be of its own type.
 --
 -- Same composite key, same NULL semantics, and the same reason for having no `ON DELETE` clause,
 -- as `transactions`. The full reasoning lives in the header of transactions.sq; it is not repeated
@@ -30,13 +27,6 @@ CREATE INDEX IF NOT EXISTS recurring_active_idx ON recurring_movements(isActive,
 CREATE INDEX IF NOT EXISTS recurring_movements_syncstate_idx ON recurring_movements(syncState);
 CREATE INDEX IF NOT EXISTS recurring_movements_user_deleted_idx ON recurring_movements(userId, deletedAt);
 
-selectActive:
-SELECT * FROM recurring_movements WHERE isActive = 1 AND deletedAt IS NULL ORDER BY name;
-
--- Every live row, flat and unfiltered beyond the tombstone — the shape the backup export needs.
--- `selectActive:` above drops paused templates and `selectAllWithDetails:` below carries three
--- joined columns a file has no use for, so neither could be reused. Adding a SELECT is not a schema
--- change: nothing about the table moves, so no `.sqm` is owed.
 selectAllLive:
 SELECT * FROM recurring_movements WHERE deletedAt IS NULL ORDER BY name;
 
@@ -47,11 +37,6 @@ insert:
 INSERT INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, syncState)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending');
 
-update:
-UPDATE recurring_movements
-SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, dayOfMonth = ?, isActive = ?, updatedAt = ?, syncState = 'Pending'
-WHERE id = ?;
-
 -- Same detach as transactions.sq:clearCategoryOnTypeChange, for the same reason. See it for why.
 clearCategoryOnTypeChange:
 UPDATE recurring_movements SET categoryId = NULL WHERE categoryId = :categoryId AND type != :categoryType;
@@ -60,9 +45,6 @@ softDelete:
 UPDATE recurring_movements
 SET deletedAt = ?, updatedAt = ?, syncState = 'Pending'
 WHERE id = ?;
-
-deleteAll:
-DELETE FROM recurring_movements;
 
 -- ── Backup restore ────────────────────────────────────────────────────────────
 -- The same three statements accounts.sq declares, for the same two reasons — tombstone instead of
@@ -75,12 +57,8 @@ DELETE FROM recurring_movements;
 -- DefaultBackupRepository.importFromJson.
 --
 -- ONE divergence from the other three tables, and it is deliberate: restoreFromBackup writes
--- createdAt. Everywhere else createdAt is a storage stamp and the row keeps the one it was first
--- inserted with; here it is behaviour — RecurringDueRules.pendingPeriods floors the catch-up window
--- at the month the template was created, so a re-import onto a device that still holds the row must
--- take the file's value or every period the template owes before the local value disappears.
--- lastConfirmedPeriod travels for the mirror-image reason: without it the restored template owes
--- months the user already settled.
+-- createdAt and lastConfirmedPeriod, so the template reads back exactly as the file carried it and
+-- the next snapshot writes the same values out again.
 -- userId is deliberately never written, exactly as on the other three.
 softDeleteAllLive:
 UPDATE recurring_movements
@@ -108,44 +86,5 @@ LEFT JOIN accounts   a ON rm.accountId  = a.accountId AND a.deletedAt IS NULL
 WHERE rm.deletedAt IS NULL
 ORDER BY rm.isActive DESC, rm.dayOfMonth, rm.name;
 
-markConfirmed:
-UPDATE recurring_movements
-SET lastConfirmedPeriod = ?, updatedAt = ?, syncState = 'Pending'
-WHERE id = ?;
-
 countLiveByAccount:
 SELECT COUNT(*) FROM recurring_movements WHERE accountId = :accountId AND deletedAt IS NULL;
-
-claimAll:
-UPDATE recurring_movements SET userId = :userId, syncState = 'Pending' WHERE userId IS NULL;
-
-unclaimAll:
-UPDATE recurring_movements SET userId = NULL, syncState = 'Pending' WHERE userId = :userId;
-
-selectPending:
-SELECT * FROM recurring_movements WHERE syncState = 'Pending' AND userId IS NOT NULL;
-
-markSynced:
-UPDATE recurring_movements SET syncState = 'Synced' WHERE id = ? AND updatedAt = ?;
-
-markPendingForResync:
-UPDATE recurring_movements SET syncState = 'Pending' WHERE id = ?;
-
--- See accounts.sq:accountSyncRevision for why syncState is selected and why the name is per-table.
-recurringMovementSyncRevision:
-SELECT updatedAt, syncState FROM recurring_movements WHERE id = ?;
-
-insertOrIgnoreFromRemote:
-INSERT OR IGNORE INTO recurring_movements(id, name, type, amount, description, categoryId, accountId, frequency, dayOfMonth, isActive, lastConfirmedPeriod, createdAt, updatedAt, userId, deletedAt, syncState)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Synced');
-
-updateFromRemote:
-UPDATE recurring_movements
-SET name = ?, type = ?, amount = ?, description = ?, categoryId = ?, accountId = ?, frequency = ?, dayOfMonth = ?, isActive = ?, lastConfirmedPeriod = ?, createdAt = ?, updatedAt = ?, userId = ?, deletedAt = ?, syncState = 'Synced'
-WHERE id = ?;
-
-countPending:
-SELECT COUNT(*) FROM recurring_movements WHERE syncState = 'Pending' AND userId IS NOT NULL;
-
-countUnclaimed:
-SELECT COUNT(*) FROM recurring_movements WHERE userId IS NULL;

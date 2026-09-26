@@ -9,8 +9,6 @@ import com.emm.justchill.core.database.account.AccountLocalDataSource
 import com.emm.justchill.core.database.account.DefaultAccountRepository
 import com.emm.justchill.core.database.category.CategoryLocalDataSource
 import com.emm.justchill.core.database.category.DefaultCategoryRepository
-import com.emm.justchill.core.database.recurring.DefaultRecurringMovementRepository
-import com.emm.justchill.core.database.recurring.RecurringMovementLocalDataSource
 import com.emm.justchill.core.database.transaction.DefaultTransactionRepository
 import com.emm.justchill.core.database.transaction.TransactionLocalDataSource
 import com.emm.justchill.core.domain.account.AccountType
@@ -19,11 +17,9 @@ import com.emm.justchill.core.domain.account.DeleteAccountUseCase
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.category.CategoryUpsert
 import com.emm.justchill.core.domain.category.DeleteCategoryUseCase
-import com.emm.justchill.core.domain.recurring.DeleteRecurringMovementUseCase
 import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.domain.shared.RecurringMovementId
 import com.emm.justchill.core.domain.shared.TransactionId
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.transaction.DeleteTransactionUseCase
@@ -51,12 +47,10 @@ class DeleteUseCasesE2ETest {
     private lateinit var deleteTransaction: DeleteTransactionUseCase
     private lateinit var deleteCategory: DeleteCategoryUseCase
     private lateinit var deleteAccount: DeleteAccountUseCase
-    private lateinit var deleteRecurring: DeleteRecurringMovementUseCase
 
     private lateinit var accountRepo: DefaultAccountRepository
     private lateinit var categoryRepo: DefaultCategoryRepository
     private lateinit var transactionRepo: DefaultTransactionRepository
-    private lateinit var recurringRepo: DefaultRecurringMovementRepository
 
     @Before
     fun setUp() {
@@ -76,17 +70,14 @@ class DeleteUseCasesE2ETest {
         val accountDs = AccountLocalDataSource(database, Clock.System)
         val categoryDs = CategoryLocalDataSource(database, Clock.System)
         val transactionDs = TransactionLocalDataSource(database.transactionsQueries, Clock.System)
-        val recurringDs = RecurringMovementLocalDataSource(database, Clock.System)
 
         accountRepo = DefaultAccountRepository(accountDs)
         categoryRepo = DefaultCategoryRepository(categoryDs)
         transactionRepo = DefaultTransactionRepository(transactionDs)
-        recurringRepo = DefaultRecurringMovementRepository(recurringDs, Clock.System)
 
         deleteTransaction = DeleteTransactionUseCase(transactionRepo)
         deleteCategory = DeleteCategoryUseCase(categoryRepo)
-        deleteAccount = DeleteAccountUseCase(accountRepo, transactionRepo, recurringRepo)
-        deleteRecurring = DeleteRecurringMovementUseCase(recurringRepo)
+        deleteAccount = DeleteAccountUseCase(accountRepo, transactionRepo)
     }
 
     @After
@@ -130,9 +121,7 @@ class DeleteUseCasesE2ETest {
         return txId
     }
 
-    // No suspend: unlike its siblings, this bypasses the repository for direct SQL (own id
-    // instead of the DataSource's generated UUID), so the body never crosses a suspend call.
-    private fun insertRecurring(id: String, accountId: AccountId, categoryId: CategoryId?): RecurringMovementId {
+    private fun insertRecurring(id: String, accountId: AccountId, categoryId: CategoryId?) {
         database.recurring_movementsQueries.insert(
             id = id,
             name = "Rec $id",
@@ -148,7 +137,6 @@ class DeleteUseCasesE2ETest {
             createdAt = 1_000L,
             updatedAt = 1_000L,
         )
-        return RecurringMovementId(id)
     }
 
     private fun rawTransactionCount(txId: String): Long = driver.executeQuery(
@@ -278,16 +266,17 @@ class DeleteUseCasesE2ETest {
     }
 
     @Test
-    fun deleteAccount_withLiveRecurringMovement_throwsValidationError() = runTest {
-        val accountId = insertAccount("A6")
-        val categoryId = insertCategory("C6")
+    fun deleteAccount_withLiveRecurringTemplateAndNoTransactions_succeeds() = runTest {
+        val accountId: AccountId = insertAccount("A6")
+        val categoryId: CategoryId = insertCategory("C6")
         insertRecurring("REC6", accountId, categoryId)
 
-        assertFailsWith<DomainException.ValidationError> {
-            deleteAccount(accountId)
-        }
+        deleteAccount(accountId)
 
-        assertNull(rawAccountDeletedAt("A6"), "account must not be tombstoned when blocked")
+        val deletedAt: Long? = rawAccountDeletedAt("A6")
+        assertTrue(deletedAt != null && deletedAt > 0L, "a live template must not block the account delete")
+        assertNull(accountRepo.find(accountId), "tombstoned account must not be returned by find()")
+        assertNull(rawRecurringDeletedAt("REC6"), "the template row stays as the snapshot left it")
     }
 
     @Test
@@ -303,25 +292,5 @@ class DeleteUseCasesE2ETest {
         val deletedAt = rawAccountDeletedAt("A7")
         assertTrue(deletedAt != null && deletedAt > 0L, "account must be tombstoned after successful delete")
         assertNull(accountRepo.find(accountId), "tombstoned account must not be returned by find()")
-    }
-
-    @Test
-    fun deleteRecurringMovement_unknownId_throwsNotFound() = runTest {
-        assertFailsWith<DomainException.NotFound> {
-            deleteRecurring(RecurringMovementId("does-not-exist"))
-        }
-    }
-
-    @Test
-    fun deleteRecurringMovement_tombstonesRow_and_filters_it_from_reads() = runTest {
-        val accountId = insertAccount("A9")
-        val categoryId = insertCategory("C9")
-        val recId = insertRecurring("REC9", accountId, categoryId)
-
-        deleteRecurring(recId)
-
-        val deletedAt = rawRecurringDeletedAt("REC9")
-        assertTrue(deletedAt != null && deletedAt > 0L, "recurring movement deletedAt must be set")
-        assertNull(recurringRepo.find(recId), "tombstoned recurring movement must not be returned by find()")
     }
 }
