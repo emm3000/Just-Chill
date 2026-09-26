@@ -1,3 +1,4 @@
+// SPIKE: throwaway, see branch spike/collapsing-month-summary
 package com.emm.justchill.feature.transaction.list
 
 import androidx.activity.compose.BackHandler
@@ -35,10 +36,16 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -99,13 +106,42 @@ internal fun SeeTransactionsContent(
     navigateToEdit: (String) -> Unit,
 ) {
     val colors = LocalEmmColors.current
+    val listState: LazyListState = rememberLazyListState()
+    var variant: SpikeCollapseVariant by rememberSaveable { mutableStateOf(SpikeCollapseVariant.SummaryCollapses) }
+    val collapseState: SpikeCollapseState = remember { SpikeCollapseState() }
+    val summary: MonthSummaryUi? = state.summary
+        ?.takeIf { state.listDisplayState == ListDisplayState.Content }
+    val isCollapsibleShown: Boolean = when (variant) {
+        SpikeCollapseVariant.EverythingCollapses -> state.isEyebrowVisible
+        SpikeCollapseVariant.SummaryCollapses, SpikeCollapseVariant.SummaryFades ->
+            state.isEyebrowVisible && summary != null
+    }
+    val isCollapsibleShownNow: Boolean by rememberUpdatedState(isCollapsibleShown)
+    val connection: NestedScrollConnection = remember(variant, collapseState, listState) {
+        SpikeCollapseConnection(
+            state = collapseState,
+            consumesCollapse = variant != SpikeCollapseVariant.SummaryFades,
+            canCollapse = {
+                isCollapsibleShownNow && (listState.canScrollForward || listState.canScrollBackward)
+            },
+        )
+    }
+
+    LaunchedEffect(variant, isCollapsibleShown) {
+        collapseState.reset()
+    }
+
+    LaunchedEffect(state.days.size) {
+        collapseState.expand()
+    }
 
     BackHandler(enabled = state.isSearchOpen) { onIntent(SeeTransactionsIntent.ScreenChromeIntent.OnSearchClosed) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bg),
+            .background(colors.bg)
+            .nestedScroll(connection),
     ) {
         if (state.isSearchOpen) {
             SearchBar(
@@ -120,20 +156,26 @@ internal fun SeeTransactionsContent(
             )
         }
 
-        val summary: MonthSummaryUi? = state.summary
-            ?.takeIf { state.listDisplayState == ListDisplayState.Content }
+        SpikeVariantSwitcher(selected = variant, onSelect = { variant = it })
+
         if (state.isEyebrowVisible) {
+            val headerModifier: Modifier = when (variant) {
+                SpikeCollapseVariant.EverythingCollapses -> Modifier.spikeCollapsing(collapseState)
+                SpikeCollapseVariant.SummaryCollapses, SpikeCollapseVariant.SummaryFades -> Modifier
+            }
+            val summaryModifier: Modifier = when (variant) {
+                SpikeCollapseVariant.SummaryCollapses -> Modifier.spikeCollapsing(collapseState)
+                SpikeCollapseVariant.SummaryFades -> Modifier.spikeFading(collapseState)
+                SpikeCollapseVariant.EverythingCollapses -> Modifier
+            }
             MonthHeader(
                 month = state.month,
                 currentYear = state.currentMonth.year,
                 summary = summary,
                 onIntent = onIntent,
-                modifier = Modifier.padding(top = LocalEmmSpacing.current.s2),
+                modifier = headerModifier.padding(top = LocalEmmSpacing.current.s2),
+                summaryModifier = summaryModifier,
             )
-        }
-
-        if (summary != null) {
-            Spacer(Modifier.height(LocalEmmSpacing.current.s2))
         }
 
         val activeCategory: ActiveCategoryInfo? = state.activeCategory
@@ -149,6 +191,7 @@ internal fun SeeTransactionsContent(
 
         TransactionListColumn(
             state = state,
+            listState = listState,
             onIntent = onIntent,
             navigateToEdit = navigateToEdit,
         )
@@ -168,10 +211,10 @@ internal fun SeeTransactionsContent(
 @Composable
 private fun TransactionListColumn(
     state: SeeTransactionsUiState,
+    listState: LazyListState,
     onIntent: (SeeTransactionsIntent) -> Unit,
     navigateToEdit: (String) -> Unit,
 ) {
-    val listState: LazyListState = rememberLazyListState()
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     LaunchedEffect(state.days.size) {

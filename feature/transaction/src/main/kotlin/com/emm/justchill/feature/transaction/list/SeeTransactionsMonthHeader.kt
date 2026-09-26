@@ -1,3 +1,4 @@
+// SPIKE: throwaway, see branch spike/collapsing-month-summary
 package com.emm.justchill.feature.transaction.list
 
 import androidx.compose.foundation.background
@@ -52,17 +53,13 @@ internal fun MonthHeader(
     summary: MonthSummaryUi?,
     onIntent: (SeeTransactionsIntent) -> Unit,
     modifier: Modifier = Modifier,
+    summaryModifier: Modifier = Modifier,
 ) {
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(spacing.s2),
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         MonthEyebrowRow(month = month, currentYear = currentYear, onIntent = onIntent)
 
         if (summary != null) {
-            MonthTotals(summary = summary)
+            MonthTotals(summary = summary, modifier = summaryModifier)
         }
     }
 }
@@ -105,13 +102,14 @@ private fun MonthEyebrowRow(month: YearMonth, currentYear: Int, onIntent: (SeeTr
 }
 
 @Composable
-private fun MonthTotals(summary: MonthSummaryUi) {
+private fun MonthTotals(summary: MonthSummaryUi, modifier: Modifier = Modifier) {
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .padding(top = spacing.s2, bottom = spacing.s2)
             .padding(horizontal = spacing.s6),
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
