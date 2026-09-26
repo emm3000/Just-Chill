@@ -66,25 +66,25 @@ class TransactionUiTest {
     }
 
     @Test
-    fun `a described row subtitles with the category and the account`() {
-        assertEquals("Supermercado · BCP", row("Compra de la semana").subtitle)
+    fun `a described row subtitles with the category, the account and the time`() {
+        assertEquals("Supermercado · BCP · 14:30", row("Compra de la semana").subtitle)
     }
 
     @Test
-    fun `a row titled by its category subtitles with the account alone`() {
-        assertEquals("BCP", row("").subtitle)
+    fun `a row titled by its category subtitles with the account and the time`() {
+        assertEquals("BCP · 14:30", row("").subtitle)
     }
 
     @Test
-    fun `an account the join could not name leaves the category alone`() {
-        assertEquals("Supermercado", row("Compra de la semana", accountName = "").subtitle)
+    fun `an account the join could not name leaves the category and the time`() {
+        assertEquals("Supermercado · 14:30", row("Compra de la semana", accountName = "").subtitle)
     }
 
     @Test
-    fun `a row with neither a description nor an account still has a title`() {
+    fun `a row with neither a description nor an account still subtitles with the time`() {
         val orphan: TransactionUi = row("", category = null, accountName = "")
 
         assertEquals("Sin categoría", orphan.title)
-        assertEquals("", orphan.subtitle)
+        assertEquals("14:30", orphan.subtitle)
     }
 }
