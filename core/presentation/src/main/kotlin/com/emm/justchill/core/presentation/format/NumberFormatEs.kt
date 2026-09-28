@@ -1,0 +1,67 @@
+package com.emm.justchill.core.presentation.format
+
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.roundToLong
+
+object NumberFormatEs {
+
+    // Reversed from conventional Spanish (dot-thousands, comma-decimal) to match es-PE;
+    // SpanishFormatGoldenTest pins it.
+    private const val GROUP = ','
+    private const val DECIMAL = '.'
+
+    private const val DIGITS_PER_GROUP = 3
+
+    private fun groupDigits(digits: String): String {
+        if (digits.length <= DIGITS_PER_GROUP) return digits
+        val sb = StringBuilder()
+        val firstGroup = digits.length % DIGITS_PER_GROUP
+        var index = 0
+        if (firstGroup > 0) {
+            sb.append(digits, 0, firstGroup)
+            index = firstGroup
+        }
+        while (index < digits.length) {
+            if (sb.isNotEmpty()) sb.append(GROUP)
+            sb.append(digits, index, index + DIGITS_PER_GROUP)
+            index += DIGITS_PER_GROUP
+        }
+        return sb.toString()
+    }
+
+    // value must be >= 0; unchecked.
+    fun integer(value: Long): String = groupDigits(value.toString())
+
+    // Rounds like NumberFormat.getNumberInstance(es-PE) at 0 fraction digits: HALF_EVEN (banker's),
+    // not HALF_UP.
+    fun integerRounded(value: Double): String = groupDigits(roundHalfEven(abs(value)).toString())
+
+    private const val MIDPOINT = 0.5
+
+    private fun roundHalfEven(value: Double): Long {
+        val floorValue = floor(value)
+        val diff = value - floorValue
+        val floorLong = floorValue.toLong()
+        return when {
+            diff < MIDPOINT -> floorLong
+            diff > MIDPOINT -> floorLong + 1
+            floorLong % 2 == 0L -> floorLong
+            else -> floorLong + 1
+        }
+    }
+
+    private const val CENTS_PER_SOL = 100L
+
+    // Callers needing a sign prefix add it themselves.
+    fun cents(cents: Long): String {
+        val abs = abs(cents)
+        val grouped = groupDigits((abs / CENTS_PER_SOL).toString())
+        val centsStr = (abs % CENTS_PER_SOL).toString().padStart(2, '0')
+        return "$grouped$DECIMAL$centsStr"
+    }
+
+    // Rounds HALF_UP to the nearest cent before delegating to cents(), unlike integerRounded's
+    // HALF_EVEN.
+    fun decimal2(value: Double): String = cents((abs(value) * CENTS_PER_SOL).roundToLong())
+}

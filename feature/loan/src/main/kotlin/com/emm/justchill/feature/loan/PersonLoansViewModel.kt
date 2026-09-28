@@ -1,8 +1,8 @@
 package com.emm.justchill.feature.loan
 
 import com.emm.justchill.core.domain.loan.LoanRepository
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.mvi.MviViewModel
 import kotlinx.coroutines.flow.onEach
 
 class PersonLoansViewModel(personKey: String, loanRepository: LoanRepository) :

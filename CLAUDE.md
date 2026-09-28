@@ -11,19 +11,21 @@ No third-party users, but **the author runs the release daily on a device holdin
 ## Modules
 
 ```
-androidApp     -> feature:*, core:backup, core:database, core:ui, core:domain
-feature:*      -> core:ui, core:domain, core:testing
-core:backup    -> core:domain
-core:database  -> core:domain
-core:ui        -> core:domain
-core:testing   -> core:domain
+androidApp        -> feature:*, core:backup, core:database, core:ui, core:presentation, core:domain
+feature:*         -> core:ui, core:presentation, core:domain, core:testing
+core:backup       -> core:domain
+core:database     -> core:domain
+core:ui           -> core:presentation, core:domain
+core:presentation -> core:domain
+core:testing      -> core:domain
 ```
 
 - `:core:domain` — **pure Kotlin** (`kotlin("jvm")`): models, value objects, use cases and the repository interfaces. `kotlinx-coroutines-core` and `kotlinx-datetime` only.
 - `:core:database` — the domain interfaces implemented: SQLDelight (`JustChillDatabase`, the schema and migrations), mappers, and `SnapshotStore` over the six tables.
 - `:core:backup` — the snapshot file and the account it needs: DTOs, decoder, Supabase Storage, the backup cycle and auth. Never depends on `:core:database`.
-- `:core:ui` — the UI vocabulary more than one feature uses: the MVI base (`MviViewModel` and its contracts), the navigation vocabulary (`AppRoute`, `AppNavigator`, `NavHostBindings`) in `navigation/`, `toUserMessage` in `error/`, `AmountInputSheet` and the account/category/date pickers in `sheets/`, `FormSection` in `atoms/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, the `Emm*` components and the bundled fonts), and the capture vocabulary — the icon and colour catalog in `category/`, the transaction row and its `Catalog` in `transaction/`. Never depends on `:core:database` or `:core:backup`.
-- `:core:testing` — the JVM test-fixture module, on `:core:domain` only, wired into feature modules, `:core:ui` and `:androidApp` as `testImplementation`. Fixture list: `core/testing/CLAUDE.md`.
+- `:core:presentation` — the Compose-free half of the shared UI vocabulary (ADR 024 Decision 2), an Android library on `:core:domain`, lifecycle-viewmodel, coroutines and datetime: the MVI base (`MviViewModel` and its contracts) in `mvi/`, `toUserMessage` in `error/`, the Spanish money, date and search formatters in `format/`, `CategoryUi` and `SelectableCategory` in `category/`, `TransactionUi` and `Catalog` in `transaction/`, `PersonBalanceUi` in `loan/`. No Compose.
+- `:core:ui` — the Compose UI vocabulary more than one feature uses, on `:core:presentation`: the navigation vocabulary (`AppRoute`, `AppNavigator`, `NavHostBindings`) in `navigation/`, `AmountInputSheet` and the account/category/date pickers in `sheets/`, `FormSection` in `atoms/`, the design system (theme tokens, atoms, the `Emm*` components and the bundled fonts), and the render half of the capture vocabulary — the icon and colour catalog in `category/`, `TransactionRow` in `transaction/`. Never depends on `:core:database` or `:core:backup`.
+- `:core:testing` — the JVM test-fixture module, on `:core:domain` only, wired into feature modules, `:core:presentation` and `:androidApp` as `testImplementation`. Fixture list: `core/testing/CLAUDE.md`.
 - `:feature:{account, auth, category, loan, onboarding, profile, report, transaction}` — eight, one screen family each (ADR 015): Compose-free ViewModels, screens, `@Serializable` routes with a `<feature>Routes` registry, nav entries, a `<feature>Module` binding its ViewModels, tests.
 - `:androidApp` — `MainActivity`, `EmmApp`, the app shell (`shell/`: the nav host, its entry graph, the launcher shortcut routes, `rememberPlatformHostActions`), the Koin graph (`core/AppGraph.kt`) over the cross-cutting modules in `core/di/` plus one `wiring/<Feature>Wiring.kt` per feature that binds something (onboarding injects nothing, so it has none), the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, the `dev` / `prod` flavors, shortcuts, the session keystore.
 

@@ -32,9 +32,9 @@ import com.emm.justchill.core.CommitHash
 import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.preferences.AppPreferences
+import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.BottomBarRoute
 import com.emm.justchill.core.ui.navigation.NavHostBindings

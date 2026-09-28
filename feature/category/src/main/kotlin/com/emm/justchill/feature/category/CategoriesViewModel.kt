@@ -6,8 +6,8 @@ import com.emm.justchill.core.domain.category.DeleteCategoryUseCase
 import com.emm.justchill.core.domain.category.UpdateCategoryUseCase
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.mvi.MviViewModel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 

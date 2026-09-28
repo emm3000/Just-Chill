@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.profile
 
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
-import com.emm.justchill.core.ui.format.titlecaseFirstChar
+import com.emm.justchill.core.presentation.format.titlecaseFirstChar
 
 const val BACKUP_DESTINATION_DISCLOSURE: String =
     "Tu respaldo va a llevar TODO lo que hay en este teléfono a esta cuenta, incluso lo que " +

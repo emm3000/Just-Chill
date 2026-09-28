@@ -2,7 +2,7 @@
 
 Everything a movement is: `capture/` holds the add, edit and delete form with its sheets and its shortcut combos, `list/` holds the Movimientos tab with its search and its category filter. ViewModels, `UiState` / `Intent` / `Effect`, Compose screens, the three routes and both entry functions live here, in `com.emm.justchill.feature.transaction`.
 
-`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended`. Depends on `:core:ui` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge. The transaction row and its `Catalog`, the account, category and date pickers and `AmountInputSheet` are `:core:ui`'s shared vocabulary: consume them, never copy them here.
+`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended`. Depends on `:core:ui`, `:core:presentation` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge. The transaction row, the account, category and date pickers and `AmountInputSheet` are `:core:ui`'s shared vocabulary, `TransactionUi` and `Catalog` are `:core:presentation`'s: consume them, never copy them here.
 
 `./gradlew :feature:transaction:testDebugUnitTest`. The MockK ViewModel suites moved here from `:androidApp` with the ViewModels; `MainDispatcherRule` and `FakeTodayFlow` come from `:core:testing`. `TransactionDateEndToEndTest` stayed in `:androidApp`'s test set: it drives the date through the real repository over an in-memory SQLite, which needs `:core:database`, an edge a feature module may not have.
 

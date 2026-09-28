@@ -2,7 +2,7 @@
 
 The Categories screen family, ViewModels and Compose together: the list with its edit and delete dialogs, the create screen with the icon and colour pickers and the preview chip, and the two routes the host pushes. Extracted by ADR 015's wave 7 (#119); the package is `com.emm.justchill.feature.category`.
 
-`justchill.android.feature` is the whole build file, plus `androidx.lifecycle.runtime.compose` and `androidx.material.icons.extended`, which the plugin does not bring and the screens need. Depends on `:core:domain` and `:core:ui` only. `compose_stability.conf` declares `com.emm.justchill.**` stable so the `:core:domain` values the screens take are not treated as unstable.
+`justchill.android.feature` is the whole build file, plus `androidx.lifecycle.runtime.compose` and `androidx.material.icons.extended`, which the plugin does not bring and the screens need. Depends on `:core:domain`, `:core:presentation` and `:core:ui` only. `compose_stability.conf` declares `com.emm.justchill.**` stable so the `:core:domain` values the screens take are not treated as unstable.
 
 ## What lives where
 

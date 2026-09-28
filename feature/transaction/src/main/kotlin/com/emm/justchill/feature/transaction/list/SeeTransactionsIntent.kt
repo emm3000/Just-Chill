@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.transaction.list
 
 import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.ui.mvi.UiIntent
+import com.emm.justchill.core.presentation.mvi.UiIntent
 
 sealed interface SeeTransactionsIntent : UiIntent {
     data class OnMonthSelected(val month: YearMonth) : SeeTransactionsIntent

@@ -18,8 +18,8 @@ import com.emm.justchill.core.domain.transaction.GetTopUsedCategoryIdsUseCase
 import com.emm.justchill.core.domain.transaction.TransactionInsert
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.testing.MainDispatcherRule
-import com.emm.justchill.core.ui.category.SelectableCategory
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify

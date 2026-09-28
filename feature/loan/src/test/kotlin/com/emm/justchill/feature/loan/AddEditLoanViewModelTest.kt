@@ -10,10 +10,10 @@ import com.emm.justchill.core.domain.shared.LoanId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.error.ValidationCode
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.format.moneyCentsString
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.format.moneyCentsString
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

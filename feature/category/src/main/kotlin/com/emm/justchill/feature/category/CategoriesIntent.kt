@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.Category
-import com.emm.justchill.core.ui.mvi.UiIntent
+import com.emm.justchill.core.presentation.mvi.UiIntent
 
 sealed interface CategoriesIntent : UiIntent {
     data class OnEditClick(val category: Category) : CategoriesIntent

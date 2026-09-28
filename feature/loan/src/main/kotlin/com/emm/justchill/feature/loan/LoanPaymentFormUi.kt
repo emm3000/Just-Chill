@@ -2,9 +2,9 @@ package com.emm.justchill.feature.loan
 
 import com.emm.justchill.core.domain.loan.PaymentMethod
 import com.emm.justchill.core.domain.shared.error.ValidationCode
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.format.isSavableAmount
-import com.emm.justchill.core.ui.format.relativeDayLabel
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.format.isSavableAmount
+import com.emm.justchill.core.presentation.format.relativeDayLabel
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 

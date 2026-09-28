@@ -1,6 +1,6 @@
 package com.emm.justchill.feature.transaction.capture
 
-import com.emm.justchill.core.ui.mvi.UiEffect
+import com.emm.justchill.core.presentation.mvi.UiEffect
 
 sealed interface EditTransactionEffect : UiEffect {
 

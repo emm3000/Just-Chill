@@ -1,6 +1,6 @@
 package com.emm.justchill.feature.report
 
-import com.emm.justchill.core.ui.format.NumberFormatEs
+import com.emm.justchill.core.presentation.format.NumberFormatEs
 
 internal fun formatSoles(cents: Long): String {
     val soles = cents.toDouble() / 100.0

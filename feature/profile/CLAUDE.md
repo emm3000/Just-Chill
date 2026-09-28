@@ -4,7 +4,7 @@ The fifth bottom-bar tab, "Más" (ADR 022): a corner-icon-free `JcTopBar`, then 
 
 One flat package plus `privacy/`: the backup rows are fields of `ProfileUiState` and their copy mappers read its types, so a `backup/` sub-package would import the root and be imported back. The privacy screen shares nothing with them and sits on its own.
 
-`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended` (the cloud, shield and file glyphs). Depends on `:core:ui` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge. The atoms, the tokens and `toUserMessage` are `:core:ui`'s: consume them, never copy them here.
+`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended` (the cloud, shield and file glyphs). Depends on `:core:ui`, `:core:presentation` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge. The atoms and the tokens are `:core:ui`'s, `toUserMessage` is `:core:presentation`'s: consume them, never copy them here.
 
 `./gradlew :feature:profile:testDebugUnitTest`. `MainDispatcherRule` and `FakeTodayFlow` come from `:core:testing`. `ProfileViewModelBackupFailureTest` stayed in `:androidApp`'s test set under this package: it wires a real `BackupOrchestrator`, an `:androidApp` class a feature module may not see.
 

@@ -42,11 +42,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.emm.justchill.core.presentation.format.SpanishDateFormat
+import com.emm.justchill.core.presentation.format.titlecaseFirstChar
 import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.core.ui.format.SpanishDateFormat
-import com.emm.justchill.core.ui.format.titlecaseFirstChar
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType

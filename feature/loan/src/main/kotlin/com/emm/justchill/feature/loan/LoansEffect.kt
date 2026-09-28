@@ -1,6 +1,6 @@
 package com.emm.justchill.feature.loan
 
-import com.emm.justchill.core.ui.mvi.UiEffect
+import com.emm.justchill.core.presentation.mvi.UiEffect
 
 sealed interface LoansEffect : UiEffect {
     data class NavigateToPerson(val personKey: String) : LoansEffect

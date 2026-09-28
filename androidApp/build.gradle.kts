@@ -82,6 +82,7 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.backup)
     implementation(projects.core.database)
+    implementation(projects.core.presentation)
     implementation(projects.core.ui)
 
     implementation(projects.feature.transaction)

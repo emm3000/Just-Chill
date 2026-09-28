@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.Category
-import com.emm.justchill.core.ui.mvi.UiEffect
+import com.emm.justchill.core.presentation.mvi.UiEffect
 
 sealed interface AddCategoryEffect : UiEffect {
 

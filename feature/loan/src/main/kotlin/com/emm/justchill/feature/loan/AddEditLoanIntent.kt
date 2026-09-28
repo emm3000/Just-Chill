@@ -1,6 +1,6 @@
 package com.emm.justchill.feature.loan
 
-import com.emm.justchill.core.ui.mvi.UiIntent
+import com.emm.justchill.core.presentation.mvi.UiIntent
 import kotlinx.datetime.LocalDate
 
 sealed interface AddEditLoanIntent : UiIntent {

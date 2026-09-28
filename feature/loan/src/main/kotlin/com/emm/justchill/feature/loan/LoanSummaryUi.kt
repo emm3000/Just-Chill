@@ -3,9 +3,9 @@ package com.emm.justchill.feature.loan
 import com.emm.justchill.core.domain.loan.Loan
 import com.emm.justchill.core.domain.loan.remaining
 import com.emm.justchill.core.domain.shared.Money
-import com.emm.justchill.core.ui.format.SpanishDateFormat
-import com.emm.justchill.core.ui.format.format
-import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.presentation.format.SpanishDateFormat
+import com.emm.justchill.core.presentation.format.format
+import com.emm.justchill.core.presentation.format.formatNeutral
 
 data class LoanSummaryUi(
     val personName: String,

@@ -9,10 +9,10 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.transaction.Catalog
 import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.selectableColorIds
-import com.emm.justchill.core.ui.transaction.Catalog
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 

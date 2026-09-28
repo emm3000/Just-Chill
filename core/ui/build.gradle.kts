@@ -8,12 +8,10 @@ composeCompiler {
 
 dependencies {
     api(projects.core.domain)
-    api(libs.androidx.lifecycle.viewmodel)
+    api(projects.core.presentation)
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.datetime)
     api(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.material.icons.extended)
-
-    testImplementation(projects.core.testing)
 }

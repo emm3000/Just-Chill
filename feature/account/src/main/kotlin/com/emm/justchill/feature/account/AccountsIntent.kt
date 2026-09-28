@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.account
 
 import com.emm.justchill.core.domain.account.Account
-import com.emm.justchill.core.ui.mvi.UiIntent
+import com.emm.justchill.core.presentation.mvi.UiIntent
 
 sealed interface AccountsIntent : UiIntent {
     data class OnEditClick(val account: Account) : AccountsIntent

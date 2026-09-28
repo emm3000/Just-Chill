@@ -1,6 +1,6 @@
 package com.emm.justchill.feature.auth
 
-import com.emm.justchill.core.ui.mvi.UiIntent
+import com.emm.justchill.core.presentation.mvi.UiIntent
 
 sealed interface AuthIntent : UiIntent {
     data class EmailChanged(val value: String) : AuthIntent

@@ -5,13 +5,13 @@ import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.category.SelectableCategory
-import com.emm.justchill.core.ui.format.centsToSoles
-import com.emm.justchill.core.ui.format.moneyCentsString
-import com.emm.justchill.core.ui.format.relativeDayLabel
-import com.emm.justchill.core.ui.mvi.UiState
-import com.emm.justchill.core.ui.transaction.Catalog
-import com.emm.justchill.core.ui.transaction.categoriesOf
+import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.format.centsToSoles
+import com.emm.justchill.core.presentation.format.moneyCentsString
+import com.emm.justchill.core.presentation.format.relativeDayLabel
+import com.emm.justchill.core.presentation.mvi.UiState
+import com.emm.justchill.core.presentation.transaction.Catalog
+import com.emm.justchill.core.presentation.transaction.categoriesOf
 import kotlinx.datetime.LocalDate
 
 data class EditTransactionUiState(

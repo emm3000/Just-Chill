@@ -35,10 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.presentation.format.monthAbbrevLabel
 import com.emm.justchill.core.ui.atoms.MonthChevron
 import com.emm.justchill.core.ui.atoms.MonthChevronDirection
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.core.ui.format.monthAbbrevLabel
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing

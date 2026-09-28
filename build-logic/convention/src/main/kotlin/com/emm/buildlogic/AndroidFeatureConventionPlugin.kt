@@ -16,6 +16,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
 
         dependencies {
             add("implementation", project(":core:domain"))
+            add("implementation", project(":core:presentation"))
             add("implementation", project(":core:ui"))
             add("implementation", platform(libs.library("koin-bom")))
             add("implementation", libs.library("koin-core"))

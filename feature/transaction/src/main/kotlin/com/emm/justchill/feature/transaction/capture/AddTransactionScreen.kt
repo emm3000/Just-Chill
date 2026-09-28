@@ -32,6 +32,13 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.format.MAX_AMOUNT_DIGITS
+import com.emm.justchill.core.presentation.format.balanceFormatted
+import com.emm.justchill.core.presentation.format.centsToMoney
+import com.emm.justchill.core.presentation.format.centsToSoles
+import com.emm.justchill.core.presentation.format.positiveMoneyFormatted
+import com.emm.justchill.core.presentation.transaction.Catalog
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -41,13 +48,7 @@ import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.SelectableCategory
 import com.emm.justchill.core.ui.category.selectableColorIds
-import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
-import com.emm.justchill.core.ui.format.balanceFormatted
-import com.emm.justchill.core.ui.format.centsToMoney
-import com.emm.justchill.core.ui.format.centsToSoles
-import com.emm.justchill.core.ui.format.positiveMoneyFormatted
 import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 import com.emm.justchill.core.ui.preview.PreviewWindowEdges
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
@@ -60,7 +61,6 @@ import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
-import com.emm.justchill.core.ui.transaction.Catalog
 import com.emm.justchill.feature.transaction.capture.components.MonthSpendLine
 import com.emm.justchill.feature.transaction.capture.components.PadForm
 import com.emm.justchill.feature.transaction.capture.components.SignToggle
