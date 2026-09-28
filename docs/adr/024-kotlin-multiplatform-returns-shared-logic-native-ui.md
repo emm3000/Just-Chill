@@ -66,7 +66,9 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
    and each converted module registers `testAndroidHostTest` — ADR 011's silent-drop trap, reversed.
 4. **Conversion order is dependency before consumer** (ADR 011 Decision 6 inverted, same reason: a
    `commonMain` cannot resolve a JVM-only or plain-Android artifact): `:core:domain`,
-   `:core:presentation`, `:core:testing`, `:core:database`, `:core:backup`, then the seven features with a ViewModel; `:feature:onboarding` has none and no Koin module, so it stays `com.android.library`.
+   `:core:presentation`, `:core:testing`, `:core:database`, `:core:backup`, then the seven
+   features with a ViewModel; `:feature:onboarding` has none and no Koin module, so it stays
+   `com.android.library`.
    `:core:database` gets `expect`/`actual` for `DatabaseDriver` (`NativeSqliteDriver` on iOS) and
    `SqliteExceptions`; its `.sq`, `.sqm` and `databases/N.db` move unchanged, and the migration suite
    moves to `androidDeviceTest` on `justchill-api36`. `:core:backup` takes the darwin engine in
