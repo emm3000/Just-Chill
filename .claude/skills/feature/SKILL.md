@@ -52,7 +52,7 @@ Placeholder copy in the screen is a literal Spanish string, tuteo. A message a V
 ## Hard rules (from `CLAUDE.md` and `.claude/rules/`)
 
 - UI uses **only** `core/ui/atoms/` components; `Text` and `Icon` only with a `LocalEmmType` role and a `LocalEmmColors` token. Never a raw Material3 control.
-- A feature depends on `:core:ui` and `:core:domain` only, plus `:core:testing` on the test edge; `checkModuleBoundaries` fails anything else.
+- A feature depends on `:core:ui`, `:core:presentation` and `:core:domain` only, plus `:core:testing` on the test edge; `checkModuleBoundaries` fails anything else.
 - No Compose import in a ViewModel or a UiState; `checkComposeFreeViewModels` is on the gate.
 - Explicit types on every property and local; no comments.
 - No nested `also/apply/run/let`; nesting, returns, length and functions per file are detekt's, on the gate — see `.claude/rules/kotlin-style.md`.

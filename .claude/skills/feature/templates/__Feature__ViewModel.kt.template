@@ -1,6 +1,6 @@
 package com.emm.justchill.feature.__feature__
 
-import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.presentation.mvi.MviViewModel
 
 class __Feature__ViewModel : MviViewModel<__Feature__UiState, __Feature__Intent, __Feature__Effect>(__Feature__UiState()) {
 
