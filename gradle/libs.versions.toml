@@ -162,6 +162,8 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 # against the wrong stdlib — build-logic/convention/build.gradle.kts pins the real jar explicitly instead (a
 # literal marker coordinate, not this alias, since versioning this alias is what breaks resolution).
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 android-compose-screenshot = { id = "com.android.compose.screenshot", version.ref = "screenshot" }

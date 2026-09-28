@@ -233,6 +233,18 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `detekt fails on a violation in the common and the host test source sets of a kmp library`() {
+        val output: String = fixture.checkAndFail(
+            task = ":probe:detekt",
+            modules = mapOf(":probe" to """plugins { id("justchill.kmp.library") }"""),
+            sources = DETEKT_CONFIG + KMP_VIOLATIONS,
+        )
+
+        assertTrue(output.contains("src/commonMain/kotlin/CommonProbe.kt"), output)
+        assertTrue(output.contains("src/androidHostTest/kotlin/HostProbeTest.kt"), output)
+    }
+
+    @Test
     fun `detekt adds no per-variant or per-source-set task to a flavored application or a jvm library`() {
         val application: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.application"),
@@ -304,6 +316,18 @@ class ConventionPluginTest {
             "probe/src/androidTest/kotlin/ProbeMigrationTest.kt" to "class ProbeMigrationTest",
             "probe/src/main/sqldelight/Probe.sq" to "SELECT 1;",
         )
+
+        val DETEKT_CONFIG: Map<String, String> = mapOf(
+            "config/detekt/detekt.yml" to
+                File(System.getProperty("justchill.rootDir"), "config/detekt/detekt.yml").readText(),
+        )
+
+        val KMP_VIOLATIONS: Map<String, String> = mapOf(
+            "probe/src/commonMain/kotlin/CommonProbe.kt" to EMPTY_FUNCTION_SOURCE,
+            "probe/src/androidHostTest/kotlin/HostProbeTest.kt" to EMPTY_FUNCTION_SOURCE,
+        )
+
+        const val EMPTY_FUNCTION_SOURCE: String = "package sample\n\nfun probe() {\n}\n"
 
         const val LINTED_SOURCES: String =
             "src/androidTest/kotlin/ProbeMigrationTest.kt,src/main/kotlin/Probe.kt,src/test/kotlin/ProbeTest.kt"
