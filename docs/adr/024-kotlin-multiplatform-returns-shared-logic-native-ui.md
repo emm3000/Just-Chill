@@ -66,7 +66,7 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
    and each converted module registers `testAndroidHostTest` — ADR 011's silent-drop trap, reversed.
 4. **Conversion order is dependency before consumer** (ADR 011 Decision 6 inverted, same reason: a
    `commonMain` cannot resolve a JVM-only or plain-Android artifact): `:core:domain`,
-   `:core:presentation`, `:core:testing`, `:core:database`, `:core:backup`, then the eight features.
+   `:core:presentation`, `:core:testing`, `:core:database`, `:core:backup`, then the seven features with a ViewModel; `:feature:onboarding` has none and no Koin module, so it stays `com.android.library`.
    `:core:database` gets `expect`/`actual` for `DatabaseDriver` (`NativeSqliteDriver` on iOS) and
    `SqliteExceptions`; its `.sq`, `.sqm` and `databases/N.db` move unchanged, and the migration suite
    moves to `androidDeviceTest` on `justchill-api36`. `:core:backup` takes the darwin engine in
@@ -79,7 +79,7 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
    `:androidApp/src/screenshotTest`, `justchill.screenshot` applies there, and the move lands before
    `:feature:transaction` converts, making the `internal` `AddTransactionScreenContent` reachable.
 6. **`:shared` exports `JustChillKit`.** An umbrella KMP module exports domain, presentation,
-   database, backup and the eight features as one framework, with SKIE 0.10.15. `iosMain` holds the
+   database, backup and the seven converted features as one framework, with SKIE 0.10.15. `iosMain` holds the
    actuals for the ports `androidApp/core/` implements today: preferences (multiplatform-settings
    over `NSUserDefaults`), `Dispatchers`, `UniqueIdProvider`, `BackgroundEvents` / `ResumeEvents`,
    session storage (Keychain). Koin starts from Swift through an `initKoin` entry.
@@ -98,7 +98,7 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
 1. `:core:presentation` out of `:core:ui` (Decision 2), Android-only.
 2. The KMP plugins, gate legs and detekt spike; `:core:domain`, `:core:presentation`, `:core:testing`.
 3. `:core:database`, then `:core:backup`.
-4. The screenshot matrix to `:androidApp`, then the eight features, one ticket each.
+4. The screenshot matrix to `:androidApp`, then the seven converted features, one ticket each.
 5. `:shared`, the iOS actuals, `JustChillKit` linked for `iosSimulatorArm64`.
 6. `iosApp/` per Decision 7; `justchill-ios27` is created here.
 
