@@ -20,10 +20,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.format.formatCentsForDisplay
 import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.IconBtnTone
-import com.emm.justchill.core.ui.format.formatCentsForDisplay
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii

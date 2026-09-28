@@ -15,9 +15,9 @@ import com.emm.justchill.core.domain.transaction.TransactionTotals
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
 import com.emm.justchill.core.domain.transaction.withAmountRange
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.format.centsToMoney
-import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.format.centsToMoney
+import com.emm.justchill.core.presentation.mvi.MviViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

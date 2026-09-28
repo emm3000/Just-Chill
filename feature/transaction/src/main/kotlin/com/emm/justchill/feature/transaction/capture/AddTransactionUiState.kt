@@ -7,14 +7,14 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.category.SelectableCategory
-import com.emm.justchill.core.ui.format.balanceFormatted
-import com.emm.justchill.core.ui.format.centsToSoles
-import com.emm.justchill.core.ui.format.monthLabel
-import com.emm.justchill.core.ui.format.relativeDayLabel
-import com.emm.justchill.core.ui.mvi.UiState
-import com.emm.justchill.core.ui.transaction.Catalog
-import com.emm.justchill.core.ui.transaction.categoriesOf
+import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.format.balanceFormatted
+import com.emm.justchill.core.presentation.format.centsToSoles
+import com.emm.justchill.core.presentation.format.monthLabel
+import com.emm.justchill.core.presentation.format.relativeDayLabel
+import com.emm.justchill.core.presentation.mvi.UiState
+import com.emm.justchill.core.presentation.transaction.Catalog
+import com.emm.justchill.core.presentation.transaction.categoriesOf
 import kotlinx.datetime.LocalDate
 
 data class MonthSpend(val month: YearMonth, val total: Money)

@@ -7,8 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import com.emm.justchill.core.ui.category.SelectableCategory
-import com.emm.justchill.core.ui.category.toSelectable
+import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.category.toSelectable
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator

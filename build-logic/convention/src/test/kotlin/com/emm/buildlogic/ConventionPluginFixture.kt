@@ -29,9 +29,10 @@ internal class ConventionPluginFixture(
         files: Map<String, String> = emptyMap(),
     ): Map<String, String> {
         files.forEach { (path, content) -> write(path, content) }
-        writeSettings(listOf(":probe", ":core:domain", ":core:ui", ":core:testing"))
+        writeSettings(listOf(":probe", ":core:domain", ":core:presentation", ":core:ui", ":core:testing"))
         writeLocalProperties()
         writeStubModule("core/domain")
+        writeStubModule("core/presentation")
         writeStubModule("core/ui")
         writeStubModule("core/testing")
         writeProbeModule(pluginIds, androidConfiguration)

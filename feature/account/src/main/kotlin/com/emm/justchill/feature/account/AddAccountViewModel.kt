@@ -1,8 +1,8 @@
 package com.emm.justchill.feature.account
 
 import com.emm.justchill.core.domain.account.CreateAccountUseCase
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.mvi.MviViewModel
 
 class AddAccountViewModel(private val createAccount: CreateAccountUseCase) :
     MviViewModel<AddAccountUiState, AddAccountIntent, AddAccountEffect>(AddAccountUiState()) {

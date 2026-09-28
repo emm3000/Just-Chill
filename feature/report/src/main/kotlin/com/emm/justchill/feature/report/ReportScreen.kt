@@ -39,13 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.format.monthLabel
+import com.emm.justchill.core.presentation.format.monthYearLabel
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.MonthSelector
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
-import com.emm.justchill.core.ui.format.monthLabel
-import com.emm.justchill.core.ui.format.monthYearLabel
 import com.emm.justchill.core.ui.sheets.MonthPickerSheet
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme

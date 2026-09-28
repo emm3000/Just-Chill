@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.ui.category.SelectableCategory
+import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.feature.account.AddAccountRoute
 import com.emm.justchill.feature.account.accountEntries

@@ -2,8 +2,8 @@ package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.category.CreateCategoryUseCase
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.mvi.MviViewModel
 
 class AddCategoryViewModel(
     private val createCategory: CreateCategoryUseCase,

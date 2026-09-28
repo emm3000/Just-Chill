@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.report
 
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.format.monthLabel
+import com.emm.justchill.core.presentation.format.monthLabel
 
 private const val PERCENT_BASE = 100
 

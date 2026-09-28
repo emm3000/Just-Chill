@@ -22,6 +22,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.format.MAX_AMOUNT_DIGITS
+import com.emm.justchill.core.presentation.format.centsToSoles
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -35,8 +37,6 @@ import com.emm.justchill.core.ui.atoms.SelectorChip
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.category.resolvedColor
-import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
-import com.emm.justchill.core.ui.format.centsToSoles
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet
 import com.emm.justchill.core.ui.sheets.CategoryPickerSheet
 import com.emm.justchill.core.ui.sheets.DatePickerSheet

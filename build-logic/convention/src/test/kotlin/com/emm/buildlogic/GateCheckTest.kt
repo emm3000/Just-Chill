@@ -17,11 +17,12 @@ class GateCheckTest {
         get() = ConventionPluginFixture(temporaryFolder.root)
 
     @Test
-    fun `every edge ADR 015 allows passes the boundary check`() {
+    fun `every edge ADR 015 and ADR 024 allow passes the boundary check`() {
         val modules: Map<String, String> = mapOf(
-            ":androidApp" to module(":feature:loan", ":core:ui", ":core:domain"),
-            ":feature:loan" to module(":core:domain", ":core:ui"),
-            ":core:ui" to module(":core:domain"),
+            ":androidApp" to module(":feature:loan", ":core:ui", ":core:presentation", ":core:domain"),
+            ":feature:loan" to module(":core:domain", ":core:presentation", ":core:ui"),
+            ":core:ui" to module(":core:domain", ":core:presentation"),
+            ":core:presentation" to module(":core:domain"),
             ":core:domain" to module(),
             ":core:testing" to module(":core:domain"),
         )
@@ -29,6 +30,32 @@ class GateCheckTest {
         val result: BuildResult = fixture.check(task = BOUNDARY_TASK, modules = modules)
 
         modules.keys.forEach { path -> assertSucceeded(result, "$path:$BOUNDARY_TASK") }
+    }
+
+    @Test
+    fun `core presentation that depends on core ui fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":core:presentation:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":core:presentation" to module(":core:ui"),
+                ":core:ui" to module(),
+            ),
+        )
+
+        assertTrue(output.contains(":core:presentation depends on :core:ui"), output)
+    }
+
+    @Test
+    fun `core ui that depends on anything but core domain and core presentation fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":core:ui:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":core:ui" to module(":core:testing"),
+                ":core:testing" to module(),
+            ),
+        )
+
+        assertTrue(output.contains(":core:ui depends on :core:testing"), output)
     }
 
     @Test

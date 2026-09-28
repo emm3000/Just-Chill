@@ -7,11 +7,11 @@ import com.emm.justchill.core.domain.loan.LoanUpdate
 import com.emm.justchill.core.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.core.domain.shared.LoanId
 import com.emm.justchill.core.domain.time.TodayFlow
-import com.emm.justchill.core.ui.error.toUserMessage
-import com.emm.justchill.core.ui.format.centsToMoney
-import com.emm.justchill.core.ui.format.isSavableAmount
-import com.emm.justchill.core.ui.format.moneyCentsString
-import com.emm.justchill.core.ui.mvi.MviViewModel
+import com.emm.justchill.core.presentation.error.toUserMessage
+import com.emm.justchill.core.presentation.format.centsToMoney
+import com.emm.justchill.core.presentation.format.isSavableAmount
+import com.emm.justchill.core.presentation.format.moneyCentsString
+import com.emm.justchill.core.presentation.mvi.MviViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.LocalDateTime

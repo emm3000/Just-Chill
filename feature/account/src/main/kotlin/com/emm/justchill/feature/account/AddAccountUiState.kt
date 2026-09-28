@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.account
 
 import com.emm.justchill.core.domain.account.AccountType
-import com.emm.justchill.core.ui.mvi.UiState
+import com.emm.justchill.core.presentation.mvi.UiState
 
 data class AddAccountUiState(
     val name: String = "",

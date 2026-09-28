@@ -2,8 +2,8 @@ package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.category.SelectableCategory
-import com.emm.justchill.core.ui.mvi.UiIntent
+import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.mvi.UiIntent
 import kotlinx.datetime.LocalDate
 
 sealed interface AddTransactionIntent : UiIntent {

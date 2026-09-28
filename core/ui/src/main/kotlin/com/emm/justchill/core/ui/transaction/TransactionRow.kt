@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.transaction.TransactionUi
 import com.emm.justchill.core.ui.atoms.CategoryDotSlot
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize

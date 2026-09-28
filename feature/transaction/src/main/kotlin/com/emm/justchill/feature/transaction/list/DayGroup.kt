@@ -3,10 +3,10 @@ package com.emm.justchill.feature.transaction.list
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.domain.transaction.TransactionWithCategory
-import com.emm.justchill.core.ui.format.SpanishDateFormat
-import com.emm.justchill.core.ui.format.titlecaseFirstChar
-import com.emm.justchill.core.ui.transaction.TransactionUi
-import com.emm.justchill.core.ui.transaction.toUi
+import com.emm.justchill.core.presentation.format.SpanishDateFormat
+import com.emm.justchill.core.presentation.format.titlecaseFirstChar
+import com.emm.justchill.core.presentation.transaction.TransactionUi
+import com.emm.justchill.core.presentation.transaction.toUi
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.isoDayNumber

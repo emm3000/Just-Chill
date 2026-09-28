@@ -9,9 +9,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
-import com.emm.justchill.core.ui.category.CategoryUi
+import com.emm.justchill.core.presentation.category.CategoryUi
+import com.emm.justchill.core.presentation.transaction.TransactionUi
 import com.emm.justchill.core.ui.theme.EmmTheme
-import com.emm.justchill.core.ui.transaction.TransactionUi
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month

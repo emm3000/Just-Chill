@@ -3,9 +3,9 @@ package com.emm.justchill.feature.account
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
-import com.emm.justchill.core.ui.format.format
-import com.emm.justchill.core.ui.format.formatNeutral
-import com.emm.justchill.core.ui.mvi.UiState
+import com.emm.justchill.core.presentation.format.format
+import com.emm.justchill.core.presentation.format.formatNeutral
+import com.emm.justchill.core.presentation.mvi.UiState
 
 data class AccountsUiState(
     val month: YearMonth,

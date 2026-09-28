@@ -1,9 +1,9 @@
 package com.emm.justchill.feature.loan
 
 import com.emm.justchill.core.domain.loan.LoanPayment
-import com.emm.justchill.core.ui.format.SpanishDateFormat
-import com.emm.justchill.core.ui.format.format
-import com.emm.justchill.core.ui.format.formatNeutral
+import com.emm.justchill.core.presentation.format.SpanishDateFormat
+import com.emm.justchill.core.presentation.format.format
+import com.emm.justchill.core.presentation.format.formatNeutral
 
 data class LoanPaymentRowUi(
     val paymentId: String,

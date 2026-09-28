@@ -2,7 +2,7 @@
 
 The informal-loan ledger: the person list, a person's loans, a loan's detail with its payments, and the add/edit loan form. ViewModels, `UiState` / `Intent` / `Effect`, Compose screens, routes and `loanEntries` all live here, in `com.emm.justchill.feature.loan`.
 
-`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended`. Depends on `:core:ui` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge.
+`id("justchill.android.feature")` plus `kotlinx-coroutines-core`, `kotlinx-datetime`, `androidx-lifecycle-runtime-compose` and `androidx-material-icons-extended`. Depends on `:core:ui`, `:core:presentation` and `:core:domain` and nothing else; `checkModuleBoundaries` fails the gate on any other edge.
 
 `./gradlew :feature:loan:testDebugUnitTest`. The MockK ViewModel suite moved here from `:androidApp` with the ViewModels; `MainDispatcherRule` and `FakeTodayFlow` come from `:core:testing`.
 
@@ -51,4 +51,4 @@ Stored in basis points. `percentTextToBps` deliberately does not clamp: `MAX_INT
 
 ## Tone
 
-Positive remaining takes `success`, a settled balance takes the muted step, and an unsettled non-positive remaining stays monochrome. `LoansSection` on the accounts screen shows the same total and must keep matching. `PersonBalanceUi` and its `toUi` are shared vocabulary in `:core:ui`'s `core/ui/loan/`, not a copy of this module's models.
+Positive remaining takes `success`, a settled balance takes the muted step, and an unsettled non-positive remaining stays monochrome. `LoansSection` on the accounts screen shows the same total and must keep matching. `PersonBalanceUi` and its `toUi` are shared vocabulary in `:core:presentation`'s `core/presentation/loan/`, not a copy of this module's models.

@@ -2,7 +2,7 @@
 
 Sign-in and sign-up for the snapshot-backup account (ADR 009): the email/password form, the Google button, and the "revisa tu correo" step after a sign-up that needs confirmation. ViewModel, state and Compose screen together in `com.emm.justchill.feature.auth`.
 
-`justchill.android.feature`, which brings `:core:domain`, `:core:ui`, Koin, lifecycle, navigation3-runtime, the serialization plugin and `:core:testing`. The build file adds two libraries of its own: `androidx-activity-compose` for the `BackHandler` that keeps the CheckEmail step from popping the back stack, and `androidx-material-icons-extended` for the mail and password-visibility glyphs.
+`justchill.android.feature`, which brings `:core:domain`, `:core:presentation`, `:core:ui`, Koin, lifecycle, navigation3-runtime, the serialization plugin and `:core:testing`. The build file adds two libraries of its own: `androidx-activity-compose` for the `BackHandler` that keeps the CheckEmail step from popping the back stack, and `androidx-material-icons-extended` for the mail and password-visibility glyphs.
 
 ## DI and navigation
 

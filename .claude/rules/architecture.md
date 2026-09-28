@@ -14,20 +14,22 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
 | `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
-| `:core:ui` | The MVI base, the navigation vocabulary (`AppRoute`, `CaptureRoute`, `BottomBarRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters, the design system (theme tokens, atoms, `Emm*` widgets, fonts), and the `PersonBalanceUi` model with its owed-total helpers in `loan/`. |
-| `:core:testing` | JVM test fixtures on `:core:domain` alone; wired into feature modules, `:core:ui` and `:androidApp` as `testImplementation`. Fixture list: `core/testing/CLAUDE.md`. |
+| `:core:presentation` | Compose-free, an Android library (ADR 024 Decision 2): the MVI base in `mvi/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters in `format/`, the presentation models `CategoryUi`, `SelectableCategory`, `TransactionUi`, `Catalog` and `PersonBalanceUi` with its owed-total helpers. |
+| `:core:ui` | Compose: the navigation vocabulary (`AppRoute`, `CaptureRoute`, `BottomBarRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the design system (theme tokens, atoms, `Emm*` widgets, fonts), the shared sheets, the icon and colour catalog, `TransactionRow`. |
+| `:core:testing` | JVM test fixtures on `:core:domain` alone; wired into feature modules, `:core:presentation` and `:androidApp` as `testImplementation`. Fixture list: `core/testing/CLAUDE.md`. |
 | `:feature:*` | One screen family: its Compose-free ViewModels, its Compose screens and nav entries, its `@Serializable` routes and its Koin module. |
 | `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, entry graph, shortcut routes, the SAF host actions), the Koin graph with the cross-cutting modules in `core/di/` and one wiring file per feature, the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, flavors, shortcuts, the session keystore. |
 
 Allowed dependencies, and nothing else:
 
 ```
-androidApp   -> feature:*, core:backup, core:database, core:ui, core:domain
-feature:*    -> core:ui, core:domain, core:testing
-core:backup  -> core:domain
-core:database -> core:domain
-core:ui      -> core:domain (+ core:testing, testImplementation)
-core:testing -> core:domain
+androidApp        -> feature:*, core:backup, core:database, core:ui, core:presentation, core:domain
+feature:*         -> core:ui, core:presentation, core:domain, core:testing
+core:backup       -> core:domain
+core:database     -> core:domain
+core:ui           -> core:presentation, core:domain
+core:presentation -> core:domain (+ core:testing, testImplementation)
+core:testing      -> core:domain
 ```
 
 `checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` may depend on a feature.
@@ -53,7 +55,7 @@ Loan writes always go through `CreateLoanUseCase` / `UpdateLoanUseCase`: `LoanRe
 
 ## Errors
 
-Sealed `DomainException` (`core/domain/.../shared/error/`) is the one failure type. `:core:database`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:core:ui`'s `core/ui/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
+Sealed `DomainException` (`core/domain/.../shared/error/`) is the one failure type. `:core:database`'s `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`) translates SQLDelight exceptions into it; `:core:presentation`'s `core/presentation/error/DomainExceptionExt.kt` renders the Spanish message. Add a failure mode by extending `DomainException`, never with a new exception type.
 
 Every catch-all owes a `CancellationException` arm first. `runCatching` and `catch (e: Exception)` both swallow it, the body runs on, and a cancelled loader overwrites the winner. Rethrow cancellation, then catch `Exception` (`MviViewModel.launchSafe` is the pattern); a `Flow.catch` lambda owes the arm explicitly.
 
@@ -69,7 +71,7 @@ This is not duplication to be removed. See `principles.md`, DRY.
 
 ## MVI contract
 
-Naming lives in `naming.md`. This is the flow. The base class is `mvi/MviViewModel.kt` in `:core:ui`.
+Naming lives in `naming.md`. This is the flow. The base class is `mvi/MviViewModel.kt` in `:core:presentation`, which applies no Compose plugin, so a Compose import there does not compile.
 
 - **One state object per feature.** `<Feature>UiState : UiState` is a `data class` (or a `sealed interface` of data classes) with every field `val` and immutable collections. A module whose screens read state declared elsewhere declares it stable in its `compose_stability.conf`; a `var` or a `MutableMap` turns that declaration into a lie no compiler catches.
 - **One public entry point.** `MviViewModel<S, I, E>` exposes `state: StateFlow<S>`, `effect: Flow<E>` and `onIntent(intent: I)`. A screen reaches its ViewModel through those three and nothing else.

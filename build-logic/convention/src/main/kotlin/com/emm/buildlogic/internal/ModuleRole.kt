@@ -4,6 +4,8 @@ internal enum class ModuleRole {
     ROOT,
     APP,
     CORE_DOMAIN,
+    CORE_PRESENTATION,
+    CORE_UI,
     CORE,
     FEATURE,
     ;
@@ -12,22 +14,30 @@ internal enum class ModuleRole {
         ROOT -> false
         APP -> true
         CORE_DOMAIN -> false
+        CORE_PRESENTATION -> dependencyPath == CORE_DOMAIN_PATH
+        CORE_UI -> dependencyPath == CORE_DOMAIN_PATH || dependencyPath == CORE_PRESENTATION_PATH
         CORE -> dependencyPath == CORE_DOMAIN_PATH
-        FEATURE -> dependencyPath == CORE_DOMAIN_PATH || dependencyPath == CORE_UI_PATH
+        FEATURE ->
+            dependencyPath == CORE_DOMAIN_PATH ||
+                dependencyPath == CORE_PRESENTATION_PATH ||
+                dependencyPath == CORE_UI_PATH
     }
 
     fun rule(): String = when (this) {
         ROOT -> "the root project depends on no module"
         APP -> "the app composes every module"
         CORE_DOMAIN -> "$CORE_DOMAIN_PATH depends on no other module and stays JVM-only"
+        CORE_PRESENTATION -> "$CORE_PRESENTATION_PATH depends on $CORE_DOMAIN_PATH only"
+        CORE_UI -> "$CORE_UI_PATH depends on $CORE_DOMAIN_PATH and $CORE_PRESENTATION_PATH only"
         CORE -> "a core module depends on $CORE_DOMAIN_PATH only"
-        FEATURE -> "a feature depends on $CORE_DOMAIN_PATH and $CORE_UI_PATH only"
+        FEATURE -> "a feature depends on $CORE_DOMAIN_PATH, $CORE_PRESENTATION_PATH and $CORE_UI_PATH only"
     }
 
     companion object {
         const val ROOT_PATH: String = ":"
         const val APP_PATH: String = ":androidApp"
         const val CORE_DOMAIN_PATH: String = ":core:domain"
+        const val CORE_PRESENTATION_PATH: String = ":core:presentation"
         const val CORE_UI_PATH: String = ":core:ui"
         const val CORE_TESTING_PATH: String = ":core:testing"
 
@@ -40,6 +50,8 @@ internal enum class ModuleRole {
             modulePath == ROOT_PATH -> ROOT
             modulePath == APP_PATH -> APP
             modulePath == CORE_DOMAIN_PATH -> CORE_DOMAIN
+            modulePath == CORE_PRESENTATION_PATH -> CORE_PRESENTATION
+            modulePath == CORE_UI_PATH -> CORE_UI
             modulePath.startsWith(CORE_PREFIX) -> CORE
             modulePath.startsWith(FEATURE_PREFIX) -> FEATURE
             else -> throw IllegalArgumentException(

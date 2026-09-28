@@ -26,6 +26,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.emm.justchill.core.presentation.format.MAX_AMOUNT_DIGITS
+import com.emm.justchill.core.presentation.format.centsToSoles
+import com.emm.justchill.core.presentation.format.formatCentsForDisplay
+import com.emm.justchill.core.presentation.format.sanitizeCentsInput
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
 import com.emm.justchill.core.ui.atoms.AmountTone
@@ -33,10 +37,6 @@ import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.core.ui.format.MAX_AMOUNT_DIGITS
-import com.emm.justchill.core.ui.format.centsToSoles
-import com.emm.justchill.core.ui.format.formatCentsForDisplay
-import com.emm.justchill.core.ui.format.sanitizeCentsInput
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme

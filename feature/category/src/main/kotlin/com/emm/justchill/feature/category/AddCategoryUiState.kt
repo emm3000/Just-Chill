@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.category
 
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.ui.mvi.UiState
+import com.emm.justchill.core.presentation.mvi.UiState
 
 data class AddCategoryUiState(
     val name: String = "",

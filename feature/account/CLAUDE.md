@@ -2,7 +2,7 @@
 
 Accounts: the month list, create, edit, delete, and the Loan balance row that sits under them. ViewModels, state and Compose screens together in `com.emm.justchill.feature.account`.
 
-`justchill.android.feature`, which brings `:core:domain`, `:core:ui`, Koin, lifecycle, navigation3-runtime, the serialization plugin and `:core:testing`. The build file adds one library of its own, `androidx-material-icons-extended`, for the account type glyphs.
+`justchill.android.feature`, which brings `:core:domain`, `:core:presentation`, `:core:ui`, Koin, lifecycle, navigation3-runtime, the serialization plugin and `:core:testing`. The build file adds one library of its own, `androidx-material-icons-extended`, for the account type glyphs, and a `compose_stability.conf` declaring `com.emm.justchill.**` stable, because the screens take `:core:presentation`'s `PersonBalanceUi`.
 
 ## DI and navigation
 

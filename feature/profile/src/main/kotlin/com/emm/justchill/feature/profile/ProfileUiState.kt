@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.profile
 
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
-import com.emm.justchill.core.ui.mvi.UiState
+import com.emm.justchill.core.presentation.mvi.UiState
 
 sealed interface SessionUiState {
     data object Initializing : SessionUiState

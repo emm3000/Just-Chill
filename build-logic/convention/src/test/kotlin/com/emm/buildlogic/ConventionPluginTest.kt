@@ -80,7 +80,7 @@ class ConventionPluginTest {
         val report: Map<String, String> = fixture.report(listOf("justchill.android.feature"))
 
         assertEquals("true", report["compose"])
-        assertEquals(":core:domain,:core:testing,:core:ui", report["projectDependencies"])
+        assertEquals(":core:domain,:core:presentation,:core:testing,:core:ui", report["projectDependencies"])
         assertTrue(report.getValue("testDependencies").split(',').contains("testing"), report.getValue("testDependencies"))
         assertTrue(
             report.getValue("implementationDependencies").split(',').containsAll(FEATURE_DEPENDENCIES),
