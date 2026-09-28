@@ -109,6 +109,32 @@ class GateCheckTest {
     }
 
     @Test
+    fun `a kmp feature that takes the fixtures module on its test source sets passes the boundary check`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":feature:loan" to kmpModule(KMP_TEST_SOURCE_SETS.associateWith { ":core:testing" }),
+                ":core:testing" to module(),
+            ),
+        )
+
+        assertSucceeded(result, ":feature:loan:$BOUNDARY_TASK")
+    }
+
+    @Test
+    fun `a kmp feature that ships the fixtures module from common main fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":feature:loan" to kmpModule(mapOf("commonMain" to ":core:testing")),
+                ":core:testing" to module(),
+            ),
+        )
+
+        assertTrue(output.contains(":feature:loan depends on :core:testing"), output)
+    }
+
+    @Test
     fun `a core module that depends on anything but core domain fails the boundary check`() {
         val output: String = fixture.checkAndFail(
             task = ":core:backup:$BOUNDARY_TASK",
@@ -175,6 +201,29 @@ class GateCheckTest {
         )
 
         assertTrue(output.contains("src/test/kotlin/LoanUiState.kt"), output)
+    }
+
+    @Test
+    fun `a common main ViewModel of a kmp feature that imports compose fails the ios compile`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:compileKotlinIosSimulatorArm64",
+            modules = KMP_FEATURE_MODULES,
+            sources = mapOf(COMMON_VIEW_MODEL_PATH to COMPOSE_VIEW_MODEL_SOURCE),
+        )
+
+        assertTrue(output.contains("LoanViewModel.kt"), output)
+        assertTrue(output.contains("Unresolved reference 'compose'"), output)
+    }
+
+    @Test
+    fun `a common main ViewModel of a kmp feature that imports compose fails the compose check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":feature:loan:$COMPOSE_TASK",
+            modules = KMP_FEATURE_MODULES,
+            sources = mapOf(COMMON_VIEW_MODEL_PATH to COMPOSE_VIEW_MODEL_SOURCE),
+        )
+
+        assertTrue(output.contains("src/commonMain/kotlin/LoanViewModel.kt"), output)
     }
 
     @Test
@@ -414,6 +463,19 @@ class GateCheckTest {
         assertSucceeded(result, ":feature:loan:$LAZY_KEY_TASK")
     }
 
+    @Test
+    fun `a value class declared by a kmp test source set alone passes the lazy key check`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:$LAZY_KEY_TASK",
+            modules = mapOf(":feature:loan" to module()),
+            sources = KMP_TEST_SOURCE_SETS.associate { sourceSet ->
+                "feature/loan/src/$sourceSet/kotlin/LoanFixtures.kt" to TYPED_ID_FIXTURE
+            } + mapOf("feature/loan/src/commonMain/kotlin/PersonLoansScreen.kt" to FIXTURE_NAMED_KEY),
+        )
+
+        assertSucceeded(result, ":feature:loan:$LAZY_KEY_TASK")
+    }
+
     private fun assertSucceeded(result: BuildResult, taskPath: String) {
         assertEquals(TaskOutcome.SUCCESS, result.task(taskPath)?.outcome, taskPath)
     }
@@ -435,7 +497,31 @@ class GateCheckTest {
         }
     }
 
+    private fun kmpModule(dependencies: Map<String, String>): String = buildString {
+        appendLine("""plugins { id("justchill.kmp.library") }""")
+        appendLine("kotlin {")
+        appendLine("    android { withDeviceTest {} }")
+        dependencies.forEach { (sourceSet, path) ->
+            appendLine("""    sourceSets.getByName("$sourceSet").dependencies { implementation(project("$path")) }""")
+        }
+        appendLine("}")
+    }
+
     private companion object {
+        val KMP_TEST_SOURCE_SETS: List<String> = listOf("commonTest", "androidHostTest", "androidDeviceTest")
+
+        val KMP_FEATURE_MODULES: Map<String, String> = mapOf(
+            ":feature:loan" to """plugins { id("justchill.kmp.feature") }""",
+            ":core:domain" to """plugins { id("justchill.kmp.library") }""",
+            ":core:presentation" to """plugins { id("justchill.kmp.library") }""",
+            ":core:ui" to "",
+            ":core:testing" to "",
+        )
+
+        const val COMMON_VIEW_MODEL_PATH: String = "feature/loan/src/commonMain/kotlin/LoanViewModel.kt"
+        const val COMPOSE_VIEW_MODEL_SOURCE: String =
+            "package sample\n\nimport androidx.compose.runtime.Immutable\n\n@Immutable\nclass LoanViewModel\n"
+
         const val BOUNDARY_TASK: String = QualityGateConventionPlugin.BOUNDARY_TASK
         const val COMPOSE_TASK: String = QualityGateConventionPlugin.COMPOSE_TASK
         const val SNAPSHOT_TASK: String = QualityGateConventionPlugin.SNAPSHOT_TASK

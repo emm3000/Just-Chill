@@ -2,6 +2,7 @@ package com.emm.buildlogic
 
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.emm.buildlogic.internal.BuildConventions
+import com.emm.buildlogic.internal.gateOn
 import com.emm.buildlogic.internal.libs
 import com.emm.buildlogic.internal.library
 import com.emm.buildlogic.internal.pluginId
@@ -23,12 +24,12 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         apply<DetektConventionPlugin>()
         apply<QualityGateConventionPlugin>()
 
-        val kotlin: KotlinMultiplatformExtension = extensions.getByType<KotlinMultiplatformExtension>()
-        kotlin.jvmToolchain(BuildConventions.JVM_TOOLCHAIN)
-        kotlin.compilerOptions.optIn.addAll(BuildConventions.COROUTINES_OPT_INS)
-        configureAndroidTarget(kotlin)
-        kotlin.iosArm64()
-        kotlin.iosSimulatorArm64()
+        val multiplatform: KotlinMultiplatformExtension = extensions.getByType<KotlinMultiplatformExtension>()
+        multiplatform.jvmToolchain(BuildConventions.JVM_TOOLCHAIN)
+        multiplatform.compilerOptions.optIn.addAll(BuildConventions.COROUTINES_OPT_INS)
+        configureAndroidTarget(multiplatform)
+        multiplatform.iosArm64()
+        multiplatform.iosSimulatorArm64()
 
         dependencies {
             add("commonTestImplementation", kotlin("test"))
@@ -36,11 +37,13 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             add("androidHostTestImplementation", libs.library("kotlinx-coroutines-test"))
             add("androidHostTestImplementation", libs.library("mockk"))
         }
+
+        QualityGateConventionPlugin.KMP_GATE_TASKS.forEach(::gateOn)
     }
 
-    private fun Project.configureAndroidTarget(kotlin: KotlinMultiplatformExtension) {
+    private fun Project.configureAndroidTarget(multiplatform: KotlinMultiplatformExtension) {
         val android: KotlinMultiplatformAndroidLibraryTarget =
-            (kotlin as ExtensionAware).extensions.getByType<KotlinMultiplatformAndroidLibraryTarget>()
+            (multiplatform as ExtensionAware).extensions.getByType<KotlinMultiplatformAndroidLibraryTarget>()
         android.namespace = BuildConventions.namespaceOf(path)
         android.compileSdk = BuildConventions.COMPILE_SDK
         android.minSdk = BuildConventions.MIN_SDK

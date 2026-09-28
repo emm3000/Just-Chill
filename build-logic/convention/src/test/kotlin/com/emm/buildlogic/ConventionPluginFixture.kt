@@ -203,6 +203,25 @@ internal class ConventionPluginFixture(
                             println("REPORT mappingUpload=" + (crashlytics as com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension).mappingFileUploadEnabled)
                         }
                     }
+                    val kmp = project.extensions.findByType(org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java)
+                    if (kmp != null) {
+                        println("REPORT kmpTargets=" + kmp.targets.names.filter { it != "metadata" }.sorted().joinToString(","))
+                        println("REPORT kmpSourceSets=" + kmp.sourceSets.names.sorted().joinToString(","))
+                        kmp.targets.withType(com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget::class.java).forEach { target ->
+                            println("REPORT compileSdk=" + target.compileSdk)
+                            println("REPORT minSdk=" + target.minSdk)
+                            println("REPORT namespace=" + target.namespace)
+                        }
+                        listOf("commonMain", "androidMain", "commonTest", "androidHostTest").forEach { sourceSet ->
+                            val configuration = project.configurations.findByName(sourceSet + "Implementation")
+                            println("REPORT " + sourceSet + "Dependencies=" + configuration?.dependencies.orEmpty().map { if (it is org.gradle.api.artifacts.ProjectDependency) it.path else it.name }.sorted().joinToString(","))
+                        }
+                        println("REPORT compilerPlugins=" + listOf("org.jetbrains.kotlin.plugin.compose", "org.jetbrains.kotlin.plugin.serialization").filter { project.pluginManager.hasPlugin(it) }.joinToString(","))
+                        val composeCompiler =project.extensions.findByType(org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension::class.java)
+                        if (composeCompiler != null) {
+                            println("REPORT composePlatforms=" + composeCompiler.targetKotlinPlatforms.get().map { it.name }.sorted().joinToString(","))
+                        }
+                    }
                     val sqldelight = project.extensions.findByType(app.cash.sqldelight.gradle.SqlDelightExtension::class.java)
                     sqldelight?.databases?.forEach { database ->
                         println("REPORT database=" + listOf(database.name, database.packageName.get(), database.schemaOutputDirectory.get().asFile.relativeTo(project.projectDir).invariantSeparatorsPath, database.verifyMigrations.get()).joinToString(","))
