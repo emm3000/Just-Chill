@@ -6,6 +6,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ConventionPluginTest {
@@ -40,6 +41,65 @@ class ConventionPluginTest {
 
         assertEquals("testDebugUnitTest", report["gatedTests"])
         assertEquals(GATE_TASKS, report["gateTasks"])
+    }
+
+    @Test
+    fun `kmp library plugin targets android and ios with the shared android configuration`() {
+        val report: Map<String, String> = fixture.report(listOf("justchill.kmp.library"))
+
+        assertEquals(KMP_TARGETS, report["kmpTargets"])
+        assertEquals("com.emm.justchill.probe", report["namespace"])
+        assertEquals("37", report["compileSdk"])
+        assertEquals("28", report["minSdk"])
+        assertEquals("17", report["jvmTarget"])
+        assertEquals(COROUTINES_OPT_INS, report["optIn"])
+        assertTrue(report.getValue("kmpSourceSets").split(',').containsAll(KMP_SOURCE_SETS), report["kmpSourceSets"])
+        assertFalse(report.getValue("kmpSourceSets").split(',').contains(DEVICE_TEST_SOURCE_SET), report["kmpSourceSets"])
+        assertEquals("kotlin-test", report["commonTestDependencies"])
+        assertEquals(KMP_HOST_TEST_DEPENDENCIES, report["androidHostTestDependencies"])
+        assertEquals(CHECK_PLUGINS, report["plugins"])
+    }
+
+    @Test
+    fun `kmp library plugin puts the ios compile, the android compile and the host tests in the quality gate`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.kmp.library"),
+            arguments = REPORT_GATE_TASKS,
+        )
+
+        assertTrue(
+            QualityGateConventionPlugin.KMP_GATE_TASKS.containsAll(listOf("compileKotlinIosSimulatorArm64", "testAndroidHostTest")),
+            QualityGateConventionPlugin.KMP_GATE_TASKS.toString(),
+        )
+        assertEquals(KMP_GATE_TASKS, report["gateTasks"])
+    }
+
+    @Test
+    fun `a kmp library that opts into device tests gates their compile`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.kmp.library"),
+            androidConfiguration = DEVICE_TEST_CONFIGURATION,
+            arguments = REPORT_GATE_TASKS,
+        )
+
+        assertTrue(report.getValue("kmpSourceSets").split(',').contains(DEVICE_TEST_SOURCE_SET), report["kmpSourceSets"])
+        assertEquals(KMP_DEVICE_GATE_TASKS, report["gateTasks"])
+    }
+
+    @Test
+    fun `kmp feature plugin splits the core modules between common and android over the kmp library`() {
+        val report: Map<String, String> = fixture.report(listOf("justchill.kmp.feature"))
+
+        assertEquals(KMP_TARGETS, report["kmpTargets"])
+        assertEquals("com.emm.justchill.probe", report["namespace"])
+        assertEquals("28", report["minSdk"])
+        assertTrue(report.getValue("kmpSourceSets").split(',').containsAll(KMP_SOURCE_SETS), report["kmpSourceSets"])
+        assertEquals(KMP_FEATURE_COMMON_DEPENDENCIES, report["commonMainDependencies"])
+        assertEquals(KMP_FEATURE_ANDROID_DEPENDENCIES, report["androidMainDependencies"])
+        assertEquals(":core:testing,$KMP_HOST_TEST_DEPENDENCIES", report["androidHostTestDependencies"])
+        assertEquals("org.jetbrains.kotlin.plugin.compose,org.jetbrains.kotlin.plugin.serialization", report["compilerPlugins"])
+        assertEquals("androidJvm", report["composePlatforms"])
+        assertEquals(CHECK_PLUGINS, report["plugins"])
     }
 
     @Test
@@ -366,6 +426,38 @@ class ConventionPluginTest {
                 "compileDebugAndroidTestKotlin,compileReleaseKotlin,detekt,testDebugUnitTest"
 
         const val SCREENSHOT_GATE_TASKS: String = "$GATE_TASKS,validateDebugScreenshotTest"
+
+        const val KMP_TARGETS: String = "android,iosArm64,iosSimulatorArm64"
+
+        val KMP_SOURCE_SETS: List<String> = listOf("commonMain", "androidMain", "iosMain", "commonTest", "androidHostTest")
+
+        const val DEVICE_TEST_SOURCE_SET: String = "androidDeviceTest"
+
+        const val KMP_FEATURE_COMMON_DEPENDENCIES: String =
+            ":core:domain,:core:presentation,koin-bom,koin-core,koin-core-viewmodel"
+
+        const val KMP_FEATURE_ANDROID_DEPENDENCIES: String =
+            ":core:ui,koin-compose-viewmodel,kotlinx-serialization-json,navigation3-runtime"
+
+        const val KMP_HOST_TEST_DEPENDENCIES: String = "junit,kotlinx-coroutines-test,mockk"
+
+        const val KMP_GATE_TASKS: String =
+            "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
+                "checkSqlDelightSnapshots," +
+                "compileAndroidMain,compileKotlinIosSimulatorArm64,detekt,testAndroidHostTest"
+
+        const val KMP_DEVICE_GATE_TASKS: String =
+            "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
+                "checkSqlDelightSnapshots," +
+                "compileAndroidDeviceTest,compileAndroidMain,compileKotlinIosSimulatorArm64,detekt,testAndroidHostTest"
+
+        val DEVICE_TEST_CONFIGURATION: String = """
+            kotlin {
+                android {
+                    withDeviceTest {}
+                }
+            }
+        """.trimIndent()
 
         val SCREENSHOT_PROPERTIES: Map<String, String> =
             mapOf("gradle.properties" to "android.experimental.enableScreenshotTest=true")

@@ -27,6 +27,9 @@ class QualityGateConventionPlugin : Plugin<Project> {
                     ":build-logic:convention:test on the root, " +
                     "checkModuleBoundaries, checkComposeFreeViewModels, checkSqlDelightSnapshots, " +
                     "checkLazyListKeys and validateDebugScreenshotTest where justchill.screenshot applies, " +
+                    "compileAndroidMain, compileKotlinIosSimulatorArm64 and testAndroidHostTest where " +
+                    "justchill.kmp.library applies, plus compileAndroidDeviceTest where a module opts into " +
+                    "device tests, " +
                     "the unit tests the library plugins name, plus the tests and the prodRelease " +
                     "compile :androidApp adds. " +
                     "Invoked by CI."
@@ -133,16 +136,17 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
         private const val TEST_TASK: String = ":convention:test"
         private const val ANDROID_BASE_PLUGIN: String = "com.android.base"
-        private const val TEST_CONFIGURATION_PREFIX: String = "test"
-        private const val ANDROID_TEST_CONFIGURATION_PREFIX: String = "androidTest"
+        private val TEST_CONFIGURATION_PREFIXES: List<String> =
+            listOf("test", "androidTest", "commonTest", "androidHostTest", "androidDeviceTest")
 
         private fun Configuration.isTestConfiguration(): Boolean =
-            name.startsWith(TEST_CONFIGURATION_PREFIX) || name.startsWith(ANDROID_TEST_CONFIGURATION_PREFIX)
+            TEST_CONFIGURATION_PREFIXES.any { prefix -> name.startsWith(prefix) }
         private const val SOURCE_DIRECTORY: String = "src"
         private const val VIEW_MODEL_SOURCES: String = "**/*ViewModel.kt"
         private const val UI_STATE_SOURCES: String = "**/*UiState.kt"
         private const val KOTLIN_SOURCES: String = "**/*.kt"
-        private val TEST_SOURCE_SETS: List<String> = listOf("test*/**", "androidTest*/**")
+        private val TEST_SOURCE_SETS: List<String> =
+            listOf("test*/**", "androidTest*/**", "commonTest/**", "androidHostTest/**", "androidDeviceTest/**")
         private const val SQLDELIGHT_DIRECTORY: String = "src/main/sqldelight"
         private const val SNAPSHOT_DIRECTORY: String = "src/main/sqldelight/databases"
         private const val MIGRATION_SOURCES: String = "**/*.sqm"
@@ -154,6 +158,13 @@ class QualityGateConventionPlugin : Plugin<Project> {
         val COMPILE_GATE_TASKS: Set<String> = setOf(
             "compileDebugAndroidTestKotlin",
             "compileReleaseKotlin",
+            "compileAndroidDeviceTest",
+        )
+
+        val KMP_GATE_TASKS: Set<String> = setOf(
+            "compileAndroidMain",
+            "compileKotlinIosSimulatorArm64",
+            "testAndroidHostTest",
         )
 
         // The only check that a `.sq` change shipped its `.sqm`. SQLDelight wires it into `check`

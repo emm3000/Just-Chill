@@ -57,6 +57,10 @@ gradlePlugin {
             id = "justchill.kmp.library"
             implementationClass = "com.emm.buildlogic.KmpLibraryConventionPlugin"
         }
+        register("kmpFeature") {
+            id = "justchill.kmp.feature"
+            implementationClass = "com.emm.buildlogic.KmpFeatureConventionPlugin"
+        }
         register("jvmLibrary") {
             id = "justchill.jvm.library"
             implementationClass = "com.emm.buildlogic.JvmLibraryConventionPlugin"
