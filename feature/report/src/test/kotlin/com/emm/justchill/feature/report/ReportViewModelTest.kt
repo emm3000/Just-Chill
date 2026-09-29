@@ -378,7 +378,7 @@ class ReportViewModelTest {
 
         assertEquals(true, vm.state.value.comparisonDirectionUp)
         assertEquals(false, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
+        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
     }
 
     @Test
@@ -387,7 +387,7 @@ class ReportViewModelTest {
 
         assertEquals(false, vm.state.value.comparisonDirectionUp)
         assertEquals(true, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
+        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
     }
 
     @Test
@@ -396,7 +396,7 @@ class ReportViewModelTest {
 
         assertEquals(false, vm.state.value.comparisonDirectionUp)
         assertEquals(false, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
+        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
     }
 
     @Test
@@ -405,7 +405,7 @@ class ReportViewModelTest {
 
         assertEquals(true, vm.state.value.comparisonDirectionUp)
         assertEquals(true, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
+        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
     }
 
     @Test
