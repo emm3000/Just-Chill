@@ -136,7 +136,7 @@ class ReportViewModel(
                     comparisonDirectionUp = directionUp,
                     comparisonIsPositive = isPositive,
                     comparisonAmountFormatted = comparisonAmountFormatted,
-                    comparisonPercent = comparison?.deltaPercent ?: 0,
+                    comparisonPercent = comparison?.let { abs(it.deltaPercent) } ?: 0,
                     shares = shares,
                     isEmpty = amounts.isEmpty(),
                     isMonthEmpty = isMonthEmpty,

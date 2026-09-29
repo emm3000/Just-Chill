@@ -37,7 +37,7 @@ internal object ReportShareFormatter {
         val vsText = state.comparisonText
         if (deltaAmt != null && vsText != null) {
             val sign = if (state.comparisonDirectionUp == true) "↑" else "↓"
-            appendLine("$sign $deltaAmt · $deltaPct% $vsText")
+            appendLine("$sign $deltaAmt · ${comparisonPercentLabel(deltaPct)} $vsText")
         }
         appendLine("Por categoría:")
         state.shares.forEach { share ->

@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.atoms.Pill
 import com.emm.justchill.core.ui.atoms.PillTone
@@ -20,6 +22,7 @@ import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
+import com.emm.justchill.feature.report.comparisonPercentLabel
 
 @Composable
 fun ComparisonPill(
@@ -31,14 +34,20 @@ fun ComparisonPill(
 ) {
     val tone: PillTone = comparisonPillTone(isPositive)
     val icon = if (directionUp) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
-    val text = "$absoluteDeltaFormatted · $percent%"
+    val text = "$absoluteDeltaFormatted · ${comparisonPercentLabel(percent)}"
+    val description: String = comparisonPillDescription(absoluteDeltaFormatted, percent, directionUp)
 
     Pill(
         text = text,
         tone = tone,
         leadingIcon = icon,
-        modifier = modifier,
+        modifier = modifier.clearAndSetSemantics { contentDescription = description },
     )
+}
+
+internal fun comparisonPillDescription(absoluteDeltaFormatted: String, percent: Int, directionUp: Boolean): String {
+    val verb: String = if (directionUp) "Subió" else "Bajó"
+    return "$verb $absoluteDeltaFormatted, ${comparisonPercentLabel(percent)}"
 }
 
 @Preview

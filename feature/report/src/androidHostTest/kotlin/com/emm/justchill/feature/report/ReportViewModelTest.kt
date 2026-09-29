@@ -409,6 +409,20 @@ class ReportViewModelTest {
     }
 
     @Test
+    fun `a spending drop reports the percent as a magnitude`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = -66)
+
+        assertEquals(66, vm.state.value.comparisonPercent)
+    }
+
+    @Test
+    fun `an income drop reports the percent as a magnitude`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Income, deltaPercent = -66)
+
+        assertEquals(66, vm.state.value.comparisonPercent)
+    }
+
+    @Test
     fun `comparison data is set when previous month has transactions`() = runTest(testDispatcher) {
         coEvery { getMonthlyAmountByCategory(any(), any()) } returns emptyList()
         coEvery { getMonthlyComparison(any(), any()) } returns MonthlyComparison(
