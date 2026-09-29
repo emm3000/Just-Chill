@@ -45,11 +45,7 @@ data class EditTransactionUiState(
 
     val frequentCategories: List<SelectableCategory> get() = frequentSectionOf(categories, frequentCategoryIds)
 
-    val otherCategories: List<SelectableCategory>
-        get() {
-            val frequent: List<SelectableCategory> = frequentCategories
-            return categories.filterNot { it in frequent }
-        }
+    val otherCategories: List<SelectableCategory> get() = otherSectionOf(categories, frequentCategories)
 
     fun categoriesMatching(query: String): List<SelectableCategory> {
         val needle: String = query.trim()

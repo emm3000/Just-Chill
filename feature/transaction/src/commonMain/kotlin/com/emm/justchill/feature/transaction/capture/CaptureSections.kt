@@ -21,4 +21,9 @@ internal fun frequentSectionOf(
     .takeIf { it.size >= MIN_FREQUENT_SECTION_SIZE }
     .orEmpty()
 
+internal fun otherSectionOf(
+    categories: List<SelectableCategory>,
+    frequent: List<SelectableCategory>,
+): List<SelectableCategory> = categories.filterNot { it in frequent }
+
 private const val MIN_FREQUENT_SECTION_SIZE: Int = 2

@@ -1,7 +1,6 @@
 package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.presentation.transaction.Catalog
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -10,39 +9,13 @@ import kotlin.test.assertEquals
 
 class EditTransactionUiStateTest {
 
-    private val market: SelectableCategory = selectableCategory("market", "Supermercado")
-    private val taxi: SelectableCategory = selectableCategory("taxi", "Taxi")
-    private val coffee: SelectableCategory = selectableCategory("coffee", "Café")
-
     @Test
-    fun `the date shortcuts name today, yesterday, the week's monday and the month's first day`() {
-        val state: EditTransactionUiState = stateWithFrequent(emptyList())
-
-        assertEquals(
-            listOf(
-                DateShortcut(DateShortcutKind.Today, LocalDate(2026, Month.AUGUST, 28)),
-                DateShortcut(DateShortcutKind.Yesterday, LocalDate(2026, Month.AUGUST, 27)),
-                DateShortcut(DateShortcutKind.ThisWeek, LocalDate(2026, Month.AUGUST, 24)),
-                DateShortcut(DateShortcutKind.ThisMonth, LocalDate(2026, Month.AUGUST, 1)),
-            ),
-            state.dateShortcuts,
-        )
-    }
-
-    @Test
-    fun `two frequent categories lead in rank order and the rest keep catalog order`() {
+    fun `the shortcuts and the category sections come from the shared rules`() {
         val state: EditTransactionUiState = stateWithFrequent(listOf("coffee", "market"))
 
+        assertEquals(dateShortcutsOf(state.today), state.dateShortcuts)
         assertEquals(listOf(coffee, market), state.frequentCategories)
         assertEquals(listOf(taxi), state.otherCategories)
-    }
-
-    @Test
-    fun `a single frequent category makes no section and every category stays in the rest`() {
-        val state: EditTransactionUiState = stateWithFrequent(listOf("coffee"))
-
-        assertEquals(emptyList<SelectableCategory>(), state.frequentCategories)
-        assertEquals(listOf(market, taxi, coffee), state.otherCategories)
     }
 
     @Test
