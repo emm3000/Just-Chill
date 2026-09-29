@@ -20,8 +20,9 @@ class GateCheckTest {
     fun `every edge ADR 015 and ADR 024 allow passes the boundary check`() {
         val modules: Map<String, String> = mapOf(
             ":androidApp" to module(":shared", ":feature:loan", ":core:ui", ":core:presentation", ":core:domain"),
-            ":shared" to module(":feature:loan", ":core:backup", ":core:presentation", ":core:domain"),
+            ":shared" to module(":feature:loan", ":core:backup", ":core:database", ":core:presentation", ":core:domain"),
             ":core:backup" to module(":core:domain"),
+            ":core:database" to module(":core:domain"),
             ":feature:loan" to module(":core:domain", ":core:presentation", ":core:ui"),
             ":core:ui" to module(":core:domain", ":core:presentation"),
             ":core:presentation" to module(":core:domain"),
