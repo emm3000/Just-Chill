@@ -51,6 +51,18 @@ ios_step() {
 
 ios_step swift-format xcrun swift-format lint --strict -r iosApp
 ios_step xcodebuild xcodebuild -project iosApp/JustChill.xcodeproj -scheme JustChill -destination 'generic/platform=iOS Simulator' build
+ios_step token-drift scripts/ios-token-drift
+
+ios_simulator=justchill-ios27
+native_suites() {
+  if ! xcrun simctl list devices booted -j \
+    | jq -e --arg name "$ios_simulator" '[.devices[][] | select(.name == $name)] | length > 0' > /dev/null; then
+    echo "$ios_simulator is not booted; run: xcrun simctl boot $ios_simulator" >&2
+    return 1
+  fi
+  CI=true ./gradlew :core:database:iosSimulatorArm64Test :shared:iosSimulatorArm64Test
+}
+ios_step native-suites native_suites
 duration=$SECONDS
 echo "ios exit code: $ios_code, $(( duration - gradle_duration ))s"
 
