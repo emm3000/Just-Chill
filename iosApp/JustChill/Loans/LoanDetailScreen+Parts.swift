@@ -71,7 +71,7 @@ extension LoanDetailScreen {
                 statRow(label: "Interés", value: summary.interestPercentLabel)
                 statRow(label: "Total a pagar", value: summary.totalDue)
                 statRow(label: "Pagado", value: summary.paidSoFar)
-                if !summary.note.isEmpty {
+                if summary.hasNote {
                     Text(summary.note)
                         .emmTextStyle(EmmType.bodyM)
                         .italic()
@@ -134,7 +134,7 @@ extension LoanDetailScreen {
                 Text(payment.amount)
                     .emmTextStyle(EmmType.amountLead)
                     .foregroundStyle(EmmColors.textPrimary)
-                if !payment.note.isEmpty {
+                if payment.hasNote {
                     Text(payment.note)
                         .emmTextStyle(EmmType.bodyM)
                         .italic()

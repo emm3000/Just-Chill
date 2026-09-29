@@ -90,7 +90,7 @@ private fun LoanPaymentRow(payment: LoanPaymentRowUi, onEditClick: () -> Unit, o
                     style = type.amountLead,
                     color = colors.textPrimary,
                 )
-                if (payment.note.isNotBlank()) {
+                if (payment.hasNote) {
                     Spacer(Modifier.height(spacing.s1))
                     Text(
                         text = payment.note,
