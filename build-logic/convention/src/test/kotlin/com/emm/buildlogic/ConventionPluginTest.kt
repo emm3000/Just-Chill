@@ -284,18 +284,6 @@ class ConventionPluginTest {
     }
 
     @Test
-    fun `jvm library plugin targets java 17 and puts its tests in the quality gate`() {
-        val report: Map<String, String> = fixture.report(listOf("justchill.jvm.library"))
-
-        assertEquals("17", report["javaToolchain"])
-        assertEquals("17", report["jvmTarget"])
-        assertEquals(COROUTINES_OPT_INS, report["optIn"])
-        assertEquals("kotlin-test,kotlinx-coroutines-test,mockk", report["testDependencies"])
-        assertEquals(CHECK_PLUGINS, report["plugins"])
-        assertEquals("test", report["gatedTests"])
-    }
-
-    @Test
     fun `detekt lints every kotlin source under src with one config, no baseline and no type resolution`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.library"),
@@ -326,13 +314,13 @@ class ConventionPluginTest {
     }
 
     @Test
-    fun `detekt adds no per-variant or per-source-set task to a flavored application or a jvm library`() {
+    fun `detekt adds no per-variant or per-source-set task to a flavored application or a kmp library`() {
         val application: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.application"),
             androidConfiguration = FLAVORED_APPLICATION_CONFIGURATION,
         )
-        val library: Map<String, String> = ConventionPluginFixture(temporaryFolder.newFolder("jvm"))
-            .report(listOf("justchill.jvm.library"))
+        val library: Map<String, String> = ConventionPluginFixture(temporaryFolder.newFolder("kmp"))
+            .report(listOf("justchill.kmp.library"))
 
         assertEquals("detekt", application["detektTasks"])
         assertEquals("detekt", library["detektTasks"])
@@ -343,7 +331,7 @@ class ConventionPluginTest {
         val report: Map<String, String> = ConventionPluginFixture(
             projectDirectory = temporaryFolder.root,
             ambientEnvironment = mapOf("CI" to "true"),
-        ).report(listOf("justchill.jvm.library"))
+        ).report(listOf("justchill.android.library"))
 
         assertEquals("false", report["detektAutoCorrect"])
     }

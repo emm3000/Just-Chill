@@ -20,7 +20,6 @@ dependencies {
     implementation(marker(libs.plugins.kotlin.compose))
     implementation(marker(libs.plugins.kotlin.serialization))
     implementation(marker(libs.plugins.sqldelight))
-    implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:${libs.versions.kotlinVersion.get()}")
 
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
@@ -60,10 +59,6 @@ gradlePlugin {
         register("kmpFeature") {
             id = "justchill.kmp.feature"
             implementationClass = "com.emm.buildlogic.KmpFeatureConventionPlugin"
-        }
-        register("jvmLibrary") {
-            id = "justchill.jvm.library"
-            implementationClass = "com.emm.buildlogic.JvmLibraryConventionPlugin"
         }
         register("detekt") {
             id = "justchill.detekt"

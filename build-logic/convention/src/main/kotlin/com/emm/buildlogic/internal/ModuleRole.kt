@@ -26,7 +26,7 @@ internal enum class ModuleRole {
     fun rule(): String = when (this) {
         ROOT -> "the root project depends on no module"
         APP -> "the app composes every module"
-        CORE_DOMAIN -> "$CORE_DOMAIN_PATH depends on no other module and stays JVM-only"
+        CORE_DOMAIN -> "$CORE_DOMAIN_PATH depends on no other module and keeps its production sources in commonMain"
         CORE_PRESENTATION -> "$CORE_PRESENTATION_PATH depends on $CORE_DOMAIN_PATH only"
         CORE_UI -> "$CORE_UI_PATH depends on $CORE_DOMAIN_PATH and $CORE_PRESENTATION_PATH only"
         CORE -> "a core module depends on $CORE_DOMAIN_PATH only"
