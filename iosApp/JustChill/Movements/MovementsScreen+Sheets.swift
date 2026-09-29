@@ -1,0 +1,463 @@
+@preconcurrency import JustChillKit
+import SwiftUI
+
+extension MovementsScreen {
+    struct SheetTitleBar: View {
+        let title: String
+        let onClose: () -> Void
+
+        var body: some View {
+            HStack {
+                Text(title)
+                    .emmTextStyle(EmmType.titleM)
+                    .foregroundStyle(EmmColors.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                        .foregroundStyle(EmmColors.textSecondary)
+                        .frame(width: EmmSpacing.s8, height: EmmSpacing.s8)
+                        .background(EmmColors.surface1, in: Circle())
+                        .overlay { Circle().stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+                        .frame(width: EmmSpacing.s12, height: EmmSpacing.s12)
+                }
+                .accessibilityLabel("Cerrar")
+            }
+            .padding(.leading, EmmSpacing.s6)
+            .padding(.trailing, EmmSpacing.s4)
+            .padding(.top, EmmSpacing.s4)
+            .padding(.bottom, EmmSpacing.s2)
+        }
+    }
+
+    struct FilterSheet: View {
+        let state: SeeTransactionsUiState
+        let send: Send
+        @State private var segment: CategoryType
+        @State private var search: String = ""
+
+        init(state: SeeTransactionsUiState, send: @escaping Send) {
+            self.state = state
+            self.send = send
+            let activeType: CategoryType? = state.sheetItems.first { $0.id == state.activeCategory?.id }?.type
+            _segment = State(initialValue: activeType ?? CategoryType.spend)
+        }
+
+        var body: some View {
+            VStack(spacing: EmmSpacing.s0) {
+                SheetTitleBar(title: "Filtrar movimientos", onClose: dismiss)
+                searchField
+                amountSection
+                segmented
+                ScrollView {
+                    LazyVStack(spacing: EmmSpacing.s0) {
+                        ForEach(visibleItems, id: \.id) { item in
+                            CategoryRow(item: item) {
+                                send(SeeTransactionsIntentOnCategorySelected(categoryId: item.id))
+                                dismiss()
+                            }
+                        }
+                    }
+                }
+                if state.isCategoryOrAmountFilterActive {
+                    Button {
+                        send(SeeTransactionsIntentOnClearCategoryFilter.shared)
+                        dismiss()
+                    } label: {
+                        HStack(spacing: EmmSpacing.s2) {
+                            Image(systemName: "xmark")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                            Text("Limpiar filtro")
+                                .emmTextStyle(EmmType.titleM)
+                        }
+                        .foregroundStyle(EmmColors.textPrimary)
+                        .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
+                        .overlay { EmmRadii.rL.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+                    }
+                    .padding(.horizontal, EmmSpacing.s4)
+                    .padding(.top, EmmSpacing.s3)
+                    .padding(.bottom, EmmSpacing.s4)
+                }
+            }
+            .background(EmmColors.bg)
+            .presentationBackground(EmmColors.bg)
+            .presentationDetents([.large])
+            .sheet(isPresented: isAmountSheetPresented) {
+                AmountSheet(state: state, send: send)
+            }
+        }
+
+        private var visibleItems: [CategorySheetItem] {
+            let needle: String = normalized(search)
+            return state.sheetItems.filter { item in
+                item.type == segment && (needle.isEmpty || normalized(item.name).contains(needle))
+            }
+        }
+
+        private func normalized(_ text: String) -> String {
+            SpanishSearchKt.stripSpanishAccents(text.trimmingCharacters(in: .whitespaces).lowercased())
+        }
+
+        private func dismiss() {
+            send(SeeTransactionsIntentScreenChromeIntentOnFilterSheetDismissed.shared)
+        }
+
+        private var isAmountSheetPresented: Binding<Bool> {
+            Binding(
+                get: { state.amountSheetTarget != nil },
+                set: { isPresented in
+                    if !isPresented { send(SeeTransactionsIntentAmountFilterIntentOnAmountSheetDismissed.shared) }
+                }
+            )
+        }
+
+        private var searchField: some View {
+            HStack(spacing: EmmSpacing.s3) {
+                Image(systemName: "magnifyingglass")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: EmmSpacing.s4, height: EmmSpacing.s4)
+                    .foregroundStyle(EmmColors.textTertiary)
+                    .accessibilityHidden(true)
+                TextField(
+                    "",
+                    text: $search,
+                    prompt: Text("Buscar entre \(state.sheetItems.count) categorías")
+                        .foregroundStyle(EmmColors.textTertiary)
+                )
+                .emmTextStyle(EmmType.bodyM)
+                .foregroundStyle(EmmColors.textPrimary)
+                .tint(EmmColors.borderFocus)
+                .autocorrectionDisabled()
+            }
+            .padding(EmmSpacing.s3)
+            .background(EmmColors.surface1, in: EmmRadii.rM)
+            .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+            .padding(.horizontal, EmmSpacing.s5)
+            .padding(.bottom, EmmSpacing.s3)
+        }
+
+        private var amountSection: some View {
+            VStack(alignment: .leading, spacing: EmmSpacing.s3) {
+                Text("MONTO")
+                    .emmTextStyle(EmmType.eyebrow)
+                    .foregroundStyle(EmmColors.textTertiary)
+                AmountBoundRow(label: "Mínimo", amount: state.minAmount, target: AmountRangeTarget.min, send: send)
+                AmountBoundRow(label: "Máximo", amount: state.maxAmount, target: AmountRangeTarget.max, send: send)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, EmmSpacing.s5)
+            .padding(.vertical, EmmSpacing.s2)
+        }
+
+        private var segmented: some View {
+            HStack(spacing: EmmSpacing.s0) {
+                segmentCell(label: "Ingresos · \(state.incomeCount)", type: CategoryType.income)
+                segmentCell(label: "Gastos · \(state.spendCount)", type: CategoryType.spend)
+            }
+            .padding(EmmSpacing.s1)
+            .frame(height: EmmSpacing.s12)
+            .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+            .padding(.horizontal, EmmSpacing.s5)
+            .padding(.vertical, EmmSpacing.s1)
+            .padding(.bottom, EmmSpacing.s2)
+        }
+
+        private func segmentCell(label: String, type: CategoryType) -> some View {
+            let isSelected: Bool = segment == type
+            return Button {
+                segment = type
+            } label: {
+                Text(label)
+                    .emmTextStyle(EmmType.labelL)
+                    .foregroundStyle(isSelected ? EmmColors.textPrimary : EmmColors.textSecondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(isSelected ? EmmColors.surface2 : Color.clear, in: EmmRadii.rS)
+            }
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+        }
+    }
+
+    struct AmountBoundRow: View {
+        let label: String
+        let amount: Any?
+        let target: AmountRangeTarget
+        let send: Send
+
+        var body: some View {
+            HStack(spacing: EmmSpacing.s0) {
+                Button {
+                    send(SeeTransactionsIntentAmountFilterIntentOnAmountSheetRequested(target: target))
+                } label: {
+                    HStack {
+                        Text(label)
+                            .emmTextStyle(EmmType.bodyM)
+                            .foregroundStyle(EmmColors.textSecondary)
+                        Spacer()
+                        Text(MovementsScreen.boundText(amount) ?? "Sin límite")
+                            .emmTextStyle(EmmType.amountS)
+                            .foregroundStyle(EmmColors.textPrimary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                if amount != nil {
+                    Button {
+                        send(SeeTransactionsIntentAmountFilterIntentOnAmountBoundCleared(target: target))
+                    } label: {
+                        Image(systemName: "xmark")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                            .foregroundStyle(EmmColors.textTertiary)
+                            .frame(width: EmmSpacing.s12, height: EmmSpacing.s12)
+                    }
+                    .accessibilityLabel("Quitar " + label)
+                }
+            }
+            .padding(.leading, EmmSpacing.s4)
+            .padding(.trailing, amount == nil ? EmmSpacing.s4 : EmmSpacing.s0)
+            .frame(height: EmmSpacing.s12)
+            .background(EmmColors.surface1, in: EmmRadii.rM)
+            .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+        }
+    }
+
+    struct CategoryRow: View {
+        let item: CategorySheetItem
+        let onSelect: () -> Void
+
+        var body: some View {
+            Button(action: onSelect) {
+                HStack(spacing: EmmSpacing.s4) {
+                    Image(systemName: EmmCategory.resolvedSymbol(item.iconId))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                        .foregroundStyle(EmmColors.textSecondary)
+                        .frame(width: EmmSpacing.s6, height: EmmSpacing.s6)
+                        .overlay { EmmRadii.rXS.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+                        .accessibilityHidden(true)
+                    Text(item.name)
+                        .emmTextStyle(EmmType.titleM)
+                        .foregroundStyle(EmmColors.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if item.isActive {
+                        Image(systemName: "checkmark")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                            .foregroundStyle(EmmColors.textPrimary)
+                            .frame(width: EmmSpacing.s6, height: EmmSpacing.s6)
+                            .background(EmmColors.surface3, in: Circle())
+                    }
+                }
+                .padding(.horizontal, EmmSpacing.s6)
+                .padding(.vertical, EmmSpacing.s3)
+                .background(item.isActive ? EmmColors.surface1 : Color.clear)
+            }
+            .accessibilityAddTraits(item.isActive ? .isSelected : [])
+        }
+    }
+
+    struct AmountSheet: View {
+        let state: SeeTransactionsUiState
+        let send: Send
+        @State private var digits: String
+
+        init(state: SeeTransactionsUiState, send: @escaping Send) {
+            self.state = state
+            self.send = send
+            let current: Any? = state.amountSheetTarget == AmountRangeTarget.min ? state.minAmount : state.maxAmount
+            let seed: String =
+                MovementsScreen.cents(of: current).map { CentsFormatterKt.moneyCentsString(money: $0) } ?? ""
+            _digits = State(initialValue: CentsFormatterKt.sanitizeCentsInput(raw: seed))
+        }
+
+        var body: some View {
+            VStack(spacing: EmmSpacing.s4) {
+                SheetTitleBar(title: title, onClose: dismiss)
+                HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
+                    Text("S/")
+                        .emmTextStyle(EmmType.amountLead)
+                        .foregroundStyle(EmmColors.textPrimary)
+                    Text(digits.isEmpty ? "0.00" : formattedDigits)
+                        .emmTextStyle(EmmType.amountL)
+                        .foregroundStyle(EmmColors.textPrimary)
+                }
+                .accessibilityElement(children: .combine)
+                Numpad(digits: $digits)
+                    .padding(.horizontal, EmmSpacing.s4)
+                Button {
+                    send(SeeTransactionsIntentAmountFilterIntentOnAmountConfirmed(digits: digits))
+                    dismiss()
+                } label: {
+                    Text("Listo · S/ " + formattedDigits)
+                        .emmTextStyle(EmmType.titleM)
+                        .foregroundStyle(isConfirmEnabled ? EmmColors.bg : EmmColors.textTertiary)
+                        .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
+                        .background(isConfirmEnabled ? EmmColors.textPrimary : EmmColors.surface1, in: EmmRadii.rL)
+                }
+                .disabled(!isConfirmEnabled)
+                .padding(.horizontal, EmmSpacing.s4)
+                .padding(.bottom, EmmSpacing.s4)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(EmmColors.bg)
+            .presentationBackground(EmmColors.bg)
+            .presentationDetents([.large])
+        }
+
+        private var title: String {
+            state.amountSheetTarget == AmountRangeTarget.min ? "Monto mínimo" : "Monto máximo"
+        }
+
+        private var formattedDigits: String {
+            CentsFormatterKt.formatCentsForDisplay(digits: digits)
+        }
+
+        private var isConfirmEnabled: Bool {
+            CentsFormatterKt.isSavableAmount(digits)
+        }
+
+        private func dismiss() {
+            send(SeeTransactionsIntentAmountFilterIntentOnAmountSheetDismissed.shared)
+        }
+    }
+
+    struct Numpad: View {
+        @Binding var digits: String
+
+        private let keys: [[String]] = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], ["00", "0", "delete"]]
+
+        var body: some View {
+            VStack(spacing: EmmSpacing.s2) {
+                ForEach(keys, id: \.self) { row in
+                    HStack(spacing: EmmSpacing.s2) {
+                        ForEach(row, id: \.self) { key in
+                            Button {
+                                press(key)
+                            } label: {
+                                glyph(key)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        @ViewBuilder
+        private func glyph(_ key: String) -> some View {
+            let isEditingKey: Bool = key == "00" || key == "delete"
+            Group {
+                if key == "delete" {
+                    Image(systemName: "delete.left")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: EmmSpacing.s5, height: EmmSpacing.s5)
+                        .foregroundStyle(EmmColors.textSecondary)
+                        .accessibilityLabel("Borrar")
+                } else {
+                    Text(key)
+                        .emmTextStyle(EmmType.amountLead)
+                        .foregroundStyle(EmmColors.textPrimary)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
+            .background(isEditingKey ? EmmColors.surface1 : Color.clear, in: EmmRadii.rM)
+            .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+        }
+
+        private func press(_ key: String) {
+            let limit: Int = Int(CentsFormatterKt.MAX_AMOUNT_DIGITS)
+            switch key {
+            case "delete": digits = String(digits.dropLast())
+            default: digits = String((digits + key).prefix(limit))
+            }
+        }
+    }
+
+    struct MonthPickerSheet: View {
+        let current: YearMonth
+        let send: Send
+        @State private var displayYear: Int32
+
+        init(current: YearMonth, send: @escaping Send) {
+            self.current = current
+            self.send = send
+            _displayYear = State(initialValue: current.year)
+        }
+
+        var body: some View {
+            VStack(spacing: EmmSpacing.s2) {
+                SheetTitleBar(title: "Selecciona mes", onClose: dismiss)
+                HStack {
+                    chevron(symbol: "chevron.left", label: "Año anterior", step: -1)
+                    Spacer()
+                    Text(String(displayYear))
+                        .emmTextStyle(EmmType.labelL)
+                        .foregroundStyle(EmmColors.textPrimary)
+                    Spacer()
+                    chevron(symbol: "chevron.right", label: "Año siguiente", step: 1)
+                }
+                .padding(.horizontal, EmmSpacing.s6)
+                LazyVGrid(columns: columns, spacing: EmmSpacing.s2) {
+                    ForEach(Kotlinx_datetimeMonth.allCases, id: \.self) { month in
+                        monthCell(month)
+                    }
+                }
+                .padding(.horizontal, EmmSpacing.s4)
+                .padding(.bottom, EmmSpacing.s4)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .background(EmmColors.bg)
+            .presentationBackground(EmmColors.bg)
+            .presentationDetents([.medium])
+        }
+
+        private var columns: [GridItem] {
+            Array(repeating: GridItem(.flexible(), spacing: EmmSpacing.s2), count: 3)
+        }
+
+        private func dismiss() {
+            send(SeeTransactionsIntentScreenChromeIntentOnMonthPickerDismissed.shared)
+        }
+
+        private func chevron(symbol: String, label: String, step: Int32) -> some View {
+            Button {
+                displayYear += step
+            } label: {
+                Image(systemName: symbol)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: EmmSpacing.s4, height: EmmSpacing.s4)
+                    .foregroundStyle(EmmColors.textSecondary)
+                    .frame(width: EmmSpacing.s12, height: EmmSpacing.s12)
+            }
+            .accessibilityLabel(label)
+        }
+
+        private func monthCell(_ month: Kotlinx_datetimeMonth) -> some View {
+            let target = YearMonth(year: displayYear, month: month)
+            let isActive: Bool = month == current.month && displayYear == current.year
+            return Button {
+                send(SeeTransactionsIntentOnMonthSelected(month: target))
+                dismiss()
+            } label: {
+                Text(target.monthAbbrevLabel())
+                    .emmTextStyle(EmmType.labelL)
+                    .foregroundStyle(isActive ? EmmColors.textPrimary : EmmColors.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12)
+                    .overlay {
+                        EmmRadii.rM.stroke(
+                            isActive ? EmmColors.borderFocus : EmmColors.border, lineWidth: EmmSpacing.hairline)
+                    }
+            }
+            .accessibilityAddTraits(isActive ? .isSelected : [])
+        }
+    }
+}
