@@ -30,7 +30,7 @@ final class MviStore<State: AnyObject, Intent: AnyObject, Effect: AnyObject> {
         }
     }
 
-    deinit {
+    isolated deinit {
         handle.clear()
     }
 }

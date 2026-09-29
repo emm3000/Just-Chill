@@ -25,6 +25,11 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 - The dispatch boots each peer's device and names it: `xcrun simctl boot <device>`. Every later call names that device, never `booted`, which is ambiguous with two booted.
 - Smoke on `<device>`: `xcrun simctl install <device> <DerivedData>/Build/Products/Debug-iphonesimulator/JustChill.app`, then `xcrun simctl launch --console-pty <device> com.emm.justchill.ios`, then `xcrun simctl io <device> screenshot <file>.png`. `xcodebuild ... -showBuildSettings | rg BUILT_PRODUCTS_DIR` prints the directory. Run install and launch in sequence, never backgrounded together, or the shot lands on the home screen. A shot right after a cold boot can come out black; relaunch and shoot again.
 
+## Tests
+
+- `xcodebuild test -project iosApp/JustChill.xcodeproj -scheme JustChill -destination 'platform=iOS Simulator,name=<device>' -collect-test-diagnostics never` runs `JustChillTests`, a hosted Swift Testing target in the synchronized folder `JustChillTests/`. It installs and launches the app on `<device>`, which is why `local-gate` does not run it: the gate never touches a simulator. Without `-collect-test-diagnostics never`, a failing run waits 600 seconds collecting simulator diagnostics before it prints `** TEST FAILED **`.
+- The test target links nothing: `BUNDLE_LOADER = $(TEST_HOST)` resolves the kit's symbols from the app, so a test runs against the app's one Koin graph that `JustChillApp.init` started. Linking the static kit into the bundle too would give it a second copy.
+
 ## Layout
 
 `JustChill/` is a synchronized folder (`PBXFileSystemSynchronizedRootGroup`): adding a Swift file never touches `project.pbxproj`.
@@ -37,7 +42,7 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 ## The store
 
 - `Bridge/MviStore.swift` is the one way a screen drives a ViewModel: `MviStore(resolveAccountsHandle())`, over the handle `:shared` hands out (`shared/CLAUDE.md`, the ViewModel handle). It is `@MainActor @Observable`: `state` is observed, `send(_:)` forwards to `onIntent`, and `onEffect(_:)` sets the one closure every effect goes to, exactly once each. Effects wait in the ViewModel's channel until the first `onEffect` call; a later call swaps the closure and keeps the one collector.
-- The store clears its handle in `deinit`, which cancels `viewModelScope`; SwiftUI never calls `onCleared()`. Whoever holds the store holds the ViewModel.
+- The store clears its handle in an `isolated deinit`, which cancels `viewModelScope` on the main actor wherever the last reference drops; SwiftUI never calls `onCleared()`. Whoever holds the store holds the ViewModel. Swift 6.4 back-deploys `isolated deinit` to iOS 17.0 (`swift_task_deinitOnExecutorMainActorBackDeploy` in the binary), so it needs no iOS 18.4 runtime (#558). `JustChillTests/Bridge/MviStoreTests.swift` proves the clear.
 - One construction pattern: the screen holds `@State private var store: MviStore<...>?` and builds it in `.task` only while it is `nil`. Never build it in `init` or a `@State` initializer: SwiftUI evaluates those again on every parent redraw, and each throwaway store builds and clears a ViewModel.
 - The first store resolved opens and migrates the database synchronously (#548). Never resolve one inside `body`; until the database is warmed off the main thread, the first screen pays that cost on the main thread.
 - A screen never collects a Kotlin flow itself: `rg -n 'for await' iosApp/JustChill --glob '!**/Bridge/**'` prints nothing.
