@@ -2,7 +2,8 @@
 paths:
   - "core/ui/src/main/kotlin/**"
   - "androidApp/src/main/kotlin/**"
-  - "feature/*/src/main/kotlin/**"
+  - "feature/*/src/androidMain/kotlin/**"
+  - "feature/onboarding/src/main/kotlin/**"
 ---
 
 # Shared UI rules

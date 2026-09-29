@@ -16,7 +16,7 @@ You review exactly one pull request of `emm3000/Just-Chill`. The PR number is in
 4. `.claude/rules/ui-components.md` for every screen the diff touches.
 5. Screenshots: `git fetch origin assets/<issue>-visual-check` then `git show origin/assets/<issue>-visual-check:<file>` into the session scratchpad and view them. Every file name must carry the PR head short SHA; a mismatch is a blocking finding. A screen-touching PR without screenshots is a blocking finding.
 6. `gh pr view <n> --json statusCheckRollup`. The peer's `scripts/justchill-ci` posts `local-gate` after running the gate; do not rerun it. A `local-gate` missing or not SUCCESS on `headRefOid` is blocking.
-7. Rebase state: `git fetch origin && git merge-base --is-ancestor origin/trunk <headRefOid>`. This repository only allows rebase merges; a stale base is blocking.
+7. Merge state: `gh pr view <n> --json mergeStateStatus`. `DIRTY` is blocking; any other state, a base behind `origin/trunk` included, is at most minor. The reason lives in `docs/agents/multi-session.md` `## Review cycle`.
 
 ## Review
 

@@ -12,7 +12,7 @@ Review the pending changes (staged + unstaged) against `CLAUDE.md` and `.claude/
    - Any file under `core/domain/` importing Android, SQLDelight, Supabase or Ktor types?
    - Any `*ViewModel.kt` or `*UiState.kt` importing Compose, `BuildConfig`, `R.`, `koin.androidx` or MockK?
    - Any production file outside `:androidApp`'s `core/di/` and `wiring/` naming a `Default*` repository or data source?
-   - Allowed dependencies: `androidApp -> feature:*, core:backup, core:database, core:ui, core:domain`; `feature:* -> core:ui, core:domain` (plus `core:testing` on the test edge); every `core:*` -> `core:domain`.
+   - A new project dependency outside the allowed edges in `.claude/rules/architecture.md` ("Allowed dependencies")?
 
 2. **MVI**
    - New features have `UiState`, `Intent`, `Effect`, and `onIntent(intent)` on an `MviViewModel`?
