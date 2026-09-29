@@ -10,7 +10,7 @@ struct EmmTextStyle: Sendable {
     let isTabular: Bool
 
     fileprivate var font: Font {
-        let base: Font = Font.custom(fontName, size: size, relativeTo: textStyle)
+        let base = Font.custom(fontName, size: size, relativeTo: textStyle)
         return isTabular ? base.monospacedDigit() : base
     }
 

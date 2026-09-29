@@ -16,7 +16,7 @@ enum EmmFonts {
 
     static func logAvailability() {
         for name in all {
-            let isLoaded: Bool = UIFont(name: name, size: EmmType.bodyL.size) != nil
+            let isLoaded = UIFont(name: name, size: EmmType.bodyL.size) != nil
             print("EmmFonts \(name) loaded=\(isLoaded)")
         }
     }

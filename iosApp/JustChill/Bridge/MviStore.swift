@@ -22,7 +22,7 @@ final class MviStore<State: AnyObject, Intent: AnyObject, Effect: AnyObject> {
     }
 
     func onEffect(_ handler: @escaping (Effect) -> Void) {
-        let isCollecting: Bool = effectHandler != nil
+        let isCollecting = effectHandler != nil
         effectHandler = handler
         guard !isCollecting else { return }
         handle.collectEffects { [weak self] effect in
