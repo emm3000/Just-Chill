@@ -14,13 +14,13 @@ import com.emm.justchill.feature.transaction.list.SeeTransactionsUiState
 import com.emm.justchill.feature.transaction.list.SeeTransactionsViewModel
 import org.koin.core.parameter.parametersOf
 
-fun addTransactionViewModel(): MviHandle<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect> =
+fun resolveAddTransactionHandle(): MviHandle<AddTransactionUiState, AddTransactionIntent, AddTransactionEffect> =
     handleOf(AddTransactionViewModel::class)
 
-fun editTransactionViewModel(
+fun resolveEditTransactionHandle(
     transactionId: String,
 ): MviHandle<EditTransactionUiState, EditTransactionIntent, EditTransactionEffect> =
     handleOf(EditTransactionViewModel::class) { parametersOf(transactionId) }
 
-fun seeTransactionsViewModel(): MviHandle<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect> =
+fun resolveSeeTransactionsHandle(): MviHandle<SeeTransactionsUiState, SeeTransactionsIntent, SeeTransactionsEffect> =
     handleOf(SeeTransactionsViewModel::class)

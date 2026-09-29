@@ -10,7 +10,7 @@ The umbrella KMP module (ADR 024 Decision 6) on `justchill.kmp.library` plus SKI
 - `commonMain`, the rest: `BackupOrchestrator`, `DefaultBackupMetadataStore`, `LocalExportHistory`, `BackupDisclosureSignal`, `AppPreferences`, `SupabaseConfig`, `DefaultUniqueIdProvider`, `ioDispatcher`, and `backgroundEvents()` / `resumeEvents()` as `expect`.
 - `androidMain`: the two lifecycle edges over `ProcessLifecycleOwner`.
 - `iosMain`: the lifecycle edges over UIKit's app notifications, `iosPlatformModule`, `NSLogDiagnosticsLogger`, `NoCredentialsGoogleSignInLauncher`, and `initKoin(KitConfig)`, the iOS entry. Preferences sit on `NSUserDefaultsSettings`; the session on supabase-kt's `SettingsSessionManager` over `KeychainSettings`.
-- `iosMain`, `core/viewmodel/`: Swift cannot call Koin's reified `get()`, so every ViewModel has one top-level accessor in its feature's `<Feature>ViewModels.kt` (`accountsViewModel()`, `editTransactionViewModel(transactionId:)`, ...; navigation parameters as `String`, `AddCategoryViewModel`'s type as the `CategoryType` name), and `AppPreferences` has `appPreferences()` in `core/preferences/`. A new ViewModel gets an accessor and a line in `ViewModelAccessorsTest`.
+- `iosMain`, `core/viewmodel/`: Swift cannot call Koin's reified `get()`, so every ViewModel has one top-level `resolve<Name>Handle` function in its feature's `<Feature>ViewModels.kt` (`resolveAccountsHandle()`, `resolveEditTransactionHandle(transactionId:)`, ...; navigation parameters as `String`, `AddCategoryViewModel`'s type as the `CategoryType` name), and `AppPreferences` has `resolveAppPreferences()` in `core/preferences/`. A new ViewModel gets an accessor and a line in `ViewModelAccessorsTest`.
 
 ## What a platform module supplies
 
@@ -30,7 +30,7 @@ Every binding below must come from `androidPlatformModule` or `iosPlatformModule
 
 ## The ViewModel handle
 
-- An accessor returns an `MviHandle<S, I, E>`: `currentState`, `send(intent)`, `collectState` / `collectEffects` taking a closure, and `clear()`. The handle builds its ViewModel through `ViewModelProvider.create` over a `ViewModelStore` it owns; `clear()` clears that store, which cancels `viewModelScope`. SwiftUI never calls `onCleared()`, so the Swift owner calls `clear()` when it goes away (`iosApp/CLAUDE.md`, the store).
+- An accessor returns an `MviHandle<S, I, E>`, whose ViewModel stays `internal` so Swift drives it only through the handle: `currentState`, `send(intent)`, `collectState` / `collectEffects` taking a closure, and `clear()`. The handle builds its ViewModel through `ViewModelProvider.create` over a `ViewModelStore` it owns; `clear()` clears that store, which cancels `viewModelScope`. SwiftUI never calls `onCleared()`, so the Swift owner calls `clear()` when it goes away (`iosApp/CLAUDE.md`, the store).
 - SKIE bridges neither `MviViewModel.state` nor `effect`: both are typed by the class's own type parameters, so the header keeps a raw `id<Kotlinx_coroutines_coreFlow>`, and no concrete ViewModel redeclares them. The handle collects both in Kotlin on `viewModelScope` (`Dispatchers.Main.immediate`) and calls the Swift closure on the main thread; the same `clear()` stops them.
 - Sealed `UiIntent` / `UiEffect` / `UiState` reach Swift as protocols, so a handle reads `MviHandle<AccountsUiState, any AccountsIntent, any AccountsEffect>`.
 

@@ -11,10 +11,10 @@ import com.emm.justchill.feature.category.CategoriesUiState
 import com.emm.justchill.feature.category.CategoriesViewModel
 import org.koin.core.parameter.parametersOf
 
-fun categoriesViewModel(): MviHandle<CategoriesUiState, CategoriesIntent, CategoriesEffect> =
+fun resolveCategoriesHandle(): MviHandle<CategoriesUiState, CategoriesIntent, CategoriesEffect> =
     handleOf(CategoriesViewModel::class)
 
-fun addCategoryViewModel(
+fun resolveAddCategoryHandle(
     initialType: String,
     initialName: String,
 ): MviHandle<AddCategoryUiState, AddCategoryIntent, AddCategoryEffect> =

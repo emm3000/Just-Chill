@@ -5,4 +5,4 @@ import com.emm.justchill.feature.report.ReportIntent
 import com.emm.justchill.feature.report.ReportUiState
 import com.emm.justchill.feature.report.ReportViewModel
 
-fun reportViewModel(): MviHandle<ReportUiState, ReportIntent, ReportEffect> = handleOf(ReportViewModel::class)
+fun resolveReportHandle(): MviHandle<ReportUiState, ReportIntent, ReportEffect> = handleOf(ReportViewModel::class)
