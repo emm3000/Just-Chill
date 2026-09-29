@@ -23,7 +23,20 @@ sealed interface ProfileMessage {
     data object ExportFailed : ProfileMessage
     data object CsvExportFailed : ProfileMessage
     data class ImportDone(val transactions: Int, val recurring: Int, val loans: Int, val loanPayments: Int) :
-        ProfileMessage
+        ProfileMessage {
+
+        val summary: String
+            get() {
+                val clauses: List<String> = buildList {
+                    add(countClause(transactions, "movimiento", "movimientos"))
+                    if (recurring > 0) add(countClause(recurring, "recurrente", "recurrentes"))
+                    if (loans > 0) add(countClause(loans, "préstamo", "préstamos"))
+                    if (loanPayments > 0) add(countClause(loanPayments, "abono", "abonos"))
+                }
+                val participle: String = if (clauses.size == 1 && transactions == 1) "importado" else "importados"
+                return "Listo — ${joinedClauses(clauses)} $participle."
+            }
+    }
     data object ImportFailed : ProfileMessage
     data object OperationInProgress : ProfileMessage
 
@@ -35,3 +48,9 @@ sealed interface ProfileMessage {
     data class BackupNotVerified(val pairsInspected: Int) : Backup
     data object BackupVerifyFailed : Backup
 }
+
+private fun countClause(count: Int, singular: String, plural: String): String =
+    if (count == 1) "1 $singular" else "$count $plural"
+
+private fun joinedClauses(clauses: List<String>): String =
+    if (clauses.size <= 1) clauses.joinToString() else "${clauses.dropLast(1).joinToString(", ")} y ${clauses.last()}"

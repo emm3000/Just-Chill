@@ -82,4 +82,17 @@ data class ProfileUiState(
     val session: SessionUiState = SessionUiState.Initializing,
     val backupRow: BackupRowUi = BackupRowUi.NeedsAccount,
     val isCloudBackupAvailable: Boolean = false,
-) : UiState
+) : UiState {
+
+    val lastExportLabel: String
+        get() = when (val export: LastExportUi = lastExport) {
+            LastExportUi.Never -> "Nunca"
+            is LastExportUi.DaysAgo -> "Último: ${exportDaysAgoLabel(export.days)}"
+        }
+}
+
+private fun exportDaysAgoLabel(days: Int): String = when (days) {
+    0 -> "hoy"
+    1 -> "ayer"
+    else -> "hace $days días"
+}

@@ -86,4 +86,16 @@ class ImportDoneCopyTest {
             buildImportDoneMessage(transactions = 2, recurring = 1, loans = 1, loanPayments = 1),
         )
     }
+
+    @Test
+    fun `the ImportDone message carries its own summary for a screen that cannot build it`() {
+        assertEquals(
+            "Listo — 1 movimiento importado.",
+            ProfileMessage.ImportDone(transactions = 1, recurring = 0, loans = 0, loanPayments = 0).summary,
+        )
+        assertEquals(
+            "Listo — 2 movimientos, 1 recurrente, 3 préstamos y 4 abonos importados.",
+            ProfileMessage.ImportDone(transactions = 2, recurring = 1, loans = 3, loanPayments = 4).summary,
+        )
+    }
 }
