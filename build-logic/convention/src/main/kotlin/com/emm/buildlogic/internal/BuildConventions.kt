@@ -9,6 +9,7 @@ internal object BuildConventions {
     const val JVM_TOOLCHAIN: Int = 17
     const val JVM_TARGET: String = "17"
     const val NAMESPACE_PREFIX: String = "com.emm.justchill"
+    const val IOS_SIMULATOR: String = "justchill-ios27"
 
     val JAVA_VERSION: JavaVersion = JavaVersion.VERSION_17
 

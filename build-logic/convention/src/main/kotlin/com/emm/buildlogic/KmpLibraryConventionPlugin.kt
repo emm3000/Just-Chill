@@ -13,8 +13,10 @@ import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.kotlin
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
 
 class KmpLibraryConventionPlugin : Plugin<Project> {
 
@@ -30,6 +32,10 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
         configureAndroidTarget(multiplatform)
         multiplatform.iosArm64()
         multiplatform.iosSimulatorArm64()
+        tasks.withType<KotlinNativeSimulatorTest>().configureEach {
+            device.set(BuildConventions.IOS_SIMULATOR)
+            standalone.set(false)
+        }
 
         dependencies {
             add("commonTestImplementation", kotlin("test"))

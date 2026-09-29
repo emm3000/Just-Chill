@@ -33,11 +33,16 @@ fi
 SECONDS=0
 code=0
 CI=true ./gradlew qualityGate assembleDevDebug || code=$?
-duration=$SECONDS
+gradle_duration=$SECONDS
 echo "gate exit code: $code"
 
+ios_code=0
+xcodebuild -project iosApp/JustChill.xcodeproj -scheme JustChill -destination 'generic/platform=iOS Simulator' build || ios_code=$?
+duration=$SECONDS
+echo "ios exit code: $ios_code, $(( duration - gradle_duration ))s"
+
 state=success
-if (( code != 0 )); then
+if (( code != 0 || ios_code != 0 )); then
   state=failure
 fi
 
@@ -53,4 +58,7 @@ else
   gh api -X POST "repos/$slug/statuses/$sha" --input - --jq '"posted \(.context) \(.state) on \(.url)"' <<< "$payload"
 fi
 
+if (( code == 0 )); then
+  code=$ios_code
+fi
 exit $code
