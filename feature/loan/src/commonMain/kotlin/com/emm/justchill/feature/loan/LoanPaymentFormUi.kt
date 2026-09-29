@@ -11,8 +11,6 @@ import kotlinx.datetime.LocalDateTime
 data class LoanPaymentFormUi(
     val loanId: String,
     val today: LocalDate,
-    // The most this abono may be: what the loan still owes, with the edited abono's own old amount
-    // added back in. Filled only by LoanDetailViewModel.withCap.
     val remainingCents: Long,
     val amountDigits: String = "",
     val method: PaymentMethod = PaymentMethod.Cash,
@@ -20,23 +18,22 @@ data class LoanPaymentFormUi(
     val note: String = "",
     val isSaving: Boolean = false,
     val editingPaymentId: String? = null,
-    // Captured once when the edit opens, so confirmPayment never has to fall back to "now" and
-    // silently rewrite a real historical time. Null when creating.
     val originalPaidAt: LocalDateTime? = null,
-    // remainingCents formatted, done where the Money values live so no caller has to do money
-    // arithmetic on a display string. Null until the loan has loaded.
     val maxAmountLabel: String? = null,
     val openSheet: PaymentSheet? = null,
 ) {
-    val dateLabel: String get() = relativeDayLabel(date ?: today, today)
+    val pickerDate: LocalDate get() = date ?: today
+
+    val methodOptions: List<PaymentMethodOptionUi>
+        get() = PaymentMethod.entries.map { PaymentMethodOptionUi(it, it.label, it == method) }
+
+    val dateLabel: String get() = relativeDayLabel(pickerDate, today)
 
     val isSaveEnabled: Boolean get() = amountDigits.isSavableAmount() && !exceedsRemaining
 
     val amountError: String?
         get() = if (exceedsRemaining) ValidationCode.PaymentExceedsBalance.toUserMessage() else null
 
-    // Warns early about the balance RegisterLoanPaymentUseCase enforces, so the CTA stops inviting
-    // a round trip it knows ends in a rejection. The use case stays the authority.
     private val exceedsRemaining: Boolean get() = amountDigits.isSavableAmount() && amountCents > remainingCents
 
     private val amountCents: Long get() = amountDigits.toLongOrNull() ?: 0L
