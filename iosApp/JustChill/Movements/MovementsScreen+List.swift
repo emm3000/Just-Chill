@@ -18,8 +18,6 @@ extension MovementsScreen {
                 NoResults(state: state, send: send)
             case .content:
                 content
-            default:
-                EmptyMonth()
             }
         }
 
@@ -78,13 +76,13 @@ extension MovementsScreen {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: EmmSpacing.s3) {
                     tile
-                    texts.frame(maxWidth: .infinity, alignment: .leading)
+                    texts(subtitleLines: 1).frame(maxWidth: .infinity, alignment: .leading)
                     amount
                 }
                 VStack(alignment: .trailing, spacing: EmmSpacing.s1) {
                     HStack(spacing: EmmSpacing.s3) {
                         tile
-                        texts.frame(maxWidth: .infinity, alignment: .leading)
+                        texts(subtitleLines: 2).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     amount
                 }
@@ -105,11 +103,14 @@ extension MovementsScreen {
                 .accessibilityHidden(true)
         }
 
-        private var texts: some View {
+        private func texts(subtitleLines: Int) -> some View {
             VStack(alignment: .leading, spacing: EmmSpacing.s0) {
-                line(text: transaction.title, style: EmmType.labelL, color: EmmColors.textPrimary, dotsHere: true)
                 line(
-                    text: transaction.subtitle, style: EmmType.caption, color: EmmColors.textTertiary, dotsHere: false)
+                    text: transaction.title, style: EmmType.labelL, color: EmmColors.textPrimary, dotsHere: true,
+                    lines: 1)
+                line(
+                    text: transaction.subtitle, style: EmmType.caption, color: EmmColors.textTertiary, dotsHere: false,
+                    lines: subtitleLines)
             }
         }
 
@@ -122,7 +123,7 @@ extension MovementsScreen {
                 .fixedSize(horizontal: true, vertical: false)
         }
 
-        private func line(text: String, style: EmmTextStyle, color: Color, dotsHere: Bool) -> some View {
+        private func line(text: String, style: EmmTextStyle, color: Color, dotsHere: Bool, lines: Int) -> some View {
             HStack(spacing: EmmSpacing.s2) {
                 Circle()
                     .fill(
@@ -133,7 +134,7 @@ extension MovementsScreen {
                 Text(text)
                     .emmTextStyle(style)
                     .foregroundStyle(color)
-                    .lineLimit(1)
+                    .lineLimit(lines)
             }
         }
     }
