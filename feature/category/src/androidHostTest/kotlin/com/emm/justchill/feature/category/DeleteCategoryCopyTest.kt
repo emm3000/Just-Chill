@@ -26,8 +26,6 @@ class DeleteCategoryCopyTest {
 
     @Test
     fun `says nothing is affected when the category is unused`() {
-        // Without this branch the copy warned about consequences that did not exist, which is
-        // how a harmless cleanup ends up feeling as risky as wiping the history.
         assertEquals(
             "Ningún movimiento la usa, así que no cambia nada de tu historial.",
             pendingDeleteMessage(affectedCount = 0),

@@ -131,11 +131,16 @@ extension CategoriesScreen {
         }
 
         private var label: some View {
-            HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
-                Circle()
-                    .fill(color)
-                    .frame(width: EmmSpacing.s2, height: EmmSpacing.s2)
-                    .alignmentGuide(.firstTextBaseline) { dimensions in dimensions[.bottom] }
+            HStack(alignment: .top, spacing: EmmSpacing.s2) {
+                Text(String(name.prefix(1)))
+                    .emmTextStyle(EmmType.titleM)
+                    .hidden()
+                    .frame(width: EmmSpacing.s2)
+                    .overlay {
+                        Circle()
+                            .fill(color)
+                            .frame(width: EmmSpacing.s2, height: EmmSpacing.s2)
+                    }
                     .accessibilityHidden(true)
                 Text(name)
                     .emmTextStyle(EmmType.titleM)
