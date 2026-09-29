@@ -21,9 +21,6 @@ val transactionModule: Module = module {
             accountRepository = get(),
             categoryRepository = get(),
             getTopUsedCategoryIds = get(),
-            // The parametrised DSL builds the constructor by hand, so this is passed like any
-            // other dependency. It carries no default, so omitting it is a compile error rather
-            // than a silent read of the device.
             todayFlow = get(),
         )
     }

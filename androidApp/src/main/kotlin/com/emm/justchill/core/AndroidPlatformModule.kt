@@ -28,9 +28,8 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-// Stable prefs file name, independent of OS build. Build.ID changes on every Android OS update
-// which caused the app to silently open a new empty file after an update, resetting onboarding
-// state and sync cursors. A one-time migration copies existing data from the old Build.ID file.
+// A fixed name, never Build.ID: Build.ID changes on every OS update, and a new name opens an
+// empty file that drops every stored preference.
 private const val PREFS_NAME = "justchill_prefs"
 internal const val AUTH_PREFS_NAME = "justchill_auth"
 private const val PREFS_MIGRATED_FLAG = "_migrated_from_build_id"
@@ -53,8 +52,6 @@ val androidPlatformModule = module {
         )
     }
 
-    // Bound by concrete type as well, because EmmApp sweeps the legacy cleartext key at launch and
-    // sweepLegacySession() is not part of the SessionManager port.
     single<SessionManager> { get<KeystoreSessionManager>() }
     single { CurrentActivityHolder() }
 
@@ -62,13 +59,8 @@ val androidPlatformModule = module {
 
     single(named("appVersion")) { BuildConfig.VERSION_NAME }
 
-    // Bound by TYPE, not a qualifier: the consumer is :feature:profile, a different Gradle module
-    // sharing CommitHash. Deliberately not in testPlatformModule: its only consumer is a Compose
-    // host AppGraphKoinTest never builds; AndroidPlatformModuleTest guards this binding instead.
     single { CommitHash(BuildInfo.commitHash) }
 
-    // Google Sign-In web client id, consumed by AuthViewModel. Empty when supabase.properties is
-    // absent; the Google button stays hidden so submitWithGoogle never reaches the launcher.
     single(named("googleServerClientId")) { BuildConfig.GOOGLE_WEB_CLIENT_ID }
 
     single<SupabaseConfig> {
@@ -80,8 +72,6 @@ val androidPlatformModule = module {
     factoryOf(::GoogleCredentialClient)
     factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }
 
-    // ShortcutManagerCompat needs an Android Context, so the publisher built from
-    // :feature:transaction's GetSpendShortcutCombos lives here rather than beside it.
     single { ShortcutPublisher(androidContext(), get()) }
 }
 

@@ -19,8 +19,6 @@ class AndroidPlatformModuleTest {
 
     @Test
     fun `androidPlatformModule binds the commit hash the nav host resolves at launch`() {
-        // Koin's `single { }` bindings resolve lazily, so asking only for CommitHash never touches
-        // the Context-dependent ones (SQLDelight driver, SharedPreferencesSettings, sign-in launcher).
         val koin = koinApplication { modules(androidPlatformModule) }.koin
 
         try {
@@ -36,8 +34,6 @@ class AndroidPlatformModuleTest {
 
     @Test
     fun `androidPlatformModule keeps the supabase session behind the Keystore`() {
-        // AppGraphKoinTest resolves a test double for SessionManager, so this binding is unguarded
-        // everywhere else: swapping it back reads as a green build and a plaintext refresh token.
         val koin = koinApplication {
             androidContext(mockk<Context>(relaxed = true))
             modules(androidPlatformModule)
@@ -48,9 +44,6 @@ class AndroidPlatformModuleTest {
                 koin.get<SessionManager>(),
                 "androidPlatformModule no longer stores the Supabase session encrypted.",
             )
-            // One instance, not two of the same class: KeystoreSessionManager serialises the launch
-            // sweep against the client's own first load on a monitor it owns, and a second
-            // construction behind the port would give the two paths a monitor each.
             assertSame(
                 koin.get<KeystoreSessionManager>(),
                 koin.get<SessionManager>(),
@@ -63,17 +56,12 @@ class AndroidPlatformModuleTest {
 
     @Test
     fun `androidPlatformModule binds the shortcut publisher`() {
-        // GetSpendShortcutCombos is bound in transactionWiring, unreachable from this
-        // module alone — a mock stands in so this test proves the binding, not the whole app graph
-        // AppGraphKoinTest already owns (and cannot reach this Context-dependent single, either).
         val koin = koinApplication {
             androidContext(mockk<Context>(relaxed = true))
             modules(androidPlatformModule, module { single { mockk<GetSpendShortcutCombos>() } })
         }.koin
 
         try {
-            // No assertion body on purpose: a missing or unresolvable definition throws out of
-            // `get`, which is the failure this test exists to produce.
             koin.get<ShortcutPublisher>()
         } finally {
             koin.close()
