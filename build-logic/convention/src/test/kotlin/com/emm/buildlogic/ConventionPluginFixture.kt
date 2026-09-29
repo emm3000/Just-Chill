@@ -229,7 +229,7 @@ internal class ConventionPluginFixture(
                     sqldelight?.databases?.forEach { database ->
                         println("REPORT database=" + listOf(database.name, database.packageName.get(), database.schemaOutputDirectory.get().asFile.relativeTo(project.projectDir).invariantSeparatorsPath, database.verifyMigrations.get()).joinToString(","))
                     }
-                    val stage = project.tasks.findByName("stageSqlDelightSnapshots") as? org.gradle.api.tasks.Sync
+                    val stage: org.gradle.api.tasks.Sync? = project.tasks.findByName("stageSqlDelightSnapshots") as? org.gradle.api.tasks.Sync
                     if (stage != null) {
                         val staged: File = stage.destinationDir
                         println("REPORT stagedSources=" + stage.source.files.map { it.relativeTo(project.projectDir).invariantSeparatorsPath }.sorted().joinToString(","))
