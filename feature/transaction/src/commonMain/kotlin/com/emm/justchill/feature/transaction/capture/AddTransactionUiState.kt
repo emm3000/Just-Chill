@@ -86,11 +86,7 @@ data class AddTransactionUiState(
 
     val frequentCategories: List<SelectableCategory> get() = frequentSectionOf(categories, frequentCategoryIds)
 
-    val otherCategories: List<SelectableCategory>
-        get() {
-            val frequent: List<SelectableCategory> = frequentCategories
-            return categories.filterNot { it in frequent }
-        }
+    val otherCategories: List<SelectableCategory> get() = otherSectionOf(categories, frequentCategories)
 
     val missingField: MissingField? get() = when {
         centsToSoles(amount) <= 0.0 -> MissingField.Amount
