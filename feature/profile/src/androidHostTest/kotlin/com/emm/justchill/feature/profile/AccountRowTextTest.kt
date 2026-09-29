@@ -11,23 +11,20 @@ class AccountRowTextTest {
     fun `the sign-in row shows only with the backup on and no session`() {
         assertTrue(ProfileUiState(isCloudBackupAvailable = true, session = SessionUiState.SignedOut).showsSignInRow)
         assertTrue(ProfileUiState(isCloudBackupAvailable = true, session = SessionUiState.Initializing).showsSignInRow)
-        assertFalse(
-            ProfileUiState(isCloudBackupAvailable = true, session = SessionUiState.SignedIn("qa@example.com"))
-                .showsSignInRow,
-        )
+        assertFalse(signedInProfile.copy(isCloudBackupAvailable = true).showsSignInRow)
         assertFalse(ProfileUiState(isCloudBackupAvailable = false, session = SessionUiState.SignedOut).showsSignInRow)
     }
 
     @Test
     fun `only a signed-in session opens the account section`() {
-        assertTrue(ProfileUiState(session = SessionUiState.SignedIn("qa@example.com")).isSignedIn)
+        assertTrue(signedInProfile.isSignedIn)
         assertFalse(ProfileUiState(session = SessionUiState.SignedOut).isSignedIn)
         assertFalse(ProfileUiState(session = SessionUiState.Initializing).isSignedIn)
     }
 
     @Test
     fun `the account row names the email and falls back without one`() {
-        assertEquals("qa@example.com", ProfileUiState(session = SessionUiState.SignedIn("qa@example.com")).accountLabel)
+        assertEquals("qa@example.com", signedInProfile.accountLabel)
         assertEquals("Tu cuenta", ProfileUiState(session = SessionUiState.SignedIn(email = null)).accountLabel)
     }
 
