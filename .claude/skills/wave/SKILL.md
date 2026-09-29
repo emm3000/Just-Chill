@@ -42,7 +42,7 @@ Every row is a bet; the thresholds that move a row up or down live in `docs/agen
 
 ## Execution Steps
 
-1. For each issue run `gh issue view <n> --comments`. Read the comments as part of the ticket: one may clarify or rescope the body. Confirm the label and derive a short lowercase pane name from the title (one word, no digits).
+1. For each issue run `gh issue view <n> --json title,body,labels,comments`. Read the comments as part of the ticket: one may clarify or rescope the body. Confirm the label and derive a short lowercase pane name from the title (one word, no digits).
 2. Classify each ticket with the table. The table binds: deviate only with a one-line reason stated in the plan, never silently. Tell the owner the plan in one line per ticket: `@<name> #<n> <model>:<effort>`, before booting anything.
 3. Run `scripts/justchill-wave <name>:<model>:<effort> ...` once with every ticket.
 4. Poll `ListAgents` until every pane name is listed, at most 60 seconds.

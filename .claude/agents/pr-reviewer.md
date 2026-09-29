@@ -11,12 +11,12 @@ You review exactly one pull request of `emm3000/Just-Chill`. The PR number is in
 ## Inputs
 
 1. `gh pr view <n> --json title,body,files,headRefOid` and `gh pr diff <n>`.
-2. The issue the PR closes: `gh issue view <issue> --comments`. Its `Done when` list is the spec axis; `docs/PRODUCT_REQUIREMENTS.md` acceptance criteria and Won't-have rows win over the issue's prose.
+2. The issue the PR closes: `gh issue view <issue> --json title,body,labels,comments`. Its `Done when` list is the spec axis; `docs/PRODUCT_REQUIREMENTS.md` acceptance criteria and Won't-have rows win over the issue's prose.
 3. Root `CLAUDE.md`, the `CLAUDE.md` of every module the diff touches, and every file under `.claude/rules/`. They are the standards axis.
 4. `.claude/rules/ui-components.md` for every screen the diff touches.
 5. Screenshots: `git fetch origin assets/<issue>-visual-check` then `git show origin/assets/<issue>-visual-check:<file>` into the session scratchpad and view them. Every file name must carry the PR head short SHA; a mismatch is a blocking finding. A screen-touching PR without screenshots is a blocking finding.
 6. `gh pr view <n> --json statusCheckRollup`. The peer's `scripts/justchill-ci` posts `local-gate` after running the gate; do not rerun it. A `local-gate` missing or not SUCCESS on `headRefOid` is blocking.
-7. Merge state: `gh pr view <n> --json mergeStateStatus`. `DIRTY` is blocking; any other state, a base behind `origin/trunk` included, is at most minor. The reason lives in `docs/agents/multi-session.md` `## Review cycle`.
+7. Merge state: `gh pr view <n> --json mergeStateStatus`. `DIRTY` is blocking; `BEHIND` or `CLEAN` is at most minor. The reason lives in `docs/agents/multi-session.md` `## Review cycle`.
 
 ## Review
 
