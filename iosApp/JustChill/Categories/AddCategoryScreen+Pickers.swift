@@ -146,6 +146,7 @@ extension AddCategoryScreen {
                     .tint(EmmColors.borderFocus)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
+                    .accessibilityLabel("Buscar")
             }
             .padding(EmmSpacing.s3)
             .background(EmmColors.surface1, in: EmmRadii.rM)
