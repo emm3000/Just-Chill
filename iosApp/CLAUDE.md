@@ -5,6 +5,7 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 ## Build
 
 - `xcodebuild -project iosApp/JustChill.xcodeproj -scheme JustChill -destination 'generic/platform=iOS Simulator' build` from the repo root. `scripts/justchill-ci` runs it after the Gradle gate; no workflow does, since ubuntu has no Xcode and skips the framework link.
+- `scripts/justchill-ci`'s iOS leg first runs `xcrun swift-format lint --strict -r iosApp` against `iosApp/.swift-format` (`.claude/rules/swift-style.md`); fix a finding with `xcrun swift-format format -i -r iosApp/JustChill`.
 - The `Compile Kotlin Framework` phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode` before Swift compiles; the framework lands in `shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)`. It is static, so the target links `-lsqlite3` for SQLDelight's native driver.
 - `EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64`: `:shared` builds only `iosSimulatorArm64`, and a generic simulator destination asks for `x86_64` too.
 - `ENABLE_USER_SCRIPT_SANDBOXING = NO`, or the sandbox blocks Gradle from the repo.
