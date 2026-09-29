@@ -16,9 +16,22 @@ sealed interface ProfileMessage {
 
     sealed interface Backup : ProfileMessage
 
-    data object SessionClosed : ProfileMessage
-    data object SessionClosedLocallyOnly : ProfileMessage
-    data object AccountDeleted : ProfileMessage
+    data object SessionClosed : ProfileMessage {
+        val text: String
+            get() = "Sesión cerrada. Tus datos siguen en este teléfono."
+    }
+
+    data object SessionClosedLocallyOnly : ProfileMessage {
+        val text: String
+            get() = "Sesión cerrada acá; no llegué al servidor, así que tu acceso remoto sigue activo hasta " +
+                "que expire. Cierra sesión con internet para cortarlo. Tus datos siguen en este teléfono."
+    }
+
+    data object AccountDeleted : ProfileMessage {
+        val text: String
+            get() = "Cuenta eliminada. Tus datos siguen en este teléfono."
+    }
+
     data object ExportDone : ProfileMessage
     data object ExportFailed : ProfileMessage
     data object CsvExportFailed : ProfileMessage
