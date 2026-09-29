@@ -33,9 +33,10 @@ person actually promotes in Play Console. Nothing on this page is optional.
   requires a continuously proven restore before backup ships, and this line is its only
   enforcement: delete it and nothing in the repo asks for the drill again.
   - While `prod`'s `SNAPSHOT_BACKUP_ENABLED` is `false` (its state today), the drill runs over the manual
-    export: export from the installed build, record Cuentas' `Saldo total` and the Cuentas and
-    Categorías counts first, import onto a clean install, and confirm all three figures and the
-    ledger survive.
+    export: export from the installed build, record each account's "este mes" net (naming the
+    month), the Cuentas count, the Categorías count and each person's loan balance first, import
+    onto a clean install, and confirm all four figures and the ledger survive. The month net resets
+    each month: run the drill within one calendar month or compare the named month.
   - Once `prod`'s flag flips, the drill runs over the newest verified snapshot instead.
   - Read the figures from the app, not from the import snackbar: `buildImportDoneMessage` never
     reports accounts or categories, and omits any clause whose count is zero.
