@@ -159,27 +159,6 @@ extension ReportScreen {
         }
     }
 
-    struct Hairline: View {
-        var body: some View {
-            Rectangle()
-                .fill(EmmColors.border)
-                .frame(height: EmmSpacing.hairline)
-                .accessibilityHidden(true)
-        }
-    }
-
-    struct Eyebrow: View {
-        let text: String
-
-        var body: some View {
-            Text(text)
-                .emmTextStyle(EmmType.eyebrow)
-                .foregroundStyle(EmmColors.textTertiary)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-        }
-    }
-
     struct HeaderRow<Trailing: View>: View {
         let title: String
         @ViewBuilder let trailing: Trailing

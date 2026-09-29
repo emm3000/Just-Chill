@@ -66,6 +66,8 @@ extension CaptureScreen {
         let onOpenMovements: () -> Void
 
         @State private var isAddAccountPresented: Bool = false
+        @State private var isAddCategoryRequested: Bool = false
+        @State private var isAddCategoryPresented: Bool = false
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
@@ -111,7 +113,7 @@ extension CaptureScreen {
                     onDismiss: { send(AddTransactionIntentOnSheetDismissed.shared) }
                 )
             }
-            .sheet(isPresented: sheetBinding(.category)) {
+            .sheet(isPresented: sheetBinding(.category), onDismiss: openRequestedAddCategory) {
                 CategorySheet(
                     categories: state.categories,
                     frequent: state.frequentCategories,
@@ -119,7 +121,18 @@ extension CaptureScreen {
                     selected: state.categorySelected,
                     search: matches,
                     onSelect: { send(AddTransactionIntentOnCategorySelected(value: $0)) },
+                    onAddNew: { isAddCategoryRequested = true },
                     onDismiss: { send(AddTransactionIntentOnSheetDismissed.shared) }
+                )
+            }
+            .sheet(isPresented: $isAddCategoryPresented) {
+                AddCategoryScreen(
+                    initialType: state.transactionType.categoryType,
+                    onClose: { isAddCategoryPresented = false },
+                    onSaved: { created in
+                        send(AddTransactionIntentOnNewValueFromOthers(value: created.toSelectable()))
+                        isAddCategoryPresented = false
+                    }
                 )
             }
             .sheet(isPresented: sheetBinding(.date)) {
@@ -147,6 +160,12 @@ extension CaptureScreen {
         private var saveLabel: String {
             if state.hasNoAccounts { return "Crea una cuenta primero" }
             return isSpend ? "Anotar gasto" : "Anotar ingreso"
+        }
+
+        private func openRequestedAddCategory() {
+            guard isAddCategoryRequested else { return }
+            isAddCategoryRequested = false
+            isAddCategoryPresented = true
         }
 
         private func request(_ sheet: TransactionSheet) {

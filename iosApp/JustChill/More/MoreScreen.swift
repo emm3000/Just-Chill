@@ -9,9 +9,9 @@ struct MoreScreen: View {
     enum Destination: Hashable {
         case manifesto
         case privacy
+        case categories
     }
 
-    var onOpenCategories: () -> Void = {}
     var onOpenLoans: () -> Void = {}
 
     @State private var store: Store?
@@ -38,7 +38,7 @@ struct MoreScreen: View {
                     state: store.state,
                     send: { store.send($0) },
                     actions: Actions(
-                        onOpenCategories: onOpenCategories,
+                        onOpenCategories: { path.append(.categories) },
                         onOpenLoans: onOpenLoans,
                         onOpenManifesto: { path.append(.manifesto) },
                         onOpenPrivacy: { path.append(.privacy) },
@@ -92,6 +92,10 @@ struct MoreScreen: View {
                 .toolbar(.hidden, for: .tabBar)
         case .privacy:
             PrivacyPolicy(onBack: { path.removeLast() })
+                .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
+        case .categories:
+            CategoriesScreen(onBack: { path.removeLast() })
                 .toolbar(.hidden, for: .navigationBar)
                 .toolbar(.hidden, for: .tabBar)
         }

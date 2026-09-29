@@ -99,6 +99,7 @@ extension CaptureScreen {
         let selected: SelectableCategory?
         let search: (String) -> [SelectableCategory]
         let onSelect: (SelectableCategory) -> Void
+        var onAddNew: (() -> Void)?
         let onDismiss: () -> Void
         @State private var query: String = ""
 
@@ -113,6 +114,10 @@ extension CaptureScreen {
                         LazyVStack(spacing: EmmSpacing.s0) { rows }
                             .padding(.bottom, EmmSpacing.s4)
                     }
+                }
+                if let onAddNew {
+                    Spacer(minLength: EmmSpacing.s0)
+                    addButton(onAddNew)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -140,6 +145,30 @@ extension CaptureScreen {
                     onDismiss()
                 }
             }
+        }
+
+        private func addButton(_ onAddNew: @escaping () -> Void) -> some View {
+            Button {
+                onAddNew()
+                onDismiss()
+            } label: {
+                HStack(spacing: EmmSpacing.s2) {
+                    Image(systemName: "plus")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                        .accessibilityHidden(true)
+                    Text("Nueva categoría")
+                        .emmTextStyle(EmmType.labelL)
+                }
+                .foregroundStyle(EmmColors.textPrimary)
+                .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12)
+                .overlay { EmmRadii.rM.stroke(EmmColors.borderFocus, lineWidth: EmmSpacing.hairline) }
+                .contentShape(Rectangle())
+            }
+            .padding(.horizontal, EmmSpacing.s4)
+            .padding(.top, EmmSpacing.s3)
+            .padding(.bottom, EmmSpacing.s4)
         }
 
         private var trimmedQuery: String {

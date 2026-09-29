@@ -98,7 +98,7 @@ extension AddAccountScreen {
 
         private func section<Body: View>(eyebrow: String, @ViewBuilder content: () -> Body) -> some View {
             VStack(alignment: .leading, spacing: EmmSpacing.s3) {
-                AccountsScreen.Eyebrow(text: eyebrow)
+                Eyebrow(text: eyebrow)
                 content()
             }
         }
