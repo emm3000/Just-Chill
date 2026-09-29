@@ -350,6 +350,19 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `a flavored application names its own screenshot validation because validateDebugScreenshotTest never matches`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.android.application", "justchill.screenshot"),
+            androidConfiguration = FLAVORED_SCREENSHOT_CONFIGURATION,
+            arguments = REPORT_GATE_TASKS,
+            files = SCREENSHOT_PROPERTIES,
+        )
+
+        assertEquals("true", report["screenshotSourceSet"])
+        assertEquals(FLAVORED_SCREENSHOT_GATE_TASKS, report["gateTasks"])
+    }
+
+    @Test
     fun `the namespace is the module path under the app prefix`() {
         assertEquals("com.emm.justchill.core.domain", BuildConventions.namespaceOf(":core:domain"))
         assertEquals("com.emm.justchill.feature.loan", BuildConventions.namespaceOf(":feature:loan"))
@@ -403,7 +416,7 @@ class ConventionPluginTest {
 
         val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
 
-        val FLAVORED_APPLICATION_CONFIGURATION: String = """
+        val FLAVORED_ANDROID_CONFIGURATION: String = """
             android {
                 namespace = "com.emm.justchill.probe"
 
@@ -418,6 +431,9 @@ class ConventionPluginTest {
                     create("prod") { dimension = "environment" }
                 }
             }
+        """.trimIndent()
+
+        val FLAVORED_APPLICATION_CONFIGURATION: String = FLAVORED_ANDROID_CONFIGURATION + """
 
             tasks.named("qualityGate") {
                 dependsOn("compileProdReleaseKotlin")
@@ -428,6 +444,15 @@ class ConventionPluginTest {
             "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
                 "checkSqlDelightSnapshots," +
                 "compileProdReleaseKotlin,detekt"
+
+        val FLAVORED_SCREENSHOT_CONFIGURATION: String = FLAVORED_ANDROID_CONFIGURATION + """
+
+            tasks.named("qualityGate") {
+                dependsOn("compileProdReleaseKotlin", "validateDevDebugScreenshotTest")
+            }
+        """.trimIndent()
+
+        const val FLAVORED_SCREENSHOT_GATE_TASKS: String = "$FLAVORED_GATE_TASKS,validateDevDebugScreenshotTest"
 
         const val GATE_TASKS: String =
             "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +

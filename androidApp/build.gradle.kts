@@ -5,6 +5,7 @@ plugins {
     id("justchill.android.application")
     id("justchill.android.release")
     id("justchill.build.info")
+    id("justchill.screenshot")
     id("org.jetbrains.kotlin.plugin.serialization")
     alias(libs.plugins.google.services)
 }
@@ -71,10 +72,11 @@ composeCompiler {
 }
 
 // Android lint is deliberately absent; .github/workflows/uploadApk.yml runs it on every trunk push.
-// The gate's own `compileReleaseKotlin` never matches here: this module's flavors name the task
-// `compileProdReleaseKotlin`, and `assembleProdRelease` is not on the gate.
+// The gate's own `compileReleaseKotlin` and `validateDebugScreenshotTest` never match here: this
+// module's flavors name the tasks `compileProdReleaseKotlin` and `validateDevDebugScreenshotTest`,
+// and `assembleProdRelease` is not on the gate.
 tasks.named("qualityGate") {
-    dependsOn("testDevDebugUnitTest", "compileProdReleaseKotlin")
+    dependsOn("testDevDebugUnitTest", "compileProdReleaseKotlin", "validateDevDebugScreenshotTest")
 }
 
 dependencies {
