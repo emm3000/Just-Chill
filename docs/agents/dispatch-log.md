@@ -15,7 +15,7 @@ Totals of rows already folded out of Recent.
 | 1 | sonnet:low | 6 | 6 | 0 | 0 | 0 | - | - |
 | 2 | sonnet:medium | 45 | 20 | 12 | 10 | 3 | - | - |
 | 2 | sonnet:high | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 3 | opus:medium | 88 | 59 | 6 | 13 | 10 | - | - |
+| 3 | opus:medium | 89 | 60 | 6 | 13 | 10 | - | - |
 | 4 | opus:high | 35 | 22 | 10 | 1 | 2 | - | - |
 
 ## Recent
@@ -24,7 +24,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause | Review | Nudges | Minutes |
 |---|---|---|---|---|---|---|---|---|
-| #472 | #465 | 3 | opus:medium | MERGE | - | - | - | - |
 | #473 | #471 | 3 | opus:medium | MERGE | - | - | - | - |
 | #475 | #474 | 1 | sonnet:low | MERGE | - | - | - | - |
 | #477 | #476 | 3 | opus:medium | FIX FIRST | checklist | - | - | - |
@@ -48,3 +47,4 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 ## Changes
 
 - 2026-09-28: ported Anthropic's Opus 5.5, Sonnet 5.5 and Fable 5.1 prompting guides. Row 2 sonnet:medium -> sonnet:high; autonomy paragraph and reporting rule in every dispatch; Time sentence rows 1-2; @orch nudges capped at 3; Review, Nudges and Minutes columns; five-MERGE downward pilot; fable:low pilot allowed on row 3.
+| #516 | #493 | 4 | opus:high | FIX FIRST | checklist | ok | 0 | 30 |
