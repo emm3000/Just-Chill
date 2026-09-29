@@ -4,6 +4,7 @@ import SwiftUI
 @main
 struct JustChillApp: App {
     init() {
+        EmmFonts.logAvailability()
         doInitKoin(config: KitConfig.offline(appVersion: Bundle.main.shortVersion))
     }
 

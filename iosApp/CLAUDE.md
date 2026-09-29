@@ -8,6 +8,7 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 - The `Compile Kotlin Framework` phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode` before Swift compiles; the framework lands in `shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)`. It is static, so the target links `-lsqlite3` for SQLDelight's native driver.
 - `EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64`: `:shared` builds only `iosSimulatorArm64`, and a generic simulator destination asks for `x86_64` too.
 - `ENABLE_USER_SCRIPT_SANDBOXING = NO`, or the sandbox blocks Gradle from the repo.
+- `INFOPLIST_FILE = Info.plist` points at `iosApp/Info.plist`, outside the synchronized folder, and Xcode merges it with the generated `INFOPLIST_KEY_*` keys; inside `JustChill/` it is copied as a resource and the build fails on "Multiple commands produce Info.plist" (#527).
 - Swift 6 language mode. `@preconcurrency import JustChillKit` in every file that imports the kit: Kotlin classes are not `Sendable`.
 - SKIE runs at link time, so a green `compileKotlinIos*` proves nothing about the Swift API; grep `shared/build/bin/iosSimulatorArm64/debugFramework/JustChillKit.framework/Headers/JustChillKit.h` for a type before using it. `initKoin` reaches Swift with a `do` prefix, since ObjC reserves `init`.
 
