@@ -1,5 +1,6 @@
 package com.emm.buildlogic
 
+import com.emm.buildlogic.internal.configureCompose
 import com.emm.buildlogic.internal.libs
 import com.emm.buildlogic.internal.library
 import com.emm.buildlogic.internal.pluginId
@@ -22,6 +23,7 @@ class KmpFeatureConventionPlugin : Plugin<Project> {
         extensions.configure<ComposeCompilerGradlePluginExtension> {
             targetKotlinPlatforms.set(setOf(KotlinPlatformType.androidJvm))
         }
+        configureCompose(implementation = "androidMainImplementation", tooling = "androidRuntimeClasspath")
 
         dependencies {
             add("commonMainImplementation", project(":core:domain"))

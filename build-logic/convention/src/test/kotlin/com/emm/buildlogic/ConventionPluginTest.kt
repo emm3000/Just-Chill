@@ -1,6 +1,8 @@
 package com.emm.buildlogic
 
 import com.emm.buildlogic.internal.BuildConventions
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -97,9 +99,28 @@ class ConventionPluginTest {
         assertEquals(KMP_FEATURE_COMMON_DEPENDENCIES, report["commonMainDependencies"])
         assertEquals(KMP_FEATURE_ANDROID_DEPENDENCIES, report["androidMainDependencies"])
         assertEquals(":core:testing,$KMP_HOST_TEST_DEPENDENCIES", report["androidHostTestDependencies"])
+        assertEquals("ui-tooling", report["androidRuntimeDependencies"])
         assertEquals("org.jetbrains.kotlin.plugin.compose,org.jetbrains.kotlin.plugin.serialization", report["compilerPlugins"])
         assertEquals("androidJvm", report["composePlatforms"])
+        assertEquals(COMPOSE_OPT_INS, report["optIn"])
         assertEquals(CHECK_PLUGINS, report["plugins"])
+    }
+
+    @Test
+    fun `a kmp feature compiles a material3 composable in android main with koin versioned by the common bom`() {
+        val result: BuildResult = fixture.check(
+            task = ":feature:loan:compileAndroidMain",
+            modules = mapOf(
+                ":feature:loan" to """plugins { id("justchill.kmp.feature") }""",
+                ":core:domain" to """plugins { id("justchill.kmp.library") }""",
+                ":core:presentation" to """plugins { id("justchill.kmp.library") }""",
+                ":core:ui" to """plugins { id("justchill.android.library") }""",
+                ":core:testing" to "",
+            ),
+            sources = mapOf("feature/loan/src/androidMain/kotlin/LoanRow.kt" to COMPOSABLE_SOURCE),
+        )
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":feature:loan:compileAndroidMain")?.outcome)
     }
 
     @Test
@@ -437,7 +458,12 @@ class ConventionPluginTest {
             ":core:domain,:core:presentation,koin-bom,koin-core,koin-core-viewmodel"
 
         const val KMP_FEATURE_ANDROID_DEPENDENCIES: String =
-            ":core:ui,koin-compose-viewmodel,kotlinx-serialization-json,navigation3-runtime"
+            ":core:ui,compose-bom,foundation,koin-compose-viewmodel,kotlinx-serialization-json,material3," +
+                "navigation3-runtime,runtime,ui,ui-tooling-preview"
+
+        const val COMPOSABLE_SOURCE: String =
+            "package sample\n\nimport androidx.compose.material3.Text\nimport androidx.compose.runtime.Composable\n\n" +
+                "@Composable\nfun LoanRow() {\n    Text(\"Préstamo\")\n}\n"
 
         const val KMP_HOST_TEST_DEPENDENCIES: String = "junit,kotlinx-coroutines-test,mockk"
 

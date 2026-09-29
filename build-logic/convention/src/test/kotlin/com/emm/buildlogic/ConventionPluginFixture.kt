@@ -203,7 +203,7 @@ internal class ConventionPluginFixture(
                             println("REPORT mappingUpload=" + (crashlytics as com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension).mappingFileUploadEnabled)
                         }
                     }
-                    val kmp = project.extensions.findByType(org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java)
+                    val kmp: org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension? = project.extensions.findByType(org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension::class.java)
                     if (kmp != null) {
                         println("REPORT kmpTargets=" + kmp.targets.names.filter { it != "metadata" }.sorted().joinToString(","))
                         println("REPORT kmpSourceSets=" + kmp.sourceSets.names.sorted().joinToString(","))
@@ -213,11 +213,12 @@ internal class ConventionPluginFixture(
                             println("REPORT namespace=" + target.namespace)
                         }
                         listOf("commonMain", "androidMain", "commonTest", "androidHostTest").forEach { sourceSet ->
-                            val configuration = project.configurations.findByName(sourceSet + "Implementation")
+                            val configuration: org.gradle.api.artifacts.Configuration? = project.configurations.findByName(sourceSet + "Implementation")
                             println("REPORT " + sourceSet + "Dependencies=" + configuration?.dependencies.orEmpty().map { if (it is org.gradle.api.artifacts.ProjectDependency) it.path else it.name }.sorted().joinToString(","))
                         }
+                        println("REPORT androidRuntimeDependencies=" + project.configurations.findByName("androidRuntimeClasspath")?.dependencies.orEmpty().map { it.name }.sorted().joinToString(","))
                         println("REPORT compilerPlugins=" + listOf("org.jetbrains.kotlin.plugin.compose", "org.jetbrains.kotlin.plugin.serialization").filter { project.pluginManager.hasPlugin(it) }.joinToString(","))
-                        val composeCompiler =project.extensions.findByType(org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension::class.java)
+                        val composeCompiler: org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension? = project.extensions.findByType(org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension::class.java)
                         if (composeCompiler != null) {
                             println("REPORT composePlatforms=" + composeCompiler.targetKotlinPlatforms.get().map { it.name }.sorted().joinToString(","))
                         }
