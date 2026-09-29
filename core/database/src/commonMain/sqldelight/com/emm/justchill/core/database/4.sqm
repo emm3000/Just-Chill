@@ -14,13 +14,15 @@
 -- ── THE ORDER IS LOAD-BEARING: REPAIR BEFORE REBUILD ──────────────────────────────────────────
 --
 -- The two repair UPDATEs run FIRST, while the old tables are still the ones with no composite key.
--- Not a stylistic choice — on iOS this migration runs with foreign keys ENABLED. DatabaseDriver.ios.kt
--- hands NativeSqliteDriver `foreignKeyConstraints = true`, which applies to the whole connection;
--- iOS has no onOpen/onUpgrade split to hide behind, and `PRAGMA foreign_keys` is a no-op inside a
--- transaction, which is where SQLDelight runs this. So on iOS the `INSERT INTO ..._new SELECT` is
+-- Not a stylistic choice. Both platforms run this migration with foreign keys OFF today: Android
+-- because onOpen turns them on after onUpgrade (the property 3.sqm already leans on), iOS because
+-- DatabaseDriver.ios.kt's `openSqlDriver` runs the chain on a SQLiter connection with foreign keys
+-- off, then opens NativeSqliteDriver with them on. `PRAGMA foreign_keys` is a no-op inside the
+-- transaction SQLDelight runs this in, so the order is fixed by whoever opens the connection, not
+-- here. With foreign keys on, as MigrationV4ToV5Test runs it, the `INSERT INTO ..._new SELECT` is
 -- validated against the new key as it copies: repairing afterwards would be repairing rows that
--- never made it across. Android disables FKs here by ordering (onOpen runs after onUpgrade, the
--- property 3.sqm already leans on) and would not have noticed. Correct on both, not on one.
+-- never made it across. With them off, SQLite never re-checks what the copy wrote. Repairing first
+-- is correct under both, not under one.
 --
 -- `NOT EXISTS` and not a type comparison, because it has to catch two different broken shapes with
 -- one statement: a categoryId whose category has the OTHER type (the bug this migration exists for)

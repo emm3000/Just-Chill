@@ -4,6 +4,7 @@ import app.cash.sqldelight.db.SqlDriver
 import co.touchlab.sqliter.DatabaseFileContext
 import com.emm.justchill.core.database.databaseConfiguration
 import com.emm.justchill.core.database.openSqlDriver
+import com.emm.justchill.core.database.perRunDatabaseName
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -21,12 +22,11 @@ private const val INSERT_PAYMENT_FOR_MISSING_LOAN: String =
 
 class SqliteExceptionsTest {
 
-    private val databaseName: String = "sqlite-exceptions-test.db"
+    private val databaseName: String = perRunDatabaseName("sqlite-exceptions")
     private lateinit var driver: SqlDriver
 
     @BeforeTest
     fun setUp() {
-        DatabaseFileContext.deleteDatabase(databaseName)
         driver = openSqlDriver(databaseConfiguration(databaseName))
     }
 

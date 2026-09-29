@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 
 class ForeignKeyOrderTest {
 
-    private val databaseName: String = "foreign-key-order-test.db"
+    private val databaseName: String = perRunDatabaseName("foreign-key-order")
     private val shipped: DatabaseConfiguration = databaseConfiguration(databaseName)
     private var foreignKeysDuringUpgrade: Long? = null
 
@@ -27,7 +27,6 @@ class ForeignKeyOrderTest {
 
     @BeforeTest
     fun setUp() {
-        DatabaseFileContext.deleteDatabase(databaseName)
         openAndMigrate(shipped)
     }
 

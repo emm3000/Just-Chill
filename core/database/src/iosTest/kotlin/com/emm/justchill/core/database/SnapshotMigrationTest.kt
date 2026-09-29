@@ -15,6 +15,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+private const val SNAPSHOT_EXTENSION: String = "db"
+
 private const val INSERT_ACCOUNT: String =
     "INSERT INTO accounts (accountId, name, type, currency, updatedAt, createdAt, userId, syncState) " +
         "VALUES ('account-bcp', 'BCP', 'Bank', 'PEN', 1000, 1000, 'user-1', 'Synced')"
@@ -78,11 +80,12 @@ private val SEEDED_TRANSACTION: List<String?> = listOf(
 
 class SnapshotMigrationTest {
 
-    private val freshName: String = "snapshot-migration-fresh.db"
+    private val migratedName: String = perRunDatabaseName("snapshot-migration")
+    private val freshName: String = perRunDatabaseName("snapshot-migration-fresh")
 
     @AfterTest
     fun tearDown() {
-        DatabaseFileContext.deleteDatabase(DATABASE_NAME)
+        DatabaseFileContext.deleteDatabase(migratedName)
         DatabaseFileContext.deleteDatabase(freshName)
     }
 
@@ -114,21 +117,20 @@ class SnapshotMigrationTest {
 
     @OptIn(ExperimentalForeignApi::class)
     private fun copySnapshot(version: Int) {
-        DatabaseFileContext.deleteDatabase(DATABASE_NAME)
         val snapshots: String = NSProcessInfo.processInfo.environment["SQLDELIGHT_SNAPSHOTS"] as? String
             ?: error("SQLDELIGHT_SNAPSHOTS is unset: run these through :core:database:iosSimulatorArm64Test")
         val copied: Boolean = NSFileManager.defaultManager.copyItemAtPath(
-            srcPath = "$snapshots/$version.db",
-            toPath = DatabaseFileContext.databasePath(DATABASE_NAME, null),
+            srcPath = "$snapshots/$version.$SNAPSHOT_EXTENSION",
+            toPath = DatabaseFileContext.databasePath(migratedName, null),
             error = null,
         )
-        assertTrue(copied, "$snapshots/$version.db could not be copied")
+        assertTrue(copied, "$snapshots/$version.$SNAPSHOT_EXTENSION could not be copied")
     }
 
     private fun seedAsShippedBuild(version: Int, seed: List<String>) {
         // The committed snapshots carry user_version 0, so SQLiter's no-op create stamps `version` on the copy.
         val shipped: DatabaseConfiguration = DatabaseConfiguration(
-            name = DATABASE_NAME,
+            name = migratedName,
             version = version,
             create = {},
             upgrade = { _, _, _ -> },
@@ -138,7 +140,7 @@ class SnapshotMigrationTest {
 
     private fun assertOpensMigrated() {
         val expectedSchema: List<List<List<String?>>> = freshSchema()
-        val driver: SqlDriver = openSqlDriver(databaseConfiguration(DATABASE_NAME))
+        val driver: SqlDriver = openSqlDriver(databaseConfiguration(migratedName))
         val version: List<List<String?>> = driver.rows("PRAGMA user_version", columns = 1)
         val schema: List<List<List<String?>>> = driver.schema()
         val transactions: List<List<String?>> = driver.rows(SELECT_SEEDED_TRANSACTION, SEEDED_TRANSACTION.size)
@@ -154,7 +156,6 @@ class SnapshotMigrationTest {
     }
 
     private fun freshSchema(): List<List<List<String?>>> {
-        DatabaseFileContext.deleteDatabase(freshName)
         val fresh: SqlDriver = openSqlDriver(databaseConfiguration(freshName))
         val schema: List<List<List<String?>>> = fresh.schema()
         fresh.close()

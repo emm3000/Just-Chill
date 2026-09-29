@@ -7,7 +7,7 @@ import co.touchlab.sqliter.DatabaseConfiguration
 import co.touchlab.sqliter.createDatabaseManager
 import co.touchlab.sqliter.withConnection
 
-fun provideSqlDriver(): SqlDriver = openSqlDriver(databaseConfiguration(DATABASE_NAME))
+fun provideSqlDriver(name: String = DATABASE_NAME): SqlDriver = openSqlDriver(databaseConfiguration(name))
 
 internal fun databaseConfiguration(name: String): DatabaseConfiguration = DatabaseConfiguration(
     name = name,

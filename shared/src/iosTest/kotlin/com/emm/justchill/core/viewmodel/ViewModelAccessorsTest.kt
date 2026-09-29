@@ -1,7 +1,11 @@
 package com.emm.justchill.core.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import app.cash.sqldelight.db.QueryResult
+import app.cash.sqldelight.db.SqlCursor
+import app.cash.sqldelight.db.SqlDriver
 import com.emm.justchill.core.KitConfig
+import com.emm.justchill.core.database.provideSqlDriver
 import com.emm.justchill.core.initKoin
 import com.emm.justchill.core.preferences.resolveAppPreferences
 import com.emm.justchill.feature.account.AccountsViewModel
@@ -20,11 +24,21 @@ import com.emm.justchill.feature.report.ReportViewModel
 import com.emm.justchill.feature.transaction.capture.AddTransactionViewModel
 import com.emm.justchill.feature.transaction.capture.EditTransactionViewModel
 import com.emm.justchill.feature.transaction.list.SeeTransactionsViewModel
+import com.russhwolf.settings.NSUserDefaultsSettings
+import com.russhwolf.settings.Settings
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
+import org.koin.core.context.loadKoinModules
 import org.koin.core.context.stopKoin
+import org.koin.core.module.Module
+import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSHomeDirectory
+import platform.Foundation.NSUUID
+import platform.Foundation.NSUserDefaults
 import kotlin.reflect.KClass
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -34,6 +48,14 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ViewModelAccessorsTest {
+
+    private val databaseName: String = "view-model-accessors-${NSUUID().UUIDString}"
+    private val preferencesSuite: String = "com.emm.justchill.test.${NSUUID().UUIDString}"
+
+    private val perRunStores: Module = module {
+        single<SqlDriver> { provideSqlDriver(databaseName) }
+        single<Settings> { NSUserDefaultsSettings(NSUserDefaults(suiteName = preferencesSuite)) }
+    }
 
     @BeforeTest
     fun setUp() {
@@ -46,11 +68,22 @@ class ViewModelAccessorsTest {
                 isSnapshotBackupEnabled = false,
             ),
         )
+        loadKoinModules(perRunStores)
     }
 
     @AfterTest
     fun tearDown() {
+        val driver: SqlDriver = KoinPlatform.getKoin().get()
+        val databaseFile: String = driver.mainDatabaseFile()
+        driver.close()
         stopKoin()
+        val preferences: NSUserDefaults = NSUserDefaults(suiteName = preferencesSuite)
+        preferences.removePersistentDomainForName(preferencesSuite)
+        preferences.synchronize()
+        deleteFiles(
+            listOf("", "-wal", "-shm").map { suffix: String -> "$databaseFile$suffix" } +
+                "${NSHomeDirectory()}/Library/Preferences/$preferencesSuite.plist",
+        )
     }
 
     @Test
@@ -107,5 +140,20 @@ class ViewModelAccessorsTest {
         val result: GoogleSignInResult = runBlocking { launcher.signIn(serverClientId = "") }
 
         assertEquals(GoogleSignInResult.NoCredentials, result)
+    }
+
+    private fun SqlDriver.mainDatabaseFile(): String = executeQuery(
+        identifier = null,
+        sql = "PRAGMA database_list",
+        mapper = { cursor: SqlCursor ->
+            cursor.next()
+            QueryResult.Value(cursor.getString(2) ?: error("the main database has no file"))
+        },
+        parameters = 0,
+    ).value
+
+    @OptIn(ExperimentalForeignApi::class)
+    private fun deleteFiles(paths: List<String>) {
+        paths.forEach { path: String -> NSFileManager.defaultManager.removeItemAtPath(path, error = null) }
     }
 }
