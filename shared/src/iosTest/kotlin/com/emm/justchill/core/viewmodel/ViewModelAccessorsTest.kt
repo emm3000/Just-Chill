@@ -52,8 +52,12 @@ class ViewModelAccessorsTest {
     private val databaseName: String = "view-model-accessors-${NSUUID().UUIDString}"
     private val preferencesSuite: String = "com.emm.justchill.test.${NSUUID().UUIDString}"
 
+    private var databaseFile: String? = null
+
     private val perRunStores: Module = module {
-        single<SqlDriver> { provideSqlDriver(databaseName) }
+        single<SqlDriver> {
+            provideSqlDriver(databaseName).also { driver: SqlDriver -> databaseFile = driver.mainDatabaseFile() }
+        }
         single<Settings> { NSUserDefaultsSettings(NSUserDefaults(suiteName = preferencesSuite)) }
     }
 
@@ -73,17 +77,9 @@ class ViewModelAccessorsTest {
 
     @AfterTest
     fun tearDown() {
-        val driver: SqlDriver = KoinPlatform.getKoin().get()
-        val databaseFile: String = driver.mainDatabaseFile()
-        driver.close()
         stopKoin()
-        val preferences: NSUserDefaults = NSUserDefaults(suiteName = preferencesSuite)
-        preferences.removePersistentDomainForName(preferencesSuite)
-        preferences.synchronize()
-        deleteFiles(
-            listOf("", "-wal", "-shm").map { suffix: String -> "$databaseFile$suffix" } +
-                "${NSHomeDirectory()}/Library/Preferences/$preferencesSuite.plist",
-        )
+        NSUserDefaults(suiteName = preferencesSuite).removePersistentDomainForName(preferencesSuite)
+        databaseFile?.let(::deleteDatabaseFiles)
     }
 
     @Test
@@ -153,7 +149,9 @@ class ViewModelAccessorsTest {
     ).value
 
     @OptIn(ExperimentalForeignApi::class)
-    private fun deleteFiles(paths: List<String>) {
-        paths.forEach { path: String -> NSFileManager.defaultManager.removeItemAtPath(path, error = null) }
+    private fun deleteDatabaseFiles(databaseFile: String) {
+        listOf("", "-wal", "-shm").forEach { suffix: String ->
+            NSFileManager.defaultManager.removeItemAtPath("$databaseFile$suffix", error = null)
+        }
     }
 }
