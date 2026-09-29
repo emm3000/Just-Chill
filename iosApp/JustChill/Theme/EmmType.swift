@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct EmmTextStyle: Sendable {
     let fontName: String
@@ -8,9 +9,14 @@ struct EmmTextStyle: Sendable {
     let textStyle: Font.TextStyle
     let isTabular: Bool
 
-    var font: Font {
+    fileprivate var font: Font {
         let base: Font = Font.custom(fontName, size: size, relativeTo: textStyle)
         return isTabular ? base.monospacedDigit() : base
+    }
+
+    fileprivate var extraLineSpacing: CGFloat {
+        let naturalLineHeight: CGFloat = UIFont(name: fontName, size: size)?.lineHeight ?? size
+        return max(lineHeight - naturalLineHeight, 0)
     }
 }
 
@@ -76,7 +82,7 @@ private struct EmmTextStyleModifier: ViewModifier {
     init(style: EmmTextStyle) {
         self.style = style
         _tracking = ScaledMetric(wrappedValue: style.tracking, relativeTo: style.textStyle)
-        _lineSpacing = ScaledMetric(wrappedValue: max(style.lineHeight - style.size, 0), relativeTo: style.textStyle)
+        _lineSpacing = ScaledMetric(wrappedValue: style.extraLineSpacing, relativeTo: style.textStyle)
     }
 
     func body(content: Content) -> some View {

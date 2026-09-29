@@ -12,11 +12,13 @@ enum EmmCategory {
         }
     }
 
-    static func resolvedSymbol(_ iconId: String) -> String {
-        iconSymbols[iconId] ?? fallbackSymbol
+    static func resolvedSymbol(_ iconId: String?) -> String {
+        guard let iconId else { return missingSymbol }
+        return iconSymbols[iconId] ?? fallbackSymbol
     }
 
     static let fallbackSymbol: String = "fork.knife"
+    static let missingSymbol: String = "questionmark"
 
     static let iconSymbols: [String: String] = [
         "food": "fork.knife",
