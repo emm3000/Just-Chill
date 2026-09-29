@@ -16,7 +16,7 @@ enum class PersonRemainingTone {
     Neutral,
 }
 
-private fun PersonBalanceUi.toRow() = PersonRowUi(
+private fun PersonBalanceUi.toRow(): PersonRowUi = PersonRowUi(
     personKey = personKey,
     personName = personName,
     remaining = remaining,
@@ -28,4 +28,4 @@ private fun PersonBalanceUi.toRow() = PersonRowUi(
     },
 )
 
-fun List<PersonBalanceUi>.toRows(): List<PersonRowUi> = map { it.toRow() }
+internal fun List<PersonBalanceUi>.toRows(): List<PersonRowUi> = map { it.toRow() }
