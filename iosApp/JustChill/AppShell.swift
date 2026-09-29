@@ -1,3 +1,4 @@
+@preconcurrency import JustChillKit
 import SwiftUI
 
 enum AppTab: Hashable {
@@ -11,10 +12,11 @@ enum AppTab: Hashable {
 struct AppShell: View {
     @State private var selectedTab: AppTab = .movements
     @State private var isCapturePresented: Bool = false
+    @State private var savedMonth: YearMonth?
 
     var body: some View {
         TabView(selection: tabSelection) {
-            MovementsScreen()
+            MovementsScreen(savedMonth: savedMonth, onSavedMonthApplied: { savedMonth = nil })
                 .tabItem { Label("Movimientos", systemImage: "list.bullet.rectangle") }
                 .tag(AppTab.movements)
             ReportScreen()
@@ -37,8 +39,20 @@ struct AppShell: View {
                 .tag(AppTab.more)
         }
         .fullScreenCover(isPresented: $isCapturePresented) {
-            CaptureScreen(onClose: { isCapturePresented = false })
+            CaptureScreen(
+                onClose: { isCapturePresented = false },
+                onSaved: { month in
+                    savedMonth = month
+                    showMovements()
+                },
+                onOpenMovements: showMovements
+            )
         }
+    }
+
+    private func showMovements() {
+        selectedTab = .movements
+        isCapturePresented = false
     }
 
     private var tabSelection: Binding<AppTab> {
@@ -46,7 +60,12 @@ struct AppShell: View {
             get: { selectedTab },
             set: { tab in
                 if tab == .capture {
+                    // TabView keeps a refused tab on screen until the bound value changes; bouncing through
+                    // .capture and back resyncs it, or the blank add tab shows once the pad closes.
+                    let current: AppTab = selectedTab
+                    selectedTab = .capture
                     isCapturePresented = true
+                    Task { selectedTab = current }
                 } else {
                     selectedTab = tab
                 }
