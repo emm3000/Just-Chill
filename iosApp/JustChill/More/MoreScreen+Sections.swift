@@ -49,7 +49,7 @@ extension MoreScreen {
                 Row(
                     symbol: "square.grid.2x2",
                     label: "Categorías",
-                    meta: "\(state.categoryCount) en total · \(state.incomeCategoryCount) de ingreso",
+                    meta: state.categoriesLabel,
                     isNavigable: true,
                     action: actions.onOpenCategories
                 )
