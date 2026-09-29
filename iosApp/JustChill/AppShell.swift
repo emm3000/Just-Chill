@@ -21,8 +21,13 @@ struct AppShell: View {
                 .tabItem { Label("Reporte", systemImage: "chart.bar.xaxis") }
                 .tag(AppTab.report)
             Color.clear
-                .tabItem { Label("Anotar", systemImage: "plus.circle.fill") }
-                .accessibilityLabel("Anotar movimiento")
+                .tabItem {
+                    Label {
+                        Text("Anotar").accessibilityLabel("Anotar movimiento")
+                    } icon: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                }
                 .tag(AppTab.capture)
             AccountsScreen()
                 .tabItem { Label("Cuentas", systemImage: "wallet.bifold") }
