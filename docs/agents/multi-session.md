@@ -38,6 +38,7 @@ One GitHub issue of `emm3000/Just-Chill` labelled `ready-for-agent`. The label v
 - One slice = one small PR: a migration + domain change, or one screen, or one integration. A ticket naming more than 2 screens, or a migration plus a screen, gets split into sub-issues with `gh` first.
 - If a session passes ~60% context without a PR, it commits, opens a partial PR, clears, and continues.
 - Waves are ordered by dependency; parallelism is safe only within a wave (shared `:core:domain` or atom changes first, then independent slices). No wave carries two tickets touching the same module; a schema change (`.sq` / `.sqm`) is always a wave of one. A wave starts only after the previous one is merged.
+- `iosApp/` only: two tickets may share a wave when they touch different screen-family folders under `iosApp/JustChill/` and neither edits a shared file. Shared: `iosApp/CLAUDE.md`, `project.pbxproj`, and every entry of `git ls-tree --name-only origin/trunk iosApp/JustChill/` that is not a screen-family folder (today `JustChillApp.swift`, `AppShell.swift`, `Bridge/`; `Theme/` once #527 merges).
 - Before dispatching tickets filed by an audit, re-verify each against current `trunk`; the finding may already be fixed.
 
 ## Dispatch prompt checklist
@@ -90,6 +91,7 @@ Every dispatch to a peer session must include:
 - When a wave needs two device peers, the second AVD is created once with `avdmanager create avd -n justchill-api36-b -k "system-images;android-36;google_apis_playstore;arm64-v8a" -d medium_phone` and booted on port 5560. One AVD per session still holds, and a second instance of the same AVD needs `-read-only` on every instance, the first included, or the failure lands on the follower.
 - `./gradlew installDevDebug` installs on **every** connected adb device. Install with `ANDROID_SERIAL=<serial> ./gradlew installDevDebug` and scope every adb call, screenshots included, with `adb -s <serial>`. Never install on another session's emulator.
 - When the review cycle closes, the peer shuts its own emulator down with `adb -s <serial> emu kill`, never a bare `adb emu kill`, together with the worktree cleanup. Keep the AVDs. Never shut down an emulator another session still uses.
+- iOS pool (ADR 024 `## Amendments (2026-09-29)`): `justchill-ios27` and `justchill-ios27-b`, iPhone 17 on the one iOS 27 runtime, one device per peer. The second was created once with `xcrun simctl create justchill-ios27-b com.apple.CoreSimulator.SimDeviceType.iPhone-17 com.apple.CoreSimulator.SimRuntime.iOS-27-0`; never `simctl clone`, which needs the source shut down while peers use it. Only the dispatch boots a device, and it names each peer's. A peer installs, launches and shoots only on its device by name, never through the `booted` alias, which is ambiguous with two booted. Kotlin/Native simulator tests stay pinned to `justchill-ios27` and share it safely, because they never install the app. Recipe: `iosApp/CLAUDE.md` `## Simulator`.
 
 ## Review cycle
 
