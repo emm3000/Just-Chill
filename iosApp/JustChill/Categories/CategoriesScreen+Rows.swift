@@ -94,30 +94,19 @@ extension CategoriesScreen {
 
         var body: some View {
             HStack(spacing: EmmSpacing.s3) {
-                Image(systemName: symbol)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: EmmSpacing.s4, height: EmmSpacing.s4)
-                    .foregroundStyle(EmmColors.textSecondary)
-                    .frame(width: EmmSpacing.s8, height: EmmSpacing.s8)
-                    .background(EmmColors.surface2, in: EmmRadii.rXS)
-                    .accessibilityHidden(true)
-                HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
-                    Circle()
-                        .fill(color)
-                        .frame(width: EmmSpacing.s2, height: EmmSpacing.s2)
-                        .alignmentGuide(.firstTextBaseline) { dimensions in dimensions[.bottom] }
-                        .accessibilityHidden(true)
-                    Text(name)
-                        .emmTextStyle(EmmType.titleM)
-                        .foregroundStyle(isMuted ? EmmColors.textTertiary : EmmColors.textPrimary)
-                        .multilineTextAlignment(.leading)
+                tile
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: EmmSpacing.s3) {
+                        label
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        count
+                    }
+                    VStack(alignment: .leading, spacing: EmmSpacing.s1) {
+                        label
+                        count
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Text(countLabel)
-                    .emmTextStyle(EmmType.labelM)
-                    .foregroundStyle(isMuted ? EmmColors.textDisabled : EmmColors.textTertiary)
-                    .fixedSize()
                 Image(systemName: "chevron.right")
                     .resizable()
                     .scaledToFit()
@@ -128,6 +117,38 @@ extension CategoriesScreen {
             .padding(.horizontal, EmmSpacing.s5)
             .padding(.vertical, EmmSpacing.s3)
             .contentShape(Rectangle())
+        }
+
+        private var tile: some View {
+            Image(systemName: symbol)
+                .resizable()
+                .scaledToFit()
+                .frame(width: EmmSpacing.s4, height: EmmSpacing.s4)
+                .foregroundStyle(EmmColors.textSecondary)
+                .frame(width: EmmSpacing.s8, height: EmmSpacing.s8)
+                .background(EmmColors.surface2, in: EmmRadii.rXS)
+                .accessibilityHidden(true)
+        }
+
+        private var label: some View {
+            HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
+                Circle()
+                    .fill(color)
+                    .frame(width: EmmSpacing.s2, height: EmmSpacing.s2)
+                    .alignmentGuide(.firstTextBaseline) { dimensions in dimensions[.bottom] }
+                    .accessibilityHidden(true)
+                Text(name)
+                    .emmTextStyle(EmmType.titleM)
+                    .foregroundStyle(isMuted ? EmmColors.textTertiary : EmmColors.textPrimary)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+
+        private var count: some View {
+            Text(countLabel)
+                .emmTextStyle(EmmType.labelM)
+                .foregroundStyle(isMuted ? EmmColors.textDisabled : EmmColors.textTertiary)
+                .fixedSize()
         }
     }
 
