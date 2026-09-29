@@ -447,6 +447,19 @@ class ReportViewModelTest {
     }
 
     @Test
+    fun `a pill amount with no direction has no description rather than a guessed verb`() {
+        val state = ReportUiState(
+            month = currentMonth,
+            comparisonAmountFormatted = "S/ 20",
+            comparisonDirectionUp = null,
+            comparisonPercent = 25,
+        )
+
+        assertEquals("S/ 20 · 25%", state.comparisonPillText)
+        assertEquals(null, state.comparisonPillDescription)
+    }
+
+    @Test
     fun `a month with no previous month has no pill text`() = runTest(testDispatcher) {
         stubEmptyReport()
         val vm: ReportViewModel = buildViewModel()

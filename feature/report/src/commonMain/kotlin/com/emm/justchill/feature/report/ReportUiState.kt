@@ -30,7 +30,9 @@ data class ReportUiState(
         get() = comparisonAmountFormatted?.let { comparisonPillText(it, comparisonPercent) }
 
     val comparisonPillDescription: String?
-        get() = comparisonAmountFormatted?.let {
-            comparisonPillDescription(it, comparisonPercent, comparisonDirectionUp ?: true)
+        get() {
+            val amount: String = comparisonAmountFormatted ?: return null
+            val directionUp: Boolean = comparisonDirectionUp ?: return null
+            return comparisonPillDescription(amount, comparisonPercent, directionUp)
         }
 }
