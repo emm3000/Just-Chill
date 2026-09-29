@@ -34,7 +34,7 @@ fun ComparisonPill(
 ) {
     val tone: PillTone = comparisonPillTone(isPositive)
     val icon = if (directionUp) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
-    val text = "$absoluteDeltaFormatted · ${comparisonPercentLabel(percent)}"
+    val text: String = "$absoluteDeltaFormatted · ${comparisonPercentLabel(percent)}"
     val description: String = comparisonPillDescription(absoluteDeltaFormatted, percent, directionUp)
 
     Pill(

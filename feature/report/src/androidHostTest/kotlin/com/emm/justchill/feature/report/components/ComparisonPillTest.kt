@@ -40,7 +40,7 @@ class ComparisonPillTest {
     }
 
     @Test
-    fun `renders the capped percent on one line of pill text`() {
+    fun `renders the capped percent as the pill text`() {
         renderPill(absoluteDeltaFormatted = "S/ 712", percent = 44499, directionUp = true)
 
         composeRule.onNodeWithText("S/ 712 · más de 999%", useUnmergedTree = true).assertExists()

@@ -118,7 +118,7 @@ class ReportShareFormatterTest {
             comparisonText = "vs Abril",
             comparisonDirectionUp = true,
         )
-        val result = ReportShareFormatter.buildMonthShareText(state)
+        val result: String = ReportShareFormatter.buildMonthShareText(state)
         assertTrue(result.contains("S/ 712 · más de 999% vs"), "Capped percent missing from: $result")
     }
 
