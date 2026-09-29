@@ -10,9 +10,9 @@ struct MoreScreen: View {
         case manifesto
         case privacy
         case categories
+        case loans
+        case personLoans(String)
     }
-
-    var onOpenLoans: () -> Void = {}
 
     @State private var store: Store?
     @State private var path: [Destination] = []
@@ -39,7 +39,7 @@ struct MoreScreen: View {
                     send: { store.send($0) },
                     actions: Actions(
                         onOpenCategories: { path.append(.categories) },
-                        onOpenLoans: onOpenLoans,
+                        onOpenLoans: { path.append(.loans) },
                         onOpenManifesto: { path.append(.manifesto) },
                         onOpenPrivacy: { path.append(.privacy) },
                         onPickBackup: { isImporterPresented = true }
@@ -96,6 +96,14 @@ struct MoreScreen: View {
                 .toolbar(.hidden, for: .tabBar)
         case .categories:
             CategoriesScreen(onBack: { path.removeLast() })
+                .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
+        case .loans:
+            LoansScreen(onBack: { path.removeLast() }, onOpenPerson: { path.append(.personLoans($0)) })
+                .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
+        case .personLoans(let personKey):
+            PersonLoansScreen(personKey: personKey, onBack: { path.removeLast() })
                 .toolbar(.hidden, for: .navigationBar)
                 .toolbar(.hidden, for: .tabBar)
         }

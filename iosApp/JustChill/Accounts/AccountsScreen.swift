@@ -5,15 +5,27 @@ struct AccountsScreen: View {
     typealias Store = MviStore<AccountsUiState, any AccountsIntent, any AccountsEffect>
     typealias Send = (any AccountsIntent) -> Void
 
-    var onOpenLoans: () -> Void = {}
+    enum Destination: Hashable {
+        case loans
+        case personLoans(String)
+    }
 
     @State private var store: Store?
     @State private var errorMessage: String?
+    @State private var path: [Destination] = []
 
     var body: some View {
+        NavigationStack(path: $path) {
+            root
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: Destination.self, destination: destination)
+        }
+    }
+
+    private var root: some View {
         Group {
             if let store {
-                Content(state: store.state, send: { store.send($0) }, onOpenLoans: onOpenLoans)
+                Content(state: store.state, send: { store.send($0) }, onOpenLoans: { path.append(.loans) })
             } else {
                 EmmColors.bg
             }
@@ -31,6 +43,20 @@ struct AccountsScreen: View {
         }
         .alert(errorMessage ?? "", isPresented: isErrorPresented) {
             Button("Aceptar") { errorMessage = nil }
+        }
+    }
+
+    @ViewBuilder
+    private func destination(_ destination: Destination) -> some View {
+        switch destination {
+        case .loans:
+            LoansScreen(onBack: { path.removeLast() }, onOpenPerson: { path.append(.personLoans($0)) })
+                .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
+        case .personLoans(let personKey):
+            PersonLoansScreen(personKey: personKey, onBack: { path.removeLast() })
+                .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
         }
     }
 
