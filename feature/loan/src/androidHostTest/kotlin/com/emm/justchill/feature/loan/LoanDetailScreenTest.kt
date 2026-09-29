@@ -22,28 +22,12 @@ class LoanDetailScreenTest {
 
     private val recordedIntents: MutableList<LoanDetailIntent> = mutableListOf()
 
-    private val openLoan: LoanSummaryUi = LoanSummaryUi(
-        personName = "María",
-        principal = "S/ 100.00",
-        interestPercentLabel = "0%",
-        totalDue = "S/ 100.00",
-        paidSoFar = "S/ 0.00",
-        remaining = "S/ 100.00",
-        remainingCents = 10_000L,
-        readableLentAt = "1 de agosto de 2026",
-        note = "",
-    )
+    private val openLoan: LoanSummaryUi = loanSummary()
 
-    private val settledLoan: LoanSummaryUi = LoanSummaryUi(
-        personName = "María",
-        principal = "S/ 100.00",
-        interestPercentLabel = "0%",
-        totalDue = "S/ 100.00",
+    private val settledLoan: LoanSummaryUi = openLoan.copy(
         paidSoFar = "S/ 100.00",
         remaining = "S/ 0.00",
         remainingCents = 0L,
-        readableLentAt = "1 de agosto de 2026",
-        note = "",
     )
 
     @Test

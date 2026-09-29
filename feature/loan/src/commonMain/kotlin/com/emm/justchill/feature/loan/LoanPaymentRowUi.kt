@@ -11,7 +11,9 @@ data class LoanPaymentRowUi(
     val methodLabel: String,
     val readablePaidAt: String,
     val note: String,
-)
+) {
+    val hasNote: Boolean get() = note.isNotBlank()
+}
 
 private fun LoanPayment.toUi() = LoanPaymentRowUi(
     paymentId = id.value,

@@ -11,14 +11,6 @@ class LoanDetailUiStateTest {
 
     private val listedPayments: LoanDetailUiState = LoanDetailUiState(payments = listOf(firstPayment, secondPayment))
 
-    private fun paymentRow(id: String, amount: String): LoanPaymentRowUi = LoanPaymentRowUi(
-        paymentId = id,
-        amount = amount,
-        methodLabel = "Efectivo",
-        readablePaidAt = "15 de agosto de 2026",
-        note = "",
-    )
-
     @Test
     fun `the payment awaiting deletion is the listed one its id names`() {
         assertEquals(secondPayment, listedPayments.copy(pendingDeletePaymentId = "pay-2").pendingDeletePayment)

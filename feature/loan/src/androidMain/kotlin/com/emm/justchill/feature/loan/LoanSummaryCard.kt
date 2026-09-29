@@ -76,7 +76,7 @@ fun LoanSummaryCard(summary: LoanSummaryUi, modifier: Modifier = Modifier) {
         SummaryStatRow(label = "Total a pagar", value = summary.totalDue)
         Spacer(Modifier.height(spacing.s2))
         SummaryStatRow(label = "Pagado", value = summary.paidSoFar)
-        if (summary.note.isNotBlank()) {
+        if (summary.hasNote) {
             Spacer(Modifier.height(spacing.s3))
             Text(
                 text = summary.note,

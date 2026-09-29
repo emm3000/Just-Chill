@@ -19,6 +19,8 @@ data class LoanSummaryUi(
     val note: String,
 ) {
     val isSettled: Boolean get() = remainingCents == 0L
+
+    val hasNote: Boolean get() = note.isNotBlank()
 }
 
 fun loanSummaryUi(loan: Loan, paidSoFar: Money): LoanSummaryUi {
