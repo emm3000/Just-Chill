@@ -16,7 +16,7 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
 | `:core:presentation` | Compose-free, KMP with every production source in `commonMain` on the JetBrains `lifecycle-viewmodel` (ADR 024 Decision 2): the MVI base in `mvi/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters in `format/`, the presentation models `CategoryUi`, `SelectableCategory`, `TransactionUi`, `Catalog` and `PersonBalanceUi` with its owed-total helpers. |
 | `:core:ui` | Compose: the navigation vocabulary (`AppRoute`, `CaptureRoute`, `BottomBarRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the design system (theme tokens, atoms, `Emm*` widgets, fonts), the shared sheets, the icon and colour catalog, `TransactionRow`. |
-| `:core:testing` | KMP test fixtures on `:core:domain` alone, the fakes in `commonMain` and the JUnit4 `MainDispatcherRule` in `androidMain`; wired into feature modules, `:core:presentation` and `:androidApp` as `testImplementation`. Fixture list: `core/testing/CLAUDE.md`. |
+| `:core:testing` | KMP test fixtures on `:core:domain` alone, the fakes in `commonMain` and the JUnit4 `MainDispatcherRule` in `androidMain`; wired into feature modules and `:androidApp` as `testImplementation`, and into the KMP modules (`:core:domain`, `:core:presentation`) on `androidHostTest`. Fixture list: `core/testing/CLAUDE.md`. |
 | `:feature:*` | One screen family: its Compose-free ViewModels, its Compose screens and nav entries, its `@Serializable` routes and its Koin module. |
 | `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, entry graph, shortcut routes, the SAF host actions), the Koin graph with the cross-cutting modules in `core/di/` and one wiring file per feature, the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, flavors, shortcuts, the session keystore. |
 
@@ -28,7 +28,7 @@ feature:*         -> core:ui, core:presentation, core:domain, core:testing
 core:backup       -> core:domain
 core:database     -> core:domain
 core:ui           -> core:presentation, core:domain
-core:presentation -> core:domain (+ core:testing, testImplementation)
+core:presentation -> core:domain (+ core:testing, androidHostTest)
 core:testing      -> core:domain
 ```
 
