@@ -145,9 +145,11 @@ extension MoreScreen {
         var pressedGround: Color = EmmColors.surface1
         let action: () -> Void
 
+        @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
+
         var body: some View {
             Button(action: action) {
-                HStack(spacing: EmmSpacing.s3) {
+                HStack(alignment: dynamicTypeSize.isAccessibilitySize ? .top : .center, spacing: EmmSpacing.s3) {
                     tile
                     VStack(alignment: .leading, spacing: EmmSpacing.s0) {
                         Text(label)
