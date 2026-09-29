@@ -1,6 +1,7 @@
 ---
 paths:
   - "**/src/*/kotlin/**"
+  - "iosApp/**"
 ---
 
 # Design principles
