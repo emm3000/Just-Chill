@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.CategoryId
+import com.emm.justchill.core.presentation.category.AppIconCatalog
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.ChevronTrailing
@@ -46,7 +47,7 @@ import com.emm.justchill.core.ui.atoms.IconBtnTone
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.JcTopBar
-import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.components.EmmTextInput
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
@@ -92,38 +93,25 @@ fun CategoriesScreen(
             return@Column
         }
 
-        val incomes: List<Category> = state.categories
-            .filter { it.categoryType == CategoryType.Income }
-            .sortedBy { it.name.lowercase() }
-        val spends: List<Category> = state.categories
-            .filter { it.categoryType == CategoryType.Spend }
-            .sortedBy { it.name.lowercase() }
+        val incomes: List<CategoryRowUi> = state.incomeRows
 
         LazyColumn(contentPadding = PaddingValues(bottom = spacing.s8)) {
             if (incomes.isNotEmpty()) {
                 item(key = "header-incomes") {
                     SectionHeader(label = "Ingresos", count = incomes.size)
                 }
-                items(incomes, key = { "income-${it.categoryId.value}" }) { category ->
-                    CategoryRow(
-                        category = category,
-                        movementCount = state.txCountByCategory[category.categoryId] ?: 0,
-                        onClick = { onIntent(CategoriesIntent.OnEditClick(category)) },
-                    )
+                items(incomes, key = { "income-${it.id}" }) { row ->
+                    CategoryRow(row = row, onClick = { onIntent(CategoriesIntent.OnEditClick(row.category)) })
                 }
             }
             item(key = "header-spends") {
-                SectionHeader(label = "Gastos", count = spends.size + 1)
+                SectionHeader(label = "Gastos", count = state.spendSectionCount)
             }
-            items(spends, key = { "spend-${it.categoryId.value}" }) { category ->
-                CategoryRow(
-                    category = category,
-                    movementCount = state.txCountByCategory[category.categoryId] ?: 0,
-                    onClick = { onIntent(CategoriesIntent.OnEditClick(category)) },
-                )
+            items(state.spendRows, key = { "spend-${it.id}" }) { row ->
+                CategoryRow(row = row, onClick = { onIntent(CategoriesIntent.OnEditClick(row.category)) })
             }
             item(key = "uncategorized-spend") {
-                UncategorizedRow(count = state.uncategorizedSpendCount)
+                UncategorizedRow(countLabel = state.uncategorizedCountLabel)
             }
         }
     }
@@ -144,7 +132,7 @@ fun CategoriesScreen(
     state.pendingDelete?.let { category ->
         DeleteCategoryDialog(
             categoryName = category.name,
-            affectedCount = state.txCountByCategory[category.categoryId] ?: 0,
+            message = state.pendingDeleteMessage.orEmpty(),
             onConfirm = { onIntent(CategoriesIntent.OnDeleteConfirm) },
             onDismiss = { onIntent(CategoriesIntent.OnDeleteDismiss) },
         )
@@ -166,11 +154,11 @@ private fun SectionHeader(label: String, count: Int) {
 }
 
 @Composable
-private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> Unit) {
+private fun CategoryRow(row: CategoryRowUi, onClick: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
-    val icon: ImageVector = remember(category.icon) { AppIconCatalog.findById(category.icon).icon }
+    val icon: ImageVector = remember(row.iconId) { AppIconCatalog.findById(row.iconId).icon }
 
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
@@ -195,22 +183,22 @@ private fun CategoryRow(category: Category, movementCount: Int, onClick: () -> U
             horizontalArrangement = Arrangement.spacedBy(spacing.s2),
             modifier = Modifier.weight(1f),
         ) {
-            CategoryDot(color = colors.resolvedColor(category.color))
+            CategoryDot(color = colors.resolvedColor(row.colorId))
             Text(
-                text = category.name,
+                text = row.name,
                 style = type.titleM,
                 fontWeight = FontWeight.W500,
                 color = colors.textPrimary,
             )
         }
-        MovementMeta(count = movementCount, muted = false)
+        MovementMeta(label = row.movementCountLabel, muted = false)
         Spacer(Modifier.size(spacing.s1))
         ChevronTrailing()
     }
 }
 
 @Composable
-private fun UncategorizedRow(count: Int) {
+private fun UncategorizedRow(countLabel: String) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
@@ -236,18 +224,18 @@ private fun UncategorizedRow(count: Int) {
                 color = colors.textTertiary,
             )
         }
-        MovementMeta(count = count, muted = true)
+        MovementMeta(label = countLabel, muted = true)
         Spacer(Modifier.size(spacing.s1))
         ChevronTrailing(enabled = false)
     }
 }
 
 @Composable
-private fun MovementMeta(count: Int, muted: Boolean) {
+private fun MovementMeta(label: String, muted: Boolean) {
     val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
     Text(
-        text = "$count mov.",
+        text = label,
         style = type.labelM,
         color = if (muted) colors.textDisabled else colors.textTertiary,
     )
@@ -286,12 +274,7 @@ private fun EditCategoryDialog(
 }
 
 @Composable
-private fun DeleteCategoryDialog(
-    categoryName: String,
-    affectedCount: Int,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
+private fun DeleteCategoryDialog(categoryName: String, message: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
 
@@ -303,7 +286,7 @@ private fun DeleteCategoryDialog(
         onDismiss = onDismiss,
         confirmTone = IconBtnTone.Danger,
     ) {
-        Text(text = buildDeleteCategoryMessage(affectedCount), style = type.bodyM, color = colors.textSecondary)
+        Text(text = message, style = type.bodyM, color = colors.textSecondary)
     }
 }
 
@@ -396,14 +379,16 @@ private fun CategoriesScreenEmptyPreview() {
 private fun CategoryRowOverflowPreview() {
     EmmTheme {
         CategoryRow(
-            category = Category(
-                CategoryId("1"),
-                "Cuidado personal y salud",
-                "wallet",
-                "green",
-                CategoryType.Spend,
+            row = CategoryRowUi(
+                category = Category(
+                    CategoryId("1"),
+                    "Cuidado personal y salud",
+                    "wallet",
+                    "green",
+                    CategoryType.Spend,
+                ),
+                movementCount = 999,
             ),
-            movementCount = 999,
             onClick = {},
         )
     }

@@ -5,6 +5,7 @@ repo="${0:A:h:h}"
 cd "$repo"
 
 kotlin_ui=core/ui/src/main/kotlin/com/emm/justchill/core/ui
+kotlin_catalog=core/presentation/src/commonMain/kotlin/com/emm/justchill/core/presentation/category/IconCatalog.kt
 swift_theme=iosApp/JustChill/Theme
 failed=0
 
@@ -121,7 +122,7 @@ swift_color_fallback() {
 }
 
 kotlin_icon_ids() {
-  rg -U -o 'IconCatalog\(\s*"(\w+)"' -r '$1' "$kotlin_ui/category/IconsAll.kt"
+  rg -U -o '^    [A-Z]\w*\(\s*"(\w+)"' -r '$1' "$kotlin_catalog"
 }
 swift_icon_ids() {
   rg -o '^\s+"(\w+)": "[^"]+",$' -r '$1' "$swift_theme/EmmCategory.swift" | sd '^\s+' ''

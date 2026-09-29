@@ -44,6 +44,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.presentation.category.AppIconCatalog
+import com.emm.justchill.core.presentation.category.IconCatalog
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
@@ -51,8 +53,6 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.JcTopBar
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.IconCatalog
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -151,7 +151,8 @@ private fun AddCategoryContent(
                 contentAlignment = Alignment.Center,
             ) {
                 PreviewChip(
-                    name = state.name,
+                    name = state.previewName,
+                    isPlaceholder = state.isPreviewPlaceholder,
                     icon = selectedIcon,
                     colorId = state.colorId,
                     type = state.categoryType,
@@ -192,16 +193,11 @@ private fun AddCategoryContent(
         }
 
         StickyCTA(
-            label = saveButtonLabel(state),
+            label = state.saveLabel,
             interaction = if (state.isAllFieldValidated) CtaInteraction.Enabled else CtaInteraction.Disabled,
             onClick = attemptSave,
         )
     }
-}
-
-private fun saveButtonLabel(state: AddCategoryUiState): String {
-    val trimmed: String = state.name.trim()
-    return if (trimmed.isBlank()) "Escribe un nombre" else "Crear «$trimmed»"
 }
 
 @Composable

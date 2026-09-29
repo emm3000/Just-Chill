@@ -23,23 +23,15 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import com.emm.justchill.core.presentation.category.colorLabel
+import com.emm.justchill.core.presentation.category.selectableColorIds
 import com.emm.justchill.core.ui.category.resolvedColor
-import com.emm.justchill.core.ui.category.selectableColorIds
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
-
-private val colorLabels: Map<String, String> = mapOf(
-    "blue" to "Pizarra",
-    "green" to "Salvia",
-    "red" to "Terracota",
-    "purple" to "Malva",
-    "orange" to "Ocre",
-    "gray" to "Grafito",
-)
 
 @Composable
 internal fun ColorRow(selected: String, onSelect: (String) -> Unit) {
@@ -61,7 +53,7 @@ private fun ColorSwatch(colorId: String, selected: Boolean, onClick: () -> Unit)
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val ring: Color = if (selected) colors.borderFocus else Color.Transparent
-    val label: String = colorLabels[colorId] ?: colorId
+    val label: String = colorLabel(colorId)
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(

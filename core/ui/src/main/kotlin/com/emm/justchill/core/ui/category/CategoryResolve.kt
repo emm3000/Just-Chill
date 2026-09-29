@@ -4,11 +4,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.emm.justchill.core.presentation.category.AppIconCatalog
 import com.emm.justchill.core.presentation.category.CategoryUi
 import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.ui.theme.EmmColors
-
-val selectableColorIds: List<String> = listOf("blue", "green", "red", "purple", "orange", "gray")
 
 fun EmmColors.resolvedColor(colorId: String?): Color = when (colorId) {
     "blue" -> catSlate

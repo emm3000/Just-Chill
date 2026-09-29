@@ -32,7 +32,9 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.category.AppIconCatalog
 import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.category.selectableColorIds
 import com.emm.justchill.core.presentation.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.presentation.format.balanceFormatted
 import com.emm.justchill.core.presentation.format.centsToMoney
@@ -47,8 +49,6 @@ import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.IconBtn
 import com.emm.justchill.core.ui.atoms.StickyCTA
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
-import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.selectableColorIds
 import com.emm.justchill.core.ui.preview.PreviewRedmi15C
 import com.emm.justchill.core.ui.preview.PreviewWindowEdges
 import com.emm.justchill.core.ui.sheets.AccountPickerSheet

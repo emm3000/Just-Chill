@@ -47,6 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.presentation.category.AppIconCatalog
+import com.emm.justchill.core.presentation.category.IconCatalog
 import com.emm.justchill.core.presentation.format.balanceFormatted
 import com.emm.justchill.core.presentation.format.stripSpanishAccents
 import com.emm.justchill.core.ui.atoms.CtaHeight
@@ -57,8 +59,7 @@ import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
-import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.IconCatalog
+import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
