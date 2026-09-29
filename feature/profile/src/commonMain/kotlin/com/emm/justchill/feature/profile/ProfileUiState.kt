@@ -39,8 +39,6 @@ sealed interface BackupRowUi {
 
     data object Unreadable : BackupRowUi
 
-    // reason may be null even on a real, ongoing failure streak — this case is chosen on
-    // consecutiveFailures > 0, never on reason != null.
     data class Failed(val reason: BackupFailureReason?, val lastSnapshot: LastSnapshot) : BackupRowUi
 
     data class Stale(val daysSinceLastBackup: Int) : BackupRowUi
@@ -86,6 +84,21 @@ data class ProfileUiState(
 
     val categoriesLabel: String
         get() = "$categoryCount en total · $incomeCategoryCount de ingreso"
+
+    val isSignedIn: Boolean
+        get() = session is SessionUiState.SignedIn
+
+    val showsSignInRow: Boolean
+        get() = isCloudBackupAvailable && !isSignedIn
+
+    val accountLabel: String
+        get() = (session as? SessionUiState.SignedIn)?.email ?: "Tu cuenta"
+
+    val signOutMeta: String
+        get() = if (op == ProfileOp.SigningOut) "Cerrando sesión…" else "Tus datos siguen en este teléfono"
+
+    val deleteAccountMeta: String
+        get() = if (op == ProfileOp.DeletingAccount) "Eliminando…" else "Borra tu cuenta y tus datos en la nube"
 
     val importWarning: String
         get() = if (session is SessionUiState.SignedIn) {

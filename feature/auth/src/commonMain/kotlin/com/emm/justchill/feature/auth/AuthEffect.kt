@@ -14,4 +14,12 @@ enum class AuthMessage {
     GoogleAccountUnavailable,
     GoogleSignInFailed,
     ConfirmationLinkResent,
+    ;
+
+    val text: String
+        get() = when (this) {
+            GoogleAccountUnavailable -> "No encontramos una cuenta de Google en este teléfono."
+            GoogleSignInFailed -> "No se pudo iniciar sesión con Google."
+            ConfirmationLinkResent -> "Listo, te reenviamos el enlace."
+        }
 }
