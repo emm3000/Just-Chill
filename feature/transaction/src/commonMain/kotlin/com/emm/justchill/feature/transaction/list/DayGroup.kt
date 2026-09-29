@@ -19,6 +19,9 @@ data class DayGroup(
     val spendTotal: Money? = null,
 ) {
 
+    val spendTotalCents: Long?
+        get() = spendTotal?.cents
+
     val primaryLabel: String
         get() = when (date) {
             today -> "HOY"

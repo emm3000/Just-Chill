@@ -7,6 +7,7 @@ import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 // The list's empty/loading precedence is decided here, not in a UI when: every consumer reads one
@@ -126,5 +127,50 @@ class SeeTransactionsUiStateTest {
 
     @Test fun the_month_picker_sheet_is_closed_by_default() {
         assertFalse(SeeTransactionsUiState(month = august).showMonthPicker)
+    }
+
+    @Test fun `amount bounds also read as whole cents`() {
+        val state = SeeTransactionsUiState(month = august, minAmount = Money(1_500L), maxAmount = Money(9_900L))
+
+        assertEquals(1_500L, state.minAmountCents)
+        assertEquals(9_900L, state.maxAmountCents)
+    }
+
+    @Test fun `an absent amount bound has no cents`() {
+        val state = SeeTransactionsUiState(month = august)
+
+        assertNull(state.minAmountCents)
+        assertNull(state.maxAmountCents)
+    }
+
+    @Test fun `the net is positive only while income exceeds spend`() {
+        val ahead = SeeTransactionsUiState(
+            month = august,
+            summary = MonthSummaryUi(income = Money(1_000L), spend = Money(400L)),
+        )
+        val even = SeeTransactionsUiState(
+            month = august,
+            summary = MonthSummaryUi(income = Money(400L), spend = Money(400L)),
+        )
+        val behind = SeeTransactionsUiState(
+            month = august,
+            summary = MonthSummaryUi(income = Money(100L), spend = Money(400L)),
+        )
+
+        assertTrue(ahead.isNetPositive)
+        assertFalse(even.isNetPositive)
+        assertFalse(behind.isNetPositive)
+    }
+
+    @Test fun `a month without a summary has no positive net`() {
+        assertFalse(SeeTransactionsUiState(month = august).isNetPositive)
+    }
+
+    @Test fun `the month year shows only outside the current year`() {
+        val earlierYear = SeeTransactionsUiState(month = YearMonth(2025, Month.DECEMBER), currentMonth = august)
+        val sameYear = SeeTransactionsUiState(month = YearMonth(2026, Month.JANUARY), currentMonth = august)
+
+        assertTrue(earlierYear.isMonthYearVisible)
+        assertFalse(sameYear.isMonthYearVisible)
     }
 }

@@ -67,4 +67,14 @@ class DayGroupTest {
 
         assertNull(groups.single().spendTotal)
     }
+
+    @Test fun `spendTotalCents reads the spend total as whole cents`() {
+        val group = DayGroup(date = today, today = today, transactions = emptyList(), spendTotal = Money(800L))
+
+        assertEquals(800L, group.spendTotalCents)
+    }
+
+    @Test fun `a day without spend has no spendTotalCents`() {
+        assertNull(group(today).spendTotalCents)
+    }
 }

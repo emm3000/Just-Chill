@@ -50,6 +50,18 @@ data class SeeTransactionsUiState(
     val showMonthPicker: Boolean = false,
 ) : UiState {
 
+    val minAmountCents: Long?
+        get() = minAmount?.cents
+
+    val maxAmountCents: Long?
+        get() = maxAmount?.cents
+
+    val isNetPositive: Boolean
+        get() = (summary?.net?.cents ?: 0L) > 0L
+
+    val isMonthYearVisible: Boolean
+        get() = month.year != currentMonth.year
+
     val isCategoryOrAmountFilterActive: Boolean
         get() = activeCategory != null || minAmount != null || maxAmount != null
 
