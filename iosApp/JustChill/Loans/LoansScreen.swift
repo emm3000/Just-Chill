@@ -9,6 +9,7 @@ struct LoansScreen: View {
 
     @State private var store: Store?
     @State private var errorMessage: String?
+    @State private var isAddLoanPresented: Bool = false
 
     var body: some View {
         Group {
@@ -19,13 +20,18 @@ struct LoansScreen: View {
             }
         }
         .background(EmmColors.bg)
+        .navigationDestination(isPresented: $isAddLoanPresented) {
+            AddEditLoanScreen(loanId: nil, onClose: { isAddLoanPresented = false })
+                .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
+        }
         .task {
             guard store == nil else { return }
             let newStore = Store(resolveLoansHandle())
             newStore.onEffect { effect in
                 switch onEnum(of: effect) {
                 case .navigateToPerson(let person): onOpenPerson(person.personKey)
-                case .navigateToAddLoan: break
+                case .navigateToAddLoan: isAddLoanPresented = true
                 case .showError(let failure): errorMessage = failure.message
                 }
             }
