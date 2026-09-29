@@ -20,7 +20,7 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 ## Simulator
 
 - Pool of two, `justchill-ios27` and `justchill-ios27-b` (iPhone 17, the one iOS 27 runtime), one device per peer (ADR 024 `## Amendments (2026-09-29)`, `docs/agents/multi-session.md` `## Isolation: emulators`). Never a second runtime, never `simctl clone`.
-- Every `KotlinNativeSimulatorTest` targets `justchill-ios27` with `standalone = false` (`build-logic`'s `KmpLibraryConventionPlugin`) and never boots, shuts down or creates one; it never installs the app, so it shares the device with a peer safely. Never shut down, erase or rename `justchill-ios27` while a peer or a test uses it.
+- Every `KotlinNativeSimulatorTest` targets `justchill-ios27` with `standalone = false` (`build-logic`'s `KmpLibraryConventionPlugin`) and never boots, shuts down or creates one; it never installs the app and each run opens a per-run database and preferences suite, so it shares the device with a peer safely. Never shut down, erase or rename `justchill-ios27` while a peer or a test uses it.
 - The dispatch boots each peer's device and names it: `xcrun simctl boot <device>`. Every later call names that device, never `booted`, which is ambiguous with two booted.
 - Smoke on `<device>`: `xcrun simctl install <device> <DerivedData>/Build/Products/Debug-iphonesimulator/JustChill.app`, then `xcrun simctl launch --console-pty <device> com.emm.justchill.ios`, then `xcrun simctl io <device> screenshot <file>.png`. `xcodebuild ... -showBuildSettings | rg BUILT_PRODUCTS_DIR` prints the directory. Run install and launch in sequence, never backgrounded together, or the shot lands on the home screen. A shot right after a cold boot can come out black; relaunch and shoot again.
 
