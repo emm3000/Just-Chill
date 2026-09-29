@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
-fun resumeEvents(): Flow<Unit> = callbackFlow {
+actual fun resumeEvents(): Flow<Unit> = callbackFlow {
     val observer = object : DefaultLifecycleObserver {
         override fun onResume(owner: LifecycleOwner) {
             trySend(Unit)
@@ -18,4 +18,4 @@ fun resumeEvents(): Flow<Unit> = callbackFlow {
     val lifecycle = ProcessLifecycleOwner.get().lifecycle
     lifecycle.addObserver(observer)
     awaitClose { lifecycle.removeObserver(observer) }
-}.flowOn(Dispatchers.Main.immediate) // see BackgroundEvents.kt for why
+}.flowOn(Dispatchers.Main.immediate) // see BackgroundEvents.android.kt for why

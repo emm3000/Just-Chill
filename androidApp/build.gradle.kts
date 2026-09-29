@@ -81,6 +81,7 @@ tasks.named("qualityGate") {
 
 dependencies {
 
+    implementation(projects.shared)
     implementation(projects.core.domain)
     implementation(projects.core.backup)
     implementation(projects.core.database)
@@ -104,8 +105,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    // ProcessLifecycleOwner, which core/lifecycle/ turns into the backup orchestrator's edges.
-    implementation(libs.androidx.lifecycle.process)
 
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
@@ -131,8 +130,7 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.google.identity.googleid)
 
-    // AppPreferences and DefaultBackupMetadataStore sit on Settings; AndroidPlatformModule
-    // builds the SharedPreferencesSettings they get.
+    // AndroidPlatformModule builds the SharedPreferencesSettings :shared's preference stores sit on.
     implementation(libs.multiplatform.settings)
 
     // The Snapshot's end-to-end tests live here: only the app sees both :core:backup, which writes

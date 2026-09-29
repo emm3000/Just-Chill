@@ -32,7 +32,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
                     "justchill.kmp.library applies, plus compileAndroidDeviceTest where a module opts into " +
                     "device tests, " +
                     "the unit tests the library plugins name, plus the tests, the devDebug screenshot " +
-                    "validation and the prodRelease compile :androidApp adds. " +
+                    "validation and the prodRelease compile :androidApp adds, and the iosSimulatorArm64 " +
+                    "debug framework link :shared adds. " +
                     "Invoked by CI."
 
             dependsOn(boundaries, composeFree, snapshots, lazyKeys)

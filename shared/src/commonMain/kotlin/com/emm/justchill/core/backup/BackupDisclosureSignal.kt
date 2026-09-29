@@ -23,5 +23,5 @@ class BackupDisclosureSignal(
     }
 }
 
-internal fun disclosureIsPending(session: SessionStatus, health: BackupHealth): Boolean =
+fun disclosureIsPending(session: SessionStatus, health: BackupHealth): Boolean =
     session is SessionStatus.Authenticated && !health.canUploadToDestination
