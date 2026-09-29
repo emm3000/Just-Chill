@@ -105,8 +105,6 @@ class QualityGateConventionPlugin : Plugin<Project> {
 
     // Split so the task can allow :core:testing from a test configuration alone: a fixture module
     // reached from src/test never reaches a user, while every other edge binds in both.
-    // The Kotlin plugin fills its SwiftPM lockfile configurations of one KMP module with every KMP
-    // module in the build; no build file declares those edges.
     private fun Project.declaredProjectDependencies(tests: Boolean): Set<String> = configurations
         .filterNot { it.name.startsWith(SWIFT_PM_CONFIGURATION_PREFIX) }
         .filter { it.isTestConfiguration() == tests }
@@ -121,8 +119,6 @@ class QualityGateConventionPlugin : Plugin<Project> {
     private fun Project.composeFreeSources(): FileCollection =
         fileTree(SOURCE_DIRECTORY) { include(VIEW_MODEL_SOURCES, UI_STATE_SOURCES) }
 
-    // A test fixture declaring its own value-class id would be read as a production declaration
-    // and could redden a safe key through the name-only fallback, so the test source sets stay out.
     private fun Project.platformSourceSets(): Set<String> {
         val sourceRoot: File = file(SOURCE_DIRECTORY)
         return fileTree(sourceRoot).files
@@ -131,6 +127,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
             .toSet()
     }
 
+    // A test fixture declaring its own value-class id would be read as a production declaration
+    // and could redden a safe key through the name-only fallback, so the test source sets stay out.
     private fun Project.lazyKeySources(): FileCollection =
         fileTree(SOURCE_DIRECTORY) {
             include(KOTLIN_SOURCES)
@@ -148,6 +146,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
         private val IOS_TEST_SOURCE_SETS: List<String> = listOf("iosTest", "iosArm64Test", "iosSimulatorArm64Test")
         private const val TEST_TASK: String = ":convention:test"
+        // The Kotlin plugin fills its SwiftPM lockfile configurations of one KMP module with every KMP
+        // module in the build; no build file declares those edges.
         private const val SWIFT_PM_CONFIGURATION_PREFIX: String = "swiftPM"
         private val TEST_CONFIGURATION_PREFIXES: List<String> =
             listOf("test", "androidTest", "commonTest", "androidHostTest", "androidDeviceTest") + IOS_TEST_SOURCE_SETS
