@@ -12,6 +12,7 @@ struct MoreScreen: View {
         case categories
         case loans
         case personLoans(String)
+        case auth
     }
 
     @State private var store: Store?
@@ -42,7 +43,8 @@ struct MoreScreen: View {
                         onOpenLoans: { path.append(.loans) },
                         onOpenManifesto: { path.append(.manifesto) },
                         onOpenPrivacy: { path.append(.privacy) },
-                        onPickBackup: { isImporterPresented = true }
+                        onPickBackup: { isImporterPresented = true },
+                        onSignIn: { path.append(.auth) }
                     )
                 )
             } else {
@@ -104,6 +106,10 @@ struct MoreScreen: View {
                 .toolbar(.hidden, for: .tabBar)
         case .personLoans(let personKey):
             PersonLoansScreen(personKey: personKey, onBack: { path.removeLast() })
+                .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
+        case .auth:
+            AuthScreen(onBack: { path.removeLast() })
                 .toolbar(.hidden, for: .navigationBar)
                 .toolbar(.hidden, for: .tabBar)
         }

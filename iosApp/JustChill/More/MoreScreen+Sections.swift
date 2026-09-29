@@ -8,6 +8,7 @@ extension MoreScreen {
         let onOpenManifesto: () -> Void
         let onOpenPrivacy: () -> Void
         let onPickBackup: () -> Void
+        let onSignIn: () -> Void
     }
 
     struct Content: View {
@@ -24,6 +25,9 @@ extension MoreScreen {
                         .accessibilityAddTraits(.isHeader)
                         .frame(maxWidth: .infinity, minHeight: EmmSpacing.s16, alignment: .leading)
                         .padding(.horizontal, EmmSpacing.s6)
+                    if state.isSignedIn {
+                        AccountSection(state: state, send: send)
+                    }
                     destinations
                     data
                     app
@@ -76,6 +80,15 @@ extension MoreScreen {
                     isBusy: state.op == .importing,
                     action: { send(ProfileIntentImportClicked.shared) }
                 )
+                if state.showsSignInRow {
+                    Row(
+                        symbol: "person.crop.circle",
+                        label: "Iniciar sesión",
+                        meta: "Respalda tus datos en la nube",
+                        isNavigable: true,
+                        action: actions.onSignIn
+                    )
+                }
                 if !state.isCloudBackupAvailable {
                     LocalOnlyNote()
                 }
@@ -133,36 +146,43 @@ extension MoreScreen {
         var isEnabled: Bool = true
         var isBusy: Bool = false
         var pressedGround: Color = EmmColors.surface1
-        let action: () -> Void
+        var action: (() -> Void)?
 
         @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
 
         var body: some View {
-            Button(action: action) {
-                HStack(alignment: dynamicTypeSize.isAccessibilitySize ? .top : .center, spacing: EmmSpacing.s3) {
-                    tile
-                    VStack(alignment: .leading, spacing: EmmSpacing.s0) {
-                        Text(label)
-                            .emmTextStyle(EmmType.titleM)
-                            .foregroundStyle(isActive ? EmmColors.textPrimary : EmmColors.textTertiary)
-                        if !meta.isEmpty {
-                            Text(meta)
-                                .emmTextStyle(EmmType.bodyM)
-                                .foregroundStyle(isActive ? EmmColors.textTertiary : EmmColors.textDisabled)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    if isNavigable {
-                        chevron
+            if let action {
+                Button(action: action) { content }
+                    .buttonStyle(RowPressStyle(pressedGround: pressedGround))
+                    .disabled(!isEnabled)
+            } else {
+                content
+                    .accessibilityElement(children: .combine)
+            }
+        }
+
+        private var content: some View {
+            HStack(alignment: dynamicTypeSize.isAccessibilitySize ? .top : .center, spacing: EmmSpacing.s3) {
+                tile
+                VStack(alignment: .leading, spacing: EmmSpacing.s0) {
+                    Text(label)
+                        .emmTextStyle(EmmType.titleM)
+                        .foregroundStyle(isActive ? EmmColors.textPrimary : EmmColors.textTertiary)
+                    if !meta.isEmpty {
+                        Text(meta)
+                            .emmTextStyle(EmmType.bodyM)
+                            .foregroundStyle(isActive ? EmmColors.textTertiary : EmmColors.textDisabled)
                     }
                 }
-                .padding(.horizontal, EmmSpacing.s6)
-                .padding(.vertical, EmmSpacing.s3)
-                .frame(minHeight: EmmSpacing.s12)
-                .contentShape(Rectangle())
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if isNavigable {
+                    chevron
+                }
             }
-            .buttonStyle(RowPressStyle(pressedGround: pressedGround))
-            .disabled(!isEnabled)
+            .padding(.horizontal, EmmSpacing.s6)
+            .padding(.vertical, EmmSpacing.s3)
+            .frame(minHeight: EmmSpacing.s12)
+            .contentShape(Rectangle())
         }
 
         private var isActive: Bool {
