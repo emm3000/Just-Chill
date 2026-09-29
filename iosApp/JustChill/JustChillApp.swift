@@ -3,15 +3,27 @@ import SwiftUI
 
 @main
 struct JustChillApp: App {
+    @State private var isManifestoPending: Bool
+
     init() {
         EmmFonts.logAvailability()
         doInitKoin(config: KitConfig.offline(appVersion: Bundle.main.shortVersion))
+        _isManifestoPending = State(initialValue: !resolveAppPreferences().firstLaunchSeen)
     }
 
     var body: some Scene {
         WindowGroup {
-            AppShell()
+            if isManifestoPending {
+                ManifestoScreen(isRevisit: false, onStart: markFirstLaunchSeen)
+            } else {
+                AppShell()
+            }
         }
+    }
+
+    private func markFirstLaunchSeen() {
+        resolveAppPreferences().firstLaunchSeen = true
+        isManifestoPending = false
     }
 }
 
