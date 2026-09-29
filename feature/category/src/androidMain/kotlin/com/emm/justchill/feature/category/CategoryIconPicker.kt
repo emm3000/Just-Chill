@@ -18,8 +18,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
-import com.emm.justchill.core.ui.category.AppIconCatalog
-import com.emm.justchill.core.ui.category.IconCatalog
+import com.emm.justchill.core.presentation.category.AppIconCatalog
+import com.emm.justchill.core.presentation.category.IconCatalog
+import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
@@ -71,7 +72,7 @@ private fun IconCell(icon: IconCatalog, selected: Boolean, onClick: () -> Unit) 
     ) {
         Icon(
             imageVector = icon.icon,
-            contentDescription = icon.name,
+            contentDescription = icon.label,
             tint = tint,
             modifier = Modifier.size(spacing.s5),
         )

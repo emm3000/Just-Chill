@@ -17,8 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.presentation.category.IconCatalog
 import com.emm.justchill.core.ui.atoms.CategoryDot
-import com.emm.justchill.core.ui.category.IconCatalog
+import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -32,6 +33,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 @Composable
 internal fun PreviewChip(
     name: String,
+    isPlaceholder: Boolean,
     icon: IconCatalog,
     colorId: String,
     type: CategoryType,
@@ -42,8 +44,7 @@ internal fun PreviewChip(
     val radii: EmmRadii = LocalEmmRadii.current
     val emmType: EmmType = LocalEmmType.current
 
-    val displayName: String = name.trim().ifBlank { "Tu categoría" }
-    val nameColor: Color = if (name.isBlank()) colors.textTertiary else colors.textPrimary
+    val nameColor: Color = if (isPlaceholder) colors.textTertiary else colors.textPrimary
     val shape: Shape = radii.rFull
 
     Row(
@@ -71,7 +72,7 @@ internal fun PreviewChip(
         }
         CategoryDot(color = colors.resolvedColor(colorId))
         Text(
-            text = displayName,
+            text = name,
             style = emmType.titleM,
             color = nameColor,
         )

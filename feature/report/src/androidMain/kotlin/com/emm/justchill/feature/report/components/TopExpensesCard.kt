@@ -14,11 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import com.emm.justchill.core.presentation.category.AppIconCatalog
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
-import com.emm.justchill.core.ui.category.AppIconCatalog
+import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
