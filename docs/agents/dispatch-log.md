@@ -15,7 +15,7 @@ Totals of rows already folded out of Recent.
 | 1 | sonnet:low | 6 | 6 | 0 | 0 | 0 |
 | 2 | sonnet:medium | 42 | 19 | 10 | 10 | 3 |
 | 3 | opus:medium | 85 | 57 | 5 | 13 | 10 |
-| 4 | opus:high | 32 | 20 | 9 | 1 | 2 |
+| 4 | opus:high | 35 | 22 | 10 | 1 | 2 |
 
 ## Recent
 
@@ -23,9 +23,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause |
 |---|---|---|---|---|---|
-| #461 | #456 | 4 | opus:high | MERGE | - |
-| #462 | #457 | 4 | opus:high | MERGE | - |
-| #463 | #458 | 4 | opus:high | FIX FIRST | checklist |
 | #464 | #448 | 3 | opus:medium | MERGE | - |
 | #466 | #449 | 3 | opus:medium | FIX FIRST | checklist |
 | #467 | #455 | 2 | sonnet:medium | FIX FIRST | checklist |
@@ -43,3 +40,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #500 | #481 | 4 | opus:high | MERGE | - |
 | #502 | #484 | 3 | opus:medium | FIX FIRST | checklist |
 | #503 | #482 | 4 | opus:high | MERGE | - |
+| #504 | #485 | 3 | opus:medium | MERGE | - |
+| #506 | #483 | 4 | opus:high | FIX FIRST | checklist |
+| #505 | #487 | 3 | opus:medium | MERGE | - |
