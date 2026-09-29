@@ -27,6 +27,9 @@ const val TRENDS_WINDOW_MONTHS = 6
 private const val MONTHS_FOR_A_MEANINGFUL_TREND = 3
 private const val TOP_EXPENSES_SHOWN = 3
 
+private fun barFraction(cents: Long, tallestCents: Long): Float =
+    if (tallestCents == 0L) 0f else cents.toFloat() / tallestCents.toFloat()
+
 class ReportViewModel(
     private val getMonthlyAmountByCategory: GetMonthlyAmountByCategoryUseCase,
     private val getMonthlyComparison: GetMonthlyComparisonUseCase,
@@ -170,6 +173,9 @@ class ReportViewModel(
                 deltaPoints = savingsRate.deltaPointsVsPrior,
             )
 
+            val tallestBarCents: Long = savingsRate.monthly
+                .maxOfOrNull { total -> maxOf(total.income.cents, total.expense.cents) }
+                ?: 0L
             val barItems = savingsRate.monthly.map { m ->
                 MonthlyBarItem(
                     monthShortLabel = m.yearMonth.monthAbbrevLabel(),
@@ -178,6 +184,8 @@ class ReportViewModel(
                     expenseAmount = m.expense.cents,
                     incomeFormatted = formatSoles(m.income.cents),
                     expenseFormatted = formatSoles(m.expense.cents),
+                    incomeFraction = barFraction(m.income.cents, tallestBarCents),
+                    expenseFraction = barFraction(m.expense.cents, tallestBarCents),
                 )
             }
 

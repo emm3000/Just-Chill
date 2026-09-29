@@ -205,8 +205,8 @@ class ReportViewModelTest {
         )
     }
 
-    private fun monthlyTotal(month: YearMonth) =
-        MonthlyTotal(yearMonth = month, income = Money.Zero, expense = Money.Zero)
+    private fun monthlyTotal(month: YearMonth, income: Money = Money.Zero, expense: Money = Money.Zero) =
+        MonthlyTotal(yearMonth = month, income = income, expense = expense)
 
     @Test
     fun `PreviousMonth intent decrements month`() = runTest(testDispatcher) {
@@ -420,6 +420,87 @@ class ReportViewModelTest {
         val vm: ReportViewModel = viewModelFor(TransactionType.Income, deltaPercent = -66)
 
         assertEquals(66, vm.state.value.comparisonPercent)
+    }
+
+    @Test
+    fun `a rising spend pill reads its direction in words with the percent`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = 25)
+
+        assertEquals("S/ 20 · 25%", vm.state.value.comparisonPillText)
+        assertEquals("Subió S/ 20, 25%", vm.state.value.comparisonPillDescription)
+    }
+
+    @Test
+    fun `a falling income pill reads its direction in words with the percent`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Income, deltaPercent = -66)
+
+        assertEquals("S/ 20 · 66%", vm.state.value.comparisonPillText)
+        assertEquals("Bajó S/ 20, 66%", vm.state.value.comparisonPillDescription)
+    }
+
+    @Test
+    fun `a tiny-base percent caps in the pill text and its description`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = 44499)
+
+        assertEquals("S/ 20 · más de 999%", vm.state.value.comparisonPillText)
+        assertEquals("Subió S/ 20, más de 999%", vm.state.value.comparisonPillDescription)
+    }
+
+    @Test
+    fun `a month with no previous month has no pill text`() = runTest(testDispatcher) {
+        stubEmptyReport()
+        val vm: ReportViewModel = buildViewModel()
+        advanceUntilIdle()
+
+        assertEquals(null, vm.state.value.comparisonPillText)
+        assertEquals(null, vm.state.value.comparisonPillDescription)
+    }
+
+    @Test
+    fun `a negative savings rate is a deficit and zero is not`() = runTest(testDispatcher) {
+        stubEmptyReport()
+        coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate().copy(currentRatePercent = -12)
+        val vm: ReportViewModel = buildViewModel()
+        advanceUntilIdle()
+        assertTrue(vm.state.value.trends.isSavingsRateDeficit)
+
+        coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate().copy(currentRatePercent = 0)
+        vm.onIntent(ReportIntent.SelectTab(ReportTab.Trends))
+        advanceUntilIdle()
+        assertFalse(vm.state.value.trends.isSavingsRateDeficit)
+    }
+
+    @Test
+    fun `the trends bars scale against the tallest bar of the window`() = runTest(testDispatcher) {
+        val august = YearMonth(2026, Month.AUGUST)
+        val september = YearMonth(2026, Month.SEPTEMBER)
+        stubEmptyReport()
+        coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate().copy(
+            monthly = listOf(
+                monthlyTotal(august, income = Money(400_00L), expense = Money(100_00L)),
+                monthlyTotal(september, income = Money(200_00L), expense = Money.Zero),
+            ),
+        )
+        val vm: ReportViewModel = buildViewModel()
+        advanceUntilIdle()
+
+        val bars: List<MonthlyBarItem> = vm.state.value.trends.monthlyBars
+        assertEquals(listOf(1f, 0.5f), bars.map { it.incomeFraction })
+        assertEquals(listOf(0.25f, 0f), bars.map { it.expenseFraction })
+    }
+
+    @Test
+    fun `a window with no amounts scales every bar to zero`() = runTest(testDispatcher) {
+        stubEmptyReport()
+        coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate().copy(
+            monthly = listOf(monthlyTotal(currentMonth)),
+        )
+        val vm: ReportViewModel = buildViewModel()
+        advanceUntilIdle()
+
+        val bar: MonthlyBarItem = vm.state.value.trends.monthlyBars.single()
+        assertEquals(0f, bar.incomeFraction)
+        assertEquals(0f, bar.expenseFraction)
     }
 
     @Test
