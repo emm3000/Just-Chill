@@ -37,7 +37,20 @@ gradle_duration=$SECONDS
 echo "gate exit code: $code"
 
 ios_code=0
-xcodebuild -project iosApp/JustChill.xcodeproj -scheme JustChill -destination 'generic/platform=iOS Simulator' build || ios_code=$?
+ios_step() {
+  local name="$1"
+  shift
+  local started=$SECONDS
+  local step_code=0
+  "$@" || step_code=$?
+  echo "$name exit code: $step_code, $(( SECONDS - started ))s"
+  if (( step_code != 0 )); then
+    ios_code=$step_code
+  fi
+}
+
+ios_step swift-format xcrun swift-format lint --strict -r iosApp
+ios_step xcodebuild xcodebuild -project iosApp/JustChill.xcodeproj -scheme JustChill -destination 'generic/platform=iOS Simulator' build
 duration=$SECONDS
 echo "ios exit code: $ios_code, $(( duration - gradle_duration ))s"
 

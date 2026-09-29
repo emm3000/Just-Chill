@@ -28,24 +28,37 @@ enum EmmType {
     static let amountM: EmmTextStyle = mono(size: 15, lineHeight: 20, tracking: -0.3, relativeTo: .subheadline)
     static let amountS: EmmTextStyle = mono(size: 13, lineHeight: 18, tracking: 0, relativeTo: .footnote)
 
-    static let display: EmmTextStyle = inter(EmmFonts.interSemiBold, size: 36, lineHeight: 44, tracking: -0.5, relativeTo: .largeTitle)
-    static let headlineL: EmmTextStyle = inter(EmmFonts.interSemiBold, size: 28, lineHeight: 36, tracking: -0.25, relativeTo: .title)
-    static let headlineM: EmmTextStyle = inter(EmmFonts.interSemiBold, size: 22, lineHeight: 28, tracking: 0, relativeTo: .title2)
+    static let display: EmmTextStyle = inter(
+        EmmFonts.interSemiBold, size: 36, lineHeight: 44, tracking: -0.5, relativeTo: .largeTitle)
+    static let headlineL: EmmTextStyle = inter(
+        EmmFonts.interSemiBold, size: 28, lineHeight: 36, tracking: -0.25, relativeTo: .title)
+    static let headlineM: EmmTextStyle = inter(
+        EmmFonts.interSemiBold, size: 22, lineHeight: 28, tracking: 0, relativeTo: .title2)
 
-    static let titleL: EmmTextStyle = inter(EmmFonts.interSemiBold, size: 18, lineHeight: 24, tracking: 0, relativeTo: .title3)
-    static let titleM: EmmTextStyle = inter(EmmFonts.interSemiBold, size: 16, lineHeight: 22, tracking: 0.1, relativeTo: .headline)
+    static let titleL: EmmTextStyle = inter(
+        EmmFonts.interSemiBold, size: 18, lineHeight: 24, tracking: 0, relativeTo: .title3)
+    static let titleM: EmmTextStyle = inter(
+        EmmFonts.interSemiBold, size: 16, lineHeight: 22, tracking: 0.1, relativeTo: .headline)
 
-    static let bodyL: EmmTextStyle = inter(EmmFonts.interRegular, size: 16, lineHeight: 24, tracking: 0.15, relativeTo: .body)
-    static let bodyM: EmmTextStyle = inter(EmmFonts.interRegular, size: 14, lineHeight: 20, tracking: 0.2, relativeTo: .subheadline)
+    static let bodyL: EmmTextStyle = inter(
+        EmmFonts.interRegular, size: 16, lineHeight: 24, tracking: 0.15, relativeTo: .body)
+    static let bodyM: EmmTextStyle = inter(
+        EmmFonts.interRegular, size: 14, lineHeight: 20, tracking: 0.2, relativeTo: .subheadline)
 
-    static let labelL: EmmTextStyle = inter(EmmFonts.interMedium, size: 14, lineHeight: 20, tracking: 0.1, relativeTo: .subheadline)
-    static let labelM: EmmTextStyle = inter(EmmFonts.interMedium, size: 12, lineHeight: 16, tracking: 0.4, relativeTo: .caption)
+    static let labelL: EmmTextStyle = inter(
+        EmmFonts.interMedium, size: 14, lineHeight: 20, tracking: 0.1, relativeTo: .subheadline)
+    static let labelM: EmmTextStyle = inter(
+        EmmFonts.interMedium, size: 12, lineHeight: 16, tracking: 0.4, relativeTo: .caption)
 
-    static let caption: EmmTextStyle = inter(EmmFonts.interRegular, size: 11, lineHeight: 16, tracking: 0.5, relativeTo: .caption2)
+    static let caption: EmmTextStyle = inter(
+        EmmFonts.interRegular, size: 11, lineHeight: 16, tracking: 0.5, relativeTo: .caption2)
 
-    static let eyebrow: EmmTextStyle = inter(EmmFonts.interMedium, size: 10, lineHeight: 14, tracking: 1.6, relativeTo: .caption2)
+    static let eyebrow: EmmTextStyle = inter(
+        EmmFonts.interMedium, size: 10, lineHeight: 14, tracking: 1.6, relativeTo: .caption2)
 
-    private static func mono(size: CGFloat, lineHeight: CGFloat, tracking: CGFloat, relativeTo textStyle: Font.TextStyle) -> EmmTextStyle {
+    private static func mono(
+        size: CGFloat, lineHeight: CGFloat, tracking: CGFloat, relativeTo textStyle: Font.TextStyle
+    ) -> EmmTextStyle {
         EmmTextStyle(
             fontName: EmmFonts.plexMonoMedium,
             size: size,
