@@ -10,6 +10,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
 import org.gradle.language.base.plugins.LifecycleBasePlugin
+import java.io.File
 
 class QualityGateConventionPlugin : Plugin<Project> {
 
@@ -59,7 +60,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
             modulePath.set(this@registerBoundaryCheck.path)
             dependencyPaths.set(provider { declaredProjectDependencies(tests = false) })
             testDependencyPaths.set(provider { declaredProjectDependencies(tests = true) })
-            android.set(provider { pluginManager.hasPlugin(ANDROID_BASE_PLUGIN) })
+            platformSourceSets.set(provider { platformSourceSets() })
             report.set(layout.buildDirectory.file("reports/$BOUNDARY_TASK.txt"))
         }
 
@@ -104,7 +105,10 @@ class QualityGateConventionPlugin : Plugin<Project> {
 
     // Split so the task can allow :core:testing from a test configuration alone: a fixture module
     // reached from src/test never reaches a user, while every other edge binds in both.
+    // The Kotlin plugin fills its SwiftPM lockfile configurations of one KMP module with every KMP
+    // module in the build; no build file declares those edges.
     private fun Project.declaredProjectDependencies(tests: Boolean): Set<String> = configurations
+        .filterNot { it.name.startsWith(SWIFT_PM_CONFIGURATION_PREFIX) }
         .filter { it.isTestConfiguration() == tests }
         .flatMap { it.dependencies }
         .filterIsInstance<ProjectDependency>()
@@ -119,6 +123,14 @@ class QualityGateConventionPlugin : Plugin<Project> {
 
     // A test fixture declaring its own value-class id would be read as a production declaration
     // and could redden a safe key through the name-only fallback, so the test source sets stay out.
+    private fun Project.platformSourceSets(): Set<String> {
+        val sourceRoot: File = file(SOURCE_DIRECTORY)
+        return fileTree(sourceRoot).files
+            .map { source -> source.relativeTo(sourceRoot).invariantSeparatorsPath.substringBefore('/') }
+            .filter { sourceSet -> sourceSet != COMMON_MAIN && (sourceSet == MAIN || sourceSet.endsWith(MAIN_SUFFIX)) }
+            .toSet()
+    }
+
     private fun Project.lazyKeySources(): FileCollection =
         fileTree(SOURCE_DIRECTORY) {
             include(KOTLIN_SOURCES)
@@ -134,19 +146,24 @@ class QualityGateConventionPlugin : Plugin<Project> {
         const val SNAPSHOT_EXTENSION: String = "sqlDelightSnapshots"
 
         private const val BUILD_LOGIC_BUILD: String = "build-logic"
+        private val IOS_TEST_SOURCE_SETS: List<String> = listOf("iosTest", "iosArm64Test", "iosSimulatorArm64Test")
         private const val TEST_TASK: String = ":convention:test"
-        private const val ANDROID_BASE_PLUGIN: String = "com.android.base"
+        private const val SWIFT_PM_CONFIGURATION_PREFIX: String = "swiftPM"
         private val TEST_CONFIGURATION_PREFIXES: List<String> =
-            listOf("test", "androidTest", "commonTest", "androidHostTest", "androidDeviceTest")
+            listOf("test", "androidTest", "commonTest", "androidHostTest", "androidDeviceTest") + IOS_TEST_SOURCE_SETS
 
         private fun Configuration.isTestConfiguration(): Boolean =
             TEST_CONFIGURATION_PREFIXES.any { prefix -> name.startsWith(prefix) }
         private const val SOURCE_DIRECTORY: String = "src"
+        private const val COMMON_MAIN: String = "commonMain"
+        private const val MAIN: String = "main"
+        private const val MAIN_SUFFIX: String = "Main"
         private const val VIEW_MODEL_SOURCES: String = "**/*ViewModel.kt"
         private const val UI_STATE_SOURCES: String = "**/*UiState.kt"
         private const val KOTLIN_SOURCES: String = "**/*.kt"
         private val TEST_SOURCE_SETS: List<String> =
-            listOf("test*/**", "androidTest*/**", "commonTest/**", "androidHostTest/**", "androidDeviceTest/**")
+            listOf("test*/**", "androidTest*/**", "commonTest/**", "androidHostTest/**", "androidDeviceTest/**") +
+                IOS_TEST_SOURCE_SETS.map { sourceSet -> "$sourceSet/**" }
         private const val SQLDELIGHT_DIRECTORY: String = "src/main/sqldelight"
         private const val SNAPSHOT_DIRECTORY: String = "src/main/sqldelight/databases"
         private const val MIGRATION_SOURCES: String = "**/*.sqm"

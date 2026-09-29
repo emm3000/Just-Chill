@@ -2,7 +2,17 @@ complexity:
   CyclomaticComplexMethod:
     allowedComplexity: 14
   LargeClass:
-    excludes: ['**/test/**', '**/androidTest/**']
+    excludes: &testSources
+      - '**/test/**'
+      - '**/androidTest/**'
+      - '**/commonTest/**'
+      - '**/jvmTest/**'
+      - '**/androidUnitTest/**'
+      - '**/androidInstrumentedTest/**'
+      - '**/androidHostTest/**'
+      - '**/androidDeviceTest/**'
+      - '**/jsTest/**'
+      - '**/iosTest/**'
   LongMethod:
     allowedLines: 60
     ignoreAnnotated: ['Composable', 'Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth', 'PreviewWindowEdges']
@@ -11,16 +21,37 @@ complexity:
   TooManyFunctions:
     allowedFunctionsPerFile: 8
     ignoreAnnotatedFunctions: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth', 'PreviewWindowEdges']
+    excludes: *testSources
+
+exceptions:
+  InstanceOfCheckForException:
+    excludes: *testSources
+  ThrowingExceptionsWithoutMessageOrCause:
+    excludes: *testSources
+  TooGenericExceptionCaught:
+    excludes: *testSources
 
 naming:
   FunctionNaming:
     ignoreAnnotated: ['Composable']
+    excludes: *testSources
   MatchingDeclarationName:
     active: false
+
+performance:
+  ForEachOnRange:
+    excludes: *testSources
+  SpreadOperator:
+    excludes: *testSources
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    excludes: *testSources
 
 style:
   MagicNumber:
     ignoreAnnotated: ['Preview', 'PreviewRedmi15C', 'PreviewRedmi15CWidth', 'PreviewWindowEdges']
+    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/androidHostTest/**', '**/androidDeviceTest/**', '**/jsTest/**', '**/iosTest/**', '**/*.kts']
   ReturnCount:
     max: 2
     excludeReturnFromLambda: true

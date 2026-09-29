@@ -23,7 +23,7 @@ abstract class CheckModuleBoundariesTask : DefaultTask() {
     abstract val testDependencyPaths: SetProperty<String>
 
     @get:Input
-    abstract val android: Property<Boolean>
+    abstract val platformSourceSets: SetProperty<String>
 
     @get:OutputFile
     abstract val report: RegularFileProperty
@@ -38,8 +38,8 @@ abstract class CheckModuleBoundariesTask : DefaultTask() {
         val violations: List<String> = buildList {
             forbidden.forEach { add("$path depends on $it") }
             forbiddenInTests.forEach { add("$path depends on $it") }
-            if (role == ModuleRole.CORE_DOMAIN && android.get()) {
-                add("$path applies an Android plugin")
+            if (role == ModuleRole.CORE_DOMAIN) {
+                platformSourceSets.get().sorted().forEach { add("$path carries production sources in $it") }
             }
         }
 

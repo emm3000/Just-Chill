@@ -227,10 +227,6 @@ internal class ConventionPluginFixture(
                     sqldelight?.databases?.forEach { database ->
                         println("REPORT database=" + listOf(database.name, database.packageName.get(), database.schemaOutputDirectory.get().asFile.relativeTo(project.projectDir).invariantSeparatorsPath, database.verifyMigrations.get()).joinToString(","))
                     }
-                    val java = project.extensions.findByType(org.gradle.api.plugins.JavaPluginExtension::class.java)
-                    if (java != null) {
-                        println("REPORT javaToolchain=" + java.toolchain.languageVersion.get())
-                    }
                     val compilations = project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile::class.java)
                     println("REPORT jvmTarget=" + compilations.map { it.compilerOptions.jvmTarget.get().target }.distinct().sorted().joinToString(","))
                     println("REPORT optIn=" + compilations.flatMap { it.compilerOptions.optIn.get() }.distinct().sorted().joinToString(","))

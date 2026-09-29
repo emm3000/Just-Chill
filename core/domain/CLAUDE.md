@@ -1,6 +1,6 @@
 # :core:domain — CLAUDE.md
 
-Plain `org.jetbrains.kotlin.jvm` library (ADR 011) and the bottom of the graph: no module dependencies at all. Only `kotlinx-coroutines-core` and `kotlinx-datetime`. `android.*` / `androidx.*` cannot resolve here, a dependency-graph guarantee; SQLDelight, Supabase and Ktor stay out by convention, reviewed.
+KMP library (`justchill.kmp.library`, ADR 024) and the bottom of the graph: no module dependencies at all. Every production source is in `src/commonMain`, on `kotlinx-coroutines-core` and `kotlinx-datetime` alone. `android.*` / `androidx.*` cannot resolve in `commonMain`, a dependency-graph guarantee, and `checkModuleBoundaries` fails an `androidMain` or `iosMain` source here; SQLDelight, Supabase and Ktor stay out by convention, reviewed.
 
 Root package `com.emm.justchill.core.domain.<entity>`: one directory per entity plus `shared/` and `time/`. Read the directory instead of a list. Naming and the use-case admission rule: `.claude/rules/naming.md`, `.claude/rules/architecture.md`. The vocabulary: `CONTEXT.md` at the repo root.
 
@@ -24,4 +24,4 @@ The app is local-first; backup is a snapshot, **one device at a time** (ADR 006,
 
 ## Testing
 
-`./gradlew :core:domain:test`. Use cases are the primary test surface; a behavior test for every rule, fixture locals named by role.
+`./gradlew :core:domain:testAndroidHostTest`: the MockK and JUnit4 suite in `src/androidHostTest`, which `./gradlew test` does not reach. `commonTest` is for new `kotlin.test`-only tests. Use cases are the primary test surface; a behavior test for every rule, fixture locals named by role.

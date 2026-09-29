@@ -1,8 +1,12 @@
 plugins {
-    id("justchill.jvm.library")
+    id("justchill.kmp.library")
 }
 
-dependencies {
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.datetime)
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+        }
+    }
 }

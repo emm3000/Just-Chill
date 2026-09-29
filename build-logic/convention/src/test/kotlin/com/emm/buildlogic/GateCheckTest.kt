@@ -158,13 +158,45 @@ class GateCheckTest {
     }
 
     @Test
-    fun `core domain that applies an android plugin fails the boundary check`() {
+    fun `core domain that carries an android main or ios main source fails the boundary check`() {
         val output: String = fixture.checkAndFail(
             task = ":core:domain:$BOUNDARY_TASK",
-            modules = mapOf(":core:domain" to """plugins { id("justchill.android.library") }"""),
+            modules = mapOf(":core:domain" to kmpModule(emptyMap())),
+            sources = mapOf(
+                "core/domain/src/androidMain/kotlin/Platform.kt" to PLATFORM_SOURCE,
+                "core/domain/src/iosMain/kotlin/Platform.kt" to PLATFORM_SOURCE,
+            ),
         )
 
-        assertTrue(output.contains(":core:domain applies an Android plugin"), output)
+        assertTrue(output.contains(":core:domain carries production sources in androidMain"), output)
+        assertTrue(output.contains(":core:domain carries production sources in iosMain"), output)
+    }
+
+    @Test
+    fun `kotlin's swiftpm lockfile configuration listing every kmp module passes the boundary check`() {
+        val result: BuildResult = fixture.check(
+            task = ":core:domain:$BOUNDARY_TASK",
+            modules = mapOf(
+                ":core:domain" to kmpModule(emptyMap()),
+                ":core:testing" to kmpModule(mapOf("commonMain" to ":core:domain")),
+            ),
+        )
+
+        assertSucceeded(result, ":core:domain:$BOUNDARY_TASK")
+    }
+
+    @Test
+    fun `core domain with common main and host test sources passes the boundary check`() {
+        val result: BuildResult = fixture.check(
+            task = ":core:domain:$BOUNDARY_TASK",
+            modules = mapOf(":core:domain" to kmpModule(emptyMap())),
+            sources = mapOf(
+                "core/domain/src/commonMain/kotlin/Platform.kt" to PLATFORM_SOURCE,
+                "core/domain/src/androidHostTest/kotlin/PlatformTest.kt" to PLATFORM_SOURCE,
+            ),
+        )
+
+        assertSucceeded(result, ":core:domain:$BOUNDARY_TASK")
     }
 
     @Test
@@ -485,7 +517,7 @@ class GateCheckTest {
         testDependencies: Array<String> = emptyArray(),
         snapshotFloor: Int? = null,
     ): String = buildString {
-        appendLine("""plugins { id("justchill.jvm.library") }""")
+        appendLine("""plugins { id("justchill.android.library") }""")
         if (snapshotFloor != null) {
             appendLine("sqlDelightSnapshots { floor.set($snapshotFloor) }")
         }
@@ -502,13 +534,14 @@ class GateCheckTest {
         appendLine("kotlin {")
         appendLine("    android { withDeviceTest {} }")
         dependencies.forEach { (sourceSet, path) ->
-            appendLine("""    sourceSets.getByName("$sourceSet").dependencies { implementation(project("$path")) }""")
+            appendLine("""    sourceSets.maybeCreate("$sourceSet").dependencies { implementation(project("$path")) }""")
         }
         appendLine("}")
     }
 
     private companion object {
-        val KMP_TEST_SOURCE_SETS: List<String> = listOf("commonTest", "androidHostTest", "androidDeviceTest")
+        val KMP_TEST_SOURCE_SETS: List<String> =
+            listOf("commonTest", "androidHostTest", "androidDeviceTest", "iosTest", "iosArm64Test", "iosSimulatorArm64Test")
 
         val KMP_FEATURE_MODULES: Map<String, String> = mapOf(
             ":feature:loan" to """plugins { id("justchill.kmp.feature") }""",
@@ -556,6 +589,7 @@ class GateCheckTest {
             "package sample\n\nfun rows() = items(loans, key = { it.pendingId }) { }\n"
 
         const val COMPOSE_SOURCE: String = "package sample\n\nimport androidx.compose.runtime.Immutable\n"
+        const val PLATFORM_SOURCE: String = "package sample\n\nclass Platform\n"
         const val MIGRATION_DIRECTORY: String = "core/database/src/main/sqldelight/com/sample"
         const val SNAPSHOT_DIRECTORY: String = "core/database/src/main/sqldelight/databases"
         const val MIGRATION_SOURCE: String = "ALTER TABLE sample ADD COLUMN note TEXT;\n"
