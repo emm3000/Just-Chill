@@ -31,11 +31,12 @@ import com.emm.justchill.core.domain.shared.backup.BackupVerifier
 import com.emm.justchill.core.domain.shared.backup.SnapshotStore
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionStatsRepository
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-val dataModule = module {
+val dataModule: Module = module {
     single { provideTransactionQueries(get()) }
 
     factoryOf(::CategoryLocalDataSource)

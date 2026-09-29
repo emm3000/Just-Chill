@@ -15,7 +15,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import platform.Foundation.NSUserDefaults
 
-private const val AUTH_KEYCHAIN_SERVICE = "com.emm.justchill.auth"
+private const val AUTH_KEYCHAIN_SERVICE: String = "com.emm.justchill.auth"
 
 fun iosPlatformModule(config: KitConfig): Module = module {
     single { provideSqlDriver() }

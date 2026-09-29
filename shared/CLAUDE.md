@@ -37,4 +37,5 @@ Every binding below must come from `androidPlatformModule` or `iosPlatformModule
 
 - `./gradlew :shared:linkDebugFrameworkIosSimulatorArm64` links the framework to `build/bin/iosSimulatorArm64/debugFramework/JustChillKit.framework`; the gate runs it. No simulator is involved (ADR 024 Decision 8).
 - `./gradlew :shared:testAndroidHostTest` runs `KitGraphKoinTest`. The suites over the moved classes stay in `:androidApp` (`src/test/.../core/`), which alone sees every module they wire.
+- `skie { analytics { disableUpload } }` stays on: the app sends no telemetry, and neither does its build.
 - The ObjC export warns about `description` clashes on every data class with that field; SKIE and the link still succeed.

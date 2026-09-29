@@ -6,12 +6,14 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.koin.core.module.Module
+import org.koin.core.qualifier.Qualifier
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-val appScopeQualifier = named("appScope")
+val appScopeQualifier: Qualifier = named("appScope")
 
-val commonCoreModule = module {
+val commonCoreModule: Module = module {
     single { AppPreferences(get()) }
 
     // The handler is a backstop, not the primary defence: BackupOrchestrator catches its own

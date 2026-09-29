@@ -13,11 +13,12 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.serializer.KotlinXSerializer
 import io.github.jan.supabase.storage.Storage
 import kotlinx.serialization.json.Json
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-val supabaseModule = module {
+val supabaseModule: Module = module {
     single { provideSupabaseClient(get(), get()) }
 
     factoryOf(::DefaultAuthRepository) { bind<AuthRepository>() }

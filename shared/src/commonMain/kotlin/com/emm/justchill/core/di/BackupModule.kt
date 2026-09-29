@@ -13,6 +13,7 @@ import com.emm.justchill.core.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
 import com.emm.justchill.core.lifecycle.backgroundEvents
 import com.emm.justchill.core.lifecycle.resumeEvents
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -20,7 +21,7 @@ import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-val backupModule = module {
+val backupModule: Module = module {
     factoryOf(::ImportDataUseCase)
 
     factoryOf(::GetBackupStalenessUseCase)

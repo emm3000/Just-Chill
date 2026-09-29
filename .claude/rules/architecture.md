@@ -25,7 +25,7 @@ Allowed dependencies, and nothing else:
 
 ```
 androidApp        -> shared, feature:*, core:backup, core:database, core:ui, core:presentation, core:domain
-shared            -> the seven KMP feature:*, core:backup, core:database, core:presentation, core:domain
+shared            -> feature:*, core:backup, core:database, core:presentation, core:domain
 feature:*         -> core:ui, core:presentation, core:domain, core:testing
 core:backup       -> core:domain
 core:database     -> core:domain
@@ -34,7 +34,7 @@ core:presentation -> core:domain (+ core:testing, androidHostTest)
 core:testing      -> core:domain
 ```
 
-`checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` and `:shared` may depend on a feature.
+`checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` and `:shared` may depend on a feature. `:shared` reaches only the seven KMP features: `:feature:onboarding` is an Android library, which Gradle cannot resolve for `:shared`'s iOS targets.
 
 - `:core:domain` is pure Kotlin, a KMP module whose every production source is in `commonMain`: `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve in `commonMain`, and `checkModuleBoundaries` fails an `androidMain` or `iosMain` source there; the rest is convention, reviewed.
 - Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `:shared`'s `core/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.

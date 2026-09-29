@@ -14,9 +14,7 @@ internal enum class ModuleRole {
     fun allows(dependencyPath: String): Boolean = when (this) {
         ROOT -> false
         APP -> true
-        SHARED ->
-            (dependencyPath.startsWith(CORE_PREFIX) || dependencyPath.startsWith(FEATURE_PREFIX)) &&
-                dependencyPath != CORE_TESTING_PATH
+        SHARED -> dependencyPath in SHARED_CORE_PATHS || dependencyPath.startsWith(FEATURE_PREFIX)
         CORE_DOMAIN -> false
         CORE_PRESENTATION -> dependencyPath == CORE_DOMAIN_PATH
         CORE_UI -> dependencyPath == CORE_DOMAIN_PATH || dependencyPath == CORE_PRESENTATION_PATH
@@ -30,7 +28,7 @@ internal enum class ModuleRole {
     fun rule(): String = when (this) {
         ROOT -> "the root project depends on no module"
         APP -> "the app composes every module"
-        SHARED -> "$SHARED_PATH depends on $CORE_PREFIX and $FEATURE_PREFIX modules only, $CORE_TESTING_PATH in tests alone"
+        SHARED -> "$SHARED_PATH depends on ${SHARED_CORE_PATHS.joinToString()} and $FEATURE_PREFIX modules only"
         CORE_DOMAIN -> "$CORE_DOMAIN_PATH depends on no other module and keeps its production sources in commonMain"
         CORE_PRESENTATION -> "$CORE_PRESENTATION_PATH depends on $CORE_DOMAIN_PATH only"
         CORE_UI -> "$CORE_UI_PATH depends on $CORE_DOMAIN_PATH and $CORE_PRESENTATION_PATH only"
@@ -46,6 +44,11 @@ internal enum class ModuleRole {
         const val CORE_PRESENTATION_PATH: String = ":core:presentation"
         const val CORE_UI_PATH: String = ":core:ui"
         const val CORE_TESTING_PATH: String = ":core:testing"
+        const val CORE_DATABASE_PATH: String = ":core:database"
+        const val CORE_BACKUP_PATH: String = ":core:backup"
+
+        private val SHARED_CORE_PATHS: List<String> =
+            listOf(CORE_DOMAIN_PATH, CORE_PRESENTATION_PATH, CORE_DATABASE_PATH, CORE_BACKUP_PATH)
 
         private const val CORE_PREFIX: String = ":core:"
         private const val FEATURE_PREFIX: String = ":feature:"
