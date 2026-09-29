@@ -132,12 +132,13 @@ fun AddTransactionScreen(
 }
 
 @Composable
-internal fun AddTransactionScreenContent(
+fun AddTransactionScreenContent(
     state: AddTransactionUiState,
     onIntent: (AddTransactionIntent) -> Unit,
     onClose: () -> Unit,
     onOpenTransactions: () -> Unit,
     onSave: () -> Unit,
+    modifier: Modifier = Modifier,
     onAddNewCategory: (CategoryType) -> Unit = {},
     onAddNewAccount: () -> Unit = {},
 ) {
@@ -158,7 +159,7 @@ internal fun AddTransactionScreenContent(
         ctaLabel = ctaLabel,
         amountDescription = amountDescription,
         actions = PadActions(onIntent, onClose, onOpenTransactions, onSave, onAddNewAccount),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(colors.bg),
     )
