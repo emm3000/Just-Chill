@@ -15,8 +15,9 @@ Totals of rows already folded out of Recent.
 | 1 | sonnet:low | 7 | 7 | 0 | 0 | 0 | - | - |
 | 2 | sonnet:medium | 46 | 21 | 12 | 10 | 3 | - | - |
 | 2 | sonnet:high | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 3 | opus:medium | 92 | 61 | 8 | 13 | 10 | - | - |
-| 4 | opus:high | 39 | 23 | 11 | 3 | 2 | - | - |
+| 3 | opus:medium | 94 | 63 | 8 | 13 | 10 | - | - |
+| 3 | opus:high | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 4 | opus:high | 40 | 24 | 11 | 3 | 2 | - | - |
 
 ## Recent
 
@@ -24,10 +25,7 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause | Review | Nudges | Minutes |
 |---|---|---|---|---|---|---|---|---|
-| #503 | #482 | 4 | opus:high | MERGE | - | - | - | - |
-| #504 | #485 | 3 | opus:medium | MERGE | - | - | - | - |
 | #506 | #483 | 4 | opus:high | FIX FIRST | checklist | - | - | - |
-| #505 | #487 | 3 | opus:medium | MERGE | - | - | - | - |
 | #508 | #490 | 3 | opus:medium | MERGE | - | - | - | - |
 | #507 | #486 | 4 | opus:high | MERGE | - | - | - | - |
 | #509 | #488 | 3 | opus:medium | MERGE | - | - | - | - |
@@ -44,7 +42,11 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #545 | #542 | 1 | sonnet:low | MERGE | - | ok | 0 | 3 |
 | #548 | #528 | 4 | opus:high | FIX FIRST | checklist | ok | 0 | 16 |
 | #549 | #526 | 4 | opus:high | FIX FIRST | judgment | ok | 0 | 22 |
+| #551 | #546 | 3 | opus:medium | MERGE | - | ok | 0 | 4 |
+| #552 | #527 | 3 | opus:medium | FIX FIRST | judgment | ok | 0 | 12 |
+| #553 | #550 | 4 | opus:high | MERGE | - | ok | 0 | 14 |
 
 ## Changes
 
+- 2026-09-29: row 3 opus:medium -> opus:high: two first-review FIX FIRST judgment in Recent (#519, #552). Row 4 not raised: of its two judgment verdicts, #520 came from an orchestrator relay, not the model.
 - 2026-09-28: ported Anthropic's Opus 5.5, Sonnet 5.5 and Fable 5.1 prompting guides. Row 2 sonnet:medium -> sonnet:high; autonomy paragraph and reporting rule in every dispatch; Time sentence rows 1-2; @orch nudges capped at 3; Review, Nudges and Minutes columns; five-MERGE downward pilot; fable:low pilot allowed on row 3.
