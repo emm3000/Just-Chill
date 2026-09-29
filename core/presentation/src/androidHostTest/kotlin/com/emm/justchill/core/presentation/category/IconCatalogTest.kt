@@ -54,4 +54,9 @@ class IconCatalogTest {
             selectableColorIds.map(::colorLabel),
         )
     }
+
+    @Test
+    fun `a colour id outside the picker is named by its id`() {
+        assertEquals("teal", colorLabel("teal"))
+    }
 }
