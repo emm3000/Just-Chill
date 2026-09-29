@@ -38,15 +38,18 @@ internal fun Project.configureAndroidUnitTestDependencies() {
 
 internal fun Project.configureAndroidCompose(extension: CommonExtension) {
     extension.buildFeatures.compose = true
+    configureCompose(implementation = "implementation", tooling = "debugImplementation")
+}
 
+internal fun Project.configureCompose(implementation: String, tooling: String) {
     dependencies {
-        add("implementation", platform(libs.library("androidx-compose-bom")))
-        add("implementation", libs.library("androidx-runtime"))
-        add("implementation", libs.library("androidx-foundation"))
-        add("implementation", libs.library("androidx-ui"))
-        add("implementation", libs.library("androidx-ui-tooling-preview"))
-        add("implementation", libs.library("androidx-material3"))
-        add("debugImplementation", libs.library("androidx-ui-tooling"))
+        add(implementation, platform(libs.library("androidx-compose-bom")))
+        add(implementation, libs.library("androidx-runtime"))
+        add(implementation, libs.library("androidx-foundation"))
+        add(implementation, libs.library("androidx-ui"))
+        add(implementation, libs.library("androidx-ui-tooling-preview"))
+        add(implementation, libs.library("androidx-material3"))
+        add(tooling, libs.library("androidx-ui-tooling"))
     }
 
     tasks.withType<KotlinJvmCompile>().configureEach {
