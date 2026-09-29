@@ -44,7 +44,7 @@ class ProfileRowTextTest {
             "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
                 "Lo que no esté ahí se borra, y como tienes sesión iniciada también se " +
                 "borra en tus otros dispositivos. No se puede deshacer.",
-            ProfileUiState(session = SessionUiState.SignedIn(email = "qa@example.com")).importWarning,
+            signedInProfile.importWarning,
         )
     }
 
