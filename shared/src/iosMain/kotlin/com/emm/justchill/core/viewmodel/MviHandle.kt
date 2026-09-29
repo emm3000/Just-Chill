@@ -14,7 +14,7 @@ import org.koin.mp.KoinPlatform
 import kotlin.reflect.KClass
 
 class MviHandle<S : UiState, I : UiIntent, E : UiEffect> internal constructor(
-    val viewModel: MviViewModel<S, I, E>,
+    internal val viewModel: MviViewModel<S, I, E>,
     private val store: ViewModelStore,
 ) {
 

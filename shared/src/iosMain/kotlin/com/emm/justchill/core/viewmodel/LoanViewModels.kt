@@ -18,13 +18,13 @@ import com.emm.justchill.feature.loan.PersonLoansUiState
 import com.emm.justchill.feature.loan.PersonLoansViewModel
 import org.koin.core.parameter.parametersOf
 
-fun loansViewModel(): MviHandle<LoansUiState, LoansIntent, LoansEffect> = handleOf(LoansViewModel::class)
+fun resolveLoansHandle(): MviHandle<LoansUiState, LoansIntent, LoansEffect> = handleOf(LoansViewModel::class)
 
-fun personLoansViewModel(personKey: String): MviHandle<PersonLoansUiState, PersonLoansIntent, PersonLoansEffect> =
+fun resolvePersonLoansHandle(personKey: String): MviHandle<PersonLoansUiState, PersonLoansIntent, PersonLoansEffect> =
     handleOf(PersonLoansViewModel::class) { parametersOf(personKey) }
 
-fun loanDetailViewModel(loanId: String): MviHandle<LoanDetailUiState, LoanDetailIntent, LoanDetailEffect> =
+fun resolveLoanDetailHandle(loanId: String): MviHandle<LoanDetailUiState, LoanDetailIntent, LoanDetailEffect> =
     handleOf(LoanDetailViewModel::class) { parametersOf(loanId) }
 
-fun addEditLoanViewModel(loanId: String?): MviHandle<AddEditLoanUiState, AddEditLoanIntent, AddEditLoanEffect> =
+fun resolveAddEditLoanHandle(loanId: String?): MviHandle<AddEditLoanUiState, AddEditLoanIntent, AddEditLoanEffect> =
     handleOf(AddEditLoanViewModel::class) { parametersOf(loanId) }

@@ -9,7 +9,8 @@ import com.emm.justchill.feature.account.AddAccountIntent
 import com.emm.justchill.feature.account.AddAccountUiState
 import com.emm.justchill.feature.account.AddAccountViewModel
 
-fun accountsViewModel(): MviHandle<AccountsUiState, AccountsIntent, AccountsEffect> = handleOf(AccountsViewModel::class)
+fun resolveAccountsHandle(): MviHandle<AccountsUiState, AccountsIntent, AccountsEffect> =
+    handleOf(AccountsViewModel::class)
 
-fun addAccountViewModel(): MviHandle<AddAccountUiState, AddAccountIntent, AddAccountEffect> =
+fun resolveAddAccountHandle(): MviHandle<AddAccountUiState, AddAccountIntent, AddAccountEffect> =
     handleOf(AddAccountViewModel::class)

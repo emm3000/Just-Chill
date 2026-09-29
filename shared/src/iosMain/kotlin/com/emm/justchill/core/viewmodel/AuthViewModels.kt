@@ -5,4 +5,4 @@ import com.emm.justchill.feature.auth.AuthIntent
 import com.emm.justchill.feature.auth.AuthUiState
 import com.emm.justchill.feature.auth.AuthViewModel
 
-fun authViewModel(): MviHandle<AuthUiState, AuthIntent, AuthEffect> = handleOf(AuthViewModel::class)
+fun resolveAuthHandle(): MviHandle<AuthUiState, AuthIntent, AuthEffect> = handleOf(AuthViewModel::class)

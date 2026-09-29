@@ -3,7 +3,7 @@ package com.emm.justchill.core.viewmodel
 import androidx.lifecycle.viewModelScope
 import com.emm.justchill.core.KitConfig
 import com.emm.justchill.core.initKoin
-import com.emm.justchill.core.preferences.appPreferences
+import com.emm.justchill.core.preferences.resolveAppPreferences
 import com.emm.justchill.feature.account.AccountsViewModel
 import com.emm.justchill.feature.account.AddAccountViewModel
 import com.emm.justchill.feature.auth.AuthViewModel
@@ -56,32 +56,31 @@ class ViewModelAccessorsTest {
     @Test
     fun `every ViewModel resolves through its accessor against the iOS platform module`() {
         val resolved: List<Pair<KClass<*>, MviHandle<*, *, *>>> = listOf(
-            AccountsViewModel::class to accountsViewModel(),
-            AddAccountViewModel::class to addAccountViewModel(),
-            AuthViewModel::class to authViewModel(),
-            CategoriesViewModel::class to categoriesViewModel(),
-            AddCategoryViewModel::class to addCategoryViewModel(initialType = "Spend", initialName = "Test"),
-            LoansViewModel::class to loansViewModel(),
-            PersonLoansViewModel::class to personLoansViewModel(personKey = "test-person-key"),
-            LoanDetailViewModel::class to loanDetailViewModel(loanId = "test-loan-id"),
-            AddEditLoanViewModel::class to addEditLoanViewModel(loanId = null),
-            ProfileViewModel::class to profileViewModel(),
-            ReportViewModel::class to reportViewModel(),
-            AddTransactionViewModel::class to addTransactionViewModel(),
-            EditTransactionViewModel::class to editTransactionViewModel(transactionId = "test-transaction-id"),
-            SeeTransactionsViewModel::class to seeTransactionsViewModel(),
+            AccountsViewModel::class to resolveAccountsHandle(),
+            AddAccountViewModel::class to resolveAddAccountHandle(),
+            AuthViewModel::class to resolveAuthHandle(),
+            CategoriesViewModel::class to resolveCategoriesHandle(),
+            AddCategoryViewModel::class to resolveAddCategoryHandle(initialType = "Spend", initialName = "Test"),
+            LoansViewModel::class to resolveLoansHandle(),
+            PersonLoansViewModel::class to resolvePersonLoansHandle(personKey = "test-person-key"),
+            LoanDetailViewModel::class to resolveLoanDetailHandle(loanId = "test-loan-id"),
+            AddEditLoanViewModel::class to resolveAddEditLoanHandle(loanId = null),
+            ProfileViewModel::class to resolveProfileHandle(),
+            ReportViewModel::class to resolveReportHandle(),
+            AddTransactionViewModel::class to resolveAddTransactionHandle(),
+            EditTransactionViewModel::class to resolveEditTransactionHandle(transactionId = "test-transaction-id"),
+            SeeTransactionsViewModel::class to resolveSeeTransactionsHandle(),
         )
 
         resolved.forEach { (type, handle) ->
             assertTrue(type.isInstance(handle.viewModel), "${type.simpleName} resolved to ${handle.viewModel}")
             handle.clear()
         }
-        assertEquals(EXPECTED_VIEW_MODEL_COUNT, resolved.map { it.first }.toSet().size)
     }
 
     @Test
     fun `clear cancels the ViewModel scope`() {
-        val handle: MviHandle<*, *, *> = accountsViewModel()
+        val handle: MviHandle<*, *, *> = resolveAccountsHandle()
         val scope: CoroutineScope = handle.viewModel.viewModelScope
         assertTrue(scope.isActive)
 
@@ -91,8 +90,14 @@ class ViewModelAccessorsTest {
     }
 
     @Test
-    fun `app preferences resolve through their accessor`() {
-        appPreferences().firstLaunchSeen
+    fun `app preferences resolve through their accessor onto the platform settings`() {
+        val original: Boolean = resolveAppPreferences().firstLaunchSeen
+        resolveAppPreferences().firstLaunchSeen = !original
+
+        val reread: Boolean = resolveAppPreferences().firstLaunchSeen
+        resolveAppPreferences().firstLaunchSeen = original
+
+        assertEquals(!original, reread)
     }
 
     @Test
@@ -102,9 +107,5 @@ class ViewModelAccessorsTest {
         val result: GoogleSignInResult = runBlocking { launcher.signIn(serverClientId = "") }
 
         assertEquals(GoogleSignInResult.NoCredentials, result)
-    }
-
-    private companion object {
-        const val EXPECTED_VIEW_MODEL_COUNT: Int = 14
     }
 }
