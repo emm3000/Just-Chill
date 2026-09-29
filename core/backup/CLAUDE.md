@@ -1,8 +1,8 @@
 # :core:backup — CLAUDE.md
 
-Android library (`com.android.library`, ADR 011) holding the opt-in snapshot backup (ADR 009) and the Supabase account it rides on: the export DTOs and their frozen older generations, the payload decoder, the object store over Supabase Storage, the uploader, verifier, pruner and eraser, and `auth/`. It depends on `:core:domain` and nothing else — never on `:core:database`, which `checkModuleBoundaries` enforces. Rows reach it through `SnapshotStore`, the port `:core:domain` declares, `:core:database` implements and `:androidApp`'s `core/di/DataModule.kt` binds.
+KMP library (`justchill.kmp.library`, ADR 024) holding the opt-in snapshot backup (ADR 009) and the Supabase account it rides on: the export DTOs and their frozen older generations, the payload decoder, the object store over Supabase Storage, the uploader, verifier, pruner and eraser, and `auth/`. It depends on `:core:domain` and nothing else — never on `:core:database`, which `checkModuleBoundaries` enforces. Rows reach it through `SnapshotStore`, the port `:core:domain` declares, `:core:database` implements and `:androidApp`'s `core/di/DataModule.kt` binds.
 
-Root package `com.emm.justchill.core.backup`, `minSdk = 28`. The Supabase auth/postgrest/storage SDKs and the Ktor engine are `api`-exposed; the consumer is `:androidApp` (`core/di/SupabaseModule.kt`), which builds the `SupabaseClient` this module takes by constructor.
+Root package `com.emm.justchill.core.backup`, `minSdk = 28`. Every production source sits in `commonMain` and every test in `androidHostTest`; no file needs a platform source set. The Ktor engine is the only platform split and lives in the build file: `ktor-client-okhttp` on `androidMain`, `ktor-client-darwin` on `iosMain`, never in `commonMain`. The Supabase auth/postgrest/storage SDKs and the engine are `api`-exposed; the consumer is `:androidApp` (`core/di/SupabaseModule.kt`), which builds the `SupabaseClient` this module takes by constructor.
 
 `shared/` holds this module's own copies of the date-text, enum-parsing and dispatcher helpers `:core:database` also carries. The duplication is the point: the file format is frozen for every snapshot already on a disk, and the database's storage format has to stay free to move.
 
@@ -21,7 +21,7 @@ Root package `com.emm.justchill.core.backup`, `minSdk = 28`. The Supabase auth/p
 
 ## Testing
 
-`./gradlew :core:backup:testDebugUnitTest` — JUnit4 + MockK over the DTO mappers, the decoder, the object store and the four cycle classes, with `ktor-client-mock` standing in for the network. The tests that carry a snapshot all the way into real SQLite live in `:androidApp` (`androidApp/src/test/.../core/backup/`), the only module that sees this one and `:core:database` at once.
+`./gradlew :core:backup:testAndroidHostTest` — never reached by `./gradlew test`; JUnit4 + MockK over the DTO mappers, the decoder, the object store and the four cycle classes, with `ktor-client-mock` standing in for the network. The tests that carry a snapshot all the way into real SQLite live in `:androidApp` (`androidApp/src/test/.../core/backup/`), the only module that sees this one and `:core:database` at once.
 
 ### Building a `SupabaseClient` in a test
 
