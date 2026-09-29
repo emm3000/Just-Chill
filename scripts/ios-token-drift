@@ -11,8 +11,8 @@ failed=0
 check() {
   local label="$1"
   local kotlin_lines swift_lines
-  kotlin_lines="$(${=2} | sort)"
-  swift_lines="$(${=3} | sort)"
+  kotlin_lines="$(${=2} | sort || true)"
+  swift_lines="$(${=3} | sort || true)"
   local kotlin_count=0 swift_count=0
   [[ -n "$kotlin_lines" ]] && kotlin_count="$(wc -l <<< "$kotlin_lines" | tr -d ' ')"
   [[ -n "$swift_lines" ]] && swift_count="$(wc -l <<< "$swift_lines" | tr -d ' ')"
