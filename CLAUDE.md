@@ -67,6 +67,8 @@ Path-scoped, loaded when matching files are touched:
 | `.claude/rules/ui-components.md` | The atoms iron rule, which token to reach for and why |
 | `.claude/rules/sqldelight.md` | Schema changes: the three artifacts a migration ships, the migration test |
 | `.claude/rules/github-workflows.md` | CI, the gate's definition, pinned actions, the release upload |
+| `.claude/rules/swift-style.md` | `iosApp/`: how each Kotlin rule carries to Swift, comments, types, naming, the swift-format lint |
+| `.claude/rules/swift-screens.md` | `iosApp/`: the MVI contract through the store, the `Theme/` tokens, their falsifiers |
 
 Each module carries a `CLAUDE.md` with its build and test facts and its feature gotchas.
 
