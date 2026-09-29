@@ -62,6 +62,7 @@ extension EditMovementScreen {
         let accountName: String?
         let onConfirm: () -> Void
         let onDismiss: () -> Void
+        @State private var contentHeight: CGFloat = EmmSpacing.s0
 
         var body: some View {
             VStack(alignment: .leading, spacing: EmmSpacing.s3) {
@@ -73,7 +74,6 @@ extension EditMovementScreen {
                     .emmTextStyle(EmmType.bodyM)
                     .foregroundStyle(EmmColors.textSecondary)
                 summary
-                Spacer(minLength: EmmSpacing.s0)
                 Button(action: onConfirm) {
                     Text("Eliminar")
                         .emmTextStyle(EmmType.titleM)
@@ -81,6 +81,7 @@ extension EditMovementScreen {
                         .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
                         .overlay { EmmRadii.rL.stroke(EmmColors.danger, lineWidth: EmmSpacing.hairline) }
                 }
+                .padding(.top, EmmSpacing.s3)
                 Button(action: onDismiss) {
                     Text("Cancelar")
                         .emmTextStyle(EmmType.titleM)
@@ -91,10 +92,15 @@ extension EditMovementScreen {
             .padding(.horizontal, EmmSpacing.s6)
             .padding(.top, EmmSpacing.s6)
             .padding(.bottom, EmmSpacing.s4)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.height
+            } action: {
+                contentHeight = $0
+            }
             .background(EmmColors.bg)
             .presentationBackground(EmmColors.bg)
-            .presentationDetents([.medium])
+            .presentationDetents(contentHeight > EmmSpacing.s0 ? [.height(contentHeight)] : [.medium])
         }
 
         private var summary: some View {
