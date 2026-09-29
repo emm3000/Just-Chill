@@ -35,24 +35,20 @@ import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-// A missing, mistyped or wrongly qualified binding in appModules() compiles cleanly AND survives
-// assembleDevDebug, surfacing only as a crash when a user navigates to the affected screen. This
-// test resolves EVERY definition to close that gap; bootstrapAppGraph itself is never called.
 @OptIn(KoinInternalApi::class)
 class AppGraphKoinTest {
 
     private lateinit var koin: Koin
 
-    // Standard (not Unconfined): init-block coroutines stay queued and never run, so this test
-    // measures WIRING only and cannot flake on database contents or network reachability.
+    // Standard, not Unconfined: init-block coroutines stay queued, so the test never reads the
+    // database or the network.
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(StandardTestDispatcher())
 
     @Before
     fun setUp() {
-        // supabaseModule's install(Auth) needs a Context from an androidx.startup Initializer that
-        // only runs inside a real app; SettingsInitializer.create is the documented hook to supply
-        // one from tests. A relaxed mock is enough — nothing here reads or writes preferences.
+        // supabaseModule's install(Auth) takes its Context from an androidx.startup Initializer that
+        // runs only inside a real app; SettingsInitializer.create is the documented hook for tests.
         SettingsInitializer().create(mockk<Context>(relaxed = true))
         koin = koinApplication { modules(appModules(testPlatformModule)) }.koin
     }
@@ -68,9 +64,6 @@ class AppGraphKoinTest {
         val failures: MutableList<String> = mutableListOf()
 
         for ((type, qualifier) in boundTypes) {
-            // Intentional broad catch: any resolution failure (missing dependency, wrong qualifier,
-            // constructor throwing) must be collected so ONE run reports every broken binding
-            // instead of stopping at the first.
             @Suppress("TooGenericExceptionCaught")
             try {
                 koin.get<Any>(type, qualifier, runtimeParametersFor(type))
@@ -84,8 +77,6 @@ class AppGraphKoinTest {
             "${failures.size} of ${boundTypes.size} bindings failed to resolve:\n" +
                 failures.joinToString("\n") { "  - $it" },
         )
-        // Floor guard: if the registry sweep ever stops seeing definitions (a Koin internals change,
-        // an empty module list) the loop above would pass vacuously.
         assertTrue(
             boundTypes.size >= MIN_EXPECTED_BINDINGS,
             "Only ${boundTypes.size} bindings were discovered; the registry sweep looks broken.",
@@ -99,8 +90,6 @@ class AppGraphKoinTest {
             .mapNotNull { it.primaryType.simpleName }
             .toSet()
 
-        // Exhaustive by design: a ViewModel missing from this list resolves to nothing at
-        // navigation time, so a new one must be added both here and to its Koin module.
         assertEquals(
             EXPECTED_VIEW_MODELS,
             registered.toSortedSet(),
@@ -118,25 +107,16 @@ class AppGraphKoinTest {
         }
     }
 
-    // The sweep above proves every BOUND definition resolves; it cannot notice one that was never
-    // bound. BackupOrchestrator is resolved behind a kill switch that is off today, so a deleted
-    // binding would compile and keep the sweep green. No assertion body: get() throws on failure.
     @Test
     fun `every single bootstrapAppGraph resolves is bound`() {
         koin.get<BackupOrchestrator>()
     }
 
-    // backupModule publishes BackupController as a secondary type of the orchestrator's single. A
-    // second definition or a factory would still pass every other test while silently breaking a
-    // manual backup (ADR 009 hard constraint 4) — assertSame catches what assertEquals cannot.
     @Test
     fun `the backup controller port is the orchestrator single, not a second instance`() {
         assertSame(koin.get<BackupOrchestrator>(), koin.get<BackupController>())
     }
 
-    // Resolution succeeding is not the same as resolution being correct: sharedModule binds
-    // Clock.System, indistinguishable from a hand-written block's default (ProfileModule once
-    // forgot clock = get() and nothing noticed). Sentinel instances plus assertSame catch that.
     @Test
     fun `every graph-built class holds the Clock and TimeZone the graph bound`() {
         val boundClock = object : Clock {
@@ -153,8 +133,6 @@ class AppGraphKoinTest {
             )
         }.koin
 
-        // Resolution needs the graph; reading the fields afterwards does not, so the graph is closed
-        // as soon as the sweep has collected them.
         val timeFields: List<Pair<Any, Field>> = try {
             overridden.ownTimeFields()
         } finally {
@@ -174,8 +152,6 @@ class AppGraphKoinTest {
                 "that builds them passes a default or its own instance instead of get():\n" +
                 mismatches.joinToString("\n") { "  - $it" },
         )
-        // Floor guard, same reasoning as the sweep above: if reflection stops finding fields (a
-        // rename, a Kotlin change to how constructor vals are stored) the check passes vacuously.
         assertTrue(
             timeFields.size >= MIN_EXPECTED_TIME_FIELDS,
             "Only ${timeFields.size} Clock/TimeZone fields were inspected; the reflection sweep looks broken.",
@@ -203,16 +179,12 @@ class AppGraphKoinTest {
     private fun expectedFor(field: Field, boundClock: Clock, boundZone: TimeZone): Any =
         if (field.type == Clock::class.java) boundClock else boundZone
 
-    // Each definition's primary type plus every interface it is bind-ed to, since consumers inject
-    // the interface.
     private fun Koin.boundTypes(): List<Pair<KClass<*>, Qualifier?>> = definitions()
         .flatMap { definition ->
             (listOf(definition.primaryType) + definition.secondaryTypes).map { it to definition.qualifier }
         }
         .distinct()
 
-    // The instance registry is keyed per bound type, so one definition appears under several keys;
-    // distinct() collapses them back to one InstanceFactory per definition (identity equality).
     private fun Koin.definitions(): List<BeanDefinition<*>> = instanceRegistry.instances.values
         .distinct()
         .map { it.beanDefinition }
@@ -222,8 +194,6 @@ class AppGraphKoinTest {
     private fun describe(type: KClass<*>, qualifier: Qualifier?): String =
         if (qualifier == null) type.simpleName.orEmpty() else "${type.simpleName}(${qualifier.value})"
 
-    // Koin wraps every resolution failure in one InstanceCreationException per nesting level; the
-    // innermost cause is the actionable one — it names the type that has no definition.
     private fun Exception.rootCauseMessage(): String {
         var root: Throwable = this
         while (root.cause != null && root.cause !== root) {
@@ -234,12 +204,12 @@ class AppGraphKoinTest {
 
     private companion object {
 
-        const val MIN_EXPECTED_BINDINGS = 80
+        const val MIN_EXPECTED_BINDINGS: Int = 80
 
-        const val OWN_PACKAGE_PREFIX = "com.emm."
+        const val OWN_PACKAGE_PREFIX: String = "com.emm."
 
         // A floor, deliberately under the real count: adding an injected date field must not fail this.
-        const val MIN_EXPECTED_TIME_FIELDS = 20
+        const val MIN_EXPECTED_TIME_FIELDS: Int = 20
 
         val EXPECTED_VIEW_MODELS = sortedSetOf(
             "AccountsViewModel",
@@ -258,8 +228,6 @@ class AppGraphKoinTest {
             "SeeTransactionsViewModel",
         )
 
-        // Each entry is a factory, not a shared holder, so one resolution cannot consume the
-        // parameters of another.
         val RUNTIME_PARAMETERS: Map<KClass<*>, ParametersDefinition> = mapOf(
             AddCategoryViewModel::class to { parametersOf(CategoryType.Spend, "Test Category") },
             EditTransactionViewModel::class to { parametersOf("test-transaction-id") },

@@ -39,8 +39,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-// LongParameterList: thirteen distinct collaborator ports/seams this class orchestrates; no holder
-// would carry behaviour of its own, and the two lifecycle flows must stay independent parameters.
 @Suppress("LongParameterList")
 class BackupOrchestrator(
     private val backupRepository: BackupRepository,
@@ -69,17 +67,14 @@ class BackupOrchestrator(
 
     private val requestChannel = Channel<Unit>(Channel.CONFLATED)
 
-    // @Volatile: written by the session collector, read by the request consumer on another thread.
     @Volatile
     private var currentUserId: String? = null
 
-    // @Volatile: set from Main by requestBackup, cleared by runBackup — visibility only, not
-    // atomicity. A manual tap landing in that read/write gap is swallowed rather than counted.
+    // Visibility only, not atomicity: a manual tap landing between runBackup's read and its reset
+    // is swallowed rather than counted.
     @Volatile
     private var manualRequestPending = false
 
-    // @Volatile: requestBackup reads this from Main while start() writes it once, synchronously,
-    // before launching either coroutine below.
     @Volatile
     private var started = false
 
@@ -131,7 +126,6 @@ class BackupOrchestrator(
         }
     }
 
-    // Intentional broad catch: this is the backstop that keeps a trigger failure off the app scope.
     @Suppress("TooGenericExceptionCaught")
     private fun launchResilientTrigger(name: String, block: suspend () -> Unit) {
         externalScope.launch {
@@ -150,7 +144,6 @@ class BackupOrchestrator(
         }
     }
 
-    // Intentional broad catch: nothing may escape into externalScope; CancellationException is re-thrown.
     @Suppress("TooGenericExceptionCaught")
     private suspend fun runBackup() {
         val manual = manualRequestPending
@@ -189,7 +182,6 @@ class BackupOrchestrator(
 
             SnapshotOutcome.OwnerChanged -> BackupEvent.Failed(DomainException.Unauthorized(OWNER_CHANGED))
 
-            // The disclosure is refused at the button by ProfileViewModel, which can name why.
             SnapshotOutcome.NotDue,
             SnapshotOutcome.DestinationUndisclosed,
             -> null
@@ -219,8 +211,6 @@ class BackupOrchestrator(
 
     private suspend fun takeSnapshot(userId: String, manual: Boolean): SnapshotOutcome {
         val takenAt: Instant = clock.now()
-        // manual skips isBackupDue: a user-requested backup runs regardless of dirty state or the
-        // once-a-day cap.
         val refusal: SnapshotOutcome? = when {
             metadata.destinationDisclosedAt(userId) == null -> {
                 logger.warn(
@@ -275,7 +265,6 @@ class BackupOrchestrator(
             !alreadyBackedUpOn(lastSuccessAt, now, timeZone)
     }
 
-    // Intentional broad catch: a prune must never undo or fail a verified upload.
     @Suppress("TooGenericExceptionCaught")
     private suspend fun prune() {
         try {
