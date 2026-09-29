@@ -11,7 +11,7 @@ class LoansViewModel(loanRepository: LoanRepository) :
 
     init {
         loanRepository.balancesByPerson()
-            .onEach { balances -> updateState { copy(people = balances.toUi()) } }
+            .onEach { balances -> updateState { copy(people = balances.toUi().toRows()) } }
             .launchSafeIn(onError = { e -> LoansEffect.ShowError(e.toUserMessage()) })
     }
 
