@@ -1,0 +1,198 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+repo="${0:A:h:h}"
+cd "$repo"
+
+kotlin_ui=core/ui/src/main/kotlin/com/emm/justchill/core/ui
+swift_theme=iosApp/JustChill/Theme
+failed=0
+
+check() {
+  local label="$1"
+  local kotlin_lines swift_lines
+  kotlin_lines="$(${=2} | sort)"
+  swift_lines="$(${=3} | sort)"
+  local kotlin_count=0 swift_count=0
+  [[ -n "$kotlin_lines" ]] && kotlin_count="$(wc -l <<< "$kotlin_lines" | tr -d ' ')"
+  [[ -n "$swift_lines" ]] && swift_count="$(wc -l <<< "$swift_lines" | tr -d ' ')"
+  echo "$label: kotlin $kotlin_count, swift $swift_count"
+  if (( kotlin_count == 0 || swift_count == 0 )); then
+    echo "drift: $label parsed nothing on one side" >&2
+    failed=1
+  elif ! diff <(printf '%s\n' "$kotlin_lines") <(printf '%s\n' "$swift_lines") >&2; then
+    echo "drift: $label (< kotlin, > swift)" >&2
+    failed=1
+  fi
+}
+
+kotlin_colors() {
+  rg -o '^\s+(\w+) = Color\(0x([0-9A-Fa-f]{8})\)' -r '$1 $2' "$kotlin_ui/theme/EmmColors.kt" | sd '^\s+' ''
+}
+swift_colors() {
+  rg -o '^\s+static let (\w+): Color = Color\(argb: 0x([0-9A-Fa-f]{8})\)' -r '$1 $2' "$swift_theme/EmmColors.swift" | sd '^\s+' ''
+}
+
+kotlin_spacing() {
+  rg -o '^\s+val (\w+): Dp = ([0-9.]+)\.dp' -r '$1 $2' "$kotlin_ui/theme/EmmSpacing.kt" | sd '^\s+' ''
+}
+swift_spacing() {
+  rg -o '^\s+static let (\w+): CGFloat = ([0-9.]+)$' -r '$1 $2' "$swift_theme/EmmSpacing.swift" | sd '^\s+' ''
+}
+
+kotlin_radii() {
+  rg -o '^\s+val (\w+): RoundedCornerShape = RoundedCornerShape\((.*)\),$' -r '$1 $2' "$kotlin_ui/theme/EmmRadii.kt" \
+    | sd '^\s+' '' | sd '\w+ = ' '' | sd '([0-9.]+)\.dp' '$1' | sd ',' ''
+}
+swift_radii() {
+  rg -o '^\s+static let (\w+): \w+ = \w+\((.*)\)$' -r '$1 $2' "$swift_theme/EmmRadii.swift" \
+    | sd '^\s+' '' | sd '\w+: ' '' | sd ',' ''
+}
+
+kotlin_roles() {
+  rg -U -o 'internal val emmType: EmmType = EmmType\((?s:.*)' "$kotlin_ui/theme/EmmType.kt" \
+    | tr '\n' ' ' | sd '(\w+) = TextStyle\(' '\n$1 TextStyle(' | rg '^\w+ TextStyle\('
+}
+kotlin_type() {
+  local attribute="$1"
+  local pattern
+  case "$attribute" in
+    size) pattern='fontSize = \(?(-?[0-9.]+)\)?\.sp' ;;
+    lineHeight) pattern='lineHeight = \(?(-?[0-9.]+)\)?\.sp' ;;
+    tracking) pattern='letterSpacing = \(?(-?[0-9.]+)\)?\.sp' ;;
+    weight) pattern='fontWeight = FontWeight\.W([0-9]+)' ;;
+  esac
+  kotlin_roles | while read -r role rest; do
+    echo "$role $(rg -o "$pattern" -r '$1' <<< "$rest" || echo missing)"
+  done
+}
+
+swift_roles() {
+  rg -U -o 'enum EmmType \{(?s:.*?)private static func' "$swift_theme/EmmType.swift" \
+    | tr '\n' ' ' | sd 'static let (\w+): EmmTextStyle = ' '\n$1 ' | rg '^\w+ (mono|inter)\('
+}
+swift_face_of() {
+  local constant="$1"
+  rg -o "static let $constant: String = \"([^\"]+)\"" -r '$1' "$swift_theme/EmmFonts.swift"
+}
+swift_mono_face() {
+  rg -U -o 'private static func mono\((?s:.*?)fontName: EmmFonts\.(\w+)' -r '$1' "$swift_theme/EmmType.swift" | tail -1
+}
+swift_type() {
+  local attribute="$1"
+  local value constant
+  swift_roles | while read -r role rest; do
+    case "$attribute" in
+      size) value="$(rg -o 'size: (-?[0-9.]+)' -r '$1' <<< "$rest" || echo missing)" ;;
+      lineHeight) value="$(rg -o 'lineHeight: (-?[0-9.]+)' -r '$1' <<< "$rest" || echo missing)" ;;
+      tracking) value="$(rg -o 'tracking: (-?[0-9.]+)' -r '$1' <<< "$rest" || echo missing)" ;;
+      weight)
+        if [[ "$rest" == mono\(* ]]; then
+          constant="$(swift_mono_face)"
+        else
+          constant="$(rg -o '^inter\(\s*EmmFonts\.(\w+)' -r '$1' <<< "$rest" || echo missing)"
+        fi
+        value="$(face_weight "$(swift_face_of "$constant" || echo missing)")"
+        ;;
+    esac
+    echo "$role $value"
+  done
+}
+
+kotlin_color_ids() {
+  rg -U -o 'fun EmmColors\.resolvedColor(?s:.*?)\n\}' "$kotlin_ui/category/CategoryResolve.kt" \
+    | rg '^\s+"' | while read -r line; do
+      local token="${line##*-> }"
+      rg -o '"(\w+)"' -r '$1' <<< "${line%%->*}" | while read -r id; do echo "$id $token"; done
+    done
+}
+swift_color_ids() {
+  rg -U -o 'static func resolvedColor(?s:.*?)\n    \}' "$swift_theme/EmmCategory.swift" \
+    | rg '^\s+case "' | while read -r line; do
+      local token="${line##*EmmColors.}"
+      rg -o '"(\w+)"' -r '$1' <<< "${line%%:*}" | while read -r id; do echo "$id $token"; done
+    done
+}
+kotlin_color_fallback() {
+  rg -o '^\s+else -> (\w+)' -r '$1' "$kotlin_ui/category/CategoryResolve.kt"
+}
+swift_color_fallback() {
+  rg -o '^\s+default: EmmColors\.(\w+)' -r '$1' "$swift_theme/EmmCategory.swift"
+}
+
+kotlin_icon_ids() {
+  rg -U -o 'IconCatalog\(\s*"(\w+)"' -r '$1' "$kotlin_ui/category/IconsAll.kt"
+}
+swift_icon_ids() {
+  rg -o '^\s+"(\w+)": "[^"]+",$' -r '$1' "$swift_theme/EmmCategory.swift" | sd '^\s+' ''
+}
+swift_symbol_of() {
+  rg -o "^\s+\"$1\": \"([^\"]+)\",\$" -r '$1' "$swift_theme/EmmCategory.swift" | sd '^\s+' ''
+}
+kotlin_icon_fallback() {
+  echo "$(swift_symbol_of "$(kotlin_icon_ids | head -1)")"
+}
+swift_icon_fallback() {
+  rg -o 'static let fallbackSymbol: String = "([^"]+)"' -r '$1' "$swift_theme/EmmCategory.swift"
+}
+swift_symbols() {
+  rg -o '^\s+"\w+": "([^"]+)",$' -r '$1' "$swift_theme/EmmCategory.swift" | sd '^\s+' ''
+  rg -o 'static let (fallback|missing)Symbol: String = "([^"]+)"' -r '$2' "$swift_theme/EmmCategory.swift"
+}
+
+host_facts="$(
+  xcrun swift - "$swift_theme/Fonts" $(swift_symbols | sort -u) <<'SWIFT'
+import AppKit
+import CoreText
+
+let arguments: [String] = Array(CommandLine.arguments.dropFirst())
+let fontDirectory: URL = URL(fileURLWithPath: arguments[0])
+let fontFiles: [URL] = try FileManager.default.contentsOfDirectory(at: fontDirectory, includingPropertiesForKeys: nil)
+for file in fontFiles where file.pathExtension == "ttf" {
+    let descriptors = CTFontManagerCreateFontDescriptorsFromURL(file as CFURL) as? [CTFontDescriptor] ?? []
+    for descriptor in descriptors {
+        let font: CTFont = CTFontCreateWithFontDescriptor(descriptor, 12, nil)
+        let name: String = CTFontCopyPostScriptName(font) as String
+        guard let table = CTFontCopyTable(font, CTFontTableTag(kCTFontTableOS2), []) as Data?, table.count > 5 else {
+            print("face \(name) missing")
+            continue
+        }
+        let weight: Int = Int(table[table.startIndex + 4]) << 8 | Int(table[table.startIndex + 5])
+        print("face \(name) \(weight)")
+    }
+}
+for symbol in arguments.dropFirst() {
+    let resolves: Bool = NSImage(systemSymbolName: symbol, accessibilityDescription: nil) != nil
+    print("symbol \(symbol) \(resolves ? "ok" : "missing")")
+}
+SWIFT
+)"
+
+face_weight() {
+  rg -o "^face $1 (\\w+)\$" -r '$1' <<< "$host_facts" || echo missing
+}
+
+check colours kotlin_colors swift_colors
+check spacing kotlin_spacing swift_spacing
+check radii kotlin_radii swift_radii
+check "type size" "kotlin_type size" "swift_type size"
+check "type lineHeight" "kotlin_type lineHeight" "swift_type lineHeight"
+check "type tracking" "kotlin_type tracking" "swift_type tracking"
+check "type weight" "kotlin_type weight" "swift_type weight"
+check "colour ids" kotlin_color_ids swift_color_ids
+check "colour fallback" kotlin_color_fallback swift_color_fallback
+check "icon ids" kotlin_icon_ids swift_icon_ids
+check "icon fallback" kotlin_icon_fallback swift_icon_fallback
+
+symbol_total="$(rg -c '^symbol ' <<< "$host_facts" || echo 0)"
+missing_symbols="$(rg -o '^symbol (\S+) missing$' -r '$1' <<< "$host_facts" || true)"
+echo "sf symbols: $symbol_total checked on the host (NSImage systemSymbolName)"
+if (( symbol_total == 0 )); then
+  echo "drift: no SF Symbol was checked" >&2
+  failed=1
+elif [[ -n "$missing_symbols" ]]; then
+  echo "drift: SF Symbols that resolve to no image: ${missing_symbols//$'\n'/ }" >&2
+  failed=1
+fi
+
+exit $failed

@@ -78,7 +78,8 @@ Kotlin, Jetpack Compose, Navigation 3, Koin, SQLDelight 2, supabase-kt with Ktor
 
 ## Commands
 
-- `scripts/justchill-ci` — runs `CI=true ./gradlew qualityGate assembleDevDebug`, then the iOS leg (`iosApp/CLAUDE.md`'s `xcodebuild` build), on a clean, pushed HEAD and posts the `local-gate` status PRs require, `failure` if either fails; `--dry-run` prints it instead.
+- `scripts/justchill-ci` — runs `CI=true ./gradlew qualityGate assembleDevDebug`, then the iOS leg (the `swift-format` lint, `iosApp/CLAUDE.md`'s `xcodebuild` build, `scripts/ios-token-drift`, and the Kotlin/Native suites `:core:database:iosSimulatorArm64Test :shared:iosSimulatorArm64Test` on a booted `justchill-ios27`), on a clean, pushed HEAD and posts the `local-gate` status PRs require, `failure` if either fails; `--dry-run` prints it instead.
+- `scripts/ios-token-drift` — diffs `iosApp/JustChill/Theme/` against `:core:ui`'s tokens (colours, spacing, radii, the 17 type roles, colour and icon ids) and checks every mapped SF Symbol on the host; prints per-side counts, exits 1 on drift.
 - `./gradlew qualityGate` — the gate CI runs, defined in `QualityGateConventionPlugin.kt`; its `qualityGate` task `description` is the task list. `ConventionPluginTest`'s gate constants pin the per-module closure only.
 - `./gradlew detekt` — the lint the gate runs on every module (ADR 018), one config in `config/detekt/detekt.yml` and no baseline. Locally it rewrites formatting in place; with `CI=true` it reports it instead, and that is how CI fails on it.
 - `./gradlew assembleDevDebug` — dev debug build; `assembleProdRelease` for the release.
