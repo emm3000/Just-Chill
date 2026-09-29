@@ -10,7 +10,7 @@ You write GitHub issues for `emm3000/Just-Chill`. The prompt names the parent is
 
 ## Read first
 
-1. `gh issue view <parent> --comments` and two existing open tickets for the format in use.
+1. `gh issue view <parent> --json title,body,labels,comments` and two existing open tickets for the format in use.
 2. `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`.
 3. `docs/PRODUCT_REQUIREMENTS.md`: the acceptance criterion, the NFRs and the Won't-have rows. A ticket never paraphrases a criterion; it cites the row.
 4. The ADR and the constraints that own the area (`docs/adr/`, `.claude/rules/`, the module `CLAUDE.md`, the parent issue body). `.claude/rules/ui-components.md` for anything with UI.
