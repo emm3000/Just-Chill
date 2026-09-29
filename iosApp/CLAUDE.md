@@ -15,7 +15,8 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 
 ## Launch
 
-- `JustChillApp.init` starts Koin once with a `KitConfig` whose Supabase fields are blank, `isSnapshotBackupEnabled` false and `appVersion` from `CFBundleShortVersionString` (`MARKETING_VERSION`), so the app runs offline (PRD §2).
+- `JustChillApp.init` starts Koin once with a `KitConfig` whose Supabase fields are blank, `isSnapshotBackupEnabled` false and `appVersion` from `CFBundleShortVersionString`, so the app runs offline (PRD §2).
+- `CFBundleShortVersionString` is the latest `v*` tag without its `v`, as Android's `versionName`: the last phase, `Version From Git Tag`, runs `git describe --tags --abbrev=0 --match 'v[0-9]*'` and writes it into the built `Info.plist`. It is `alwaysOutOfDate`, so a new tag shows without `clean`. With no tag (a `--no-tags` clone) the phase leaves `MARKETING_VERSION`, `0.0.0-dev`, Android's fallback. `CURRENT_PROJECT_VERSION` stays `1`.
 
 ## Simulator
 
