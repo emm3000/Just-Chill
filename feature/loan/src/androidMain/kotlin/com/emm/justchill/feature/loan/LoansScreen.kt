@@ -94,7 +94,7 @@ private fun PersonRow(person: PersonRowUi, onClick: () -> Unit) {
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     val nameColor = if (person.isSettled) colors.textTertiary else colors.textPrimary
-    val remainingColor = person.tone.amountTone().color(colors)
+    val remainingColor: Color = person.tone.amountTone().color(colors)
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val rowBackground: Color = if (isPressed) colors.surface1 else Color.Transparent
