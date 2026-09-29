@@ -15,9 +15,16 @@ import com.emm.justchill.core.presentation.format.relativeDayLabel
 import com.emm.justchill.core.presentation.mvi.UiState
 import com.emm.justchill.core.presentation.transaction.Catalog
 import com.emm.justchill.core.presentation.transaction.categoriesOf
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
 
 data class MonthSpend(val month: YearMonth, val total: Money)
+
+enum class DateShortcutKind { Today, Yesterday, ThisWeek, ThisMonth }
+
+data class DateShortcut(val kind: DateShortcutKind, val date: LocalDate)
 
 data class FrequentUsage(
     val loadedFor: TransactionType,
@@ -58,6 +65,14 @@ data class AddTransactionUiState(
 
     val pickerDate: LocalDate get() = date ?: today
 
+    val dateShortcuts: List<DateShortcut>
+        get() = listOf(
+            DateShortcut(DateShortcutKind.Today, today),
+            DateShortcut(DateShortcutKind.Yesterday, today.minus(1, DateTimeUnit.DAY)),
+            DateShortcut(DateShortcutKind.ThisWeek, today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)),
+            DateShortcut(DateShortcutKind.ThisMonth, LocalDate(today.year, today.month, 1)),
+        )
+
     val accounts: List<Account> get() = catalog.accounts
 
     val hasNoAccounts: Boolean get() = catalog.loaded?.accounts?.isEmpty() == true
@@ -78,6 +93,18 @@ data class AddTransactionUiState(
 
     val frequentCategoryIds: List<String> get() = usageForCurrentType?.categoryIds.orEmpty()
 
+    val frequentCategories: List<SelectableCategory>
+        get() = frequentCategoryIds
+            .mapNotNull { id -> categories.find { it.categoryId.value == id } }
+            .takeIf { it.size >= MIN_FREQUENT_SECTION_SIZE }
+            .orEmpty()
+
+    val otherCategories: List<SelectableCategory>
+        get() {
+            val frequent: List<SelectableCategory> = frequentCategories
+            return categories.filterNot { it in frequent }
+        }
+
     val missingField: MissingField? get() = when {
         centsToSoles(amount) <= 0.0 -> MissingField.Amount
         accountSelected == null -> MissingField.Account
@@ -96,3 +123,5 @@ data class AddTransactionUiState(
 }
 
 enum class MissingField { Amount, Account }
+
+private const val MIN_FREQUENT_SECTION_SIZE: Int = 2
