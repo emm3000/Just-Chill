@@ -18,7 +18,7 @@ What this module exports: `app.cash.sqldelight:coroutines-extensions` is `implem
 
 - `commonMain`: every repository, mapper and data source, the `.sq` / `.sqm` / `databases/N.db` under `sqldelight/`, `DATABASE_NAME` and the category seed, and the `expect` half of `shared/SqliteExceptions.kt`.
 - `androidMain`: `provideSqlDriver(context)` and `csm()` on `AndroidSqliteDriver`, the Android exception actuals.
-- `iosMain`: `provideSqlDriver()` on `NativeSqliteDriver` with the same seed and foreign keys on, the SQLiter exception actuals. Compiled on the gate, never run until ADR 024's wave 6.
+- `iosMain`: `provideSqlDriver()` on `NativeSqliteDriver` with the same seed, the SQLiter exception actuals. SQLiter turns foreign keys on before create and upgrade, so `openSqlDriver` runs them first on a connection with foreign keys off, then opens the driver with them on: the order `csm()` gives Android.
 
 ## Snapshots
 
@@ -33,4 +33,5 @@ What this module exports: `app.cash.sqldelight:coroutines-extensions` is `implem
 ## Testing
 
 - Host tests (JUnit4 + MockK) in `core/database/src/androidHostTest/kotlin/`: mappers, enum parsing, the snapshot store, plus plain `kotlin.test` suites. `./gradlew :core:database:testAndroidHostTest`, which `./gradlew test` never reaches. A snapshot test that starts from a JSON file lives in `:androidApp`, the only module that sees `:core:backup` too.
+- Native tests (`kotlin.test`, no MockK) in `core/database/src/iosTest/kotlin/`: the constraint mapping and the foreign-key order on `provideSqlDriver`'s configuration. `./gradlew :core:database:iosSimulatorArm64Test` on the booted `justchill-ios27`, never another device; not on the gate.
 - Instrumented tests in `core/database/src/androidDeviceTest/`: the `MigrationV*Test`s plus `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. `./gradlew :core:database:connectedAndroidDeviceTest` on `justchill-api36`; the only thing that exercises migrations against the real `AndroidSqliteDriver`.
