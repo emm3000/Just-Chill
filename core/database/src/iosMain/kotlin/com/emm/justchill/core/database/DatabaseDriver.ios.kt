@@ -31,7 +31,7 @@ internal fun openSqlDriver(configuration: DatabaseConfiguration): SqlDriver {
     return NativeSqliteDriver(configuration)
 }
 
-// SQLiter turns foreign keys on before it runs create or upgrade; Android turns them on in onOpen, after.
+// SQLiter turns foreign keys on before it runs create or upgrade.
 private fun migrateWithForeignKeysOff(configuration: DatabaseConfiguration) {
     val foreignKeysOff: DatabaseConfiguration = configuration.copy(
         extendedConfig = configuration.extendedConfig.copy(foreignKeyConstraints = false),
