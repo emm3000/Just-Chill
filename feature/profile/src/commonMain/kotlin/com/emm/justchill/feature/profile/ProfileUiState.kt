@@ -91,6 +91,9 @@ data class ProfileUiState(
     val showsSignInRow: Boolean
         get() = isCloudBackupAvailable && !isSignedIn
 
+    val showsBackupDestinationDisclosure: Boolean
+        get() = backupRow == BackupRowUi.DisclosurePending
+
     val accountLabel: String
         get() = (session as? SessionUiState.SignedIn)?.email ?: "Tu cuenta"
 
