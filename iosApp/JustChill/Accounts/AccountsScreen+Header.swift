@@ -67,6 +67,7 @@ extension AccountsScreen {
                     income
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
 
         private var spent: some View {

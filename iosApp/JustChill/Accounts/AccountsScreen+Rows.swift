@@ -30,13 +30,14 @@ extension AccountsScreen {
                     }
                 }
                 VStack(alignment: .leading, spacing: EmmSpacing.s1) {
-                    HStack(spacing: EmmSpacing.s3) {
+                    HStack(alignment: .top, spacing: EmmSpacing.s3) {
                         TypeTile(symbol: row.account.type.symbolName)
                         texts(subtitleLines: 2)
                     }
                     net
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
         }
 
@@ -141,13 +142,14 @@ extension AccountsScreen {
                     chevron
                 }
                 VStack(alignment: .leading, spacing: EmmSpacing.s1) {
-                    HStack(spacing: EmmSpacing.s3) {
+                    HStack(alignment: .top, spacing: EmmSpacing.s3) {
                         TypeTile(symbol: "person.2")
                         texts(subtitleLines: 2)
                     }
                     total
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, EmmSpacing.s6)
             .padding(.vertical, EmmSpacing.s3)
             .frame(minHeight: EmmSpacing.s12)
