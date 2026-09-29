@@ -29,4 +29,12 @@ class ProfileRowTextTest {
         assertEquals("Último: ayer", ProfileUiState(lastExport = LastExportUi.DaysAgo(1)).lastExportLabel)
         assertEquals("Último: hace 3 días", ProfileUiState(lastExport = LastExportUi.DaysAgo(3)).lastExportLabel)
     }
+
+    @Test
+    fun `the state splits the categories row by type for a screen that cannot phrase it`() {
+        assertEquals(
+            "24 en total · 7 de ingreso",
+            ProfileUiState(categoryCount = 24, incomeCategoryCount = 7).categoriesLabel,
+        )
+    }
 }
