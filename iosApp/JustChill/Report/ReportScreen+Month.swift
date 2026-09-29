@@ -2,8 +2,6 @@
 import SwiftUI
 
 extension ReportScreen {
-    private static let percentScale: CGFloat = 100
-
     struct MonthTab: View {
         let state: ReportUiState
         let send: Send
@@ -180,7 +178,7 @@ extension ReportScreen {
                         .emmTextStyle(EmmType.bodyM)
                         .foregroundStyle(EmmColors.textSecondary)
                 }
-                ForEach(state.shares, id: \.name) { share in
+                ForEach(state.shares, id: \.categoryId) { share in
                     ShareRow(share: share)
                 }
                 Hairline()
@@ -242,7 +240,7 @@ extension ReportScreen {
                 GeometryReader { proxy in
                     EmmRadii.rFull
                         .fill(color)
-                        .frame(width: proxy.size.width * CGFloat(share.percentage) / ReportScreen.percentScale)
+                        .frame(width: proxy.size.width * CGFloat(share.fraction))
                 }
                 .frame(height: EmmSpacing.s1)
                 .accessibilityHidden(true)
