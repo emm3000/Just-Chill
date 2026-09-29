@@ -12,7 +12,7 @@ extension MoreScreen {
         case .sessionClosed(let closed): closed.text
         case .sessionClosedLocallyOnly(let closed): closed.text
         case .accountDeleted(let deleted): deleted.text
-        case .backup: nil
+        case .backup(let backup): backup.toBackupText()
         }
     }
 }
