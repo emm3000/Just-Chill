@@ -28,16 +28,17 @@ Rows are ordered by blast radius: how much a mistake breaks and whether a gate c
 | Row | Work | Model:effort | Extra instruction |
 |---|---|---|---|
 | 1 | `.md` edits, strings, renames, applying a diff already designed; every criterion is a command with empty output | sonnet:low | none: tests and the criteria fail loudly |
-| 2 | Code where the compiler or a test catches the error: one screen, a ViewModel rule, a use case | sonnet:medium | load `mattpocock-skills:tdd` for behavior; visual check on the peer's pool AVD for a screen |
+| 2 | Code where the compiler or a test catches the error: one screen, a ViewModel rule, a use case | sonnet:high | load `mattpocock-skills:tdd` for behavior; visual check on the peer's pool AVD for a screen |
 | 3 | Code on the trap list, where nothing catches the error: a route, a Koin binding, ViewModel purity, an atom default that changes N screens, `.github/` | opus:medium | visual check of every affected screen |
 | 4 | Migration, backup/restore, auth, DI graph, cross-module architecture | opus:high | the restore drill in `.claude/rules/sqldelight.md` when the schema moves |
 
-Reviews and other roles keep the playbook rules: a `pr-reviewer` on every PR, restyle/docs/rename reviews sonnet:medium, screen/logic/migration/backup/auth/DI reviews opus:high, post-review fixes sonnet:low, `ticket-writer` opus:high, design fable.
+Review tiers, `ticket-writer` and design roles are in `docs/agents/multi-session.md` `## Model and effort` and `## Review cycle`.
 
-Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a row shows two or more first-review FIX FIRST verdicts for reasons the checklist did not cover, raise it one step and note why here.
+Every row is a bet; the thresholds that move a row up or down live in `docs/agents/dispatch-log.md`, and each move gets a note here.
 
 - A module-wide sweep that needs judgment per line (which comment survives, which rationale is a duplicate) takes row 3, opus:medium. Wave #129-#133 ran it on sonnet:medium: all 5 PRs came back FIX FIRST, 3 for judgment (partial sweeps, kept history, repeated rationale).
 - A dispatch that names a reference file to model the work on inherits that file's debt, so name its known gaps in the same breath. Wave #208-#220 pointed three tickets at `DeleteCategoryDialog`, whose `val type` carries no explicit type: #223 and #224 both came back FIX FIRST on exactly that line. Raising the row would have been the wrong lesson, because the model was not the cause.
+- Row 2 runs sonnet:high since 2026-09-28. The Summary showed 10 FIX FIRST judgment on 45 row-2 PRs at sonnet:medium, which the raise rule already required; the raise went one effort step, not to Opus, and the log decides whether it holds.
 
 ## Execution Steps
 
@@ -45,7 +46,7 @@ Every row is a bet until `docs/agents/dispatch-log.md` says otherwise. When a ro
 2. Classify each ticket with the table. The table binds: deviate only with a one-line reason stated in the plan, never silently. Tell the owner the plan in one line per ticket: `@<name> #<n> <model>:<effort>`, before booting anything.
 3. Run `scripts/justchill-wave <name>:<model>:<effort> ...` once with every ticket.
 4. Poll `ListAgents` until every pane name is listed, at most 60 seconds.
-5. Send each peer one dispatch built from the playbook checklist: issue, docs to read, branch `<type>/<n>-<slug>`, its worktree `../justchill-<name>`, the acceptance-criteria line, the gate (`scripts/justchill-ci` after every push, before `gh pr create`), TDD or visual check per the table, `Closes #<n>`, no merge, reply with the PR URL. Ask for `notify_when_idle`.
+5. Send each peer one dispatch built from the playbook checklist: issue, docs to read, branch `<type>/<n>-<slug>`, its worktree `../justchill-<name>`, the acceptance-criteria line, the gate (`scripts/justchill-ci` after every push, before `gh pr create`), TDD or visual check per the table, `Closes #<n>`, no merge, reply with the PR URL, the autonomy paragraph and the reporting rule from the playbook checklist, the time sentence for rows 1-2. Ask for `notify_when_idle`.
 6. Report to the owner in one or two lines: peers booted, tickets dispatched.
 
 ## Output Contract
