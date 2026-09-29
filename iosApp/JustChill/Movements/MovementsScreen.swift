@@ -10,13 +10,13 @@ struct MovementsScreen: View {
 
     @State private var store: Store?
     @State private var errorMessage: String?
-    @State private var editingId: EditTarget?
+    @State private var editTarget: EditTarget?
 
     var body: some View {
         NavigationStack {
             Group {
                 if let store {
-                    Content(state: store.state, send: { store.send($0) }, onEdit: { editingId = EditTarget(id: $0) })
+                    Content(state: store.state, send: { store.send($0) }, onEdit: { editTarget = EditTarget(id: $0) })
                 } else {
                     EmmColors.bg
                 }
@@ -36,8 +36,8 @@ struct MovementsScreen: View {
             applySavedMonth()
         }
         .onChange(of: savedMonth) { applySavedMonth() }
-        .fullScreenCover(item: $editingId) { target in
-            EditMovementScreen(transactionId: target.id) { editingId = nil }
+        .fullScreenCover(item: $editTarget) { target in
+            EditMovementScreen(transactionId: target.id) { editTarget = nil }
         }
         .alert(errorMessage ?? "", isPresented: isErrorPresented) {
             Button("Aceptar") { errorMessage = nil }
