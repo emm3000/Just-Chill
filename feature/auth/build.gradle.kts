@@ -1,8 +1,18 @@
 plugins {
-    id("justchill.android.feature")
+    id("justchill.kmp.feature")
 }
 
-dependencies {
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.material.icons.extended)
+kotlin {
+    android {
+        androidResources {
+            enable = true
+        }
+    }
+
+    sourceSets {
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.material.icons.extended)
+        }
+    }
 }

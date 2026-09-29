@@ -1,8 +1,8 @@
 # :feature:auth — CLAUDE.md
 
-Sign-in and sign-up for the snapshot-backup account (ADR 009): the email/password form, the Google button, and the "revisa tu correo" step after a sign-up that needs confirmation. ViewModel, state and Compose screen together in `com.emm.justchill.feature.auth`.
+Sign-in and sign-up for the snapshot-backup account (ADR 009): the email/password form, the Google button, and the "revisa tu correo" step after a sign-up that needs confirmation. One package, `com.emm.justchill.feature.auth`, split by source set (ADR 024 Decision 5): `commonMain` holds `AuthViewModel`, its `UiState` / `Intent` / `Effect`, `authModule` and the `GoogleSignInLauncher` port with `GoogleSignInResult`; `androidMain` holds `AuthScreen`, `ic_google.xml`, the `@Serializable` `AuthRoute`, `authRoutes` and `authEntries`. Nothing in `commonMain` imports Compose, Android, Navigation 3 or kotlinx-serialization.
 
-`justchill.android.feature`, which brings `:core:domain`, `:core:presentation`, `:core:ui`, Koin, lifecycle, navigation3-runtime, the serialization plugin and `:core:testing`. The build file adds two libraries of its own: `androidx-activity-compose` for the `BackHandler` that keeps the CheckEmail step from popping the back stack, and `androidx-material-icons-extended` for the mail and password-visibility glyphs.
+`justchill.kmp.feature`, which brings `:core:domain`, `:core:presentation` and Koin to `commonMain`, `:core:ui`, koin-compose, navigation3-runtime and serialization to `androidMain`, and `:core:testing` to `androidHostTest`. The build file enables Android resources for `ic_google.xml` and adds two libraries of its own on `androidMain`: `androidx-activity-compose` for the `BackHandler` that keeps the CheckEmail step from popping the back stack, and `androidx-material-icons-extended` for the mail and password-visibility glyphs.
 
 ## DI and navigation
 
@@ -19,4 +19,4 @@ Sign-in and sign-up for the snapshot-backup account (ADR 009): the email/passwor
 
 ## Testing
 
-`./gradlew :feature:auth:testDebugUnitTest`. `AuthViewModelTest` uses MockK with `MainDispatcherRule` from `:core:testing` and drives the cooldown with `advanceTimeBy`.
+`./gradlew :feature:auth:testAndroidHostTest`; `./gradlew test` never reaches it. `AuthViewModelTest` uses MockK with `MainDispatcherRule` from `:core:testing` and drives the cooldown with `advanceTimeBy`.
