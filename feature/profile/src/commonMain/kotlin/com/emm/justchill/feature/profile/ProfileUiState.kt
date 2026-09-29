@@ -84,6 +84,9 @@ data class ProfileUiState(
     val isCloudBackupAvailable: Boolean = false,
 ) : UiState {
 
+    val categoriesLabel: String
+        get() = "$categoryCount en total · $incomeCategoryCount de ingreso"
+
     val lastExportLabel: String
         get() = when (val export: LastExportUi = lastExport) {
             LastExportUi.Never -> "Nunca"
