@@ -5,10 +5,11 @@ import com.emm.justchill.core.domain.shared.UniqueIdProvider
 import com.emm.justchill.core.domain.time.ClockTodayFlow
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.lifecycle.resumeEvents
+import org.koin.core.module.Module
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-val sharedModule = module {
+val sharedModule: Module = module {
     factory { DefaultUniqueIdProvider } bind UniqueIdProvider::class
 
     // resumeEvents() is supplied here rather than called inside the class, so ClockTodayFlow holds

@@ -8,6 +8,7 @@ import com.emm.justchill.core.database.JustChillDatabase
 import com.emm.justchill.core.database.provideDb
 import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.core.testing.NoOpDiagnosticsLogger
 import com.emm.justchill.feature.auth.GoogleSignInLauncher
 import com.emm.justchill.feature.auth.GoogleSignInResult
 import com.russhwolf.settings.MapSettings
@@ -72,8 +73,4 @@ val testPlatformModule: Module = module {
 private class NoOpGoogleSignInLauncher : GoogleSignInLauncher {
     override suspend fun signIn(serverClientId: String): GoogleSignInResult =
         GoogleSignInResult.Failure(IllegalStateException("Google Sign-In is not available in tests"))
-}
-
-private class NoOpDiagnosticsLogger : DiagnosticsLogger {
-    override fun warn(message: String, throwable: Throwable?) = Unit
 }

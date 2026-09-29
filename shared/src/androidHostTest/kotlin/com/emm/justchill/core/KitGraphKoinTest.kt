@@ -61,6 +61,6 @@ class KitGraphKoinTest {
     private fun Throwable.rootCause(): Throwable = generateSequence(this) { it.cause }.last()
 
     private companion object {
-        const val MIN_EXPECTED_BINDINGS: Int = 50
+        const val MIN_EXPECTED_BINDINGS: Int = 56
     }
 }

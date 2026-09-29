@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlin.experimental.ExperimentalObjCRefinement
+import kotlin.native.HiddenFromObjC
 
 class BackupDisclosureSignal(
     getSessionStatus: GetSessionStatusUseCase,
@@ -23,5 +25,7 @@ class BackupDisclosureSignal(
     }
 }
 
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
 fun disclosureIsPending(session: SessionStatus, health: BackupHealth): Boolean =
     session is SessionStatus.Authenticated && !health.canUploadToDestination

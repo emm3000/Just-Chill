@@ -12,7 +12,7 @@ No third-party users, but **the author runs the release daily on a device holdin
 
 ```
 androidApp        -> shared, feature:*, core:backup, core:database, core:ui, core:presentation, core:domain
-shared            -> the seven KMP feature:*, core:backup, core:database, core:presentation, core:domain
+shared            -> feature:*, core:backup, core:database, core:presentation, core:domain
 feature:*         -> core:ui, core:presentation, core:domain, core:testing
 core:backup       -> core:domain
 core:database     -> core:domain

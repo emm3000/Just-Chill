@@ -48,6 +48,12 @@ kotlin {
     }
 }
 
+skie {
+    analytics {
+        disableUpload.set(true)
+    }
+}
+
 tasks.named("qualityGate") {
     dependsOn("linkDebugFrameworkIosSimulatorArm64")
 }

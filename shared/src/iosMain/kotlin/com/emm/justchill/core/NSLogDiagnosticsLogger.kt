@@ -11,6 +11,6 @@ class NSLogDiagnosticsLogger : DiagnosticsLogger {
     }
 
     private companion object {
-        const val TAG = "JustChill"
+        const val TAG: String = "JustChill"
     }
 }

@@ -170,6 +170,16 @@ class GateCheckTest {
     }
 
     @Test
+    fun `the shared umbrella that depends on core ui fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":shared:$BOUNDARY_TASK",
+            modules = mapOf(":shared" to module(":core:ui"), ":core:ui" to module()),
+        )
+
+        assertTrue(output.contains(":shared depends on :core:ui"), output)
+    }
+
+    @Test
     fun `the shared umbrella that ships the fixtures module in production fails the boundary check`() {
         val output: String = fixture.checkAndFail(
             task = ":shared:$BOUNDARY_TASK",
