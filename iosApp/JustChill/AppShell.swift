@@ -1,5 +1,6 @@
 @preconcurrency import JustChillKit
 import SwiftUI
+import UIKit
 
 enum AppTab: Hashable {
     case movements
@@ -13,6 +14,22 @@ struct AppShell: View {
     @State private var selectedTab: AppTab = .movements
     @State private var isCapturePresented: Bool = false
     @State private var savedMonth: YearMonth?
+    @State private var disclosureWatch: BackupDisclosureWatch?
+    @State private var isDisclosurePending: Bool = false
+
+    init() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        for layout in [
+            appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance,
+            appearance.compactInlineLayoutAppearance,
+        ] {
+            layout.normal.badgeBackgroundColor = UIColor(EmmColors.warning)
+            layout.selected.badgeBackgroundColor = UIColor(EmmColors.warning)
+        }
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
 
     var body: some View {
         TabView(selection: tabSelection) {
@@ -35,9 +52,18 @@ struct AppShell: View {
                 .tabItem { Label("Cuentas", systemImage: "wallet.bifold") }
                 .tag(AppTab.accounts)
             MoreScreen()
-                .tabItem { Label("Más", systemImage: "ellipsis") }
+                .tabItem {
+                    Label {
+                        Text("Más").accessibilityLabel(isDisclosurePending ? "Más, requiere tu atención" : "Más")
+                    } icon: {
+                        Image(systemName: "ellipsis")
+                    }
+                }
+                .badge(isDisclosurePending ? Text("") : nil)
                 .tag(AppTab.more)
         }
+        .task { watchDisclosure() }
+        .onDisappear(perform: stopWatchingDisclosure)
         .fullScreenCover(isPresented: $isCapturePresented) {
             CaptureScreen(
                 onClose: { isCapturePresented = false },
@@ -48,6 +74,20 @@ struct AppShell: View {
                 onOpenMovements: showMovements
             )
         }
+    }
+
+    private func watchDisclosure() {
+        guard disclosureWatch == nil else { return }
+        let watch = resolveBackupDisclosureWatch()
+        watch.start { pending in
+            MainActor.assumeIsolated { isDisclosurePending = pending.boolValue }
+        }
+        disclosureWatch = watch
+    }
+
+    private func stopWatchingDisclosure() {
+        disclosureWatch?.stop()
+        disclosureWatch = nil
     }
 
     private func showMovements() {

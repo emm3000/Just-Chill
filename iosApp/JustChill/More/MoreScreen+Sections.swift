@@ -89,7 +89,9 @@ extension MoreScreen {
                         action: actions.onSignIn
                     )
                 }
-                if !state.isCloudBackupAvailable {
+                if state.isCloudBackupAvailable {
+                    BackupRows(state: state, send: send)
+                } else {
                     LocalOnlyNote()
                 }
             }
@@ -142,6 +144,7 @@ extension MoreScreen {
         let symbol: String
         let label: String
         var meta: String = ""
+        var metaColor: Color?
         var isNavigable: Bool = false
         var isEnabled: Bool = true
         var isBusy: Bool = false
@@ -171,7 +174,7 @@ extension MoreScreen {
                     if !meta.isEmpty {
                         Text(meta)
                             .emmTextStyle(EmmType.bodyM)
-                            .foregroundStyle(isActive ? EmmColors.textTertiary : EmmColors.textDisabled)
+                            .foregroundStyle(isActive ? metaColor ?? EmmColors.textTertiary : EmmColors.textDisabled)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
