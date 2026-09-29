@@ -11,7 +11,23 @@ import com.emm.justchill.core.presentation.format.positiveMoneyFormatted
 
 // An account has no opening balance, so net is a monthly net and never a balance — the screen owes
 // the user the "este mes" caption that says so.
-data class AccountMonthUi(val account: Account, val movementCount: Int, val net: String, val netIsPositive: Boolean)
+data class AccountMonthUi(val account: Account, val movementCount: Int, val net: String, val netIsPositive: Boolean) {
+
+    val id: String get() = account.accountId.value
+
+    val netTone: AccountNetTone
+        get() = when {
+            movementCount == 0 -> AccountNetTone.Muted
+            netIsPositive -> AccountNetTone.Positive
+            else -> AccountNetTone.Neutral
+        }
+}
+
+enum class AccountNetTone {
+    Muted,
+    Positive,
+    Neutral,
+}
 
 internal data class AccountsMonthSlice(
     val month: YearMonth,
