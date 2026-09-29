@@ -15,10 +15,7 @@ import com.emm.justchill.core.presentation.format.relativeDayLabel
 import com.emm.justchill.core.presentation.mvi.UiState
 import com.emm.justchill.core.presentation.transaction.Catalog
 import com.emm.justchill.core.presentation.transaction.categoriesOf
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.isoDayNumber
-import kotlinx.datetime.minus
 
 data class MonthSpend(val month: YearMonth, val total: Money)
 
@@ -65,13 +62,7 @@ data class AddTransactionUiState(
 
     val pickerDate: LocalDate get() = date ?: today
 
-    val dateShortcuts: List<DateShortcut>
-        get() = listOf(
-            DateShortcut(DateShortcutKind.Today, today),
-            DateShortcut(DateShortcutKind.Yesterday, today.minus(1, DateTimeUnit.DAY)),
-            DateShortcut(DateShortcutKind.ThisWeek, today.minus(today.dayOfWeek.isoDayNumber - 1, DateTimeUnit.DAY)),
-            DateShortcut(DateShortcutKind.ThisMonth, LocalDate(today.year, today.month, 1)),
-        )
+    val dateShortcuts: List<DateShortcut> get() = dateShortcutsOf(today)
 
     val accounts: List<Account> get() = catalog.accounts
 
@@ -93,11 +84,7 @@ data class AddTransactionUiState(
 
     val frequentCategoryIds: List<String> get() = usageForCurrentType?.categoryIds.orEmpty()
 
-    val frequentCategories: List<SelectableCategory>
-        get() = frequentCategoryIds
-            .mapNotNull { id -> categories.find { it.categoryId.value == id } }
-            .takeIf { it.size >= MIN_FREQUENT_SECTION_SIZE }
-            .orEmpty()
+    val frequentCategories: List<SelectableCategory> get() = frequentSectionOf(categories, frequentCategoryIds)
 
     val otherCategories: List<SelectableCategory>
         get() {
@@ -123,5 +110,3 @@ data class AddTransactionUiState(
 }
 
 enum class MissingField { Amount, Account }
-
-private const val MIN_FREQUENT_SECTION_SIZE: Int = 2

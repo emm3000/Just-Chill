@@ -39,6 +39,23 @@ data class EditTransactionUiState(
     val categories: List<SelectableCategory>
         get() = catalog.categoriesOf(transactionType.categoryType, extras = extraCategories)
 
+    val note: String get() = description
+
+    val dateShortcuts: List<DateShortcut> get() = dateShortcutsOf(today)
+
+    val frequentCategories: List<SelectableCategory> get() = frequentSectionOf(categories, frequentCategoryIds)
+
+    val otherCategories: List<SelectableCategory>
+        get() {
+            val frequent: List<SelectableCategory> = frequentCategories
+            return categories.filterNot { it in frequent }
+        }
+
+    fun categoriesMatching(query: String): List<SelectableCategory> {
+        val needle: String = query.trim()
+        return categories.filter { it.name.contains(needle, ignoreCase = true) }
+    }
+
     val accountSelected: Account? get() = accounts.find { it.accountId == accountId }
 
     // "Uncategorized" is a choice, so there is no fall back to the first row. The stored id is the
