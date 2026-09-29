@@ -8,7 +8,18 @@
 
 /* Begin PBXFileReference section */
 		A10000000000000000000001 /* JustChill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JustChill.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000012 /* JustChillTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = JustChillTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXContainerItemProxy section */
+		A1000000000000000000001B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1000000000000000000000B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000006;
+			remoteInfo = JustChill;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A10000000000000000000002 /* JustChill */ = {
@@ -16,10 +27,22 @@
 			path = JustChill;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000013 /* JustChillTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = JustChillTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000014 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000002 /* JustChill */,
+				A10000000000000000000013 /* JustChillTests */,
 				A10000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000000000000000000001 /* JustChill.app */,
+				A10000000000000000000012 /* JustChillTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,27 @@
 			productReference = A10000000000000000000001 /* JustChill.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A10000000000000000000017 /* JustChillTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000018 /* Build configuration list for PBXNativeTarget "JustChillTests" */;
+			buildPhases = (
+				A10000000000000000000015 /* Sources */,
+				A10000000000000000000014 /* Frameworks */,
+				A10000000000000000000016 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A1000000000000000000001C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A10000000000000000000013 /* JustChillTests */,
+			);
+			name = JustChillTests;
+			productName = JustChillTests;
+			productReference = A10000000000000000000012 /* JustChillTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +128,10 @@
 				TargetAttributes = {
 					A10000000000000000000006 = {
 						CreatedOnToolsVersion = 27.0;
+					};
+					A10000000000000000000017 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = A10000000000000000000006;
 					};
 				};
 			};
@@ -100,12 +150,20 @@
 			projectRoot = "";
 			targets = (
 				A10000000000000000000006 /* JustChill */,
+				A10000000000000000000017 /* JustChillTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A1000000000000000000000A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000016 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -164,7 +222,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000015 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1000000000000000000001C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000000000000000000006 /* JustChill */;
+			targetProxy = A1000000000000000000001B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A1000000000000000000000D /* Debug */ = {
@@ -281,6 +354,42 @@
 			};
 			name = Release;
 		};
+		A10000000000000000000019 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emm.justchill.ios.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JustChill.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/JustChill";
+			};
+			name = Debug;
+		};
+		A1000000000000000000001A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.emm.justchill.ios.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/JustChill.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/JustChill";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -289,6 +398,15 @@
 			buildConfigurations = (
 				A1000000000000000000000F /* Debug */,
 				A10000000000000000000010 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000018 /* Build configuration list for PBXNativeTarget "JustChillTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000019 /* Debug */,
+				A1000000000000000000001A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
