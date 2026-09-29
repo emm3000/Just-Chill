@@ -19,7 +19,9 @@ class GateCheckTest {
     @Test
     fun `every edge ADR 015 and ADR 024 allow passes the boundary check`() {
         val modules: Map<String, String> = mapOf(
-            ":androidApp" to module(":feature:loan", ":core:ui", ":core:presentation", ":core:domain"),
+            ":androidApp" to module(":shared", ":feature:loan", ":core:ui", ":core:presentation", ":core:domain"),
+            ":shared" to module(":feature:loan", ":core:backup", ":core:presentation", ":core:domain"),
+            ":core:backup" to module(":core:domain"),
             ":feature:loan" to module(":core:domain", ":core:presentation", ":core:ui"),
             ":core:ui" to module(":core:domain", ":core:presentation"),
             ":core:presentation" to module(":core:domain"),
@@ -154,7 +156,27 @@ class GateCheckTest {
             modules = mapOf(":legacy" to module(":core:domain"), ":core:domain" to module()),
         )
 
-        assertTrue(output.contains(":legacy is neither :androidApp nor a :core: or :feature: module"), output)
+        assertTrue(output.contains(":legacy is neither :androidApp, :shared nor a :core: or :feature: module"), output)
+    }
+
+    @Test
+    fun `the shared umbrella that depends on the app fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":shared:$BOUNDARY_TASK",
+            modules = mapOf(":shared" to module(":androidApp"), ":androidApp" to module()),
+        )
+
+        assertTrue(output.contains(":shared depends on :androidApp"), output)
+    }
+
+    @Test
+    fun `the shared umbrella that ships the fixtures module in production fails the boundary check`() {
+        val output: String = fixture.checkAndFail(
+            task = ":shared:$BOUNDARY_TASK",
+            modules = mapOf(":shared" to module(":core:testing"), ":core:testing" to module()),
+        )
+
+        assertTrue(output.contains(":shared depends on :core:testing"), output)
     }
 
     @Test

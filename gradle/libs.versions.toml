@@ -30,6 +30,8 @@ screenshot = "0.0.1-alpha16"
 composeRulesDetekt = "0.6.6"
 supabaseBom = "3.8.0"
 ktorClientOkhttp = "3.6.0"
+# SKIE: the Swift surface of :shared's JustChillKit (ADR 024). Its releases track Kotlin, so a Kotlin bump waits on one.
+skie = "0.10.15"
 
 # okio — the SHA-256 behind the backup integrity check. The Kotlin common stdlib has no digest, and
 # okio's `ByteString.sha256()` needs no provider setup on either target, so it replaces the
@@ -162,3 +164,4 @@ android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 android-compose-screenshot = { id = "com.android.compose.screenshot", version.ref = "screenshot" }
+skie = { id = "co.touchlab.skie", version.ref = "skie" }

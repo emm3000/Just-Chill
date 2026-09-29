@@ -1,6 +1,9 @@
 package com.emm.justchill.core.di
 
 import com.emm.justchill.core.SupabaseConfig
+import com.emm.justchill.core.backup.auth.DefaultAuthRepository
+import com.emm.justchill.core.domain.auth.AuthRepository
+import com.emm.justchill.core.domain.auth.GetSessionStatusUseCase
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.Auth
@@ -10,10 +13,15 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.serializer.KotlinXSerializer
 import io.github.jan.supabase.storage.Storage
 import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.bind
+import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
 val supabaseModule = module {
     single { provideSupabaseClient(get(), get()) }
+
+    factoryOf(::DefaultAuthRepository) { bind<AuthRepository>() }
+    factoryOf(::GetSessionStatusUseCase)
 }
 
 // The session manager is injected rather than defaulted: supabase-kt persists the refresh token to

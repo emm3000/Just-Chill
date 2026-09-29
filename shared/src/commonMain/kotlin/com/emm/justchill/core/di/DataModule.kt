@@ -35,8 +35,6 @@ import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-// The platform-specific DB single (driver construction + provideDb) does NOT live here — it needs
-// androidContext(), so it stays in androidPlatformModule.
 val dataModule = module {
     single { provideTransactionQueries(get()) }
 

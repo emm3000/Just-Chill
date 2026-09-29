@@ -4,10 +4,8 @@ import com.emm.justchill.core.appScopeQualifier
 import com.emm.justchill.core.backup.BackupDisclosureSignal
 import com.emm.justchill.core.backup.BackupOrchestrator
 import com.emm.justchill.core.backup.DefaultBackupMetadataStore
-import com.emm.justchill.core.backup.FlavorBackupAvailability
 import com.emm.justchill.core.backup.LocalExportHistory
 import com.emm.justchill.core.domain.shared.RemoteWriteMutex
-import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.backup.BackupController
 import com.emm.justchill.core.domain.shared.backup.BackupMetadataStore
 import com.emm.justchill.core.domain.shared.backup.ExportHistory
@@ -23,8 +21,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val backupModule = module {
-    singleOf(::FlavorBackupAvailability) { bind<BackupAvailability>() }
-
     factoryOf(::ImportDataUseCase)
 
     factoryOf(::GetBackupStalenessUseCase)

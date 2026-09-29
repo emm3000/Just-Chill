@@ -8,8 +8,10 @@ import com.emm.justchill.BuildConfig
 import com.emm.justchill.BuildInfo
 import com.emm.justchill.core.auth.ActivityGoogleSignInLauncher
 import com.emm.justchill.core.auth.GoogleCredentialClient
+import com.emm.justchill.core.backup.FlavorBackupAvailability
 import com.emm.justchill.core.database.provideDb
 import com.emm.justchill.core.database.provideSqlDriver
+import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.platform.CurrentActivityHolder
 import com.emm.justchill.core.session.KeystoreSessionCipher
@@ -22,6 +24,7 @@ import io.github.jan.supabase.auth.SessionManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -68,14 +71,11 @@ val androidPlatformModule = module {
     // absent; the Google button stays hidden so submitWithGoogle never reaches the launcher.
     single(named("googleServerClientId")) { BuildConfig.GOOGLE_WEB_CLIENT_ID }
 
-    // Supabase connection settings injected into supabaseModule. Empty URL falls back to the
-    // localhost placeholder so the app stays usable in anonymous/offline mode.
     single<SupabaseConfig> {
-        SupabaseConfig(
-            url = BuildConfig.SUPABASE_URL.ifBlank { "http://localhost:54321" },
-            anonKey = BuildConfig.SUPABASE_ANON_KEY,
-        )
+        SupabaseConfig.withOfflineFallback(url = BuildConfig.SUPABASE_URL, anonKey = BuildConfig.SUPABASE_ANON_KEY)
     }
+
+    singleOf(::FlavorBackupAvailability) { bind<BackupAvailability>() }
 
     factoryOf(::GoogleCredentialClient)
     factoryOf(::ActivityGoogleSignInLauncher) { bind<GoogleSignInLauncher>() }

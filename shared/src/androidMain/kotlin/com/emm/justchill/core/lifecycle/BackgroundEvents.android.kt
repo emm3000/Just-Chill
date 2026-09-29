@@ -9,9 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
-// ADR 009: the backup orchestrator triggers on this edge because backgrounding is when a snapshot
-// is cheap — nothing on screen still needs the CPU or the network at that moment.
-fun backgroundEvents(): Flow<Unit> = callbackFlow {
+actual fun backgroundEvents(): Flow<Unit> = callbackFlow {
     val observer = object : DefaultLifecycleObserver {
         override fun onStop(owner: LifecycleOwner) {
             trySend(Unit)
