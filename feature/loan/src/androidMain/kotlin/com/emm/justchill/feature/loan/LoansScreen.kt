@@ -29,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.emm.justchill.core.presentation.loan.PersonBalanceUi
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -90,12 +89,12 @@ fun LoansScreen(
 }
 
 @Composable
-private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
+private fun PersonRow(person: PersonRowUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
     val nameColor = if (person.isSettled) colors.textTertiary else colors.textPrimary
-    val remainingColor = personRemainingTone(person.isSettled, person.remainingIsPositive).color(colors)
+    val remainingColor = person.tone.amountTone().color(colors)
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val rowBackground: Color = if (isPressed) colors.surface1 else Color.Transparent
@@ -142,14 +141,10 @@ private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
     }
 }
 
-/**
- * What one tap from Cuentas shows must read the same as `LoansSection` — a positive remaining is
- * positive money, `success`; settled is the muted step it already had.
- */
-internal fun personRemainingTone(isSettled: Boolean, remainingIsPositive: Boolean): AmountTone = when {
-    isSettled -> AmountTone.Mute
-    remainingIsPositive -> AmountTone.Pos
-    else -> AmountTone.Neutral
+private fun PersonRemainingTone.amountTone(): AmountTone = when (this) {
+    PersonRemainingTone.Muted -> AmountTone.Mute
+    PersonRemainingTone.Positive -> AmountTone.Pos
+    PersonRemainingTone.Neutral -> AmountTone.Neutral
 }
 
 @Composable
@@ -192,19 +187,19 @@ private fun LoansScreenPreview() {
         LoansScreen(
             state = LoansUiState(
                 people = listOf(
-                    PersonBalanceUi(
+                    PersonRowUi(
                         personKey = "juan",
                         personName = "Juan",
                         remaining = "+S/ 250.00",
                         isSettled = false,
-                        remainingIsPositive = true,
+                        tone = PersonRemainingTone.Positive,
                     ),
-                    PersonBalanceUi(
+                    PersonRowUi(
                         personKey = "maria",
                         personName = "María",
                         remaining = "S/ 0.00",
                         isSettled = true,
-                        remainingIsPositive = false,
+                        tone = PersonRemainingTone.Muted,
                     ),
                 ),
             ),
@@ -235,12 +230,12 @@ private fun LoansScreenEmptyPreview() {
 private fun PersonRowOverflowPreview() {
     EmmTheme {
         PersonRow(
-            person = PersonBalanceUi(
+            person = PersonRowUi(
                 personKey = "maria-fernanda",
                 personName = "María Fernanda Rodríguez Quispe",
                 remaining = "+S/ 999,999.99",
                 isSettled = false,
-                remainingIsPositive = true,
+                tone = PersonRemainingTone.Positive,
             ),
             onClick = {},
         )
