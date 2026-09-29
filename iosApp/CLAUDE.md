@@ -17,9 +17,10 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 
 ## Simulator
 
-- One device, `justchill-ios27` (iPhone 17, iOS 27 runtime), created once by #525 (ADR 024 Decision 8). Never create a second device or runtime.
-- Boot: `xcrun simctl boot justchill-ios27`. The dispatch that needs it boots it; every `KotlinNativeSimulatorTest` targets it with `standalone = false` (`build-logic`'s `KmpLibraryConventionPlugin`) and never boots, shuts down or creates one, so peers share it.
-- Smoke: `xcrun simctl install justchill-ios27 <DerivedData>/Build/Products/Debug-iphonesimulator/JustChill.app`, then `xcrun simctl launch --console-pty justchill-ios27 com.emm.justchill.ios`. `xcodebuild ... -showBuildSettings | rg BUILT_PRODUCTS_DIR` prints the directory. Run install and launch in sequence, never backgrounded together, or the shot lands on the home screen. A shot right after a cold boot can come out black; relaunch and shoot again.
+- Pool of two, `justchill-ios27` and `justchill-ios27-b` (iPhone 17, the one iOS 27 runtime), one device per peer (ADR 024 `## Amendments (2026-09-29)`, `docs/agents/multi-session.md` `## Isolation: emulators`). Never a second runtime, never `simctl clone`.
+- Every `KotlinNativeSimulatorTest` targets `justchill-ios27` with `standalone = false` (`build-logic`'s `KmpLibraryConventionPlugin`) and never boots, shuts down or creates one; it never installs the app, so it shares the device with a peer safely. Never shut down, erase or rename `justchill-ios27` while a peer or a test uses it.
+- The dispatch boots each peer's device and names it: `xcrun simctl boot <device>`. Every later call names that device, never `booted`, which is ambiguous with two booted.
+- Smoke on `<device>`: `xcrun simctl install <device> <DerivedData>/Build/Products/Debug-iphonesimulator/JustChill.app`, then `xcrun simctl launch --console-pty <device> com.emm.justchill.ios`, then `xcrun simctl io <device> screenshot <file>.png`. `xcodebuild ... -showBuildSettings | rg BUILT_PRODUCTS_DIR` prints the directory. Run install and launch in sequence, never backgrounded together, or the shot lands on the home screen. A shot right after a cold boot can come out black; relaunch and shoot again.
 
 ## Layout
 

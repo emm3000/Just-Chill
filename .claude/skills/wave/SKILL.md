@@ -20,6 +20,7 @@ Run when the owner invokes `/wave` with one or more issue numbers, or when the o
 - One explicit model and one explicit effort per ticket, stated to the owner before booting.
 - Never touch the owner's main checkout. Peers get their own worktree from `scripts/justchill-session`.
 - No wave carries two tickets touching the same module, and a schema change (`.sq` / `.sqm`) is always a wave of one.
+- `iosApp/` only: two tickets may share a wave when they touch different screen-family folders under `iosApp/JustChill/` and neither edits a shared file (`iosApp/CLAUDE.md`, `project.pbxproj`, any non-screen-family entry under `iosApp/JustChill/`); the list is in `docs/agents/multi-session.md` `## Slicing and waves`.
 
 ## Decision Gates
 

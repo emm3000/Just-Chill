@@ -92,7 +92,8 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
 8. **One simulator, one runtime, from wave 6 only.** Exactly one iOS simulator device,
    `justchill-ios27`, on the iOS 27 runtime (`xcodebuild -downloadPlatform iOS`, ≈6–8 GB, once).
    Waves 1–5 compile and link only and create none. No per-wave, per-peer or extra-runtime
-   simulators; a dispatch that needs one names this device.
+   simulators; a dispatch that needs one names this device. Amended: a two-device pool
+   (`## Amendments (2026-09-29)`).
 9. **One risk stays open: detekt over KMP source sets.** The Decision 3 ticket carries a spike line;
    this ADR does not guess. SKIE and the screenshot plugin are settled (Context 5 and 7).
 
@@ -103,7 +104,8 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
 3. `:core:database`, then `:core:backup`.
 4. The screenshot matrix to `:androidApp`, then the seven converted features, one ticket each.
 5. `:shared`, the iOS actuals, `JustChillKit` linked for `iosSimulatorArm64`.
-6. `iosApp/` per Decision 7; `justchill-ios27` is created here.
+6. `iosApp/` per Decision 7; `justchill-ios27` is created here, and its pool twin with it
+   (`## Amendments (2026-09-29)`).
 
 ## Consequences
 
@@ -137,3 +139,11 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
   `:androidApp`'s `appModules()` and iOS's `initKoin` both start. This supersedes "each app keeps
   only its platform module and wiring" in Consequences: each app keeps only its platform module,
   and a use case is bound once for both platforms.
+- **Wave 6 runs on a two-device simulator pool** (#546). `justchill-ios27` and
+  `justchill-ios27-b`, both iPhone 17 on the one iOS 27 runtime, one per peer, as the Android pool
+  pairs `justchill-api36` with `justchill-api36-b`. The runtime's 7.5 GB is shared; each device
+  costs ≈2.3 GB of disk and ≈2 GB of RAM booted. This supersedes "Exactly one iOS simulator
+  device" and "No per-wave, per-peer or extra-runtime simulators" in Decision 8; one runtime
+  still holds. Rejected: one device behind a lock, because both peers install bundle id
+  `com.emm.justchill.ios`, so one install silently replaces the other and a shot can show the
+  wrong build. Kotlin/Native simulator tests stay on `justchill-ios27`.
