@@ -26,7 +26,7 @@ extension MovementsScreen {
         private var content: some View {
             ScrollView {
                 LazyVStack(spacing: EmmSpacing.s0, pinnedViews: [.sectionHeaders]) {
-                    ForEach(state.days, id: \.self) { day in
+                    ForEach(state.days, id: \.date) { day in
                         Section {
                             ForEach(day.transactions, id: \.transactionId) { transaction in
                                 Row(transaction: transaction)
@@ -56,7 +56,7 @@ extension MovementsScreen {
                     Text(day.monthYearCaption)
                         .emmTextStyle(EmmType.caption)
                         .foregroundStyle(EmmColors.textDisabled)
-                } else if let spendTotal = MovementsScreen.cents(of: day.spendTotal) {
+                } else if let spendTotal = day.spendTotalCents?.int64Value {
                     Text(CurrencyFormatKt.formatNeutral(value: MoneyFormatterKt.format(spendTotal)))
                         .emmTextStyle(EmmType.amountS)
                         .foregroundStyle(EmmColors.textTertiary)
