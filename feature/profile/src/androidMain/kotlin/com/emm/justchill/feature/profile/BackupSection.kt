@@ -109,7 +109,7 @@ private fun CloudBackupRows(state: ProfileUiState, onSignIn: () -> Unit, snapsho
         )
         VerifyBackupRow(op = state.op, onVerifyClick = snapshotActions.onVerify)
         LastBackupRow(row = state.backupRow)
-        if (state.backupRow == BackupRowUi.DisclosurePending) {
+        if (state.showsBackupDestinationDisclosure) {
             BackupDestinationDisclosure(onAcknowledge = snapshotActions.onAcknowledgeDestination)
         }
     }
