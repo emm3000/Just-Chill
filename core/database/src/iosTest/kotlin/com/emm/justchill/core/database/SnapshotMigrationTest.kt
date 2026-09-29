@@ -39,12 +39,27 @@ private const val SELECT_SEEDED_TRANSACTION: String =
     "SELECT transactionId, type, amount, description, occurredAt, categoryId, accountId, " +
         "createdAt, updatedAt, userId, deletedAt, syncState FROM transactions"
 
-private const val SELECT_COLUMNS: String =
-    "SELECT m.name, p.cid, p.name, p.type, p.\"notnull\", p.dflt_value, p.pk " +
-        "FROM sqlite_master m JOIN pragma_table_info(m.name) p " +
-        "WHERE m.type = 'table' ORDER BY m.name, p.cid"
+private class SchemaProbe(val sql: String, val columns: Int)
 
-private const val COLUMN_ATTRIBUTES: Int = 7
+private val SCHEMA_PROBES: List<SchemaProbe> = listOf(
+    SchemaProbe(
+        sql = "SELECT m.name, p.cid, p.name, p.type, p.\"notnull\", p.dflt_value, p.pk " +
+            "FROM sqlite_master m JOIN pragma_table_info(m.name) p " +
+            "WHERE m.type = 'table' ORDER BY m.name, p.cid",
+        columns = 7,
+    ),
+    SchemaProbe(
+        sql = "SELECT m.name, f.id, f.seq, f.\"table\", f.\"from\", f.\"to\", f.on_update, f.on_delete " +
+            "FROM sqlite_master m JOIN pragma_foreign_key_list(m.name) f " +
+            "WHERE m.type = 'table' ORDER BY m.name, f.id, f.seq",
+        columns = 8,
+    ),
+    SchemaProbe(
+        sql = "SELECT name, tbl_name, sql FROM sqlite_master " +
+            "WHERE type = 'index' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+        columns = 3,
+    ),
+)
 
 private val SEEDED_TRANSACTION: List<String?> = listOf(
     "transaction-salary",
@@ -122,29 +137,32 @@ class SnapshotMigrationTest {
     }
 
     private fun assertOpensMigrated() {
-        val expectedColumns: List<List<String?>> = freshColumns()
+        val expectedSchema: List<List<List<String?>>> = freshSchema()
         val driver: SqlDriver = openSqlDriver(databaseConfiguration(DATABASE_NAME))
         val version: List<List<String?>> = driver.rows("PRAGMA user_version", columns = 1)
-        val columns: List<List<String?>> = driver.rows(SELECT_COLUMNS, COLUMN_ATTRIBUTES)
+        val schema: List<List<List<String?>>> = driver.schema()
         val transactions: List<List<String?>> = driver.rows(SELECT_SEEDED_TRANSACTION, SEEDED_TRANSACTION.size)
         val foreignKeys: List<List<String?>> = driver.rows("PRAGMA foreign_keys", columns = 1)
         val violations: List<List<String?>> = driver.rows("PRAGMA foreign_key_check", columns = 1)
         driver.close()
 
         assertEquals(listOf(listOf(JustChillDatabase.Schema.version.toString())), version)
-        assertEquals(expectedColumns, columns)
+        assertEquals(expectedSchema, schema)
         assertEquals(listOf(SEEDED_TRANSACTION), transactions)
         assertEquals(listOf(listOf("1")), foreignKeys)
         assertEquals(emptyList(), violations)
     }
 
-    private fun freshColumns(): List<List<String?>> {
+    private fun freshSchema(): List<List<List<String?>>> {
         DatabaseFileContext.deleteDatabase(freshName)
         val fresh: SqlDriver = openSqlDriver(databaseConfiguration(freshName))
-        val columns: List<List<String?>> = fresh.rows(SELECT_COLUMNS, COLUMN_ATTRIBUTES)
+        val schema: List<List<List<String?>>> = fresh.schema()
         fresh.close()
-        return columns
+        return schema
     }
+
+    private fun SqlDriver.schema(): List<List<List<String?>>> =
+        SCHEMA_PROBES.map { probe: SchemaProbe -> rows(probe.sql, probe.columns) }
 
     private fun SqlDriver.rows(sql: String, columns: Int): List<List<String?>> = executeQuery(
         identifier = null,

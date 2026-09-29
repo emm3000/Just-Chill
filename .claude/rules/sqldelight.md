@@ -33,7 +33,7 @@ paths:
 - Prove the test is not vacuous before trusting it: set its `oldVersion` to the current schema version so the migration is skipped, watch it fail on the missing column, restore it.
 - Foreign keys: `csm()`'s `onOpen` turns them on only after the upgrade chain ran (they cannot be switched on inside `SQLiteOpenHelper`'s upgrade transaction), and SQLite never re-checks rows already written, so an FK-violating row written by a migration is silent on device forever. A test that enables foreign keys in its own `onOpen` and then calls `Schema.migrate` is the only check of the chain's writes; `MigrationV1ToV2Test` does it and `MigrationV4ToV5Test` flips them on for the cases where `4.sqm`'s statement order matters. Never drop that callback: the test stays green while proving less.
   On iOS, `openSqlDriver` migrates on a connection with foreign keys off, then opens `NativeSqliteDriver` with them on, the order `csm()` gives Android. `SnapshotMigrationTest` in `core/database/src/iosTest/` runs the real chain from `3.db`, `4.db` and `5.db` through it.
-- Run the suite with `./gradlew :core:database:connectedAndroidDeviceTest` on `justchill-api36` before shipping any schema change; the gate only compiles it.
+- Run both suites before shipping any schema change: `./gradlew :core:database:connectedAndroidDeviceTest` on `justchill-api36`, and `./gradlew :core:database:iosSimulatorArm64Test` on `justchill-ios27`. Neither runs on the gate, which only compiles them.
 
 ## The restore drill
 
