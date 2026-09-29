@@ -67,6 +67,7 @@ extension EditMovementScreen {
                         category: state.categorySelected,
                         dateLabel: state.dateLabel,
                         onAccount: { request(.account) },
+                        onCreateAccount: {},
                         onCategory: { request(.category) },
                         onDate: { request(.date) }
                     )
@@ -76,7 +77,7 @@ extension EditMovementScreen {
                 Numpad(digits: amountBinding)
                     .padding(.horizontal, EmmSpacing.s4)
                     .padding(.bottom, EmmSpacing.s2)
-                CaptureScreen.SaveButton(
+                SaveButton(
                     label: "Guardar cambios",
                     isEnabled: state.isEnabled,
                     isSaving: false,

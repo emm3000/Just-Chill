@@ -133,6 +133,7 @@ extension CaptureScreen {
         let category: SelectableCategory?
         let dateLabel: String
         let onAccount: () -> Void
+        let onCreateAccount: () -> Void
         let onCategory: () -> Void
         let onDate: () -> Void
 
@@ -178,8 +179,9 @@ extension CaptureScreen {
         @ViewBuilder
         private var accountChip: some View {
             if hasNoAccounts {
-                SelectorChip(label: "Crear cuenta", dotColor: nil, symbol: "plus", hint: "Crear una cuenta") {}
-                    .disabled(true)
+                SelectorChip(
+                    label: "Crear cuenta", dotColor: nil, symbol: "plus", hint: "Crear una cuenta",
+                    action: onCreateAccount)
             } else {
                 SelectorChip(label: accountName ?? "—", dotColor: nil, hint: "Cambiar la cuenta", action: onAccount)
             }
@@ -222,38 +224,6 @@ extension CaptureScreen {
             .accessibilityLabel(label)
             .accessibilityHint(hint)
             .accessibilityAddTraits(.isButton)
-        }
-    }
-
-    struct SaveButton: View {
-        let label: String
-        let isEnabled: Bool
-        let isSaving: Bool
-        let onSave: () -> Void
-
-        var body: some View {
-            VStack(spacing: EmmSpacing.s0) {
-                Rectangle()
-                    .fill(EmmColors.border)
-                    .frame(height: EmmSpacing.hairline)
-                Button(action: onSave) {
-                    HStack(spacing: EmmSpacing.s2) {
-                        if isSaving {
-                            ProgressView()
-                                .tint(EmmColors.textTertiary)
-                        }
-                        Text(label)
-                            .emmTextStyle(EmmType.titleM)
-                    }
-                    .foregroundStyle(isEnabled ? EmmColors.bg : EmmColors.textTertiary)
-                    .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
-                    .background(isEnabled ? EmmColors.textPrimary : EmmColors.surface1, in: EmmRadii.rL)
-                }
-                .disabled(!isEnabled)
-                .padding(.horizontal, EmmSpacing.s4)
-                .padding(.top, EmmSpacing.s3)
-                .padding(.bottom, EmmSpacing.s4)
-            }
         }
     }
 }

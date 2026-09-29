@@ -65,6 +65,8 @@ extension CaptureScreen {
         let onClose: () -> Void
         let onOpenMovements: () -> Void
 
+        @State private var isAddAccountPresented: Bool = false
+
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
                 TopBar(
@@ -80,6 +82,7 @@ extension CaptureScreen {
                         category: state.categorySelected,
                         dateLabel: state.dateLabel,
                         onAccount: { request(.account) },
+                        onCreateAccount: { isAddAccountPresented = true },
                         onCategory: { request(.category) },
                         onDate: { request(.date) }
                     )
@@ -97,6 +100,9 @@ extension CaptureScreen {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(EmmColors.bg)
+            .sheet(isPresented: $isAddAccountPresented) {
+                AddAccountScreen(onClose: { isAddAccountPresented = false })
+            }
             .sheet(isPresented: sheetBinding(.account)) {
                 AccountSheet(
                     accounts: state.accounts,
