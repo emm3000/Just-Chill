@@ -110,6 +110,19 @@ class ReportShareFormatterTest {
     }
 
     @Test
+    fun `buildMonthShareText caps a tiny-base percent at the more-than label`() {
+        val state = ReportUiState(
+            month = may2026,
+            comparisonAmountFormatted = "S/ 712",
+            comparisonPercent = 44499,
+            comparisonText = "vs Abril",
+            comparisonDirectionUp = true,
+        )
+        val result = ReportShareFormatter.buildMonthShareText(state)
+        assertTrue(result.contains("S/ 712 · más de 999% vs"), "Capped percent missing from: $result")
+    }
+
+    @Test
     fun `buildTrendsShareText contains JustChill footer`() {
         val state = ReportUiState(month = may2026)
         val result = ReportShareFormatter.buildTrendsShareText(state)
