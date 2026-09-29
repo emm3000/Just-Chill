@@ -1,10 +1,8 @@
 # :feature:category — CLAUDE.md
 
-The Categories screen family, ViewModels and Compose together: the list with its edit and delete dialogs, the create screen with the icon and colour pickers and the preview chip, and the two routes the host pushes. Extracted by ADR 015's wave 7 (#119); the package is `com.emm.justchill.feature.category`.
+Categories: the list with its edit and delete dialogs, the create screen with the icon and colour pickers and the preview chip, and the two routes the host pushes. Extracted by ADR 015's wave 7 (#119). One package, `com.emm.justchill.feature.category`, split by source set (ADR 024 Decision 5, #487): `commonMain` holds the two ViewModels, their `UiState` / `Intent` / `Effect` and `categoryModule`; `androidMain` holds the screens, the pickers, the preview chip, `DeleteCategoryCopy`, the `@Serializable` routes, `categoryRoutes` and `categoryEntries`. Nothing in `commonMain` imports Compose, Android, Navigation 3 or kotlinx-serialization.
 
 `justchill.kmp.feature` (ADR 024 Decision 5, #487), plus `androidx.lifecycle.runtime.compose` and `androidx.material.icons.extended` on `androidMain`, which the plugin does not bring and the screens need. Depends on `:core:domain`, `:core:presentation` and `:core:ui` only. `compose_stability.conf` declares `com.emm.justchill.**` stable so the `:core:domain` values the screens take are not treated as unstable.
-
-The split: `commonMain` holds the two ViewModels, their `UiState` / `Intent` / `Effect` files and `CategoryModule.kt`, none of them importing Compose or Android. `androidMain` holds the screens, the pickers and the preview chip, `DeleteCategoryCopy.kt`, the routes and the nav entries. The tests live in `androidHostTest`.
 
 ## What lives where
 
