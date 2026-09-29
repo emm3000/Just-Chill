@@ -7,3 +7,5 @@ val PaymentMethod.label: String
         PaymentMethod.Cash -> "Efectivo"
         PaymentMethod.Transfer -> "Transferencia"
     }
+
+data class PaymentMethodOptionUi(val method: PaymentMethod, val label: String, val isSelected: Boolean)

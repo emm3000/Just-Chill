@@ -10,4 +10,6 @@ data class LoanDetailUiState(
     val pendingDeletePaymentId: String? = null,
     val isDeletingPayment: Boolean = false,
     val payment: LoanPaymentFormUi? = null,
-) : UiState
+) : UiState {
+    val pendingDeletePayment: LoanPaymentRowUi? get() = payments.find { it.paymentId == pendingDeletePaymentId }
+}
