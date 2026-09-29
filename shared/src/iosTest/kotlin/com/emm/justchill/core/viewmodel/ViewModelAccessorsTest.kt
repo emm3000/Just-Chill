@@ -5,6 +5,8 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlCursor
 import app.cash.sqldelight.db.SqlDriver
 import com.emm.justchill.core.KitConfig
+import com.emm.justchill.core.backup.BackupDisclosureWatch
+import com.emm.justchill.core.backup.resolveBackupDisclosureWatch
 import com.emm.justchill.core.database.provideSqlDriver
 import com.emm.justchill.core.initKoin
 import com.emm.justchill.core.preferences.resolveAppPreferences
@@ -126,6 +128,14 @@ class ViewModelAccessorsTest {
         resolveAppPreferences().firstLaunchSeen = original
 
         assertEquals(!original, reread)
+    }
+
+    @Test
+    fun `the backup disclosure watch resolves through its accessor and stops`() {
+        val watch: BackupDisclosureWatch = resolveBackupDisclosureWatch()
+
+        watch.start {}
+        watch.stop()
     }
 
     @Test

@@ -15,6 +15,7 @@ extension MoreScreen {
                     symbol: "icloud.and.arrow.up",
                     label: "Respaldar ahora",
                     meta: state.op == .backingUp ? "Respaldando…" : "Sube una copia a la nube",
+                    metaTone: EmmColors.textSecondary,
                     isNavigable: true,
                     isEnabled: state.op == .none,
                     isBusy: state.op == .backingUp,
@@ -24,6 +25,7 @@ extension MoreScreen {
                     symbol: "checkmark.icloud",
                     label: "Verificar respaldo",
                     meta: state.op == .verifyingBackup ? "Verificando…" : "Revisa que el último se pueda restaurar",
+                    metaTone: EmmColors.textSecondary,
                     isNavigable: true,
                     isEnabled: state.op == .none,
                     isBusy: state.op == .verifyingBackup,
@@ -33,14 +35,14 @@ extension MoreScreen {
                     symbol: "icloud",
                     label: "Último respaldo",
                     meta: state.backupRow.toMetaText(),
-                    metaColor: statusColor
+                    metaTone: statusTone
                 )
             }
         }
 
-        private var statusColor: Color? {
+        private var statusTone: Color {
             switch state.backupRow.severity() {
-            case .normal: nil
+            case .normal: EmmColors.textSecondary
             case .warning: EmmColors.warning
             case .danger: EmmColors.danger
             }
@@ -64,6 +66,7 @@ extension MoreScreen {
                     isSaving: false,
                     onSave: onAcknowledge
                 )
+                .padding(.horizontal, EmmSpacing.s2)
             }
         }
     }
