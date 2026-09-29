@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
+
 plugins {
     id("justchill.kmp.library")
     alias(libs.plugins.skie)
@@ -23,6 +25,9 @@ kotlin {
             baseName = "JustChillKit"
             isStatic = true
             exportedModules.forEach(::export)
+        }
+        target.binaries.withType<TestExecutable>().configureEach {
+            linkerOpts("-lsqlite3")
         }
     }
 
