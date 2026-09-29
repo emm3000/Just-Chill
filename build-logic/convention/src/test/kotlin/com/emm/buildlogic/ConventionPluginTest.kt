@@ -192,7 +192,7 @@ class ConventionPluginTest {
     fun `sqldelight plugin configures JustChillDatabase in the core database package with the schema snapshots and migration verification on`() {
         val report: Map<String, String> = fixture.report(listOf("justchill.android.library", "justchill.sqldelight"))
 
-        assertEquals("JustChillDatabase,com.emm.justchill.core.database,src/main/sqldelight/databases,true", report["database"])
+        assertEquals("JustChillDatabase,com.emm.justchill.core.database,src/commonMain/sqldelight/databases,true", report["database"])
     }
 
     @Test

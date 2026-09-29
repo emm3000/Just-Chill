@@ -12,7 +12,7 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | Layer | Contains |
 |---|---|
 | `:core:domain` | Pure Kotlin. Models, value objects, use cases, and the **interfaces** the outer layers implement. |
-| `:core:database` | Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
+| `:core:database` | KMP, the drivers in `androidMain` / `iosMain`. Implementations of the domain interfaces: SQLDelight, mappers, the `SnapshotStore` over the six tables. |
 | `:core:backup` | The snapshot file and its account: DTOs, decoder, Supabase Storage, the backup cycle, auth. |
 | `:core:presentation` | Compose-free, KMP with every production source in `commonMain` on the JetBrains `lifecycle-viewmodel` (ADR 024 Decision 2): the MVI base in `mvi/`, the error copy (`DomainException.toUserMessage()`) in `error/`, the Spanish money, date and search formatters in `format/`, the presentation models `CategoryUi`, `SelectableCategory`, `TransactionUi`, `Catalog` and `PersonBalanceUi` with its owed-total helpers. |
 | `:core:ui` | Compose: the navigation vocabulary (`AppRoute`, `CaptureRoute`, `BottomBarRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the design system (theme tokens, atoms, `Emm*` widgets, fonts), the shared sheets, the icon and colour catalog, `TransactionRow`. |
