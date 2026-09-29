@@ -16,6 +16,8 @@ import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
+import com.emm.justchill.core.ui.atoms.PillTone
+import com.emm.justchill.feature.report.components.comparisonPillTone
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -348,6 +351,61 @@ class ReportViewModelTest {
         advanceUntilIdle()
 
         assertTrue(vm.state.value.isMonthEmpty)
+    }
+
+    private fun stubComparison(deltaPercent: Int) {
+        stubEmptyReport()
+        coEvery { getMonthlyComparison(any(), any()) } returns MonthlyComparison(
+            currentTotal = Money(100_00L),
+            previousTotal = Money(80_00L),
+            deltaPercent = deltaPercent,
+            absoluteDelta = Money(20_00L),
+        )
+    }
+
+    private fun TestScope.viewModelFor(type: TransactionType, deltaPercent: Int): ReportViewModel {
+        stubComparison(deltaPercent)
+        val vm: ReportViewModel = buildViewModel()
+        advanceUntilIdle()
+        vm.onIntent(ReportIntent.SelectType(type))
+        advanceUntilIdle()
+        return vm
+    }
+
+    @Test
+    fun `a spending rise stays monochrome, never danger`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = 25)
+
+        assertEquals(true, vm.state.value.comparisonDirectionUp)
+        assertEquals(false, vm.state.value.comparisonIsPositive)
+        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
+    }
+
+    @Test
+    fun `a spending drop is favourable`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = -25)
+
+        assertEquals(false, vm.state.value.comparisonDirectionUp)
+        assertEquals(true, vm.state.value.comparisonIsPositive)
+        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
+    }
+
+    @Test
+    fun `an income drop stays monochrome, never danger`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Income, deltaPercent = -25)
+
+        assertEquals(false, vm.state.value.comparisonDirectionUp)
+        assertEquals(false, vm.state.value.comparisonIsPositive)
+        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
+    }
+
+    @Test
+    fun `an income rise is favourable`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Income, deltaPercent = 25)
+
+        assertEquals(true, vm.state.value.comparisonDirectionUp)
+        assertEquals(true, vm.state.value.comparisonIsPositive)
+        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive == true))
     }
 
     @Test
