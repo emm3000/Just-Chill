@@ -81,7 +81,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
             description =
                 "Fails when a .sqm of this module has no schema snapshot, or a snapshot has no migration."
             migrations.from(fileTree(SQLDELIGHT_DIRECTORY) { include(MIGRATION_SOURCES) })
-            snapshots.from(fileTree(SNAPSHOT_DIRECTORY) { include(SNAPSHOT_SOURCES) })
+            snapshots.from(fileTree(SqlDelightConventionPlugin.SCHEMA_DIRECTORY) { include(SNAPSHOT_SOURCES) })
             floor.set(extension.floor)
             report.set(layout.buildDirectory.file("reports/$SNAPSHOT_TASK.txt"))
         }
@@ -166,7 +166,6 @@ class QualityGateConventionPlugin : Plugin<Project> {
             listOf("test*/**", "androidTest*/**", "commonTest/**", "androidHostTest/**", "androidDeviceTest/**") +
                 IOS_TEST_SOURCE_SETS.map { sourceSet -> "$sourceSet/**" }
         private const val SQLDELIGHT_DIRECTORY: String = "src/commonMain/sqldelight"
-        private const val SNAPSHOT_DIRECTORY: String = "src/commonMain/sqldelight/databases"
         private const val MIGRATION_SOURCES: String = "**/*.sqm"
         private const val SNAPSHOT_SOURCES: String = "*.db"
 

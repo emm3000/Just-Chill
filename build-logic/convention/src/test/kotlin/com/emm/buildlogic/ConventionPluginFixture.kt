@@ -229,6 +229,20 @@ internal class ConventionPluginFixture(
                     sqldelight?.databases?.forEach { database ->
                         println("REPORT database=" + listOf(database.name, database.packageName.get(), database.schemaOutputDirectory.get().asFile.relativeTo(project.projectDir).invariantSeparatorsPath, database.verifyMigrations.get()).joinToString(","))
                     }
+                    val stage = project.tasks.findByName("stageSqlDelightSnapshots") as? org.gradle.api.tasks.Sync
+                    if (stage != null) {
+                        val staged: File = stage.destinationDir
+                        println("REPORT stagedSources=" + stage.source.files.map { it.relativeTo(project.projectDir).invariantSeparatorsPath }.sorted().joinToString(","))
+                        println("REPORT stagedInto=" + staged.relativeTo(File(System.getProperty("java.io.tmpdir"))).invariantSeparatorsPath.replace(project.projectDir.absolutePath.hashCode().toString(), "<projectHash>"))
+                        println("REPORT simulatorSnapshots=" + project.tasks.withType(org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest::class.java).map { test ->
+                            val traits: List<String> = listOfNotNull(
+                                "input".takeIf { test.inputs.files.files.contains(staged) },
+                                "environment".takeIf { test.environment["SIMCTL_CHILD_SQLDELIGHT_SNAPSHOTS"] == staged.absolutePath },
+                                "tracked".takeIf { test.trackedEnvironment.containsKey("SIMCTL_CHILD_SQLDELIGHT_SNAPSHOTS") },
+                            )
+                            test.name + ":" + traits.joinToString("+")
+                        }.sorted().joinToString(","))
+                    }
                     val compilations = project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile::class.java)
                     println("REPORT jvmTarget=" + compilations.map { it.compilerOptions.jvmTarget.get().target }.distinct().sorted().joinToString(","))
                     println("REPORT optIn=" + compilations.flatMap { it.compilerOptions.optIn.get() }.distinct().sorted().joinToString(","))

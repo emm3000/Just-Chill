@@ -212,6 +212,19 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `sqldelight plugin stages the schema snapshots outside the checkout for every simulator test without tracking the path`() {
+        val report: Map<String, String> = fixture.report(
+            pluginIds = listOf("justchill.kmp.library", "justchill.sqldelight"),
+            arguments = WITHOUT_SWIFT_PM_IMPORT,
+            files = mapOf("probe/${SqlDelightConventionPlugin.SCHEMA_DIRECTORY}/1.db" to ""),
+        )
+
+        assertEquals("${SqlDelightConventionPlugin.SCHEMA_DIRECTORY}/1.db", report["stagedSources"])
+        assertEquals("justchill-sqldelight-snapshots-<projectHash>", report["stagedInto"])
+        assertEquals("iosSimulatorArm64Test:input+environment", report["simulatorSnapshots"])
+    }
+
+    @Test
     fun `release plugin minifies and shrinks the release unsigned and without mapping upload by default`() {
         val report: Map<String, String> = fixture.report(RELEASE_PLUGINS, APPLICATION_CONFIGURATION)
 
@@ -431,6 +444,8 @@ class ConventionPluginTest {
             "src/androidTest/kotlin/ProbeMigrationTest.kt,src/main/kotlin/Probe.kt,src/test/kotlin/ProbeTest.kt"
 
         val REPORT_GATE_TASKS: List<String> = listOf("-Pjustchill.reportGateTasks=true")
+
+        val WITHOUT_SWIFT_PM_IMPORT: List<String> = listOf("-Pkotlin.disableSwiftPMImport=true")
 
         val FLAVORED_ANDROID_CONFIGURATION: String = """
             android {

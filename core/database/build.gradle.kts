@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
-
 plugins {
     id("justchill.kmp.library")
     id("justchill.sqldelight")
@@ -7,22 +5,6 @@ plugins {
 
 sqlDelightSnapshots {
     floor.set(3)
-}
-
-// The simulator cannot read a checkout under a TCC-protected folder such as ~/Documents.
-val stagedSnapshots: File = File(
-    System.getProperty("java.io.tmpdir"),
-    "justchill-sqldelight-snapshots-${layout.projectDirectory.asFile.absolutePath.hashCode()}",
-)
-
-val stageSqlDelightSnapshots: TaskProvider<Sync> = tasks.register<Sync>("stageSqlDelightSnapshots") {
-    from(layout.projectDirectory.dir("src/commonMain/sqldelight/databases"))
-    into(stagedSnapshots)
-}
-
-tasks.withType<KotlinNativeSimulatorTest>().configureEach {
-    inputs.files(stageSqlDelightSnapshots).withPathSensitivity(PathSensitivity.RELATIVE)
-    environment("SIMCTL_CHILD_SQLDELIGHT_SNAPSHOTS", stagedSnapshots.absolutePath, tracked = false)
 }
 
 kotlin {
