@@ -10,7 +10,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
 @Composable
-internal fun ImportBackupDialog(isSignedIn: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+internal fun ImportBackupDialog(warning: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     EmmDialog(
         title = "¿Reemplazar todo con el respaldo?",
         confirmLabel = "Reemplazar",
@@ -20,14 +20,7 @@ internal fun ImportBackupDialog(isSignedIn: Boolean, onConfirm: () -> Unit, onDi
         confirmTone = IconBtnTone.Danger,
         content = {
             Text(
-                text = if (isSignedIn) {
-                    "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. " +
-                        "Lo que no esté ahí se borra, y como tienes sesión iniciada también se " +
-                        "borra en tus otros dispositivos. No se puede deshacer."
-                } else {
-                    "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. " +
-                        "Lo que no esté ahí se borra. No se puede deshacer."
-                },
+                text = warning,
                 style = LocalEmmType.current.bodyM,
                 color = LocalEmmColors.current.textSecondary,
             )
@@ -39,7 +32,11 @@ internal fun ImportBackupDialog(isSignedIn: Boolean, onConfirm: () -> Unit, onDi
 @Composable
 private fun ImportBackupDialogSignedInPreview() {
     EmmTheme {
-        ImportBackupDialog(isSignedIn = true, onConfirm = {}, onDismiss = {})
+        ImportBackupDialog(
+            warning = ProfileUiState(session = SessionUiState.SignedIn(email = null)).importWarning,
+            onConfirm = {},
+            onDismiss = {},
+        )
     }
 }
 
@@ -47,6 +44,10 @@ private fun ImportBackupDialogSignedInPreview() {
 @Composable
 private fun ImportBackupDialogSignedOutPreview() {
     EmmTheme {
-        ImportBackupDialog(isSignedIn = false, onConfirm = {}, onDismiss = {})
+        ImportBackupDialog(
+            warning = ProfileUiState(session = SessionUiState.SignedOut).importWarning,
+            onConfirm = {},
+            onDismiss = {},
+        )
     }
 }

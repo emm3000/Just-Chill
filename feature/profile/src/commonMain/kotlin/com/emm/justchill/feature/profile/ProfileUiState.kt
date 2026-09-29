@@ -87,6 +87,16 @@ data class ProfileUiState(
     val categoriesLabel: String
         get() = "$categoryCount en total · $incomeCategoryCount de ingreso"
 
+    val importWarning: String
+        get() = if (session is SessionUiState.SignedIn) {
+            "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                "Lo que no esté ahí se borra, y como tienes sesión iniciada también se " +
+                "borra en tus otros dispositivos. No se puede deshacer."
+        } else {
+            "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                "Lo que no esté ahí se borra. No se puede deshacer."
+        }
+
     val lastExportLabel: String
         get() = when (val export: LastExportUi = lastExport) {
             LastExportUi.Never -> "Nunca"

@@ -39,7 +39,7 @@ extension MoreScreen {
                     actions.onPickBackup()
                 }
             } message: {
-                Text(importWarning)
+                Text(state.importWarning)
             }
         }
 
@@ -100,16 +100,6 @@ extension MoreScreen {
                     action: actions.onOpenPrivacy
                 )
             }
-        }
-
-        private var importWarning: String {
-            if state.session is SessionUiStateSignedIn {
-                return "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. "
-                    + "Lo que no esté ahí se borra, y como tienes sesión iniciada también se "
-                    + "borra en tus otros dispositivos. No se puede deshacer."
-            }
-            return "Tus movimientos, categorías, cuentas y recurrentes quedan tal cual el archivo. "
-                + "Lo que no esté ahí se borra. No se puede deshacer."
         }
 
         private var appVersion: String {
