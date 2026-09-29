@@ -125,12 +125,12 @@ class AddTransactionCombosTest {
 
     private fun combo(account: Account, category: SelectableCategory): FrequentCombo =
         FrequentCombo(account.accountId, category.categoryId, TransactionType.Spend)
-
-    private fun selectableCategory(id: String, name: String): SelectableCategory = SelectableCategory(
-        categoryId = CategoryId(id),
-        name = name,
-        iconId = "icon",
-        categoryType = CategoryType.Spend,
-        colorId = "color",
-    )
 }
+
+internal fun selectableCategory(id: String, name: String): SelectableCategory = SelectableCategory(
+    categoryId = CategoryId(id),
+    name = name,
+    iconId = "icon",
+    categoryType = CategoryType.Spend,
+    colorId = "color",
+)
