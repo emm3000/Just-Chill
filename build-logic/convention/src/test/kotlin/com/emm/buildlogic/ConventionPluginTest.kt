@@ -63,6 +63,13 @@ class ConventionPluginTest {
     }
 
     @Test
+    fun `kmp library plugin runs the simulator tests on the one booted justchill-ios27 without booting it`() {
+        val report: Map<String, String> = fixture.report(listOf("justchill.kmp.library"))
+
+        assertEquals("iosSimulatorArm64Test:justchill-ios27:false", report["simulatorTests"])
+    }
+
+    @Test
     fun `kmp library plugin puts the ios compile, the android compile and the host tests in the quality gate`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.kmp.library"),

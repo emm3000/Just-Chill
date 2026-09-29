@@ -207,6 +207,7 @@ internal class ConventionPluginFixture(
                     if (kmp != null) {
                         println("REPORT kmpTargets=" + kmp.targets.names.filter { it != "metadata" }.sorted().joinToString(","))
                         println("REPORT kmpSourceSets=" + kmp.sourceSets.names.sorted().joinToString(","))
+                        println("REPORT simulatorTests=" + project.tasks.withType(org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest::class.java).map { it.name + ":" + it.device.get() + ":" + it.standalone.get() }.sorted().joinToString(","))
                         kmp.targets.withType(com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget::class.java).forEach { target ->
                             println("REPORT compileSdk=" + target.compileSdk)
                             println("REPORT minSdk=" + target.minSdk)

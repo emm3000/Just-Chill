@@ -1,0 +1,29 @@
+# iosApp — CLAUDE.md
+
+The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.emm.justchill.ios`, iOS 17.0, iPhone only, no signing identity. Swift, UI copy in Spanish addressing the user as tú.
+
+## Build
+
+- `xcodebuild -project iosApp/JustChill.xcodeproj -scheme JustChill -destination 'generic/platform=iOS Simulator' build` from the repo root. `scripts/justchill-ci` runs it after the Gradle gate; no workflow does, since ubuntu has no Xcode and skips the framework link.
+- The `Compile Kotlin Framework` phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode` before Swift compiles; the framework lands in `shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)`. It is static, so the target links `-lsqlite3` for SQLDelight's native driver.
+- `EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64`: `:shared` builds only `iosSimulatorArm64`, and a generic simulator destination asks for `x86_64` too.
+- `ENABLE_USER_SCRIPT_SANDBOXING = NO`, or the sandbox blocks Gradle from the repo.
+- Swift 6 language mode. `@preconcurrency import JustChillKit` in every file that imports the kit: Kotlin classes are not `Sendable`.
+- SKIE runs at link time, so a green `compileKotlinIos*` proves nothing about the Swift API; grep `shared/build/bin/iosSimulatorArm64/debugFramework/JustChillKit.framework/Headers/JustChillKit.h` for a type before using it. `initKoin` reaches Swift with a `do` prefix, since ObjC reserves `init`.
+
+## Launch
+
+- `JustChillApp.init` starts Koin once with a `KitConfig` whose Supabase fields are blank, `isSnapshotBackupEnabled` false and `appVersion` from `CFBundleShortVersionString` (`MARKETING_VERSION`), so the app runs offline (PRD §2).
+
+## Simulator
+
+- One device, `justchill-ios27` (iPhone 17, iOS 27 runtime), created once by #525 (ADR 024 Decision 8). Never create a second device or runtime.
+- Boot: `xcrun simctl boot justchill-ios27`. The dispatch that needs it boots it; every `KotlinNativeSimulatorTest` targets it with `standalone = false` (`build-logic`'s `KmpLibraryConventionPlugin`) and never boots, shuts down or creates one, so peers share it.
+- Smoke: `xcrun simctl install justchill-ios27 <DerivedData>/Build/Products/Debug-iphonesimulator/JustChill.app`, then `xcrun simctl launch --console-pty justchill-ios27 com.emm.justchill.ios`. `xcodebuild ... -showBuildSettings | rg BUILT_PRODUCTS_DIR` prints the directory. Run install and launch in sequence, never backgrounded together, or the shot lands on the home screen. A shot right after a cold boot can come out black; relaunch and shoot again.
+
+## Layout
+
+`JustChill/` is a synchronized folder (`PBXFileSystemSynchronizedRootGroup`): adding a Swift file never touches `project.pbxproj`.
+
+- `JustChillApp.swift` — the entry and Koin start. `AppShell.swift` — the `TabView`: Movimientos, Reporte, the add action, Cuentas, Más (ADR 022, `AppBottomBar.kt`); the add action opens `CaptureScreen` full screen instead of selecting a tab.
+- One folder per screen family, one root type each: `Movements/`, `Report/`, `Accounts/`, `More/`, `Capture/`. A screen ticket works inside its own folder and never shares a file with another.
