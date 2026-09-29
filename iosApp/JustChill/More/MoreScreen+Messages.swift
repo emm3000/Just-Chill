@@ -9,7 +9,10 @@ extension MoreScreen {
         case .importDone(let done): done.summary
         case .importFailed: "No pude importar el archivo — capaz está dañado."
         case .operationInProgress: "Espera a que termine la operación en curso."
-        case .sessionClosed, .sessionClosedLocallyOnly, .accountDeleted, .backup: nil
+        case .sessionClosed(let closed): closed.text
+        case .sessionClosedLocallyOnly(let closed): closed.text
+        case .accountDeleted(let deleted): deleted.text
+        case .backup: nil
         }
     }
 }

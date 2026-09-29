@@ -82,6 +82,7 @@
 				A10000000000000000000003 /* Frameworks */,
 				A1000000000000000000000A /* Resources */,
 				A10000000000000000000011 /* Version From Git Tag */,
+				A1000000000000000000001D /* Supabase From Properties */,
 			);
 			buildRules = (
 			);
@@ -212,6 +213,26 @@
 			shellPath = /bin/sh;
 			shellScript = "tag=$(git -C \"$SRCROOT/..\" describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null) || exit 0\nplutil -replace CFBundleShortVersionString -string \"${tag#v}\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
 		};
+		A1000000000000000000001D /* Supabase From Properties */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Supabase From Properties";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "[ \"$CONFIGURATION\" = Debug ] || exit 0\nurl=\"\"\nanon_key=\"\"\nproperties=\"$SRCROOT/../supabase.properties\"\nif [ -f \"$properties\" ]; then\n  while IFS='=' read -r name value || [ -n \"$name\" ]; do\n    case \"$name\" in\n      ios.supabase.url) url=\"$value\" ;;\n      dev.supabase.anonKey) anon_key=\"$value\" ;;\n    esac\n  done < \"$properties\"\nfi\nplutil -replace SupabaseUrl -string \"$url\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nplutil -replace SupabaseAnonKey -string \"$anon_key\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -247,6 +268,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGNING_ALLOWED = NO;
+				"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]" = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -274,6 +297,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGNING_ALLOWED = NO;
+				"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]" = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
