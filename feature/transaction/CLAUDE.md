@@ -10,7 +10,7 @@ The pad's screenshot matrix lives in `:androidApp`, which applies `id("justchill
 
 ## Koin and the graph
 
-`transactionModule` is declared here and binds the three ViewModels, nothing else. `:androidApp`'s `wiring/TransactionWiring.kt` includes it and adds the six transaction use cases plus `GetSpendShortcutCombos`, which `ShortcutPublisher` also resolves. `EditTransactionViewModel` is the one parametrised binding: the DSL builds its constructor by hand, so every dependency is listed, `todayFlow` included. Every ViewModel here is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
+`transactionModule` is declared here and binds the three ViewModels, nothing else. `:shared`'s `wiring/TransactionWiring.kt` includes it and adds the six transaction use cases plus `GetSpendShortcutCombos`, which `ShortcutPublisher` also resolves. `EditTransactionViewModel` is the one parametrised binding: the DSL builds its constructor by hand, so every dependency is listed, `todayFlow` included. Every ViewModel here is listed in `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`.
 
 ## Routes and cross-feature navigation
 

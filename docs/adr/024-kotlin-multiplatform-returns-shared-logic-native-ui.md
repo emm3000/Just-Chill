@@ -129,3 +129,11 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
 - Android behaviour, the SQLDelight schema, ADR 015's invariants (`com.emm.data.db`, the preference
   files and keys, `com.emm.justchill.MainActivity`, the `applicationId`), the backup snapshot format,
   and the MockK suite on the JVM.
+
+## Amendments (2026-09-29)
+
+- **The feature wirings are shared too** (#526). The seven `wiring/<Feature>Wiring.kt` files are
+  platform-neutral Koin and move to `:shared`'s `commonMain` as `featureWirings`, which
+  `:androidApp`'s `appModules()` and iOS's `initKoin` both start. This supersedes "each app keeps
+  only its platform module and wiring" in Consequences: each app keeps only its platform module,
+  and a use case is bound once for both platforms.

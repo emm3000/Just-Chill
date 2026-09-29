@@ -1,6 +1,6 @@
 # :feature:report — CLAUDE.md
 
-The month Report (ADR 015, wave 7): `ReportViewModel` with its `UiState` / `Intent` / `Effect`, the `CategoryShare` and `TrendsUiData` presentation models with their mappers, the share text formatter, `ReportScreen` and its `components/`, `ReportRoute` and `reportEntries`. `reportModule` in `di/` binds the ViewModel and nothing else; the five report use cases are bound in `:androidApp`'s `wiring/ReportWiring.kt`.
+The month Report (ADR 015, wave 7): `ReportViewModel` with its `UiState` / `Intent` / `Effect`, the `CategoryShare` and `TrendsUiData` presentation models with their mappers, the share text formatter, `ReportScreen` and its `components/`, `ReportRoute` and `reportEntries`. `reportModule` in `di/` binds the ViewModel and nothing else; the five report use cases are bound in `:shared`'s `wiring/ReportWiring.kt`.
 
 One package, `com.emm.justchill.feature.report`, split by source set (ADR 024 Decision 5, #491): `commonMain` holds `ReportViewModel`, its `UiState` / `Intent` / `Effect`, `reportModule` and the Compose-free files they import (`ReportTab`, `CategoryShare`, `TrendsUiData`, `ReportMappers`, `ReportShareFormatter`, `ReportCopy`, `ReportAmountFormat`); `androidMain` holds `ReportScreen`, `components/`, the `@Serializable` `ReportRoute`, `reportRoutes` and `reportEntries`. Nothing in `commonMain` imports Compose, Android, Navigation 3 or kotlinx-serialization.
 

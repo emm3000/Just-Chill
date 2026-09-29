@@ -103,7 +103,7 @@ MockK never leaks into `src/main` either.
 
 ## Koin
 
-- A binding is registered exactly once. A feature exposes `<feature>Module` with its ViewModels only; `:androidApp`'s `wiring/<Feature>Wiring.kt` binds that feature's use cases and `includes` it. What no single feature owns is a module in `:shared`'s `core/di/`, listed in `kitModules`, and never names a platform: a platform binding goes in `androidPlatformModule` or `:shared`'s `iosPlatformModule`. `appModules()` (`:androidApp`'s `core/AppGraph.kt`) is `kitModules`, the wirings and `androidPlatformModule`. `startKoin` is called only in `:androidApp`'s `EmmApp` and `:shared`'s `initKoin`, the iOS entry.
+- A binding is registered exactly once. A feature exposes `<feature>Module` with its ViewModels only; `:shared`'s `wiring/<Feature>Wiring.kt` binds that feature's use cases and `includes` it, and `featureWirings` lists the seven. What no single feature owns is a module in `:shared`'s `core/di/`, listed in `kitModules`, and never names a platform: a platform binding goes in `androidPlatformModule` or `:shared`'s `iosPlatformModule`. `appModules()` (`:androidApp`'s `core/AppGraph.kt`) is `kitModules`, `featureWirings` and `androidPlatformModule`; `initKoin` is the same with `iosPlatformModule`. `startKoin` is called only in `:androidApp`'s `EmmApp` and `:shared`'s `initKoin`, the iOS entry.
 - Every new ViewModel goes into `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`. A binding whose only consumer is a `koinInject` / `koin.get` outside the graph owes its own test.
 
 ## Routes and the back stack

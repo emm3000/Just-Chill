@@ -4,6 +4,7 @@ import com.emm.justchill.core.database.provideDb
 import com.emm.justchill.core.database.provideSqlDriver
 import com.emm.justchill.core.domain.shared.backup.BackupAvailability
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
+import com.emm.justchill.feature.auth.GoogleSignInLauncher
 import com.russhwolf.settings.ExperimentalSettingsImplementation
 import com.russhwolf.settings.KeychainSettings
 import com.russhwolf.settings.NSUserDefaultsSettings
@@ -33,6 +34,8 @@ fun iosPlatformModule(config: KitConfig): Module = module {
     single(named("appVersion")) { config.appVersion }
 
     single(named("googleServerClientId")) { config.googleServerClientId }
+
+    factory<GoogleSignInLauncher> { NoCredentialsGoogleSignInLauncher() }
 
     single { SupabaseConfig.withOfflineFallback(url = config.supabaseUrl, anonKey = config.supabaseAnonKey) }
 

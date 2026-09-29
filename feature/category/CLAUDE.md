@@ -8,7 +8,7 @@ Categories: the list with its edit and delete dialogs, the create screen with th
 
 - `CategoryRoutes.kt` — `CategoriesListRoute` and `CategoryRoute`, both `@Serializable` over `:core:ui`'s `AppRoute`, and `categoryRoutes`, the registry `:androidApp`'s `RouteSerializationTest` concatenates. A route missing from it is never round-tripped, so it crashes on process-death restore and nowhere else.
 - `CategoryEntries.kt` — `categoryEntries(bindings, onCategoryForTransaction)`. Each entry body calls `rememberAppNavigator(bindings.backStack)` itself: hoisting it would read the Activity's lifecycle owner instead of nav3's per-scene one and silently drop the mid-transition guard.
-- `CategoryModule.kt` — `categoryModule`, the two ViewModels and nothing else. The use cases are bound in `:androidApp`'s `wiring/CategoryWiring.kt`, which `includes` it.
+- `CategoryModule.kt` — `categoryModule`, the two ViewModels and nothing else. The use cases are bound in `:shared`'s `wiring/CategoryWiring.kt`, which `includes` it.
 
 ## Gotchas
 
