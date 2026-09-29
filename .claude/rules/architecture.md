@@ -18,12 +18,14 @@ Clean Architecture across the module layout in `CLAUDE.md`. Gradle enforces the 
 | `:core:ui` | Compose: the navigation vocabulary (`AppRoute`, `CaptureRoute`, `BottomBarRoute`, `AppNavigator`, `rememberAppNavigator`, `NavHostBindings`, the `PlatformHostActions` interface) in `navigation/`, the design system (theme tokens, atoms, `Emm*` widgets, fonts), the shared sheets, the icon and colour catalog, `TransactionRow`. |
 | `:core:testing` | KMP test fixtures on `:core:domain` alone, the fakes in `commonMain` and the JUnit4 `MainDispatcherRule` in `androidMain`; wired into feature modules and `:androidApp` as `testImplementation`, and into the KMP modules (`:core:domain`, `:core:presentation`) on `androidHostTest`. Fixture list: `core/testing/CLAUDE.md`. |
 | `:feature:*` | One screen family: its Compose-free ViewModels, its Compose screens and nav entries, its `@Serializable` routes and its Koin module. |
-| `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, entry graph, shortcut routes, the SAF host actions), the Koin graph with the cross-cutting modules in `core/di/` and one wiring file per feature, the backup orchestrator and the lifecycle and preference ports in `core/`, the platform Koin module, flavors, shortcuts, the session keystore. |
+| `:shared` | KMP umbrella exported to iOS as `JustChillKit` (ADR 024 Decision 6): the platform-neutral Koin modules in `core/di/` (`kitModules`), the backup orchestrator and the preference stores in `commonMain`, the lifecycle edges as `expect` with an actual per platform, and the iOS platform module plus `initKoin` in `iosMain`. |
+| `:androidApp` | `MainActivity`, `EmmApp`, the app shell (nav host, entry graph, shortcut routes, the SAF host actions), the Koin graph over `:shared`'s `kitModules` and one wiring file per feature, the platform Koin module, flavors, shortcuts, the session keystore. |
 
 Allowed dependencies, and nothing else:
 
 ```
-androidApp        -> feature:*, core:backup, core:database, core:ui, core:presentation, core:domain
+androidApp        -> shared, feature:*, core:backup, core:database, core:ui, core:presentation, core:domain
+shared            -> the seven KMP feature:*, core:backup, core:database, core:presentation, core:domain
 feature:*         -> core:ui, core:presentation, core:domain, core:testing
 core:backup       -> core:domain
 core:database     -> core:domain
@@ -32,12 +34,12 @@ core:presentation -> core:domain (+ core:testing, androidHostTest)
 core:testing      -> core:domain
 ```
 
-`checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` may depend on a feature.
+`checkModuleBoundaries` fails the gate on any other edge; only `:androidApp` and `:shared` may depend on a feature.
 
 - `:core:domain` is pure Kotlin, a KMP module whose every production source is in `commonMain`: `kotlinx-coroutines-core` and `kotlinx-datetime` only. No Android, no SQLDelight, no Supabase, no Ktor. `android.*` cannot resolve in `commonMain`, and `checkModuleBoundaries` fails an `androidMain` or `iosMain` source there; the rest is convention, reviewed.
-- Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `:androidApp`'s `core/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
-- `:androidApp` depends on `:core:database` and `:core:backup` for one reason: the modules in `core/di/` bind interface to implementation in one place. `SnapshotStore` is bound there too, which is what keeps `:core:backup` off `:core:database`. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
-- Binding them is `:androidApp`'s `core/di/` and `wiring/`; nothing else names one. The leak check is `rg -l 'Default[A-Z][A-Za-z]*(Repository|DataSource)' feature/*/src/main androidApp/src/main --glob '!**/core/di/**' --glob '!**/wiring/**'`, and it returns nothing.
+- Whatever asks "what day is it" takes an injected `Clock` **and** an injected `TimeZone`, and neither parameter carries a default: a default never blocks an explicit argument, so a test passing a fake clock also passes against the ambient one. `:shared`'s `core/di/SharedModule.kt` is the only place a clock or a zone enters the graph; `AppGraphKoinTest` asserts by identity that every graph-built `com.emm.` class holds the bound instances. `TodayFlow.today()` is the one way a ViewModel derives the date.
+- `:shared` depends on `:core:database` and `:core:backup` for one reason: the modules in its `core/di/` bind interface to implementation in one place, for both apps. `SnapshotStore` is bound there too, which is what keeps `:core:backup` off `:core:database`. A ViewModel takes `:core:domain` interfaces, never a SQLDelight type or a `Default*` implementation.
+- Binding them is `:shared`'s `core/di/` and `:androidApp`'s `wiring/`; nothing else names one. The leak check is `rg -l 'Default[A-Z][A-Za-z]*(Repository|DataSource)' feature/*/src/main androidApp/src/main shared/src --glob '!**/core/di/**' --glob '!**/wiring/**'`, and it returns nothing.
 - SQLDelight on device is the source of truth for reads and writes. Supabase holds snapshot backups (ADR 009); nothing reads rows from it. A snapshot crosses the two modules as a `LocalSnapshot` of domain models, never as a SQLDelight row or a DTO.
 
 ## Dependency inversion is the seam
@@ -101,7 +103,7 @@ MockK never leaks into `src/main` either.
 
 ## Koin
 
-- A binding is registered exactly once. A feature exposes `<feature>Module` with its ViewModels only; `:androidApp`'s `wiring/<Feature>Wiring.kt` binds that feature's use cases and `includes` it. What no single feature owns is a module in `:androidApp`'s `core/di/`. All of them are listed in `appModules()` (`core/AppGraph.kt`), which is also where a platform binding's `androidPlatformModule` joins. `startKoin` is called only in `:androidApp`.
+- A binding is registered exactly once. A feature exposes `<feature>Module` with its ViewModels only; `:androidApp`'s `wiring/<Feature>Wiring.kt` binds that feature's use cases and `includes` it. What no single feature owns is a module in `:shared`'s `core/di/`, listed in `kitModules`, and never names a platform: a platform binding goes in `androidPlatformModule` or `:shared`'s `iosPlatformModule`. `appModules()` (`:androidApp`'s `core/AppGraph.kt`) is `kitModules`, the wirings and `androidPlatformModule`. `startKoin` is called only in `:androidApp`'s `EmmApp` and `:shared`'s `initKoin`, the iOS entry.
 - Every new ViewModel goes into `AppGraphKoinTest`'s `EXPECTED_VIEW_MODELS`. A binding whose only consumer is a `koinInject` / `koin.get` outside the graph owes its own test.
 
 ## Routes and the back stack
