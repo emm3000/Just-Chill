@@ -60,6 +60,10 @@ gradlePlugin {
             id = "justchill.kmp.feature"
             implementationClass = "com.emm.buildlogic.KmpFeatureConventionPlugin"
         }
+        register("kmpRobolectric") {
+            id = "justchill.kmp.robolectric"
+            implementationClass = "com.emm.buildlogic.KmpRobolectricConventionPlugin"
+        }
         register("detekt") {
             id = "justchill.detekt"
             implementationClass = "com.emm.buildlogic.DetektConventionPlugin"

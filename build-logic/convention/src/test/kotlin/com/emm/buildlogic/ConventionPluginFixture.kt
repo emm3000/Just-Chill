@@ -211,6 +211,7 @@ internal class ConventionPluginFixture(
                             println("REPORT compileSdk=" + target.compileSdk)
                             println("REPORT minSdk=" + target.minSdk)
                             println("REPORT namespace=" + target.namespace)
+                            println("REPORT hostTestResources=" + target.compilations.withType(com.android.build.api.dsl.KotlinMultiplatformAndroidHostTestCompilation::class.java).map { it.isIncludeAndroidResources }.joinToString(","))
                         }
                         listOf("commonMain", "androidMain", "commonTest", "androidHostTest").forEach { sourceSet ->
                             val configuration: org.gradle.api.artifacts.Configuration? = project.configurations.findByName(sourceSet + "Implementation")

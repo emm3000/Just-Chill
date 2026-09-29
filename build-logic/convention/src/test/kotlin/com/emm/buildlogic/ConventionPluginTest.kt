@@ -99,11 +99,20 @@ class ConventionPluginTest {
         assertEquals(KMP_FEATURE_COMMON_DEPENDENCIES, report["commonMainDependencies"])
         assertEquals(KMP_FEATURE_ANDROID_DEPENDENCIES, report["androidMainDependencies"])
         assertEquals(":core:testing,$KMP_HOST_TEST_DEPENDENCIES", report["androidHostTestDependencies"])
+        assertEquals("false", report["hostTestResources"])
         assertEquals("ui-tooling", report["androidRuntimeDependencies"])
         assertEquals("org.jetbrains.kotlin.plugin.compose,org.jetbrains.kotlin.plugin.serialization", report["compilerPlugins"])
         assertEquals("androidJvm", report["composePlatforms"])
         assertEquals(COMPOSE_OPT_INS, report["optIn"])
         assertEquals(CHECK_PLUGINS, report["plugins"])
+    }
+
+    @Test
+    fun `a kmp feature that opts into robolectric runs its host tests on robolectric and ui-test with the android resources`() {
+        val report: Map<String, String> = fixture.report(listOf("justchill.kmp.feature", "justchill.kmp.robolectric"))
+
+        assertEquals(":core:testing,$KMP_ROBOLECTRIC_HOST_TEST_DEPENDENCIES", report["androidHostTestDependencies"])
+        assertEquals("true", report["hostTestResources"])
     }
 
     @Test
@@ -479,6 +488,9 @@ class ConventionPluginTest {
                 "@Composable\nfun LoanRow() {\n    Text(\"Préstamo\")\n}\n"
 
         const val KMP_HOST_TEST_DEPENDENCIES: String = "junit,kotlinx-coroutines-test,mockk"
+
+        const val KMP_ROBOLECTRIC_HOST_TEST_DEPENDENCIES: String =
+            "junit,kotlinx-coroutines-test,mockk,robolectric,ui-test-junit4,ui-test-manifest"
 
         const val KMP_GATE_TASKS: String =
             "checkComposeFreeViewModels,checkLazyListKeys,checkModuleBoundaries," +
