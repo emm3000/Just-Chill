@@ -2,16 +2,8 @@
 import SwiftUI
 
 extension MovementsScreen {
-    static func cents(of amount: Any?) -> Int64? {
-        guard let amount else { return nil }
-        let description: String = String(describing: amount)
-        guard let marker = description.range(of: "cents=") else { return nil }
-        return Int64(description[marker.upperBound...].prefix { $0.isNumber || $0 == "-" })
-    }
-
-    static func boundText(_ amount: Any?) -> String? {
-        guard let cents = cents(of: amount) else { return nil }
-        return CurrencyFormatKt.balanceFormatted(cents)
+    static func boundText(_ cents: KotlinLong?) -> String? {
+        cents.map { CurrencyFormatKt.balanceFormatted($0.int64Value) }
     }
 
     struct Header: View {
@@ -19,27 +11,47 @@ extension MovementsScreen {
         let send: Send
 
         var body: some View {
-            HStack(spacing: EmmSpacing.s2) {
-                Text("Movimientos")
-                    .emmTextStyle(EmmType.titleL)
-                    .foregroundStyle(EmmColors.textPrimary)
-                    .accessibilityAddTraits(.isHeader)
-                Spacer()
-                HeaderButton(
-                    symbol: "magnifyingglass",
-                    label: "Buscar transacciones",
-                    showsBadge: false,
-                    action: { send(SeeTransactionsIntentScreenChromeIntentOnSearchRequested.shared) }
-                )
-                HeaderButton(
-                    symbol: "line.3.horizontal.decrease",
-                    label: isFilterActive ? "Filtrar movimientos, filtro activo" : "Filtrar movimientos",
-                    showsBadge: isFilterActive,
-                    action: { send(SeeTransactionsIntentScreenChromeIntentOnFilterSheetRequested.shared) }
-                )
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: EmmSpacing.s2) {
+                    title
+                    Spacer()
+                    buttons
+                }
+                VStack(alignment: .leading, spacing: EmmSpacing.s2) {
+                    title
+                    HStack(spacing: EmmSpacing.s2) {
+                        Spacer()
+                        buttons
+                    }
+                }
             }
             .padding(.horizontal, EmmSpacing.s6)
             .frame(minHeight: EmmSpacing.s16)
+        }
+
+        private var title: some View {
+            Text("Movimientos")
+                .emmTextStyle(EmmType.titleL)
+                .foregroundStyle(EmmColors.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .accessibilityAddTraits(.isHeader)
+        }
+
+        @ViewBuilder
+        private var buttons: some View {
+            HeaderButton(
+                symbol: "magnifyingglass",
+                label: "Buscar transacciones",
+                showsBadge: false,
+                action: { send(SeeTransactionsIntentScreenChromeIntentOnSearchRequested.shared) }
+            )
+            HeaderButton(
+                symbol: "line.3.horizontal.decrease",
+                label: isFilterActive ? "Filtrar movimientos, filtro activo" : "Filtrar movimientos",
+                showsBadge: isFilterActive,
+                action: { send(SeeTransactionsIntentScreenChromeIntentOnFilterSheetRequested.shared) }
+            )
         }
     }
 
@@ -55,9 +67,8 @@ extension MovementsScreen {
                     .resizable()
                     .scaledToFit()
                     .frame(width: EmmSpacing.s5, height: EmmSpacing.s5)
-                    .foregroundStyle(EmmColors.textPrimary)
+                    .foregroundStyle(EmmColors.textSecondary)
                     .frame(width: EmmSpacing.s12, height: EmmSpacing.s12)
-                    .background(EmmColors.surface1, in: EmmRadii.rM)
                     .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
                     .overlay(alignment: .topTrailing) {
                         if showsBadge {
@@ -150,8 +161,8 @@ extension MovementsScreen {
                         Text(eyebrowText.uppercased())
                             .emmTextStyle(EmmType.eyebrow)
                             .foregroundStyle(EmmColors.textTertiary)
-                            .lineLimit(2)
                             .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
                         Image(systemName: "chevron.right")
                             .resizable()
                             .scaledToFit()
@@ -164,7 +175,7 @@ extension MovementsScreen {
                 }
                 .accessibilityLabel(eyebrowText + ". Cambiar de mes")
                 if let summary = displayedSummary {
-                    MonthTotals(summary: summary)
+                    MonthTotals(summary: summary, isNetPositive: state.isNetPositive)
                 }
             }
             .padding(.horizontal, EmmSpacing.s6)
@@ -178,14 +189,15 @@ extension MovementsScreen {
 
         private var eyebrowText: String {
             let label: String = state.month.monthLabel()
-            return state.month.year == state.currentMonth.year
-                ? "Gastado en " + label
-                : "Gastado en " + label + " " + String(state.month.year)
+            return state.isMonthYearVisible
+                ? "Gastado en " + label + " " + String(state.month.year)
+                : "Gastado en " + label
         }
     }
 
     struct MonthTotals: View {
         let summary: MonthSummaryUi
+        let isNetPositive: Bool
 
         @ViewBuilder
         private var secondaryAmounts: some View {
@@ -197,7 +209,7 @@ extension MovementsScreen {
             SecondaryAmount(
                 label: "Neto",
                 value: CurrencyFormatKt.positiveMoneyFormatted(summary.net),
-                color: summary.net > 0 ? EmmColors.success : EmmColors.textSecondary
+                color: isNetPositive ? EmmColors.success : EmmColors.textSecondary
             )
         }
 
@@ -297,8 +309,8 @@ extension MovementsScreen {
         }
 
         private var rangeText: String? {
-            let minimum: String? = MovementsScreen.boundText(state.minAmount)
-            let maximum: String? = MovementsScreen.boundText(state.maxAmount)
+            let minimum: String? = MovementsScreen.boundText(state.minAmountCents)
+            let maximum: String? = MovementsScreen.boundText(state.maxAmountCents)
             switch (minimum, maximum) {
             case (let minimum?, let maximum?): return minimum + " – " + maximum
             case (let minimum?, nil): return "desde " + minimum

@@ -147,8 +147,8 @@ extension MovementsScreen {
                 Text("MONTO")
                     .emmTextStyle(EmmType.eyebrow)
                     .foregroundStyle(EmmColors.textTertiary)
-                AmountBoundRow(label: "Mínimo", amount: state.minAmount, target: AmountRangeTarget.min, send: send)
-                AmountBoundRow(label: "Máximo", amount: state.maxAmount, target: AmountRangeTarget.max, send: send)
+                AmountBoundRow(label: "Mínimo", amount: state.minAmountCents, target: AmountRangeTarget.min, send: send)
+                AmountBoundRow(label: "Máximo", amount: state.maxAmountCents, target: AmountRangeTarget.max, send: send)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, EmmSpacing.s5)
@@ -185,7 +185,7 @@ extension MovementsScreen {
 
     struct AmountBoundRow: View {
         let label: String
-        let amount: Any?
+        let amount: KotlinLong?
         let target: AmountRangeTarget
         let send: Send
 
@@ -272,9 +272,9 @@ extension MovementsScreen {
         init(state: SeeTransactionsUiState, send: @escaping Send) {
             self.state = state
             self.send = send
-            let current: Any? = state.amountSheetTarget == AmountRangeTarget.min ? state.minAmount : state.maxAmount
-            let seed: String =
-                MovementsScreen.cents(of: current).map { CentsFormatterKt.moneyCentsString(money: $0) } ?? ""
+            let currentCents: KotlinLong? =
+                state.amountSheetTarget == AmountRangeTarget.min ? state.minAmountCents : state.maxAmountCents
+            let seed: String = currentCents.map { CentsFormatterKt.moneyCentsString(money: $0.int64Value) } ?? ""
             _digits = State(initialValue: CentsFormatterKt.sanitizeCentsInput(raw: seed))
         }
 
@@ -443,7 +443,7 @@ extension MovementsScreen {
 
         private func monthCell(_ month: Kotlinx_datetimeMonth) -> some View {
             let target = YearMonth(year: displayYear, month: month)
-            let isActive: Bool = month == current.month && displayYear == current.year
+            let isActive: Bool = target == current
             return Button {
                 send(SeeTransactionsIntentOnMonthSelected(month: target))
                 dismiss()
