@@ -39,7 +39,7 @@ internal fun BackupSection(
 ) {
     if (state.dialog == ProfileDialog.Import) {
         ImportBackupDialog(
-            isSignedIn = state.session is SessionUiState.SignedIn,
+            warning = state.importWarning,
             onConfirm = onImportConfirm,
             onDismiss = onDialogDismiss,
         )

@@ -37,4 +37,23 @@ class ProfileRowTextTest {
             ProfileUiState(categoryCount = 24, incomeCategoryCount = 7).categoriesLabel,
         )
     }
+
+    @Test
+    fun `the import warning of a signed-in session says the other devices lose it too`() {
+        assertEquals(
+            "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                "Lo que no esté ahí se borra, y como tienes sesión iniciada también se " +
+                "borra en tus otros dispositivos. No se puede deshacer.",
+            ProfileUiState(session = SessionUiState.SignedIn(email = "qa@example.com")).importWarning,
+        )
+    }
+
+    @Test
+    fun `the import warning of a signed-out session stays on this device`() {
+        assertEquals(
+            "Tus movimientos, categorías y cuentas quedan tal cual el archivo. " +
+                "Lo que no esté ahí se borra. No se puede deshacer.",
+            ProfileUiState(session = SessionUiState.SignedOut).importWarning,
+        )
+    }
 }
