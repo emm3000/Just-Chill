@@ -69,7 +69,8 @@ Verified on 2026-09-28 against trunk `aa8a7d3a`.
    `:core:presentation`, `:core:testing`, `:core:database`, `:core:backup`, then the seven
    features with a ViewModel; `:feature:onboarding` has none and no Koin module, so it stays
    `com.android.library`.
-   `:core:database` gets `expect`/`actual` for `DatabaseDriver` (`NativeSqliteDriver` on iOS) and
+   `:core:database` gets a plain `provideSqlDriver` per platform source set (`NativeSqliteDriver` on
+   iOS; no `expect`, since nothing in `commonMain` calls it) and `expect`/`actual` for
    `SqliteExceptions`; its `.sq`, `.sqm` and `databases/N.db` move unchanged, and the migration suite
    moves to `androidDeviceTest` on `justchill-api36`. `:core:backup` takes the darwin engine in
    `iosMain`. `:core:ui` stays `com.android.library`; `:androidApp` stays the application.
