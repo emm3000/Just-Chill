@@ -5,6 +5,9 @@ struct MovementsScreen: View {
     typealias Store = MviStore<SeeTransactionsUiState, any SeeTransactionsIntent, any SeeTransactionsEffect>
     typealias Send = (any SeeTransactionsIntent) -> Void
 
+    let savedMonth: YearMonth?
+    let onSavedMonthApplied: () -> Void
+
     @State private var store: Store?
     @State private var errorMessage: String?
 
@@ -29,10 +32,18 @@ struct MovementsScreen: View {
                 }
             }
             store = newStore
+            applySavedMonth()
         }
+        .onChange(of: savedMonth) { applySavedMonth() }
         .alert(errorMessage ?? "", isPresented: isErrorPresented) {
             Button("Aceptar") { errorMessage = nil }
         }
+    }
+
+    private func applySavedMonth() {
+        guard let savedMonth, let store else { return }
+        store.send(SeeTransactionsIntentOnMonthSelected(month: savedMonth))
+        onSavedMonthApplied()
     }
 
     private var isErrorPresented: Binding<Bool> {
