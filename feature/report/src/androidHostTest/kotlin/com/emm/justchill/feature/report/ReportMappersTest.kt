@@ -48,6 +48,18 @@ class ReportMappersTest {
         assertEquals(listOf(0), shares.map { it.percentage })
     }
 
+    @Test
+    fun `a share bar fills the fraction its percentage names`() {
+        val amounts = listOf(
+            categorized(id = "cat-1", name = "Comida", color = "green", cents = 750),
+            uncategorized(cents = 250),
+        )
+
+        val shares = buildShares(amounts, total = Money(1_000))
+
+        assertEquals(listOf(0.75f, 0.25f), shares.map { it.fraction })
+    }
+
     private fun uncategorized(cents: Long) = CategoryAmount(
         categoryId = null,
         categoryName = null,
