@@ -29,7 +29,7 @@ fun ComparisonPill(
     isPositive: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val tone = if (isPositive) PillTone.Pos else PillTone.Neg
+    val tone: PillTone = comparisonPillTone(isPositive)
     val icon = if (directionUp) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
     val text = "$absoluteDeltaFormatted · $percent%"
 
@@ -60,8 +60,14 @@ private fun ComparisonPillPreview() {
                 ComparisonPill(
                     absoluteDeltaFormatted = "S/ 660",
                     percent = 12,
-                    directionUp = true,
+                    directionUp = false,
                     isPositive = true,
+                )
+                ComparisonPill(
+                    absoluteDeltaFormatted = "S/ 660",
+                    percent = 12,
+                    directionUp = true,
+                    isPositive = false,
                 )
                 Text(
                     text = "vs. Abril",
