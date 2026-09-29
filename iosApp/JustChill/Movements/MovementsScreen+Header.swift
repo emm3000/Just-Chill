@@ -168,9 +168,8 @@ extension MovementsScreen {
                             .scaledToFit()
                             .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
                             .foregroundStyle(EmmColors.textTertiary)
-                        Spacer()
                     }
-                    .frame(minHeight: EmmSpacing.s12)
+                    .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12, alignment: .leading)
                     .contentShape(Rectangle())
                 }
                 .accessibilityLabel(eyebrowText + ". Cambiar de mes")
