@@ -83,6 +83,6 @@ abstract class CheckSqlDelightSnapshotsTask : DefaultTask() {
             "this module has SQLDelight schema sources but no pinned snapshot floor"
         const val FIX: String =
             "Pin the oldest committed snapshot with sqlDelightSnapshots { floor.set(N) } and generate " +
-                "a missing one with ./gradlew :core:database:generateDebugJustChillDatabaseSchema"
+                "a missing one with ./gradlew :core:database:generateCommonMainJustChillDatabaseSchema"
     }
 }

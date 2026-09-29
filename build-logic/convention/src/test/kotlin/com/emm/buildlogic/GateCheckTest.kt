@@ -371,6 +371,24 @@ class GateCheckTest {
     }
 
     @Test
+    fun `a kmp module whose migration shipped no snapshot fails the snapshot check`() {
+        val migrations: Map<String, String> = (0..5).associate { version ->
+            "$MIGRATION_DIRECTORY/$version.sqm" to MIGRATION_SOURCE
+        }
+        val surviving: Map<String, String> = (3..5).associate { version ->
+            "$SNAPSHOT_DIRECTORY/$version.db" to SNAPSHOT_SOURCE
+        }
+
+        val output: String = fixture.checkAndFail(
+            task = ":core:database:$SNAPSHOT_TASK",
+            modules = mapOf(":core:database" to kmpModule(emptyMap(), snapshotFloor = 3)),
+            sources = migrations + surviving,
+        )
+
+        assertTrue(output.contains("5.sqm has no snapshot 6.db"), output)
+    }
+
+    @Test
     fun `a module without sqldelight passes the snapshot check`() {
         val result: BuildResult = fixture.check(
             task = ":core:database:$SNAPSHOT_TASK",
@@ -529,8 +547,11 @@ class GateCheckTest {
         }
     }
 
-    private fun kmpModule(dependencies: Map<String, String>): String = buildString {
+    private fun kmpModule(dependencies: Map<String, String>, snapshotFloor: Int? = null): String = buildString {
         appendLine("""plugins { id("justchill.kmp.library") }""")
+        if (snapshotFloor != null) {
+            appendLine("sqlDelightSnapshots { floor.set($snapshotFloor) }")
+        }
         appendLine("kotlin {")
         appendLine("    android { withDeviceTest {} }")
         dependencies.forEach { (sourceSet, path) ->
@@ -590,8 +611,8 @@ class GateCheckTest {
 
         const val COMPOSE_SOURCE: String = "package sample\n\nimport androidx.compose.runtime.Immutable\n"
         const val PLATFORM_SOURCE: String = "package sample\n\nclass Platform\n"
-        const val MIGRATION_DIRECTORY: String = "core/database/src/main/sqldelight/com/sample"
-        const val SNAPSHOT_DIRECTORY: String = "core/database/src/main/sqldelight/databases"
+        const val MIGRATION_DIRECTORY: String = "core/database/src/commonMain/sqldelight/com/sample"
+        const val SNAPSHOT_DIRECTORY: String = "core/database/src/commonMain/sqldelight/databases"
         const val MIGRATION_SOURCE: String = "ALTER TABLE sample ADD COLUMN note TEXT;\n"
         const val SNAPSHOT_SOURCE: String = "SQLite format 3\n"
     }

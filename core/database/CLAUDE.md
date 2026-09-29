@@ -1,6 +1,6 @@
 # :core:database — CLAUDE.md
 
-Android library (`com.android.library`, ADR 011) implementing the `:core:domain` repository interfaces. SQLDelight is the local source of truth and the only framework here: Supabase, Ktor and the snapshot file live in `:core:backup`, which reaches these tables through the `SnapshotStore` port. The row-replication sync engine is gone (ADR 009); read `## Snapshots` before touching `backup/`.
+KMP library (`justchill.kmp.library`, ADR 024 Decision 4) implementing the `:core:domain` repository interfaces. SQLDelight is the local source of truth and the only framework here: Supabase, Ktor and the snapshot file live in `:core:backup`, which reaches these tables through the `SnapshotStore` port. The row-replication sync engine is gone (ADR 009); read `## Snapshots` before touching `backup/`.
 
 Root package `com.emm.justchill.core.database.<entity>`, `minSdk = 28`. Depends on `:core:domain` only. Repositories funnel I/O through `shared/SafeCall.kt` (`safeDbCall`, `catchAsDomainException`), never throwing raw SQLDelight errors.
 
@@ -8,11 +8,17 @@ Root package `com.emm.justchill.core.database.<entity>`, `minSdk = 28`. Depends 
 
 ## Persistence
 
-Schema, migrations, snapshots and the generated `JustChillDatabase` live under `core/database/src/main/sqldelight/`; `justchill.sqldelight` configures the database with `verifyMigrations` on. The rules a change must honour, the FK-on test and the restore drill: `.claude/rules/sqldelight.md`.
+Schema, migrations, snapshots and the generated `JustChillDatabase` live under `core/database/src/commonMain/sqldelight/`; `justchill.sqldelight` configures the database with `verifyMigrations` on. The rules a change must honour, the FK-on test and the restore drill: `.claude/rules/sqldelight.md`.
 
 Two migrations are destructive, and they are why the instrumented suite exists. `3.sqm` rebuilds `transactions` because SQLite cannot change a column's type. `4.sqm` rebuilds `transactions` and `recurring_movements` because SQLite cannot add a table constraint, and it repairs the data first: with foreign keys on, `INSERT INTO transactions_new SELECT` is checked against the new key as it copies, so a repair afterwards would fix rows that never crossed. `MigrationV3ToV4Test` and `MigrationV4ToV5Test` guard them.
 
-What this module exports: `app.cash.sqldelight:coroutines-extensions` is `implementation` (the `LocalDataSource`s use it for `asFlow()`) and does NOT reach consumers. Only the Android driver is `api`-exposed, for the `SqlDriver` `:androidApp` builds.
+What this module exports: `app.cash.sqldelight:coroutines-extensions` is `implementation` (the `LocalDataSource`s use it for `asFlow()`) and does NOT reach consumers. Only the Android driver is `api`-exposed, from `androidMain`, for the `SqlDriver` `:androidApp` builds.
+
+## Source sets
+
+- `commonMain`: every repository, mapper and data source, the `.sq` / `.sqm` / `databases/N.db` under `sqldelight/`, `DATABASE_NAME` and the category seed, and the `expect` half of `shared/SqliteExceptions.kt`.
+- `androidMain`: `provideSqlDriver(context)` and `csm()` on `AndroidSqliteDriver`, the Android exception actuals.
+- `iosMain`: `provideSqlDriver()` on `NativeSqliteDriver` with the same seed and foreign keys on, the SQLiter exception actuals. Compiled on the gate, never run until ADR 024's wave 6.
 
 ## Snapshots
 
@@ -26,5 +32,5 @@ What this module exports: `app.cash.sqldelight:coroutines-extensions` is `implem
 
 ## Testing
 
-- Host tests (JUnit4 + MockK) in `core/database/src/test/kotlin/`: mappers, enum parsing, the snapshot store, plus plain `kotlin.test` suites. `./gradlew :core:database:testDebugUnitTest`. A snapshot test that starts from a JSON file lives in `:androidApp`, the only module that sees `:core:backup` too.
-- Instrumented tests in `core/database/src/androidTest/`: the `MigrationV*Test`s plus `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. `./gradlew :core:database:connectedDebugAndroidTest` on `justchill-api36`; the only thing that exercises migrations against the real `AndroidSqliteDriver`.
+- Host tests (JUnit4 + MockK) in `core/database/src/androidHostTest/kotlin/`: mappers, enum parsing, the snapshot store, plus plain `kotlin.test` suites. `./gradlew :core:database:testAndroidHostTest`, which `./gradlew test` never reaches. A snapshot test that starts from a JSON file lives in `:androidApp`, the only module that sees `:core:backup` too.
+- Instrumented tests in `core/database/src/androidDeviceTest/`: the `MigrationV*Test`s plus `DeleteUseCasesE2ETest` and `RecurringMovementFkTest`. `./gradlew :core:database:connectedAndroidDeviceTest` on `justchill-api36`; the only thing that exercises migrations against the real `AndroidSqliteDriver`.

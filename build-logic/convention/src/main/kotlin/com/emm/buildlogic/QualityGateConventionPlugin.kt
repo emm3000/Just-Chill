@@ -164,8 +164,8 @@ class QualityGateConventionPlugin : Plugin<Project> {
         private val TEST_SOURCE_SETS: List<String> =
             listOf("test*/**", "androidTest*/**", "commonTest/**", "androidHostTest/**", "androidDeviceTest/**") +
                 IOS_TEST_SOURCE_SETS.map { sourceSet -> "$sourceSet/**" }
-        private const val SQLDELIGHT_DIRECTORY: String = "src/main/sqldelight"
-        private const val SNAPSHOT_DIRECTORY: String = "src/main/sqldelight/databases"
+        private const val SQLDELIGHT_DIRECTORY: String = "src/commonMain/sqldelight"
+        private const val SNAPSHOT_DIRECTORY: String = "src/commonMain/sqldelight/databases"
         private const val MIGRATION_SOURCES: String = "**/*.sqm"
         private const val SNAPSHOT_SOURCES: String = "*.db"
 
