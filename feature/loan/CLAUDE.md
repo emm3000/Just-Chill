@@ -14,6 +14,8 @@ This module is the repo's composition-test pilot; `:feature:onboarding` (#240), 
 
 `src/androidHostTest/resources/robolectric.properties` carries `sdk=35` and `qualifiers=w411dp-h891dp` once for the module, not a `@Config` per suite: Robolectric refuses SDK 36 on Java 17 (`Android SDK 36 requires Java 21`) and this project is on the 17 toolchain, and the fixed viewport keeps the eyebrow and the CTA composed regardless of the host's default device. A new suite here inherits both and adds no annotation.
 
+New suites import `androidx.compose.ui.test.junit4.v2.createComposeRule`, never the deprecated `androidx.compose.ui.test.junit4.createComposeRule`: v2 composes on a `StandardTestDispatcher`, so work is queued and a test that needs it settled calls `waitForIdle()` or advances `mainClock`.
+
 Copying this into another KMP module: take the three `androidHostTest` dependency lines, the `compilations.withType` block with its `KotlinMultiplatformAndroidHostTestCompilation` import, the properties file, and nothing else. Check the suite really runs: its `testAndroidHostTest` XML shows the same count as before and 0 skipped. `LoanDetailScreenTest` sits at exactly 8 functions, the per-file ceiling in `.claude/rules/kotlin-style.md`, so the next screen suite in this module is a new file rather than more tests in this one.
 
 ### Composing a nav entry against a real back stack
