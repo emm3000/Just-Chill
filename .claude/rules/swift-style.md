@@ -11,7 +11,7 @@ The Kotlin rules' philosophy in Swift idiom, never transliterated. How each Kotl
 |---|---|
 | `kotlin-style.md` | Adapted below: comments carry over, types and complexity adapt |
 | `naming.md` | Adapted below: the Swift API Design Guidelines replace official Kotlin |
-| `principles.md` | Carries over unchanged; it loads on `iosApp/` too |
+| `principles.md` | Carries over unchanged and loads on `iosApp/` too; a Swift screen models no domain state, so value classes, sealed types and `require` stay in Kotlin |
 | `architecture.md` | Only the MVI contract, adapted in `swift-screens.md`; Koin, routes, modules and SQLDelight dropped |
 | `ui-components.md` | Adapted in `swift-screens.md` |
 | `sqldelight.md`, `github-workflows.md` | Dropped |
@@ -22,21 +22,22 @@ The Kotlin rules' philosophy in Swift idiom, never transliterated. How each Kotl
 
 ## Types
 
-- A stored property and every non-`private` declaration carry their type: `private(set) var state: State`, `static let s4: CGFloat = 16`, a function's return type.
+- A stored property and every non-`private` declaration carry their type: `private(set) var state: State`, `static let s4: CGFloat = 16`, a function's return type. Omit it only when the right-hand side is a constructor call that already names the type: `@State private var draft = Draft()`.
 - A local `let` / `var` infers. The Swift Programming Language, The Basics: "It's rare that you need to write type annotations in practice." Annotate one only when inference would pick the wrong type or hide it from the reader.
 - `let` over `var`; `var` only when reassignment is the point.
 
 ## Complexity
 
-No tool measures it in Swift; review does, the way `kotlin-style.md`'s `### Compose sizing` does for Compose. A View is measured by decomposition, not length: one file carrying the store, the layout and N sub-views fails review. Split sub-views into sibling files in the screen's folder. Deep nesting or an `if` / `else if` chain in a `body` becomes a named computed property, a sub-view or a `switch`.
+No tool measures it in Swift; review does, the way `kotlin-style.md`'s `### Compose sizing` does for Compose. A View is measured by decomposition, not length: one file carrying the store, the layout and N sub-views fails review. A sub-view is never a top-level type: the app is one module, so two screens that each add a `Row` build green alone and collide once merged. It is a `private struct` in the screen's file, or a type nested in `extension <Feature>Screen` in a sibling file of the screen's folder, which is how a crowded screen file splits. Deep nesting or an `if` / `else if` chain in a `body` becomes a named computed property, a sub-view or a `switch`.
 
 ## Naming
 
-The [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/) replace official Kotlin; Uncle Bob's table in `naming.md` still applies.
+The [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/) replace official Kotlin. Uncle Bob's table in `naming.md` still applies, and where a row conflicts with the Guidelines (its "Functions: verbs"), the Guidelines win for Swift.
 
 - Clarity at the point of use first; omit needless words, keep every word that removes ambiguity.
 - Name a variable or parameter by its role, never its type: `onClose`, `selectedTab`, not `closure`, `tabEnum`.
 - A function with side effects reads as an imperative verb (`send(_:)`, `logAvailability()`); one without reads as a noun phrase (`resolvedColor(_:)`).
+- Argument labels follow the Guidelines: omit a first label that completes a grammatical phrase (`x.addSubview(y)`) or a value-preserving `init` conversion (`Int64(someUInt32)`); label a first argument that starts a prepositional phrase at the preposition (`removeBoxes(havingLength:)`); label every other argument.
 - A Boolean reads as an assertion about its receiver: `isCapturePresented`, `isTabular`.
 - Types and protocols `UpperCamelCase`, everything else `lowerCamelCase`, an acronym uniformly cased (`init(argb:)`, `sRGB`).
 - A name the kit exports keeps its Kotlin spelling (`supabaseUrl`, `doInitKoin`); rename in Swift only what Swift declares.
@@ -48,7 +49,7 @@ The [Swift API Design Guidelines](https://www.swift.org/documentation/api-design
 `iosApp/.swift-format` is the lint `scripts/justchill-ci` runs: `xcrun swift-format lint --strict -r iosApp`. Fix a finding with `xcrun swift-format format -i -r iosApp/JustChill`, or change the rule in that file; there is no baseline. It departs from swift-format's defaults in four keys:
 
 - `indentation.spaces` 4 and `lineLength` 120: Xcode's indent and the Kotlin line width.
-- `GroupNumericLiterals` off: an ARGB literal reads by byte pair (`0xFF6FA876`), as its Kotlin twin does.
+- `GroupNumericLiterals` off: a Swift ARGB literal is spelled exactly as its twin in `:core:ui`'s `EmmColors.kt` (`0xFF6FA876`), the pair the token drift check (#557) compares.
 - `NoAccessLevelOnExtensionDeclaration` off: `private extension` is the file-local helper idiom the theme and the app entry use.
 
 It checks layout and `/* */` (`NoBlockComments`), never a `//` comment, a type annotation, complexity or a token; those stay review-enforced.
