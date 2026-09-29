@@ -10,7 +10,11 @@ data class TrendsUiData(
     val averageExpenseFormatted: String = "S/ 0",
     val topExpenses: List<TopCategoryItem> = emptyList(),
     val isEarlyState: Boolean = false,
-)
+) {
+
+    val isSavingsRateDeficit: Boolean
+        get() = savingsRatePercent < 0
+}
 
 data class MonthlyBarItem(
     val monthShortLabel: String,
@@ -19,6 +23,8 @@ data class MonthlyBarItem(
     val expenseAmount: Long,
     val incomeFormatted: String,
     val expenseFormatted: String,
+    val incomeFraction: Float = 0f,
+    val expenseFraction: Float = 0f,
 )
 
 data class TopCategoryItem(

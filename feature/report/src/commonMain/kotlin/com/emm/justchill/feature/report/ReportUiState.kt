@@ -24,4 +24,13 @@ data class ReportUiState(
     val trends: TrendsUiData = TrendsUiData(),
     // ADR 012 Decision 2.
     val showMonthSheet: Boolean = false,
-) : UiState
+) : UiState {
+
+    val comparisonPillText: String?
+        get() = comparisonAmountFormatted?.let { comparisonPillText(it, comparisonPercent) }
+
+    val comparisonPillDescription: String?
+        get() = comparisonAmountFormatted?.let {
+            comparisonPillDescription(it, comparisonPercent, comparisonDirectionUp ?: true)
+        }
+}
