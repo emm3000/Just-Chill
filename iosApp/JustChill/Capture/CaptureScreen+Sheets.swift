@@ -3,21 +3,23 @@ import SwiftUI
 
 extension CaptureScreen {
     struct AccountSheet: View {
-        let state: AddTransactionUiState
-        let send: Send
+        let accounts: [Account]
+        let selected: Account?
+        let onSelect: (Account) -> Void
+        let onDismiss: () -> Void
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
-                SheetTitleBar(title: "Selecciona cuenta", onClose: dismiss)
-                if state.accounts.isEmpty {
+                SheetTitleBar(title: "Selecciona cuenta", onClose: onDismiss)
+                if accounts.isEmpty {
                     SheetEmptyText(text: "Sin cuentas. Cierra y crea una primero.")
                 } else {
                     ScrollView {
                         LazyVStack(spacing: EmmSpacing.s0) {
-                            ForEach(state.accounts, id: \.self) { account in
-                                AccountRow(account: account, isActive: account == state.accountSelected) {
-                                    send(AddTransactionIntentOnAccountSelected(value: account))
-                                    dismiss()
+                            ForEach(accounts, id: \.self) { account in
+                                AccountRow(account: account, isActive: account == selected) {
+                                    onSelect(account)
+                                    onDismiss()
                                 }
                             }
                         }
@@ -29,10 +31,6 @@ extension CaptureScreen {
             .background(EmmColors.bg)
             .presentationBackground(EmmColors.bg)
             .presentationDetents([.medium, .large])
-        }
-
-        private func dismiss() {
-            send(AddTransactionIntentOnSheetDismissed.shared)
         }
     }
 
@@ -95,15 +93,20 @@ extension CaptureScreen {
     }
 
     struct CategorySheet: View {
-        let state: AddTransactionUiState
-        let send: Send
+        let categories: [SelectableCategory]
+        let frequent: [SelectableCategory]
+        let other: [SelectableCategory]
+        let selected: SelectableCategory?
+        let search: (String) -> [SelectableCategory]
+        let onSelect: (SelectableCategory) -> Void
+        let onDismiss: () -> Void
         @State private var query: String = ""
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
-                SheetTitleBar(title: "Selecciona categoría", onClose: dismiss)
+                SheetTitleBar(title: "Selecciona categoría", onClose: onDismiss)
                 searchField
-                if state.categories.isEmpty {
+                if categories.isEmpty {
                     SheetEmptyText(text: "Sin categorías. Crea una primero.")
                 } else {
                     ScrollView {
@@ -120,32 +123,31 @@ extension CaptureScreen {
 
         @ViewBuilder
         private var rows: some View {
-            if isSearching || state.frequentCategories.isEmpty {
-                categoryRows(isSearching ? matches : state.categories)
+            if isSearching || frequent.isEmpty {
+                categoryRows(isSearching ? search(trimmedQuery) : categories)
             } else {
                 SectionEyebrow(text: "Frecuentes")
-                categoryRows(state.frequentCategories)
+                categoryRows(frequent)
                 SectionEyebrow(text: "Todas")
-                categoryRows(state.otherCategories)
+                categoryRows(other)
             }
         }
 
         private func categoryRows(_ categories: [SelectableCategory]) -> some View {
             ForEach(categories, id: \.self) { category in
-                CategoryRow(category: category, isActive: category == state.categorySelected) {
-                    send(AddTransactionIntentOnCategorySelected(value: category))
-                    dismiss()
+                CategoryRow(category: category, isActive: category == selected) {
+                    onSelect(category)
+                    onDismiss()
                 }
             }
         }
 
-        private var isSearching: Bool {
-            !query.trimmingCharacters(in: .whitespaces).isEmpty
+        private var trimmedQuery: String {
+            query.trimmingCharacters(in: .whitespaces)
         }
 
-        private var matches: [SelectableCategory] {
-            let needle: String = query.trimmingCharacters(in: .whitespaces)
-            return state.categories.filter { $0.name.range(of: needle, options: .caseInsensitive) != nil }
+        private var isSearching: Bool {
+            !trimmedQuery.isEmpty
         }
 
         private var searchField: some View {
@@ -159,7 +161,7 @@ extension CaptureScreen {
                 TextField(
                     "",
                     text: $query,
-                    prompt: Text("Buscar entre \(state.categories.count) categorías")
+                    prompt: Text("Buscar entre \(categories.count) categorías")
                         .foregroundStyle(EmmColors.textTertiary)
                 )
                 .emmTextStyle(EmmType.bodyM)
@@ -172,10 +174,6 @@ extension CaptureScreen {
             .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
             .padding(.horizontal, EmmSpacing.s5)
             .padding(.bottom, EmmSpacing.s4)
-        }
-
-        private func dismiss() {
-            send(AddTransactionIntentOnSheetDismissed.shared)
         }
     }
 
