@@ -93,6 +93,7 @@ struct MoreScreen: View {
         case .privacy:
             PrivacyPolicy(onBack: { path.removeLast() })
                 .toolbar(.hidden, for: .navigationBar)
+                .toolbar(.hidden, for: .tabBar)
         }
     }
 
@@ -123,8 +124,14 @@ struct MoreScreen: View {
     }
 
     private func finishShare(isFailed: Bool) {
-        pendingCsv = nil
+        discardCsv()
         if isFailed { store?.send(ProfileIntentCsvShareFailed.shared) }
+    }
+
+    private func discardCsv() {
+        guard let csv = pendingCsv else { return }
+        try? FileManager.default.removeItem(at: csv.url)
+        pendingCsv = nil
     }
 
     private func readBackup(_ result: Result<URL, any Error>) {
@@ -160,7 +167,7 @@ struct MoreScreen: View {
         Binding(
             get: { isExportSheetOnScreen ? nil : pendingCsv },
             set: { csv in
-                if csv == nil { pendingCsv = nil }
+                if csv == nil { discardCsv() }
             }
         )
     }
