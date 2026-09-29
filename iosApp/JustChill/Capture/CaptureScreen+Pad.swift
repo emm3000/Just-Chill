@@ -66,7 +66,7 @@ extension CaptureScreen {
 
     struct SignToggle: View {
         let isSpend: Bool
-        let send: Send
+        let onSelect: (TransactionType) -> Void
 
         var body: some View {
             HStack(spacing: EmmSpacing.s0) {
@@ -81,7 +81,7 @@ extension CaptureScreen {
 
         private func segment(label: String, isSelected: Bool, type: TransactionType) -> some View {
             Button {
-                send(AddTransactionIntentOnTransactionTypeChange(value: type))
+                onSelect(type)
             } label: {
                 Text(label)
                     .emmTextStyle(EmmType.labelL)
@@ -128,8 +128,13 @@ extension CaptureScreen {
     }
 
     struct PadForm: View {
-        let state: AddTransactionUiState
-        let send: Send
+        let accountName: String?
+        let hasNoAccounts: Bool
+        let category: SelectableCategory?
+        let dateLabel: String
+        let onAccount: () -> Void
+        let onCategory: () -> Void
+        let onDate: () -> Void
 
         var body: some View {
             VStack(alignment: .leading, spacing: EmmSpacing.s0) {
@@ -138,11 +143,9 @@ extension CaptureScreen {
                     VStack(alignment: .leading, spacing: EmmSpacing.s0) { chips }
                 }
                 .padding(.horizontal, EmmSpacing.s4)
-                Button {
-                    send(AddTransactionIntentOnSheetRequested(sheet: TransactionSheet.date))
-                } label: {
+                Button(action: onDate) {
                     HStack(spacing: EmmSpacing.s1) {
-                        Text(state.dateLabel)
+                        Text(dateLabel)
                             .emmTextStyle(EmmType.labelL)
                             .foregroundStyle(EmmColors.textPrimary)
                         Image(systemName: "chevron.down")
@@ -164,24 +167,21 @@ extension CaptureScreen {
                 accountChip
                     .fixedSize(horizontal: true, vertical: false)
                 SelectorChip(
-                    label: state.categorySelected?.name ?? "—",
-                    dotColor: state.categorySelected.map { EmmCategory.resolvedColor($0.colorId) },
-                    hint: "Cambiar la categoría"
-                ) {
-                    send(AddTransactionIntentOnSheetRequested(sheet: TransactionSheet.category))
-                }
+                    label: category?.name ?? "—",
+                    dotColor: category.map { EmmCategory.resolvedColor($0.colorId) },
+                    hint: "Cambiar la categoría",
+                    action: onCategory
+                )
             }
         }
 
         @ViewBuilder
         private var accountChip: some View {
-            if state.hasNoAccounts {
+            if hasNoAccounts {
                 SelectorChip(label: "Crear cuenta", dotColor: nil, symbol: "plus", hint: "Crear una cuenta") {}
                     .disabled(true)
             } else {
-                SelectorChip(label: state.accountSelected?.name ?? "—", dotColor: nil, hint: "Cambiar la cuenta") {
-                    send(AddTransactionIntentOnSheetRequested(sheet: TransactionSheet.account))
-                }
+                SelectorChip(label: accountName ?? "—", dotColor: nil, hint: "Cambiar la cuenta", action: onAccount)
             }
         }
     }
@@ -226,19 +226,19 @@ extension CaptureScreen {
     }
 
     struct SaveButton: View {
-        let state: AddTransactionUiState
-        let send: Send
+        let label: String
+        let isEnabled: Bool
+        let isSaving: Bool
+        let onSave: () -> Void
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
                 Rectangle()
                     .fill(EmmColors.border)
                     .frame(height: EmmSpacing.hairline)
-                Button {
-                    send(AddTransactionIntentOnSave.shared)
-                } label: {
+                Button(action: onSave) {
                     HStack(spacing: EmmSpacing.s2) {
-                        if state.isSaving {
+                        if isSaving {
                             ProgressView()
                                 .tint(EmmColors.textTertiary)
                         }
@@ -254,15 +254,6 @@ extension CaptureScreen {
                 .padding(.top, EmmSpacing.s3)
                 .padding(.bottom, EmmSpacing.s4)
             }
-        }
-
-        private var isEnabled: Bool {
-            !state.isSaving && state.missingField == nil
-        }
-
-        private var label: String {
-            if state.hasNoAccounts { return "Crea una cuenta primero" }
-            return state.transactionType == TransactionType.spend ? "Anotar gasto" : "Anotar ingreso"
         }
     }
 }

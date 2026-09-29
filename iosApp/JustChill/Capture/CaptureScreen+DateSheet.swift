@@ -3,8 +3,10 @@ import SwiftUI
 
 extension CaptureScreen {
     struct DateSheet: View {
-        let state: AddTransactionUiState
-        let send: Send
+        let today: Kotlinx_datetimeLocalDate
+        let dateShortcuts: [DateShortcut]
+        let onSelect: (Kotlinx_datetimeLocalDate) -> Void
+        let onDismiss: () -> Void
         @State private var selection: Date
 
         private static let spanish: Locale = Locale(identifier: "es_ES")
@@ -15,20 +17,28 @@ extension CaptureScreen {
             return calendar
         }()
 
-        init(state: AddTransactionUiState, send: @escaping Send) {
-            self.state = state
-            self.send = send
-            _selection = State(initialValue: state.pickerDate.calendarDate)
+        init(
+            pickedDay: Kotlinx_datetimeLocalDate,
+            today: Kotlinx_datetimeLocalDate,
+            shortcuts: [DateShortcut],
+            onSelect: @escaping (Kotlinx_datetimeLocalDate) -> Void,
+            onDismiss: @escaping () -> Void
+        ) {
+            self.today = today
+            self.dateShortcuts = shortcuts
+            self.onSelect = onSelect
+            self.onDismiss = onDismiss
+            _selection = State(initialValue: pickedDay.calendarDate)
         }
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
-                SheetTitleBar(title: "Selecciona fecha", onClose: dismiss)
+                SheetTitleBar(title: "Selecciona fecha", onClose: onDismiss)
                 ScrollView {
                     VStack(spacing: EmmSpacing.s0) {
                         shortcuts
                         DatePicker(
-                            "", selection: $selection, in: ...state.today.calendarDate, displayedComponents: .date
+                            "", selection: $selection, in: ...today.calendarDate, displayedComponents: .date
                         )
                         .datePickerStyle(.graphical)
                         .labelsHidden()
@@ -54,10 +64,10 @@ extension CaptureScreen {
         private var shortcuts: some View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: EmmSpacing.s2) {
-                    ForEach(state.dateShortcuts, id: \.self) { shortcut in
+                    ForEach(dateShortcuts, id: \.self) { shortcut in
                         ShortcutPill(
                             label: label(of: shortcut.kind),
-                            isActive: shortcut.kind == DateShortcutKind.today && selectedDay == state.today
+                            isActive: shortcut.kind == DateShortcutKind.today && selectedDay == today
                         ) {
                             confirm(shortcut.date)
                         }
@@ -93,12 +103,8 @@ extension CaptureScreen {
         }
 
         private func confirm(_ day: Kotlinx_datetimeLocalDate) {
-            send(AddTransactionIntentOnDateSelected(value: day))
-            dismiss()
-        }
-
-        private func dismiss() {
-            send(AddTransactionIntentOnSheetDismissed.shared)
+            onSelect(day)
+            onDismiss()
         }
     }
 

@@ -70,28 +70,60 @@ extension CaptureScreen {
                 TopBar(
                     label: state.monthSpendLabel, amount: state.monthSpendAmount, onClose: onClose,
                     onOpenMovements: onOpenMovements)
-                SignToggle(isSpend: isSpend, send: send)
+                SignToggle(isSpend: isSpend) { send(AddTransactionIntentOnTransactionTypeChange(value: $0)) }
                 VStack(spacing: EmmSpacing.s0) {
                     Hero(amount: state.amount, isSpend: isSpend)
                         .frame(maxHeight: .infinity)
-                    PadForm(state: state, send: send)
+                    PadForm(
+                        accountName: state.accountSelected?.name,
+                        hasNoAccounts: state.hasNoAccounts,
+                        category: state.categorySelected,
+                        dateLabel: state.dateLabel,
+                        onAccount: { request(.account) },
+                        onCategory: { request(.category) },
+                        onDate: { request(.date) }
+                    )
                 }
                 .frame(maxHeight: .infinity)
                 Numpad(digits: amountBinding)
                     .padding(.horizontal, EmmSpacing.s4)
                     .padding(.bottom, EmmSpacing.s2)
-                SaveButton(state: state, send: send)
+                SaveButton(
+                    label: saveLabel,
+                    isEnabled: !state.isSaving && state.missingField == nil,
+                    isSaving: state.isSaving,
+                    onSave: { send(AddTransactionIntentOnSave.shared) }
+                )
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(EmmColors.bg)
             .sheet(isPresented: sheetBinding(.account)) {
-                AccountSheet(state: state, send: send)
+                AccountSheet(
+                    accounts: state.accounts,
+                    selected: state.accountSelected,
+                    onSelect: { send(AddTransactionIntentOnAccountSelected(value: $0)) },
+                    onDismiss: { send(AddTransactionIntentOnSheetDismissed.shared) }
+                )
             }
             .sheet(isPresented: sheetBinding(.category)) {
-                CategorySheet(state: state, send: send)
+                CategorySheet(
+                    categories: state.categories,
+                    frequent: state.frequentCategories,
+                    other: state.otherCategories,
+                    selected: state.categorySelected,
+                    search: matches,
+                    onSelect: { send(AddTransactionIntentOnCategorySelected(value: $0)) },
+                    onDismiss: { send(AddTransactionIntentOnSheetDismissed.shared) }
+                )
             }
             .sheet(isPresented: sheetBinding(.date)) {
-                DateSheet(state: state, send: send)
+                DateSheet(
+                    pickedDay: state.pickerDate,
+                    today: state.today,
+                    shortcuts: state.dateShortcuts,
+                    onSelect: { send(AddTransactionIntentOnDateSelected(value: $0)) },
+                    onDismiss: { send(AddTransactionIntentOnSheetDismissed.shared) }
+                )
             }
         }
 
@@ -104,6 +136,19 @@ extension CaptureScreen {
                 get: { state.amount },
                 set: { send(AddTransactionIntentOnAmountChange(value: $0)) }
             )
+        }
+
+        private var saveLabel: String {
+            if state.hasNoAccounts { return "Crea una cuenta primero" }
+            return isSpend ? "Anotar gasto" : "Anotar ingreso"
+        }
+
+        private func request(_ sheet: TransactionSheet) {
+            send(AddTransactionIntentOnSheetRequested(sheet: sheet))
+        }
+
+        private func matches(_ query: String) -> [SelectableCategory] {
+            state.categories.filter { $0.name.range(of: query, options: .caseInsensitive) != nil }
         }
 
         private func sheetBinding(_ sheet: TransactionSheet) -> Binding<Bool> {

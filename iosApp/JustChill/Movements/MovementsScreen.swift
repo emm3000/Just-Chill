@@ -10,12 +10,13 @@ struct MovementsScreen: View {
 
     @State private var store: Store?
     @State private var errorMessage: String?
+    @State private var editingId: EditTarget?
 
     var body: some View {
         NavigationStack {
             Group {
                 if let store {
-                    Content(state: store.state, send: { store.send($0) })
+                    Content(state: store.state, send: { store.send($0) }, onEdit: { editingId = EditTarget(id: $0) })
                 } else {
                     EmmColors.bg
                 }
@@ -35,6 +36,9 @@ struct MovementsScreen: View {
             applySavedMonth()
         }
         .onChange(of: savedMonth) { applySavedMonth() }
+        .fullScreenCover(item: $editingId) { target in
+            EditMovementScreen(transactionId: target.id) { editingId = nil }
+        }
         .alert(errorMessage ?? "", isPresented: isErrorPresented) {
             Button("Aceptar") { errorMessage = nil }
         }
@@ -57,9 +61,14 @@ struct MovementsScreen: View {
 }
 
 extension MovementsScreen {
+    struct EditTarget: Identifiable {
+        let id: String
+    }
+
     struct Content: View {
         let state: SeeTransactionsUiState
         let send: Send
+        let onEdit: (String) -> Void
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
@@ -74,7 +83,7 @@ extension MovementsScreen {
                 if state.isCategoryOrAmountFilterActive {
                     FilterBanner(state: state, send: send)
                 }
-                DayList(state: state, send: send)
+                DayList(state: state, send: send, onEdit: onEdit)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .background(EmmColors.bg)

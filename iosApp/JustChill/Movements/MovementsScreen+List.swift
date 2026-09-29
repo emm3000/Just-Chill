@@ -5,6 +5,7 @@ extension MovementsScreen {
     struct DayList: View {
         let state: SeeTransactionsUiState
         let send: Send
+        let onEdit: (String) -> Void
 
         var body: some View {
             switch state.listDisplayState {
@@ -27,7 +28,7 @@ extension MovementsScreen {
                     ForEach(state.days, id: \.date) { day in
                         Section {
                             ForEach(day.transactions, id: \.transactionId) { transaction in
-                                Row(transaction: transaction)
+                                Row(transaction: transaction) { onEdit(transaction.transactionId) }
                             }
                         } header: {
                             DayHeader(day: day, showsMonthYear: state.isFilterActive)
@@ -71,8 +72,14 @@ extension MovementsScreen {
 
     struct Row: View {
         let transaction: TransactionUi
+        let onOpen: () -> Void
 
         var body: some View {
+            Button(action: onOpen) { layout }
+                .buttonStyle(.plain)
+        }
+
+        private var layout: some View {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: EmmSpacing.s3) {
                     tile
@@ -89,6 +96,7 @@ extension MovementsScreen {
             }
             .padding(.horizontal, EmmSpacing.s6)
             .padding(.vertical, EmmSpacing.s2)
+            .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
         }
 
