@@ -1,8 +1,8 @@
 # :feature:account — CLAUDE.md
 
-Accounts: the month list, create, edit, delete, and the Loan balance row that sits under them. ViewModels, state and Compose screens together in `com.emm.justchill.feature.account`.
+Accounts: the month list, create, edit, delete, and the Loan balance row that sits under them. One package, `com.emm.justchill.feature.account`, split by source set (ADR 024 Decision 5): `commonMain` holds the two ViewModels, their `UiState` / `Intent` / `Effect`, `AccountMonthUi` and `accountModule`; `androidMain` holds the screens, `AccountPalette`, the `@Serializable` routes, `accountRoutes` and `accountEntries`. Nothing in `commonMain` imports Compose, Android, Navigation 3 or kotlinx-serialization.
 
-`justchill.android.feature`, which brings `:core:domain`, `:core:presentation`, `:core:ui`, Koin, lifecycle, navigation3-runtime, the serialization plugin and `:core:testing`. The build file adds one library of its own, `androidx-material-icons-extended`, for the account type glyphs, and a `compose_stability.conf` declaring `com.emm.justchill.**` stable, because the screens take `:core:presentation`'s `PersonBalanceUi`.
+`justchill.kmp.feature`, which brings `:core:domain`, `:core:presentation` and Koin to `commonMain`, `:core:ui`, koin-compose, navigation3-runtime and serialization to `androidMain`, and `:core:testing` to `androidHostTest`. The build file adds one library of its own on `androidMain`, `androidx-material-icons-extended`, for the account type glyphs, and a `compose_stability.conf` declaring `com.emm.justchill.**` stable, because the screens take `:core:presentation`'s `PersonBalanceUi`.
 
 ## DI and navigation
 
@@ -20,4 +20,4 @@ Accounts: the month list, create, edit, delete, and the Loan balance row that si
 
 ## Testing
 
-`./gradlew :feature:account:testDebugUnitTest`. `AccountsViewModelTest` uses MockK with `MainDispatcherRule` and `FakeTodayFlow` from `:core:testing`; `AccountRowToneTest`, `LoansSectionToneTest` and `AccountsCopyTest` are plain `kotlin.test` over the pure functions next to the screens.
+`./gradlew :feature:account:testAndroidHostTest`; `./gradlew test` never reaches it. The tests live in `androidHostTest`, which sees `androidMain`. `AccountsViewModelTest` uses MockK with `MainDispatcherRule` and `FakeTodayFlow` from `:core:testing`; `AccountRowToneTest`, `LoansSectionToneTest` and `AccountsCopyTest` are plain `kotlin.test` over the pure functions next to the screens.
