@@ -1,6 +1,5 @@
 @preconcurrency import JustChillKit
 import SwiftUI
-import UIKit
 
 enum AppTab: Hashable {
     case movements
@@ -16,20 +15,6 @@ struct AppShell: View {
     @State private var savedMonth: YearMonth?
     @State private var disclosureWatch: BackupDisclosureWatch?
     @State private var isDisclosurePending: Bool = false
-
-    init() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithDefaultBackground()
-        for layout in [
-            appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance,
-            appearance.compactInlineLayoutAppearance,
-        ] {
-            layout.normal.badgeBackgroundColor = UIColor(EmmColors.warning)
-            layout.selected.badgeBackgroundColor = UIColor(EmmColors.warning)
-        }
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
-    }
 
     var body: some View {
         TabView(selection: tabSelection) {

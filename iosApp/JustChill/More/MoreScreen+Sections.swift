@@ -144,7 +144,7 @@ extension MoreScreen {
         let symbol: String
         let label: String
         var meta: String = ""
-        var metaColor: Color?
+        var metaTone: Color = EmmColors.textTertiary
         var isNavigable: Bool = false
         var isEnabled: Bool = true
         var isBusy: Bool = false
@@ -174,7 +174,7 @@ extension MoreScreen {
                     if !meta.isEmpty {
                         Text(meta)
                             .emmTextStyle(EmmType.bodyM)
-                            .foregroundStyle(isActive ? metaColor ?? EmmColors.textTertiary : EmmColors.textDisabled)
+                            .foregroundStyle(isActive ? metaTone : EmmColors.textDisabled)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

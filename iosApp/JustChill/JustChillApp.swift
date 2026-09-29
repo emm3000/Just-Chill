@@ -1,5 +1,6 @@
 @preconcurrency import JustChillKit
 import SwiftUI
+import UIKit
 
 @main
 struct JustChillApp: App {
@@ -7,6 +8,9 @@ struct JustChillApp: App {
 
     init() {
         EmmFonts.logAvailability()
+        let tabBarAppearance = UITabBarAppearance.warningBadges()
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
         doInitKoin(config: KitConfig.bundled(appVersion: Bundle.main.shortVersion))
         _isManifestoPending = State(initialValue: !resolveAppPreferences().firstLaunchSeen)
     }
@@ -38,6 +42,21 @@ private extension KitConfig {
             appVersion: appVersion,
             isSnapshotBackupEnabled: !url.isEmpty && !anonKey.isEmpty
         )
+    }
+}
+
+private extension UITabBarAppearance {
+    static func warningBadges() -> UITabBarAppearance {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        for layout in [
+            appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance,
+            appearance.compactInlineLayoutAppearance,
+        ] {
+            layout.normal.badgeBackgroundColor = UIColor(EmmColors.warning)
+            layout.selected.badgeBackgroundColor = UIColor(EmmColors.warning)
+        }
+        return appearance
     }
 }
 
