@@ -81,6 +81,39 @@ class AddTransactionCombosTest {
         assertEquals("taxi", state.categorySelected?.categoryId?.value)
     }
 
+    @Test
+    fun `two frequent categories lead in rank order and the rest keep catalog order`() {
+        val state: AddTransactionUiState = stateWithFrequent(listOf("coffee", "market"))
+
+        assertEquals(listOf(coffee, market), state.frequentCategories)
+        assertEquals(listOf(taxi), state.otherCategories)
+    }
+
+    @Test
+    fun `a single frequent category makes no section and every category stays in the rest`() {
+        val state: AddTransactionUiState = stateWithFrequent(listOf("coffee"))
+
+        assertEquals(emptyList<SelectableCategory>(), state.frequentCategories)
+        assertEquals(listOf(market, taxi, coffee), state.otherCategories)
+    }
+
+    @Test
+    fun `a frequent id naming a deleted category is skipped before the section is counted`() {
+        val state: AddTransactionUiState = stateWithFrequent(listOf("gone", "taxi"))
+
+        assertEquals(emptyList<SelectableCategory>(), state.frequentCategories)
+        assertEquals(listOf(market, taxi, coffee), state.otherCategories)
+    }
+
+    private fun stateWithFrequent(categoryIds: List<String>): AddTransactionUiState = AddTransactionUiState(
+        today = LocalDate(2026, Month.AUGUST, 28),
+        catalog = Catalog.Loaded(
+            accounts = emptyList(),
+            categories = mapOf(CategoryType.Spend to listOf(market, taxi, coffee)),
+        ),
+        frequentUsage = FrequentUsage(loadedFor = TransactionType.Spend, categoryIds = categoryIds),
+    )
+
     private fun stateWith(combos: List<FrequentCombo>): AddTransactionUiState = AddTransactionUiState(
         today = LocalDate(2026, Month.AUGUST, 28),
         catalog = Catalog.Loaded(
