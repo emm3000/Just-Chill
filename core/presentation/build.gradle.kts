@@ -1,12 +1,17 @@
 plugins {
-    id("justchill.android.library")
+    id("justchill.kmp.library")
 }
 
-dependencies {
-    api(projects.core.domain)
-    api(libs.androidx.lifecycle.viewmodel)
-    api(libs.kotlinx.coroutines.core)
-    api(libs.kotlinx.datetime)
-
-    testImplementation(projects.core.testing)
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            api(projects.core.domain)
+            api(libs.jetbrains.lifecycle.viewmodel)
+            api(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.datetime)
+        }
+        androidHostTest.dependencies {
+            implementation(projects.core.testing)
+        }
+    }
 }

@@ -14,6 +14,7 @@ kotlinxCoroutinesCore = "1.11.0"
 kotlinxCoroutinesTest = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
 lifecycleLivedataKtx = "2.11.0"
+jetbrainsLifecycle = "2.11.0"
 material = "1.14.0"
 mockk = "1.14.11"
 # Robolectric — the Android runtime a JVM composition test renders against. Latest stable 4.x.
@@ -66,6 +67,7 @@ androidx-test-runner = { module = "androidx.test:runner", version.ref = "android
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleLivedataKtx" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleLivedataKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleLivedataKtx" }
+jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "jetbrainsLifecycle" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-material3 = { module = "androidx.compose.material3:material3" }
 # Compose artifacts below are BOM-managed (androidx-compose-bom) — do not add a version.ref.
