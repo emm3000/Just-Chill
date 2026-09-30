@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
@@ -16,12 +17,14 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
+    val showError: (String) -> Unit = { message -> bindings.showMessage(message, EmmSnackbarTone.Error) }
+
     entry<LoansRoute> {
         val nav: AppNavigator = rememberAppNavigator(bindings.backStack)
         LoansEntry(
             onNavigateToPerson = { personKey -> nav.push(PersonLoansRoute(personKey)) },
             onNavigateToAddLoan = { nav.push(AddEditLoanRoute()) },
-            onShowError = bindings.showMessage,
+            onShowError = showError,
             onBack = { nav.pop() },
         )
     }
@@ -31,7 +34,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
         PersonLoansEntry(
             personKey = key.personKey,
             onNavigateToLoanDetail = { loanId -> nav.push(LoanDetailRoute(loanId)) },
-            onShowError = bindings.showMessage,
+            onShowError = showError,
             onBack = { nav.pop() },
         )
     }
@@ -41,7 +44,7 @@ fun EntryProviderScope<NavKey>.loanEntries(bindings: NavHostBindings) {
         LoanDetailEntry(
             loanId = key.loanId,
             onNavigateToEditLoan = { nav.push(AddEditLoanRoute(key.loanId)) },
-            onShowError = bindings.showMessage,
+            onShowError = showError,
             onLoanDelete = { nav.pop() },
             onBack = { nav.pop() },
         )

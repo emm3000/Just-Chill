@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarHostState
@@ -36,15 +37,15 @@ fun rememberPlatformHostActions(
     scope: CoroutineScope,
     onImport: (String) -> Unit,
 ): PlatformHostActions {
-    val context = LocalContext.current
+    val context: Context = LocalContext.current
     val currentOnImport by rememberUpdatedState(onImport)
 
     var pendingExport by remember { mutableStateOf<PendingExport?>(null) }
 
-    val exportLauncher = rememberLauncherForActivityResult(
+    val exportLauncher: ManagedActivityResultLauncher<String, Uri?> = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json"),
     ) { uri ->
-        val pending = pendingExport
+        val pending: PendingExport? = pendingExport
         pendingExport = null
         if (uri != null && pending != null) {
             val saved: Boolean = runCatching {
@@ -56,11 +57,11 @@ fun rememberPlatformHostActions(
         }
     }
 
-    val importLauncher = rememberLauncherForActivityResult(
+    val importLauncher: ManagedActivityResultLauncher<Array<String>, Uri?> = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri ->
         if (uri != null) {
-            val text = context.contentResolver.openInputStream(uri)
+            val text: String? = context.contentResolver.openInputStream(uri)
                 ?.bufferedReader()
                 ?.use { it.readText() }
             if (text != null) currentOnImport(text)

@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
@@ -21,7 +22,7 @@ fun EntryProviderScope<NavKey>.accountEntries(bindings: NavHostBindings, onOpenL
         LaunchedEffect(vm) {
             vm.effect.collect { effect ->
                 when (effect) {
-                    is AccountsEffect.ShowMessage -> bindings.showMessage(effect.text)
+                    is AccountsEffect.ShowMessage -> bindings.showMessage(effect.text, EmmSnackbarTone.Error)
                 }
             }
         }

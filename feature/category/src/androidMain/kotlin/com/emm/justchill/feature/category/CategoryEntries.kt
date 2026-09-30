@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.presentation.category.toSelectable
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.NavHostBindings
 import com.emm.justchill.core.ui.navigation.rememberAppNavigator
@@ -27,7 +28,7 @@ fun EntryProviderScope<NavKey>.categoryEntries(
         LaunchedEffect(vm) {
             vm.effect.collect { effect ->
                 when (effect) {
-                    is CategoriesEffect.ShowMessage -> bindings.showMessage(effect.text)
+                    is CategoriesEffect.ShowMessage -> bindings.showMessage(effect.text, EmmSnackbarTone.Error)
                 }
             }
         }
@@ -51,7 +52,7 @@ fun EntryProviderScope<NavKey>.categoryEntries(
                     onCategoryForTransaction(created.toSelectable())
                     nav.popToCapture()
                 } else {
-                    bindings.showMessage("Categoría «${created.name}» creada")
+                    bindings.showMessage("Categoría «${created.name}» creada", EmmSnackbarTone.Success)
                     nav.pop()
                 }
             },

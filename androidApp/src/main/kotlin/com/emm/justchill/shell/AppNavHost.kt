@@ -34,6 +34,7 @@ import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.preferences.AppPreferences
 import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.ui.atoms.EmmSnackbarHost
+import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.navigation.AppNavigator
 import com.emm.justchill.core.ui.navigation.BottomBarRoute
@@ -73,8 +74,8 @@ fun AppNavHost(modifier: Modifier = Modifier, shortcut: ShortcutIntent = Shortcu
         var savedMonth by remember { mutableStateOf<YearMonth?>(null) }
         val snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
         val rootScope: CoroutineScope = rememberCoroutineScope()
-        val showRootMessage: (String) -> Unit = { message ->
-            rootScope.launch { snackbarHostState.showEmmSnackbar(message) }
+        val showRootMessage: (String, EmmSnackbarTone) -> Unit = { message, tone ->
+            rootScope.launch { snackbarHostState.showEmmSnackbar(message, tone) }
         }
         val platform: PlatformHostActions = rememberPlatformHostActions(
             snackbarHostState = snackbarHostState,
