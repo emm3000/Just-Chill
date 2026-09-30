@@ -36,6 +36,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.concurrent.Volatile
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
@@ -56,16 +57,16 @@ class BackupOrchestrator(
     private val logger: DiagnosticsLogger,
 ) : BackupController {
 
-    private val _isBackingUp = MutableStateFlow(false)
+    private val _isBackingUp: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override val isBackingUp: StateFlow<Boolean> = _isBackingUp.asStateFlow()
 
-    private val _events = MutableSharedFlow<BackupEvent>(replay = 0, extraBufferCapacity = 1)
+    private val _events: MutableSharedFlow<BackupEvent> = MutableSharedFlow(replay = 0, extraBufferCapacity = 1)
     override val events: Flow<BackupEvent> = _events.asSharedFlow()
 
-    private val _health = MutableStateFlow(BackupHealth.None)
+    private val _health: MutableStateFlow<BackupHealth> = MutableStateFlow(BackupHealth.None)
     override val health: StateFlow<BackupHealth> = _health.asStateFlow()
 
-    private val requestChannel = Channel<Unit>(Channel.CONFLATED)
+    private val requestChannel: Channel<Unit> = Channel(Channel.CONFLATED)
 
     @Volatile
     private var currentUserId: String? = null
@@ -73,10 +74,10 @@ class BackupOrchestrator(
     // Visibility only, not atomicity: a manual tap landing between runBackup's read and its reset
     // is swallowed rather than counted.
     @Volatile
-    private var manualRequestPending = false
+    private var manualRequestPending: Boolean = false
 
     @Volatile
-    private var started = false
+    private var started: Boolean = false
 
     override fun requestBackup(manual: Boolean) {
         if (!started) {
@@ -110,7 +111,7 @@ class BackupOrchestrator(
             getSessionStatus().flatMapLatest { status ->
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        val userId = status.user.userId
+                        val userId: String = status.user.userId
                         currentUserId = userId
                         publishHealth(userId, metadata.failureState(userId))
                         merge(backgroundEvents, resumeEvents)
@@ -146,7 +147,7 @@ class BackupOrchestrator(
 
     @Suppress("TooGenericExceptionCaught")
     private suspend fun runBackup() {
-        val manual = manualRequestPending
+        val manual: Boolean = manualRequestPending
         manualRequestPending = false
         _isBackingUp.value = true
         val userId: String? = currentUserId
@@ -159,7 +160,7 @@ class BackupOrchestrator(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            val kind = if (manual) "manual" else "auto"
+            val kind: String = if (manual) "manual" else "auto"
             val failure: DomainException = e.asDomainException()
             val reason: BackupFailureReason = failure.toBackupFailureReason()
             if (manual) _events.tryEmit(BackupEvent.Failed(failure))
@@ -195,7 +196,7 @@ class BackupOrchestrator(
         return state.consecutiveFailures
     }
 
-    // Re-checked after the write: currentUserId can change on another thread between the read above
+    // Re-checked after the write: currentUserId can change on another thread between the first check
     // and this write; compareAndSet reverts only the value this call itself wrote.
     private fun publishHealth(userId: String, state: BackupFailureState) {
         if (currentUserId != userId) return
@@ -284,9 +285,9 @@ class BackupOrchestrator(
     }
 
     private companion object {
-        val TRIGGER_RETRY_DELAY = 5.seconds
-        const val OWNER_CHANGED = "Snapshot backup finished for an account that is no longer signed in"
-        const val NO_SESSION = "Snapshot backup requested with no session; the request was discarded"
+        val TRIGGER_RETRY_DELAY: Duration = 5.seconds
+        const val OWNER_CHANGED: String = "Snapshot backup finished for an account that is no longer signed in"
+        const val NO_SESSION: String = "Snapshot backup requested with no session; the request was discarded"
     }
 }
 
