@@ -26,6 +26,8 @@ import com.emm.justchill.core.domain.transaction.ExportTransactionsCsvUseCase
 import com.emm.justchill.core.domain.transaction.TransactionsCsv
 import com.emm.justchill.core.presentation.mvi.MviViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -98,7 +100,7 @@ class ProfileViewModel(
             state.map { it.session }.distinctUntilChanged(),
             backupController.health,
             backupController.isBackingUp,
-            backupRepository.observeLatestLocalChangeAt(),
+            backupRepository.observeLatestLocalChangeAt().unobservedOnFailure(logger),
         ) { sessionUiState, health, backingUp, _ ->
             resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness, logger)
         }
@@ -256,6 +258,16 @@ class ProfileViewModel(
             ),
         )
     }
+}
+
+private fun Flow<Long?>.unobservedOnFailure(logger: DiagnosticsLogger): Flow<Long?> = catch { e ->
+    if (e is CancellationException) throw e
+    logger.warn(
+        "could not observe local changes for the Perfil backup row; the row keeps following the session " +
+            "and the backup health, and stops recomputing on a saved movement",
+        e,
+    )
+    emit(null)
 }
 
 private fun ProfileUiState.withBackupProgress(backingUp: Boolean): ProfileUiState = when {

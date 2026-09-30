@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -476,6 +477,35 @@ class ProfileViewModelBackupRowTest {
 
             assertEquals(listOf(BackupRowUi.NeedsAccount, BackupRowUi.UpToDate(5), BackupRowUi.Stale(5)), rows)
         }
+
+    @Test
+    fun `a failing local-change observation still lets session and health resolve the row`() = runTest(testDispatcher) {
+        every { backupRepository.observeLatestLocalChangeAt() } returns
+            flow { throw DomainException.DatabaseError(RuntimeException("disk I/O error")) }
+        coEvery { getBackupStaleness(LAST_BACKUP_AT) } returns
+            BackupStaleness(daysSinceLastBackup = 0, isStale = false)
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 0, lastFailureReason = null)
+        val vm: ProfileViewModel = buildViewModel()
+        val rows: MutableList<BackupRowUi> = mutableListOf()
+        val recordedRows: Flow<BackupRowUi> = vm.state.map { it.backupRow }.distinctUntilChanged()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { recordedRows.toList(rows) }
+        advanceUntilIdle()
+
+        sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+        advanceUntilIdle()
+        healthFlow.value = health(LAST_BACKUP_AT, consecutiveFailures = 1, BackupFailureReason.Network)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                BackupRowUi.NeedsAccount,
+                BackupRowUi.UpToDate(0),
+                BackupRowUi.Failed(BackupFailureReason.Network, LastSnapshot.DaysAgo(days = 0, isStale = false)),
+            ),
+            rows,
+        )
+        verify { logger.warn(any(), any()) }
+    }
 
     private fun health(
         lastSuccessfulBackupAt: Long?,
