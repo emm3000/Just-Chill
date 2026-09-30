@@ -46,11 +46,6 @@ import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
-/**
- * The numpad edits a draft seeded from [amountDigits]; [onAmountConfirm] fires once, when the
- * confirm CTA commits it. Closing the sheet — affordance, scrim or back gesture — discards the
- * draft, so the owner keeps the amount it had.
- */
 @Suppress("LongParameterList")
 @Composable
 fun AmountInputSheet(

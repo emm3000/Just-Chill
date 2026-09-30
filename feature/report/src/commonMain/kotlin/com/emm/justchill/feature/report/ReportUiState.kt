@@ -5,7 +5,6 @@ import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.presentation.format.formatNeutral
 import com.emm.justchill.core.presentation.mvi.UiState
 
-// isCurrentMonth is computed by the ViewModel, which holds the live calendar month the screen lacks.
 data class ReportUiState(
     val month: YearMonth,
     val isCurrentMonth: Boolean = false,

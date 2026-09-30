@@ -15,10 +15,13 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.format.formatNeutral
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
+import com.emm.justchill.feature.report.TotalAmountParts
+import com.emm.justchill.feature.report.splitTotalAmount
 
 @Composable
 fun TotalAmountHero(totalFormatted: String, type: TransactionType, modifier: Modifier = Modifier) {
@@ -30,20 +33,19 @@ fun TotalAmountHero(totalFormatted: String, type: TransactionType, modifier: Mod
         TransactionType.Spend -> colors.textPrimary
     }
 
-    val annotated: AnnotatedString = buildAnnotatedString {
-        val dotIndex = totalFormatted.lastIndexOf('.')
-        val slashEnd = totalFormatted.indexOf(' ') + 1
+    val parts: TotalAmountParts? = splitTotalAmount(totalFormatted)
 
-        if (dotIndex < 0 || slashEnd <= 0) {
+    val annotated: AnnotatedString = buildAnnotatedString {
+        if (parts == null) {
             withStyle(SpanStyle(color = integerColor)) {
                 append(totalFormatted)
             }
         } else {
             withStyle(SpanStyle(color = colors.textTertiary, fontSize = typeTokens.amountL.fontSize)) {
-                append(totalFormatted.substring(0, slashEnd))
+                append(parts.prefix)
             }
             withStyle(SpanStyle(color = integerColor)) {
-                append(totalFormatted.substring(slashEnd, dotIndex))
+                append(parts.integer)
             }
             withStyle(
                 SpanStyle(
@@ -51,7 +53,7 @@ fun TotalAmountHero(totalFormatted: String, type: TransactionType, modifier: Mod
                     fontSize = (typeTokens.amountL.fontSize.value * 0.6f).sp,
                 ),
             ) {
-                append(totalFormatted.substring(dotIndex))
+                append(parts.decimals)
             }
         }
     }
@@ -74,8 +76,8 @@ private fun TotalAmountHeroIncomeAndSpendPreview() {
                 .padding(LocalEmmSpacing.current.s4),
             verticalArrangement = Arrangement.spacedBy(LocalEmmSpacing.current.s4),
         ) {
-            TotalAmountHero(totalFormatted = "S/ 6,200.00", type = TransactionType.Income)
-            TotalAmountHero(totalFormatted = "S/ 4,580.00", type = TransactionType.Spend)
+            TotalAmountHero(totalFormatted = formatNeutral("6,200.00"), type = TransactionType.Income)
+            TotalAmountHero(totalFormatted = formatNeutral("4,580.00"), type = TransactionType.Spend)
         }
     }
 }
