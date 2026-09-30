@@ -110,10 +110,7 @@ extension AddCategoryScreen {
                 .onSubmit(save)
                 .frame(minHeight: EmmSpacing.s12)
                 .accessibilityLabel("Nombre")
-                Rectangle()
-                    .fill(isNameFocused ? EmmColors.borderFocus : EmmColors.border)
-                    .frame(height: EmmSpacing.hairline)
-                    .accessibilityHidden(true)
+                Hairline(isFocused: isNameFocused)
             }
         }
 

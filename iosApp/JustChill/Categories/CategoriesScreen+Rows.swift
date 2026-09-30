@@ -2,42 +2,6 @@
 import SwiftUI
 
 extension CategoriesScreen {
-    struct TopBar: View {
-        let onBack: () -> Void
-        let onAdd: () -> Void
-
-        var body: some View {
-            VStack(spacing: EmmSpacing.s0) {
-                HStack(spacing: EmmSpacing.s2) {
-                    barButton(symbol: "chevron.left", label: "Volver", action: onBack)
-                    Text("Categorías")
-                        .emmTextStyle(EmmType.titleL)
-                        .foregroundStyle(EmmColors.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .accessibilityAddTraits(.isHeader)
-                        .frame(maxWidth: .infinity, minHeight: EmmSpacing.s16, alignment: .leading)
-                    barButton(symbol: "plus", label: "Nueva categoría", action: onAdd)
-                }
-                .padding(.horizontal, EmmSpacing.s2)
-                Hairline()
-            }
-        }
-
-        private func barButton(symbol: String, label: String, action: @escaping () -> Void) -> some View {
-            Button(action: action) {
-                Image(systemName: symbol)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: EmmSpacing.s5, height: EmmSpacing.s5)
-                    .foregroundStyle(EmmColors.textPrimary)
-                    .frame(width: EmmSpacing.s12, height: EmmSpacing.s12)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel(label)
-        }
-    }
-
     struct SectionHeader: View {
         let label: String
         let count: Int

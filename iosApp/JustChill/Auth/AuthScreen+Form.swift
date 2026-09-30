@@ -140,10 +140,7 @@ extension AuthScreen {
                 VStack(spacing: EmmSpacing.s2) {
                     field()
                         .frame(minHeight: EmmSpacing.s12)
-                    Rectangle()
-                        .fill(isFocused ? EmmColors.borderFocus : EmmColors.border)
-                        .frame(height: EmmSpacing.hairline)
-                        .accessibilityHidden(true)
+                    Hairline(isFocused: isFocused)
                 }
             }
         }

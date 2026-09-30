@@ -118,7 +118,7 @@ extension EditMovementScreen {
                         .lineLimit(2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Text("S/ " + CentsFormatterKt.formatCentsForDisplay(digits: amount))
+                Text(CurrencyFormatKt.formatNeutral(value: CentsFormatterKt.formatCentsForDisplay(digits: amount)))
                     .emmTextStyle(EmmType.amountM)
                     .foregroundStyle(isSpend ? EmmColors.textPrimary : EmmColors.success)
                     .fixedSize(horizontal: true, vertical: false)

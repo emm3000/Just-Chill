@@ -131,11 +131,19 @@ extension CaptureScreen {
             if isSearching || frequent.isEmpty {
                 categoryRows(isSearching ? search(trimmedQuery) : categories)
             } else {
-                SectionEyebrow(text: "Frecuentes")
+                sectionEyebrow("Frecuentes")
                 categoryRows(frequent)
-                SectionEyebrow(text: "Todas")
+                sectionEyebrow("Todas")
                 categoryRows(other)
             }
+        }
+
+        private func sectionEyebrow(_ text: String) -> some View {
+            Eyebrow(text: text)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, EmmSpacing.s6)
+                .padding(.top, EmmSpacing.s3)
+                .padding(.bottom, EmmSpacing.s2)
         }
 
         private func categoryRows(_ categories: [SelectableCategory]) -> some View {
@@ -243,21 +251,6 @@ extension CaptureScreen {
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(isActive ? .isSelected : [])
-        }
-    }
-
-    struct SectionEyebrow: View {
-        let text: String
-
-        var body: some View {
-            Text(text.uppercased())
-                .emmTextStyle(EmmType.eyebrow)
-                .foregroundStyle(EmmColors.textTertiary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, EmmSpacing.s6)
-                .padding(.top, EmmSpacing.s3)
-                .padding(.bottom, EmmSpacing.s2)
-                .accessibilityAddTraits(.isHeader)
         }
     }
 

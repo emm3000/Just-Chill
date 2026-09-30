@@ -95,7 +95,7 @@ extension CaptureScreen {
                     .padding(.bottom, EmmSpacing.s2)
                 SaveButton(
                     label: saveLabel,
-                    isEnabled: !state.isSaving && state.missingField == nil,
+                    isEnabled: state.isSaveEnabled,
                     isSaving: state.isSaving,
                     onSave: { send(AddTransactionIntentOnSave.shared) }
                 )
@@ -119,7 +119,7 @@ extension CaptureScreen {
                     frequent: state.frequentCategories,
                     other: state.otherCategories,
                     selected: state.categorySelected,
-                    search: matches,
+                    search: { state.categoriesMatching(query: $0) },
                     onSelect: { send(AddTransactionIntentOnCategorySelected(value: $0)) },
                     onAddNew: { isAddCategoryRequested = true },
                     onDismiss: { send(AddTransactionIntentOnSheetDismissed.shared) }
@@ -170,10 +170,6 @@ extension CaptureScreen {
 
         private func request(_ sheet: TransactionSheet) {
             send(AddTransactionIntentOnSheetRequested(sheet: sheet))
-        }
-
-        private func matches(_ query: String) -> [SelectableCategory] {
-            state.categories.filter { $0.name.range(of: query, options: .caseInsensitive) != nil }
         }
 
         private func sheetBinding(_ sheet: TransactionSheet) -> Binding<Bool> {

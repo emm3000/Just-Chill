@@ -91,7 +91,11 @@ extension MovementsScreen {
                 FilterSheet(state: state, send: send)
             }
             .sheet(isPresented: isMonthPickerPresented) {
-                MonthPickerSheet(current: state.month, send: send)
+                MonthSheet(
+                    current: state.month,
+                    onSelect: { send(SeeTransactionsIntentOnMonthSelected(month: $0)) },
+                    onDismiss: { send(SeeTransactionsIntentScreenChromeIntentOnMonthPickerDismissed.shared) }
+                )
             }
         }
 

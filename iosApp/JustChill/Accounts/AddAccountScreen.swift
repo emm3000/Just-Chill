@@ -120,10 +120,7 @@ extension AddAccountScreen {
                 .focused($isFocused)
                 .frame(minHeight: EmmSpacing.s12)
                 .accessibilityLabel("Nombre")
-                Rectangle()
-                    .fill(isFocused ? EmmColors.borderFocus : EmmColors.border)
-                    .frame(height: EmmSpacing.hairline)
-                    .accessibilityHidden(true)
+                Hairline(isFocused: isFocused)
             }
         }
     }
