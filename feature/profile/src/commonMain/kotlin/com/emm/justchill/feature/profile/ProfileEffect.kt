@@ -8,7 +8,7 @@ import com.emm.justchill.core.presentation.mvi.UiEffect
 sealed interface ProfileEffect : UiEffect {
     data class ShowError(val error: DomainException) : ProfileEffect
     data class Notify(val message: ProfileMessage) : ProfileEffect
-    data class ExportReady(val json: String) : ProfileEffect
+    data class ExportReady(val fileName: String, val json: String) : ProfileEffect
     data class CsvReady(val fileName: String, val content: String) : ProfileEffect
 }
 

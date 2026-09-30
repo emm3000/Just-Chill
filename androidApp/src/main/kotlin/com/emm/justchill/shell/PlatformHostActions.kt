@@ -25,16 +25,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 private class PendingExport(val json: String, val onResult: (Boolean) -> Unit)
 
-/**
- * Call at the [AppNavHost] root, never inside an `entry<...> { }` body: the SAF launchers must be
- * registered in a composition that outlives NavDisplay's entries, or a picker result arriving after
- * its entry left composition is dropped.
- */
+// Call at the AppNavHost root, never inside an `entry<...> { }` body: a picker result arriving after
+// its entry left composition is dropped.
 @Composable
 fun rememberPlatformHostActions(
     snackbarHostState: SnackbarHostState,
@@ -102,9 +97,9 @@ fun rememberPlatformHostActions(
                 }
             }
 
-            override val requestExport: (String, (Boolean) -> Unit) -> Unit = { json, onResult ->
+            override val requestExport: (String, String, (Boolean) -> Unit) -> Unit = { fileName, json, onResult ->
                 pendingExport = PendingExport(json, onResult)
-                exportLauncher.launch(suggestedExportFilename())
+                exportLauncher.launch(fileName)
             }
 
             override val requestImport: () -> Unit = {
@@ -119,11 +114,6 @@ fun rememberPlatformHostActions(
             }
         }
     }
-}
-
-private fun suggestedExportFilename(): String {
-    val date = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-    return "justchill-backup-$date.json"
 }
 
 private const val CSV_MIME_TYPE: String = "text/csv"

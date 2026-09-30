@@ -6,9 +6,11 @@ extension MoreScreen {
     struct BackupDocument: FileDocument {
         static let readableContentTypes: [UTType] = [.json]
 
+        let fileName: String
         let json: String
 
-        init(json: String) {
+        init(fileName: String, json: String) {
+            self.fileName = fileName
             self.json = json
         }
 
@@ -16,15 +18,12 @@ extension MoreScreen {
             guard let data = configuration.file.regularFileContents else {
                 throw CocoaError(.fileReadCorruptFile)
             }
+            fileName = configuration.file.filename ?? ""
             json = String(decoding: data, as: UTF8.self)
         }
 
         func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
             FileWrapper(regularFileWithContents: Data(json.utf8))
-        }
-
-        static func suggestedFilename() -> String {
-            "justchill-backup-" + Date.now.ISO8601Format(.iso8601Date(timeZone: .current)) + ".json"
         }
 
         static func read(from url: URL) -> String? {

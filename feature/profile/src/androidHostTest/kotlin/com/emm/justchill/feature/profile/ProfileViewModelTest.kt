@@ -30,6 +30,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -245,6 +246,25 @@ class ProfileViewModelTest {
         val exportReady = effects.filterIsInstance<ProfileEffect.ExportReady>().firstOrNull()
         assertEquals(expectedJson, exportReady?.json, "Expected ExportReady($expectedJson) not found in $effects")
         assertEquals(ProfileOp.None, vm.state.value.op)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `the backup export is named after the injected today`() = runTest(testDispatcher) {
+        today.value = LocalDate(2026, 9, 30)
+        coEvery { backupRepository.exportToJson(any(), any()) } returns "{}"
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
+
+        vm.onIntent(ProfileIntent.ExportRequested)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf("justchill-backup-2026-09-30.json"),
+            effects.filterIsInstance<ProfileEffect.ExportReady>().map { it.fileName },
+        )
 
         job.cancel()
     }

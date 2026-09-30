@@ -88,7 +88,7 @@ private fun ProfileEntry(
                     tone = EmmSnackbarTone.Error,
                 )
 
-                is ProfileEffect.ExportReady -> bindings.platform.requestExport(effect.json) { saved ->
+                is ProfileEffect.ExportReady -> bindings.platform.requestExport(effect.fileName, effect.json) { saved ->
                     vm.onIntent(ProfileIntent.ExportFinished(saved))
                 }
 
