@@ -9,16 +9,16 @@ class TotalAmountPartsTest {
     @Test
     fun `a formatted total splits into the currency prefix, the integer part and the decimals`() {
         assertEquals(
-            TotalAmountParts(prefix = "S/ ", integer = "14", decimals = ".50"),
-            splitTotalAmount("S/ 14.50"),
+            TotalAmountParts(prefix = "S/\u00A0", integer = "14", decimals = ".50"),
+            splitTotalAmount("S/\u00A014.50"),
         )
     }
 
     @Test
     fun `the thousands separator stays in the integer part`() {
         assertEquals(
-            TotalAmountParts(prefix = "S/ ", integer = "6,200", decimals = ".00"),
-            splitTotalAmount("S/ 6,200.00"),
+            TotalAmountParts(prefix = "S/\u00A0", integer = "6,200", decimals = ".00"),
+            splitTotalAmount("S/\u00A06,200.00"),
         )
     }
 
@@ -29,6 +29,6 @@ class TotalAmountPartsTest {
 
     @Test
     fun `a total without decimals does not split`() {
-        assertNull(splitTotalAmount("S/ 517"))
+        assertNull(splitTotalAmount("S/\u00A0517"))
     }
 }
