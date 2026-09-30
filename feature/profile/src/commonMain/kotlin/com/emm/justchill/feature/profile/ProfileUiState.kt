@@ -116,12 +116,6 @@ data class ProfileUiState(
     val lastExportLabel: String
         get() = when (val export: LastExportUi = lastExport) {
             LastExportUi.Never -> "Nunca"
-            is LastExportUi.DaysAgo -> "Último: ${exportDaysAgoLabel(export.days)}"
+            is LastExportUi.DaysAgo -> "Último: ${daysAgoLabel(export.days)}"
         }
-}
-
-private fun exportDaysAgoLabel(days: Int): String = when (days) {
-    0 -> "hoy"
-    1 -> "ayer"
-    else -> "hace $days días"
 }

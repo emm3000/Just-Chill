@@ -55,7 +55,7 @@ internal fun BackupSection(
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.FileDownload,
                 label = "Exportar mi data",
-                meta = if (state.op == ProfileOp.Exporting) "Preparando…" else state.lastExport.toMetaText(),
+                meta = if (state.op == ProfileOp.Exporting) "Preparando…" else state.lastExportLabel,
                 metaIsPrimary = false,
                 enabled = state.op == ProfileOp.None,
                 busy = state.op == ProfileOp.Exporting,
@@ -70,9 +70,7 @@ internal fun BackupSection(
                 enabled = state.op == ProfileOp.None,
                 busy = state.op == ProfileOp.Importing,
                 onClick = onImportClick,
-                trailing = {
-                    ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.Importing)
-                },
+                trailing = {},
             )
         }
         if (state.isCloudBackupAvailable) {

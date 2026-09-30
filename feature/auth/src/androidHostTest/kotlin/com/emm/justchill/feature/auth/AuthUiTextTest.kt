@@ -8,6 +8,12 @@ import kotlin.test.assertTrue
 class AuthUiTextTest {
 
     @Test
+    fun `every auth step sits under the account title`() {
+        assertEquals("Tu cuenta", AuthUiState.Form().title)
+        assertEquals("Tu cuenta", AuthUiState.CheckEmail(email = "qa@example.com").title)
+    }
+
+    @Test
     fun `the sign-in form asks to sign in and offers the sign-up`() {
         val signIn: AuthUiState.Form = AuthUiState.Form(mode = AuthMode.SignIn)
 

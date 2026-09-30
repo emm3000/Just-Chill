@@ -57,11 +57,9 @@ fun ProfileScreen(
             column = spacing.s6,
         )
 
-        (state.session as? SessionUiState.SignedIn)?.let { signedIn ->
+        if (state.isSignedIn) {
             AccountSection(
-                session = signedIn,
-                op = state.op,
-                dialog = state.dialog,
+                state = state,
                 onSignOutClick = onSignOutClick,
                 onDeleteAccountClick = onDeleteAccountClick,
                 onDeleteAccountConfirm = onDeleteAccountConfirm,
@@ -70,8 +68,7 @@ fun ProfileScreen(
         }
 
         DestinationsSection(
-            categoryCount = state.categoryCount,
-            incomeCategoryCount = state.incomeCategoryCount,
+            categoriesLabel = state.categoriesLabel,
             destinations = ProfileDestinationActions(
                 onCategoriesClick = onCategoriesClick,
                 onLoansClick = onLoansClick,

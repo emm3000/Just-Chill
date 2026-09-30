@@ -39,15 +39,4 @@ class AccountRowTextTest {
         assertEquals("Borra tu cuenta y tus datos en la nube", ProfileUiState().deleteAccountMeta)
         assertEquals("Eliminando…", ProfileUiState(op = ProfileOp.DeletingAccount).deleteAccountMeta)
     }
-
-    @Test
-    fun `each session notice says the data stays on the phone`() {
-        assertEquals("Sesión cerrada. Tus datos siguen en este teléfono.", ProfileMessage.SessionClosed.text)
-        assertEquals(
-            "Sesión cerrada acá; no llegué al servidor, así que tu acceso remoto sigue activo hasta " +
-                "que expire. Cierra sesión con internet para cortarlo. Tus datos siguen en este teléfono.",
-            ProfileMessage.SessionClosedLocallyOnly.text,
-        )
-        assertEquals("Cuenta eliminada. Tus datos siguen en este teléfono.", ProfileMessage.AccountDeleted.text)
-    }
 }

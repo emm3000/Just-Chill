@@ -118,7 +118,7 @@ struct MoreScreen: View {
     private func handle(_ effect: any ProfileEffect) {
         switch onEnum(of: effect) {
         case .showError(let failure): notice = failure.error.toUserMessage()
-        case .notify(let notify): notice = Self.text(for: notify.message)
+        case .notify(let notify): notice = notify.message.toText()
         case .exportReady(let ready): pendingExport = BackupDocument(json: ready.json)
         case .csvReady(let csv): shareCsv(fileName: csv.fileName, content: csv.content)
         }
