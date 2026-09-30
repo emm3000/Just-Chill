@@ -36,18 +36,19 @@ fun ComparisonPill(
     modifier: Modifier = Modifier,
 ) {
     val tone: PillTone = comparisonPillTone(isPositive)
-    val icon: ImageVector? = when (directionUp) {
-        true -> Icons.Filled.ArrowUpward
-        false -> Icons.Filled.ArrowDownward
-        null -> null
-    }
 
     Pill(
         text = text,
         tone = tone,
-        leadingIcon = icon,
+        leadingIcon = comparisonPillIcon(directionUp),
         modifier = modifier.clearAndSetSemantics { contentDescription = description },
     )
+}
+
+internal fun comparisonPillIcon(directionUp: Boolean?): ImageVector? = when (directionUp) {
+    true -> Icons.Filled.ArrowUpward
+    false -> Icons.Filled.ArrowDownward
+    null -> null
 }
 
 @Preview
