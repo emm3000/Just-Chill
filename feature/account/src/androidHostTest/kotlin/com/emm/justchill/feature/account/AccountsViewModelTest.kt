@@ -11,17 +11,24 @@ import com.emm.justchill.core.domain.shared.AccountId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.TransactionId
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionRepository
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -290,5 +297,27 @@ class AccountsViewModelTest {
         assertEquals("−S/\u00A0193.45", rowFor(bcp).net)
         assertEquals("S/\u00A0193.45", viewModel.state.value.monthSpent)
         assertEquals("+S/\u00A09,999,999.99", viewModel.state.value.loansTotalOwed)
+    }
+
+    @Test
+    fun `a refused rename closes its dialog and says why once, as a refused delete does`() = runTest {
+        coEvery { updateAccount(any(), any()) } throws
+            DomainException.ValidationError("Name cannot be empty", ValidationCode.NameRequired)
+        val dialogs: MutableList<Pair<Account?, String>> = mutableListOf()
+        val effects: MutableList<AccountsEffect> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.state.map { it.pendingEdit to it.editName }.distinctUntilChanged().collect { dialogs += it }
+        }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effect.collect { effects += it }
+        }
+
+        viewModel.onIntent(AccountsIntent.OnEditClick(bcp))
+        viewModel.onIntent(AccountsIntent.OnEditNameChange("   "))
+        viewModel.onIntent(AccountsIntent.OnEditConfirm)
+        advanceUntilIdle()
+
+        assertEquals(listOf(null to "", bcp to "BCP", bcp to "   ", null to ""), dialogs)
+        assertEquals(listOf<AccountsEffect>(AccountsEffect.ShowMessage("El nombre no puede estar vacío")), effects)
     }
 }
