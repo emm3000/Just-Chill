@@ -37,8 +37,6 @@ class AccountsViewModel(
     AccountsUiState(month = YearMonth.of(todayFlow.today())),
 ) {
 
-    // The screen's only derivation of "what month is it": the eyebrow, the two header totals and
-    // every row's net are attributed against this one value, so they cannot disagree at midnight.
     private val month: StateFlow<YearMonth> = todayFlow()
         .map { YearMonth.of(it) }
         .distinctUntilChanged()
@@ -109,7 +107,10 @@ class AccountsViewModel(
     }
 
     private fun confirmEdit() = launchSafe(
-        onError = onDomainError,
+        onError = { e ->
+            updateState { copy(pendingEdit = null, editName = "") }
+            AccountsEffect.ShowMessage(e.toUserMessage())
+        },
     ) {
         val target = currentState.pendingEdit ?: return@launchSafe
         val newName = currentState.editName

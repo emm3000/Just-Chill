@@ -61,7 +61,7 @@ internal fun AccountRow(row: AccountMonthUi, onEdit: () -> Unit, onDelete: () ->
                 Text(
                     text = row.net,
                     style = type.amountM,
-                    color = accountNetTone(row.movementCount, row.netIsPositive).color(colors),
+                    color = row.netTone.toAmountTone().color(colors),
                 )
                 Text(text = "este mes", style = type.caption, color = colors.textTertiary)
             }
@@ -78,12 +78,8 @@ internal fun accountSubtitle(typeLabel: String, movementCount: Int): String = wh
     else -> "$typeLabel · $movementCount movimientos"
 }
 
-/**
- * A positive net is positive money — `success` — but only once the account has activity; a
- * silent account keeps its muted step regardless of what its empty net would sign.
- */
-internal fun accountNetTone(movementCount: Int, netIsPositive: Boolean): AmountTone = when {
-    movementCount == 0 -> AmountTone.Mute
-    netIsPositive -> AmountTone.Pos
-    else -> AmountTone.Neutral
+private fun AccountNetTone.toAmountTone(): AmountTone = when (this) {
+    AccountNetTone.Muted -> AmountTone.Mute
+    AccountNetTone.Positive -> AmountTone.Pos
+    AccountNetTone.Neutral -> AmountTone.Neutral
 }
