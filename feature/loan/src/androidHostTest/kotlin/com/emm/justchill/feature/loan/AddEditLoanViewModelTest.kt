@@ -107,6 +107,23 @@ class AddEditLoanViewModelTest {
     }
 
     @Test
+    fun `a form left open past midnight opens the date sheet on the new today`() = runTest {
+        val vm: AddEditLoanViewModel = viewModel()
+        val todays: MutableList<LocalDate> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.today }.distinctUntilChanged().collect { todays += it }
+        }
+        advanceUntilIdle()
+        val nextDay: LocalDate = LocalDate(2026, Month.AUGUST, 11)
+
+        todayDates.value = nextDay
+        vm.onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Date))
+        advanceUntilIdle()
+
+        assertEquals(listOf(today, nextDay), todays)
+    }
+
+    @Test
     fun `an untouched date is lent on TodayFlow's day, at the clock's hour`() = runTest {
         coEvery { createLoan(any()) } returns Unit
         val christmas = LocalDate(2026, Month.DECEMBER, 25)

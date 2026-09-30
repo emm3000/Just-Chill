@@ -139,7 +139,6 @@ fun DatePickerSheet(
                     SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
                 }
                 Text(text = monthLabel, style = type.titleM, color = colors.textPrimary)
-                // A movement records money that already moved, so no month after today's is browsable.
                 val canGoForward: Boolean = displayedMonth < today.firstOfMonth()
                 IconBtn(
                     icon = Icons.Outlined.ChevronRight,

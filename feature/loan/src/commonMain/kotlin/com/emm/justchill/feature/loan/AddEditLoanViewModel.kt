@@ -55,6 +55,7 @@ class AddEditLoanViewModel(
     }
 
     override fun onIntent(intent: AddEditLoanIntent) {
+        updateState { copy(today = todayFlow.today()) }
         when (intent) {
             is AddEditLoanIntent.OnPersonNameChange -> {
                 updateState {

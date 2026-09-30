@@ -19,7 +19,6 @@ import kotlinx.datetime.LocalDate
 data class EditTransactionUiState(
     val date: LocalDate,
     val today: LocalDate,
-    // The row as stored, and the only yardstick for "was anything edited".
     val original: Transaction? = null,
     val amount: String = "",
     val description: String = "",
