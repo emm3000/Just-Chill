@@ -71,7 +71,7 @@ class OnboardingEntriesTest {
         val bindings: NavHostBindings = NavHostBindings(
             backStack = backStack,
             snackbarHostState = SnackbarHostState(),
-            showMessage = {},
+            showMessage = { _, _ -> },
             platform = SilentPlatformHostActions,
         )
         val resolveEntry: (NavKey) -> NavEntry<NavKey> = entryProvider {
