@@ -9,8 +9,6 @@ import kotlin.test.assertTrue
 
 class ReportShareFormatterTest {
 
-    // Which month it is does not matter to a formatter — that it is STATED does. ReportUiState used
-    // to default it to YearMonth.current(), so these tests silently ran against the wall clock.
     private val may2026 = YearMonth(2026, Month.MAY)
 
     @Test
@@ -54,7 +52,6 @@ class ReportShareFormatterTest {
     @Test
     fun `buildContextSentence with a negative rate says what was overspent`() {
         val result = ReportShareFormatter.buildContextSentence(ratePercent = -50, deltaPoints = null)
-        // "ahorraste S/ -50" is not a sentence. At -50% the user spent 150 for every 100 earned.
         assertEquals("De cada S/\u00A0100 que entró, gastaste S/\u00A0150.", result)
     }
 

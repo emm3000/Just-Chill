@@ -478,7 +478,6 @@ class LoanDetailViewModelTest {
         vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-1"))
         advanceUntilIdle()
 
-        // `today` is the sheet's fallback day, distinct from the abono's own `date`.
         assertEquals(christmas, vm.state.value.payment?.today)
     }
 
@@ -510,9 +509,6 @@ class LoanDetailViewModelTest {
             vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-2"))
             advanceUntilIdle()
 
-            // Plain remaining is S/ 600.00 (110_000 totalDue - 50_000 paid); editing pay-2 (20_000)
-            // must add its own amount back so the ceiling reflects what UpdateLoanPaymentUseCase
-            // actually allows, not the balance including the abono being edited.
             assertEquals("S/\u00A0800.00", vm.state.value.payment?.maxAmountLabel)
         }
 

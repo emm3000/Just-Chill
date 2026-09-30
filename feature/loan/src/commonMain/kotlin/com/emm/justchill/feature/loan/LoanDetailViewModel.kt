@@ -80,8 +80,6 @@ class LoanDetailViewModel(
             .launchSafeIn(onError = { e -> LoanDetailEffect.ShowError(e.toUserMessage()) })
     }
 
-    // Mirrors UpdateLoanPaymentUseCase's own remainingBeforeThis: editing the only abono on a
-    // settled loan has its own old amount as headroom, not a zero cap.
     private fun LoanPaymentFormUi.withCap(): LoanPaymentFormUi {
         val loan = loadedLoan ?: return this
         val edited = editingPaymentId?.let { id -> loadedPayments.find { it.id.value == id } }
