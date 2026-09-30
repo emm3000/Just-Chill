@@ -16,8 +16,8 @@ Totals of rows already folded out of Recent.
 | 2 | sonnet:medium | 47 | 22 | 12 | 10 | 3 | - | - |
 | 2 | sonnet:high | 1 | 0 | 1 | 0 | 0 | 0 | 0 |
 | 3 | opus:medium | 102 | 69 | 8 | 15 | 10 | 0 | 0 |
-| 3 | opus:high | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| 4 | opus:high | 48 | 27 | 14 | 5 | 2 | 0 | 0 |
+| 3 | opus:high | 1 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 4 | opus:high | 50 | 29 | 14 | 5 | 2 | 0 | 0 |
 
 ## Recent
 
@@ -25,9 +25,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause | Review | Nudges | Minutes |
 |---|---|---|---|---|---|---|---|---|
-| #553 | #550 | 4 | opus:high | MERGE | - | ok | 0 | 14 |
-| #554 | #547 | 3 | opus:high | FIX FIRST | judgment | ok | 0 | 7 |
-| #561 | #555 | 4 | opus:high | MERGE | - | ok | 0 | 24 |
 | #562 | #560 | 3 | opus:high | MERGE | - | ok | 0 | 17 |
 | #563 | #556 | 3 | opus:high | FIX FIRST | checklist | ok | 0 | 28 |
 | #564 | #557 | 3 | opus:high | MERGE | - | ok | 0 | 10 |
@@ -45,8 +42,12 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #576 | #538 | 2 | sonnet:high | FIX FIRST | checklist | ok | 0 | 23 |
 | #577 | #539 | 4 | opus:high | FIX FIRST | spec | overturned | 0 | 27 |
 | #578 | #540 | 4 | opus:high | MERGE | - | ok | 0 | 24 |
+| #594 | #581 | 3 | opus:high | MERGE | - | ok | 0 | 12 |
+| #595 | #579 | 4 | opus:high | FIX FIRST | judgment | ok | 0 | 16 |
+| #596 | #580 | 2 | sonnet:high | FIX FIRST | judgment | ok | 0 | 17 |
 
 ## Changes
 
+- 2026-09-30: row 2 sonnet:high -> opus:medium: two first-review FIX FIRST judgment in Recent (#569; #596, the report hero split on a plain space, visible in the peer's own shot). High is the table's top effort, so the raise moves the model. #595 counts as FIX FIRST judgment: the reviewer said MERGE and the orchestrator promoted its minor (an uncaught observed query froze the backup row).
 - 2026-09-29: row 3 opus:medium -> opus:high: two first-review FIX FIRST judgment in Recent (#519, #552). Row 4 not raised: of its two judgment verdicts, #520 came from an orchestrator relay, not the model.
 - 2026-09-28: ported Anthropic's Opus 5.5, Sonnet 5.5 and Fable 5.1 prompting guides. Row 2 sonnet:medium -> sonnet:high; autonomy paragraph and reporting rule in every dispatch; Time sentence rows 1-2; @orch nudges capped at 3; Review, Nudges and Minutes columns; five-MERGE downward pilot; fable:low pilot allowed on row 3.
