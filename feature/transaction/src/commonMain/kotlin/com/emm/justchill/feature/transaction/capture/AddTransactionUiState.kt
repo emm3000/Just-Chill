@@ -8,6 +8,8 @@ import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.FrequentCombo
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.date.DateShortcut
+import com.emm.justchill.core.presentation.date.dateShortcutsOf
 import com.emm.justchill.core.presentation.format.balanceFormatted
 import com.emm.justchill.core.presentation.format.centsToSoles
 import com.emm.justchill.core.presentation.format.monthLabel
@@ -18,10 +20,6 @@ import com.emm.justchill.core.presentation.transaction.categoriesOf
 import kotlinx.datetime.LocalDate
 
 data class MonthSpend(val month: YearMonth, val total: Money)
-
-enum class DateShortcutKind { Today, Yesterday, ThisWeek, ThisMonth }
-
-data class DateShortcut(val kind: DateShortcutKind, val date: LocalDate)
 
 data class FrequentUsage(
     val loadedFor: TransactionType,
@@ -88,11 +86,15 @@ data class AddTransactionUiState(
 
     val otherCategories: List<SelectableCategory> get() = otherSectionOf(categories, frequentCategories)
 
+    fun categoriesMatching(query: String): List<SelectableCategory> = categories.matching(query)
+
     val missingField: MissingField? get() = when {
         centsToSoles(amount) <= 0.0 -> MissingField.Amount
         accountSelected == null -> MissingField.Account
         else -> null
     }
+
+    val isSaveEnabled: Boolean get() = !isSaving && missingField == null
 
     private val usageForCurrentType: FrequentUsage? get() = frequentUsage?.takeIf { it.loadedFor == transactionType }
 

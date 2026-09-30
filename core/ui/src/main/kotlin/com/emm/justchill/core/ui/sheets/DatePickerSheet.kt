@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.emm.justchill.core.presentation.date.DateShortcut
 import com.emm.justchill.core.presentation.format.SpanishDateFormat
 import com.emm.justchill.core.presentation.format.titlecaseFirstChar
 import com.emm.justchill.core.ui.atoms.FilledCta
@@ -57,36 +58,25 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Clock
-
-private data class Shortcut(val label: String, val date: LocalDate)
 
 @Composable
-fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDismiss: () -> Unit) {
+fun DatePickerSheet(
+    currentDate: LocalDate,
+    today: LocalDate,
+    shortcuts: List<DateShortcut>,
+    onConfirm: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
     val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val zone: TimeZone = TimeZone.currentSystemDefault()
-    val today: LocalDate = Clock.System.now().toLocalDateTime(zone).date
-
     var selectedDate: LocalDate by remember(currentDate) { mutableStateOf(currentDate) }
     var displayedMonth: LocalDate by remember(currentDate) { mutableStateOf(currentDate.firstOfMonth()) }
-
-    val shortcuts: List<Shortcut> = remember(today) {
-        listOf(
-            Shortcut("Hoy", today),
-            Shortcut("Ayer", today.minus(1, DateTimeUnit.DAY)),
-            Shortcut("Esta semana", today.startOfWeekMonday()),
-            Shortcut("Este mes", today.firstOfMonth()),
-        )
-    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -124,7 +114,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                 items(shortcuts) { shortcut ->
                     ShortcutPill(
                         label = shortcut.label,
-                        isActive = shortcut.label == "Hoy" && selectedDate == today,
+                        isActive = shortcut.isActiveFor(selectedDate),
                         onClick = {
                             onConfirm(shortcut.date)
                             onDismiss()
@@ -149,9 +139,7 @@ fun DatePickerSheet(currentDate: LocalDate, onConfirm: (LocalDate) -> Unit, onDi
                     SpanishDateFormat.monthYear(displayedMonth.year, displayedMonth.month).titlecaseFirstChar()
                 }
                 Text(text = monthLabel, style = type.titleM, color = colors.textPrimary)
-                // A transaction records money that already moved, so there is no month after this one
-                // to browse. The domain rejects a future date outright (TransactionDateRules); this
-                // chevron and the day cells' own enabled gate keep the user away from that error.
+                // A movement records money that already moved, so no month after today's is browsable.
                 val canGoForward: Boolean = displayedMonth < today.firstOfMonth()
                 IconBtn(
                     icon = Icons.Outlined.ChevronRight,
@@ -311,20 +299,14 @@ private const val DAYS_IN_WEEK: Int = 7
 
 private fun LocalDate.firstOfMonth(): LocalDate = LocalDate(year, month, 1)
 
-private fun LocalDate.startOfWeekMonday(): LocalDate {
-    val offset: Int = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
-    return minus(offset, DateTimeUnit.DAY)
-}
-
 private fun LocalDate.lengthOfMonth(): Int {
     val firstOfMonth: LocalDate = firstOfMonth()
     val firstOfNextMonth: LocalDate = firstOfMonth.plus(1, DateTimeUnit.MONTH)
     return firstOfNextMonth.minus(1, DateTimeUnit.DAY).dayOfMonth
 }
 
-/** [this] must be the first day of the displayed month. */
 private fun LocalDate.daysGrid(): List<LocalDate?> {
-    val offset: Int = (dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
+    val offset: Int = (firstOfMonth().dayOfWeek.isoDayNumber - DayOfWeek.MONDAY.isoDayNumber + 7) % 7
     val length: Int = lengthOfMonth()
     return List(CALENDAR_GRID_CELLS) { index ->
         val dayNumber: Int = index - offset + 1

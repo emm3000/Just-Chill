@@ -1,6 +1,7 @@
 package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.domain.category.CategoryType
+import com.emm.justchill.core.presentation.date.dateShortcutsOf
 import com.emm.justchill.core.presentation.transaction.Catalog
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -19,18 +20,10 @@ class EditTransactionUiStateTest {
     }
 
     @Test
-    fun `a search matches names ignoring case and surrounding spaces`() {
+    fun `a search goes through the shared accent-free match`() {
         val state: EditTransactionUiState = stateWithFrequent(emptyList())
 
-        assertEquals(listOf(market), state.categoriesMatching("  SUPER "))
-        assertEquals(listOf(coffee), state.categoriesMatching("caf"))
-    }
-
-    @Test
-    fun `a blank search matches every category in catalog order`() {
-        val state: EditTransactionUiState = stateWithFrequent(emptyList())
-
-        assertEquals(listOf(market, taxi, coffee), state.categoriesMatching("   "))
+        assertEquals(listOf(coffee), state.categoriesMatching("cafe "))
     }
 
     @Test

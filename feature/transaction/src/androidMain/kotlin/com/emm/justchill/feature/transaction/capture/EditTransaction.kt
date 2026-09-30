@@ -224,18 +224,21 @@ private fun EditTransactionContent(
 
     if (state.openSheet == TransactionSheet.Category) {
         CategoryPickerSheet(
-            categories = state.categories,
+            frequent = state.frequentCategories,
+            other = state.otherCategories,
+            search = state::categoriesMatching,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
             onSelect = { onIntent(EditTransactionIntent.OnCategorySelected(it)) },
             onAddNew = { onAddNewCategory(state.transactionType.categoryType) },
             onDismiss = { onIntent(EditTransactionIntent.OnSheetDismissed) },
-            frequentCategoryIds = state.frequentCategoryIds,
         )
     }
 
     if (state.openSheet == TransactionSheet.Date) {
         DatePickerSheet(
             currentDate = state.date,
+            today = state.today,
+            shortcuts = state.dateShortcuts,
             onConfirm = { date -> onIntent(EditTransactionIntent.OnDateSelected(date)) },
             onDismiss = { onIntent(EditTransactionIntent.OnSheetDismissed) },
         )

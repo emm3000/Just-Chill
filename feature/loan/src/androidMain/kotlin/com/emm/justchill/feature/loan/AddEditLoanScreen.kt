@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.emm.justchill.core.presentation.date.dateShortcutsOf
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
@@ -189,6 +190,8 @@ private fun AddEditLoanContent(
     if (state.openSheet == LoanFormSheet.Date) {
         DatePickerSheet(
             currentDate = state.pickerDate,
+            today = state.today,
+            shortcuts = dateShortcutsOf(state.today),
             onConfirm = { date -> onIntent(AddEditLoanIntent.OnDateSelected(date)) },
             onDismiss = { onIntent(AddEditLoanIntent.OnSheetDismissed) },
         )

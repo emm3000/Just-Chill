@@ -6,6 +6,8 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.transaction.Transaction
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.presentation.category.SelectableCategory
+import com.emm.justchill.core.presentation.date.DateShortcut
+import com.emm.justchill.core.presentation.date.dateShortcutsOf
 import com.emm.justchill.core.presentation.format.centsToSoles
 import com.emm.justchill.core.presentation.format.moneyCentsString
 import com.emm.justchill.core.presentation.format.relativeDayLabel
@@ -17,7 +19,7 @@ import kotlinx.datetime.LocalDate
 data class EditTransactionUiState(
     val date: LocalDate,
     val today: LocalDate,
-    // The row as stored, and the only yardstick for "was anything edited". Null until it loads.
+    // The row as stored, and the only yardstick for "was anything edited".
     val original: Transaction? = null,
     val amount: String = "",
     val description: String = "",
@@ -47,10 +49,7 @@ data class EditTransactionUiState(
 
     val otherCategories: List<SelectableCategory> get() = otherSectionOf(categories, frequentCategories)
 
-    fun categoriesMatching(query: String): List<SelectableCategory> {
-        val needle: String = query.trim()
-        return categories.filter { it.name.contains(needle, ignoreCase = true) }
-    }
+    fun categoriesMatching(query: String): List<SelectableCategory> = categories.matching(query)
 
     val accountSelected: Account? get() = accounts.find { it.accountId == accountId }
 
