@@ -4,7 +4,31 @@ import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.domain.shared.backup.BackupRowCounts
 import com.emm.justchill.core.domain.shared.backup.BackupVerification
 
-fun ProfileMessage.Backup.toBackupText(): String = when (this) {
+fun ProfileMessage.toText(): String = when (this) {
+    ProfileMessage.SessionClosed -> "Sesión cerrada. Tus datos siguen en este teléfono."
+
+    ProfileMessage.SessionClosedLocallyOnly ->
+        "Sesión cerrada acá; no llegué al servidor, así que tu acceso remoto sigue activo hasta " +
+            "que expire. Cierra sesión con internet para cortarlo. Tus datos siguen en este teléfono."
+
+    ProfileMessage.AccountDeleted -> "Cuenta eliminada. Tus datos siguen en este teléfono."
+
+    ProfileMessage.ExportDone -> "Listo, tu data está guardada."
+
+    ProfileMessage.ExportFailed -> "No pude exportar — capaz no hay espacio en tu celu?"
+
+    ProfileMessage.CsvExportFailed -> "No pude exportar tus movimientos. Inténtalo de nuevo."
+
+    is ProfileMessage.ImportDone -> importDoneText(transactions, recurring, loans, loanPayments)
+
+    ProfileMessage.ImportFailed -> "No pude importar el archivo — capaz está dañado."
+
+    ProfileMessage.OperationInProgress -> "Espera a que termine la operación en curso."
+
+    is ProfileMessage.Backup -> backupText()
+}
+
+private fun ProfileMessage.Backup.backupText(): String = when (this) {
     ProfileMessage.BackupDone -> "Listo, tu respaldo está en la nube."
     ProfileMessage.BackupNeedsAccount -> "Inicia sesión para respaldar en la nube."
     ProfileMessage.BackupNeedsDisclosure -> "Primero confirma dónde va a quedar tu respaldo."
@@ -26,7 +50,7 @@ private fun failedText(reason: BackupFailureReason): String = when (reason) {
 }
 
 private fun verifiedText(snapshot: BackupVerification.Verified): String {
-    val opening = if (snapshot.isNewestPair) "Verificado" else "Verificado un respaldo más antiguo"
+    val opening: String = if (snapshot.isNewestPair) "Verificado" else "Verificado un respaldo más antiguo"
     return "$opening: ${snapshot.fileName} — ${snapshot.rowCounts.toPhrase()}"
 }
 
@@ -37,10 +61,10 @@ private fun notVerifiedText(pairsInspected: Int): String = when (pairsInspected)
 }
 
 private fun BackupRowCounts.toPhrase(): String = listOf(
-    if (accounts == 1) "1 cuenta" else "$accounts cuentas",
-    if (categories == 1) "1 categoría" else "$categories categorías",
-    if (transactions == 1) "1 movimiento" else "$transactions movimientos",
-    if (recurringMovements == 1) "1 recurrente" else "$recurringMovements recurrentes",
-    if (loans == 1) "1 préstamo" else "$loans préstamos",
-    if (loanPayments == 1) "1 abono" else "$loanPayments abonos",
+    countClause(accounts, "cuenta", "cuentas"),
+    countClause(categories, "categoría", "categorías"),
+    countClause(transactions, "movimiento", "movimientos"),
+    countClause(recurringMovements, "recurrente", "recurrentes"),
+    countClause(loans, "préstamo", "préstamos"),
+    countClause(loanPayments, "abono", "abonos"),
 ).joinToString(", ")

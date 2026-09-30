@@ -11,18 +11,14 @@ import androidx.compose.ui.Modifier
 internal data class ProfileDestinationActions(val onCategoriesClick: () -> Unit, val onLoansClick: () -> Unit)
 
 @Composable
-internal fun DestinationsSection(
-    categoryCount: Int,
-    incomeCategoryCount: Int,
-    destinations: ProfileDestinationActions,
-) {
+internal fun DestinationsSection(categoriesLabel: String, destinations: ProfileDestinationActions) {
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(text = "Registro")
         ProfileGroup {
             ProfileRow(
                 icon = Icons.Outlined.Category,
                 label = "Categorías",
-                meta = categoriesMetaText(categoryCount, incomeCategoryCount),
+                meta = categoriesLabel,
                 metaIsPrimary = false,
                 onClick = destinations.onCategoriesClick,
             )

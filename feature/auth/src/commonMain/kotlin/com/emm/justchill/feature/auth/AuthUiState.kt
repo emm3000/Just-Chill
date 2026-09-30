@@ -8,6 +8,9 @@ enum class Submitting { None, Email, Google }
 
 sealed interface AuthUiState : UiState {
 
+    val title: String
+        get() = "Tu cuenta"
+
     data class Form(
         val email: String = "",
         val password: String = "",

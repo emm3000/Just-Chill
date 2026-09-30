@@ -93,7 +93,7 @@ fun AuthScreen(
                 )
 
                 is AuthEffect.Notify -> snackbarHostState.showEmmSnackbar(
-                    message = effect.message.toText(),
+                    message = effect.message.text,
                     tone = when (effect.message) {
                         AuthMessage.GoogleAccountUnavailable,
                         AuthMessage.GoogleSignInFailed,
@@ -113,12 +113,6 @@ fun AuthScreen(
     )
 }
 
-private fun AuthMessage.toText(): String = when (this) {
-    AuthMessage.GoogleAccountUnavailable -> "No encontramos una cuenta de Google en este teléfono."
-    AuthMessage.GoogleSignInFailed -> "No se pudo iniciar sesión con Google."
-    AuthMessage.ConfirmationLinkResent -> "Listo, te reenviamos el enlace."
-}
-
 @Composable
 private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit, showGoogleSignIn: Boolean = true) {
     val colors: EmmColors = LocalEmmColors.current
@@ -129,7 +123,7 @@ private fun AuthContent(state: AuthUiState, onIntent: (AuthIntent) -> Unit, show
             .background(colors.bg),
     ) {
         JcTopBar(
-            title = "Tu cuenta",
+            title = state.title,
             left = { BackBtn(onClick = { onIntent(AuthIntent.Back) }) },
         )
 
@@ -162,18 +156,6 @@ private fun AuthFormStep(
     val type: EmmType = LocalEmmType.current
     val radii: EmmRadii = LocalEmmRadii.current
 
-    val headingText: String = if (state.mode == AuthMode.SignIn) "Inicia sesión" else "Crea tu cuenta"
-    val submitLabel: String = if (state.mode == AuthMode.SignIn) {
-        if (state.submitting == Submitting.Email) "Entrando…" else "Iniciar sesión"
-    } else {
-        if (state.submitting == Submitting.Email) "Creando…" else "Crear cuenta"
-    }
-    val toggleLabel: String = if (state.mode == AuthMode.SignIn) {
-        "¿No tienes cuenta? Créala"
-    } else {
-        "¿Ya tienes cuenta? Inicia sesión"
-    }
-
     // Deliberately not rememberSaveable: a config change re-masks the password.
     var passwordVisible: Boolean by remember { mutableStateOf(false) }
 
@@ -188,7 +170,7 @@ private fun AuthFormStep(
             Spacer(Modifier.height(spacing.s6))
 
             Text(
-                text = headingText,
+                text = state.heading,
                 style = type.headlineL,
                 color = colors.textPrimary,
             )
@@ -274,7 +256,7 @@ private fun AuthFormStep(
                     .clickable(role = Role.Button) { onIntent(AuthIntent.ToggleMode) },
             ) {
                 Text(
-                    text = toggleLabel,
+                    text = state.toggleLabel,
                     style = type.bodyM,
                     color = colors.textPrimary,
                 )
@@ -284,7 +266,7 @@ private fun AuthFormStep(
         }
 
         StickyCTA(
-            label = submitLabel,
+            label = state.submitLabel,
             interaction = state.submitting.toCtaInteraction(busyWhen = Submitting.Email),
             onClick = { onIntent(AuthIntent.Submit) },
         )
@@ -383,7 +365,7 @@ private fun CheckEmailStep(
                 style = type.bodyM,
                 color = colors.textTertiary,
             )
-            val resendActive: Boolean = !state.isResending && state.canResend
+            val resendActive: Boolean = state.isResendEnabled
             Box(
                 contentAlignment = Alignment.Center,
                 // The height sits outside the branch so the row keeps it when the link
@@ -395,7 +377,7 @@ private fun CheckEmailStep(
                 }.height(spacing.s12),
             ) {
                 Text(
-                    text = if (state.isResending) "Reenviando…" else "Reenviar enlace",
+                    text = state.resendLabel,
                     style = type.bodyM,
                     color = if (resendActive) colors.textPrimary else colors.textTertiary,
                 )

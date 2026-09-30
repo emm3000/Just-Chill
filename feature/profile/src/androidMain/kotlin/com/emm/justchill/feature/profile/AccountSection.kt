@@ -12,15 +12,13 @@ import com.emm.justchill.core.ui.atoms.ChevronTrailing
 
 @Composable
 internal fun AccountSection(
-    session: SessionUiState.SignedIn,
-    op: ProfileOp,
-    dialog: ProfileDialog,
+    state: ProfileUiState,
     onSignOutClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
     onDeleteAccountConfirm: () -> Unit,
     onDialogDismiss: () -> Unit,
 ) {
-    if (dialog == ProfileDialog.DeleteAccount) {
+    if (state.dialog == ProfileDialog.DeleteAccount) {
         DeleteAccountDialog(
             onConfirm = onDeleteAccountConfirm,
             onDismiss = onDialogDismiss,
@@ -32,7 +30,7 @@ internal fun AccountSection(
         ProfileGroup {
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.AccountCircle,
-                label = session.email ?: "Tu cuenta",
+                label = state.accountLabel,
                 meta = "",
                 metaIsPrimary = false,
                 onClick = null,
@@ -41,30 +39,30 @@ internal fun AccountSection(
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.Shield,
                 label = "Cerrar sesión",
-                meta = if (op == ProfileOp.SigningOut) {
-                    "Cerrando sesión…"
-                } else {
-                    "Tus datos siguen en este teléfono"
-                },
+                meta = state.signOutMeta,
                 metaIsPrimary = false,
-                enabled = op == ProfileOp.None,
-                busy = op == ProfileOp.SigningOut,
+                enabled = state.op == ProfileOp.None,
+                busy = state.op == ProfileOp.SigningOut,
                 onClick = onSignOutClick,
-                trailing = { ChevronTrailing(enabled = op == ProfileOp.None || op == ProfileOp.SigningOut) },
+                trailing = {
+                    ChevronTrailing(
+                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.SigningOut,
+                    )
+                },
             )
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.Delete,
                 label = "Eliminar cuenta",
-                meta = if (op == ProfileOp.DeletingAccount) {
-                    "Eliminando…"
-                } else {
-                    "Borra tu cuenta y tus datos en la nube"
-                },
+                meta = state.deleteAccountMeta,
                 metaIsPrimary = false,
-                enabled = op == ProfileOp.None,
-                busy = op == ProfileOp.DeletingAccount,
+                enabled = state.op == ProfileOp.None,
+                busy = state.op == ProfileOp.DeletingAccount,
                 onClick = onDeleteAccountClick,
-                trailing = { ChevronTrailing(enabled = op == ProfileOp.None || op == ProfileOp.DeletingAccount) },
+                trailing = {
+                    ChevronTrailing(
+                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.DeletingAccount,
+                    )
+                },
             )
         }
     }
