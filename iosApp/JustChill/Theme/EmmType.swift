@@ -106,6 +106,11 @@ private struct EmmTextStyleModifier: ViewModifier {
     }
 }
 
+extension EmmType {
+    static let labelMEmphasis: Font = Font.custom(
+        EmmFonts.interSemiBold, size: labelM.size, relativeTo: labelM.textStyle)
+}
+
 extension View {
     func emmTextStyle(_ style: EmmTextStyle) -> some View {
         modifier(EmmTextStyleModifier(style: style))

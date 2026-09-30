@@ -2,6 +2,7 @@ package com.emm.justchill.feature.transaction.list
 
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.presentation.format.CURRENCY_PREFIX
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlin.test.Test
@@ -10,13 +11,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-// The list's empty/loading precedence is decided here, not in a UI when: every consumer reads one
-// value and renders it, so these cases are the whole contract.
 class SeeTransactionsUiStateTest {
 
-    // Stated, not read: none of the cases below is about a month at all, so a real clock read here
-    // would make them depend on the day the suite runs.
     private val august = YearMonth(2026, Month.AUGUST)
+    private val food: ActiveCategoryInfo = ActiveCategoryInfo(id = "cat-1", name = "Comida")
+    private val closedRange: String = "${CURRENCY_PREFIX}20.00 – ${CURRENCY_PREFIX}50.00"
 
     private val day = DayGroup(
         date = LocalDate(2026, 8, 10),
@@ -56,7 +55,7 @@ class SeeTransactionsUiStateTest {
         val state = SeeTransactionsUiState(
             month = august,
             movementCount = 3,
-            activeCategory = ActiveCategoryInfo(id = "cat-1", name = "Comida"),
+            activeCategory = food,
         )
 
         assertFalse(state.isEyebrowVisible)
@@ -85,7 +84,6 @@ class SeeTransactionsUiStateTest {
     }
 
     @Test fun searching_an_empty_ledger_resolves_to_the_empty_ledger_alone() {
-        // A ledger with nothing in it cannot have search results to miss, so the ledger state wins.
         val state = SeeTransactionsUiState(month = august, movementCount = 0, query = "café")
 
         assertEquals(ListDisplayState.EmptyLedger, state.listDisplayState)
@@ -101,7 +99,7 @@ class SeeTransactionsUiStateTest {
         val state = SeeTransactionsUiState(
             month = august,
             movementCount = 12,
-            activeCategory = ActiveCategoryInfo(id = "cat-1", name = "Comida"),
+            activeCategory = food,
         )
 
         assertEquals(ListDisplayState.NoSearchResults, state.listDisplayState)
@@ -172,5 +170,94 @@ class SeeTransactionsUiStateTest {
 
         assertTrue(earlierYear.isMonthYearVisible)
         assertFalse(sameYear.isMonthYearVisible)
+    }
+
+    @Test
+    fun `no category and no range leave the banner empty even with a query`() {
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(month = august, query = "pan")
+
+        assertEquals(emptyList(), state.filterBannerSegments)
+    }
+
+    @Test
+    fun `a category alone emphasises its name inside the guillemets`() {
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(month = august, activeCategory = food)
+
+        assertEquals(
+            listOf(
+                FilterBannerSegment("Filtrando por «", FilterBannerSegmentKind.Plain),
+                FilterBannerSegment("Comida", FilterBannerSegmentKind.Emphasis),
+                FilterBannerSegment("»", FilterBannerSegmentKind.Plain),
+            ),
+            state.filterBannerSegments,
+        )
+    }
+
+    @Test
+    fun `a closed range emphasises both bounds joined by an en dash`() {
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(
+            month = august,
+            minAmount = Money(2_000L),
+            maxAmount = Money(5_000L),
+        )
+
+        assertEquals(
+            listOf(
+                FilterBannerSegment(closedRange, FilterBannerSegmentKind.Emphasis),
+            ),
+            state.filterBannerSegments,
+        )
+    }
+
+    @Test
+    fun `a lower bound alone reads desde`() {
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(month = august, minAmount = Money(2_000L))
+
+        assertEquals(
+            listOf(FilterBannerSegment("desde ${CURRENCY_PREFIX}20.00", FilterBannerSegmentKind.Emphasis)),
+            state.filterBannerSegments,
+        )
+    }
+
+    @Test
+    fun `an upper bound alone reads hasta`() {
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(month = august, maxAmount = Money(5_000L))
+
+        assertEquals(
+            listOf(FilterBannerSegment("hasta ${CURRENCY_PREFIX}50.00", FilterBannerSegmentKind.Emphasis)),
+            state.filterBannerSegments,
+        )
+    }
+
+    @Test
+    fun `a category, a range and a query read in that order with the query quoted`() {
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(
+            month = august,
+            activeCategory = food,
+            minAmount = Money(2_000L),
+            maxAmount = Money(5_000L),
+            query = "pan",
+        )
+
+        assertEquals(
+            listOf(
+                FilterBannerSegment("Filtrando por «", FilterBannerSegmentKind.Plain),
+                FilterBannerSegment("Comida", FilterBannerSegmentKind.Emphasis),
+                FilterBannerSegment("»", FilterBannerSegmentKind.Plain),
+                FilterBannerSegment(", ", FilterBannerSegmentKind.Plain),
+                FilterBannerSegment(closedRange, FilterBannerSegmentKind.Emphasis),
+                FilterBannerSegment(" + \"", FilterBannerSegmentKind.Plain),
+                FilterBannerSegment("pan", FilterBannerSegmentKind.Query),
+                FilterBannerSegment("\"", FilterBannerSegmentKind.Plain),
+            ),
+            state.filterBannerSegments,
+        )
+    }
+
+    @Test
+    fun `a blank query adds nothing to the banner`() {
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(month = august, activeCategory = food, query = "  ")
+
+        assertEquals(3, state.filterBannerSegments.size)
     }
 }
