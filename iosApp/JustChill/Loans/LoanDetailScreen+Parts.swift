@@ -2,47 +2,6 @@
 import SwiftUI
 
 extension LoanDetailScreen {
-    struct TopBar: View {
-        let title: String
-        let onBack: () -> Void
-        let onEdit: () -> Void
-        let onDelete: () -> Void
-
-        var body: some View {
-            VStack(spacing: EmmSpacing.s0) {
-                HStack(spacing: EmmSpacing.s2) {
-                    barButton(symbol: "chevron.left", color: EmmColors.textPrimary, label: "Volver", action: onBack)
-                    Text(title)
-                        .emmTextStyle(EmmType.titleL)
-                        .foregroundStyle(EmmColors.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .accessibilityAddTraits(.isHeader)
-                        .frame(maxWidth: .infinity, minHeight: EmmSpacing.s16, alignment: .leading)
-                    barButton(symbol: "pencil", color: EmmColors.textPrimary, label: "Editar préstamo", action: onEdit)
-                    barButton(symbol: "trash", color: EmmColors.danger, label: "Eliminar préstamo", action: onDelete)
-                }
-                .padding(.horizontal, EmmSpacing.s2)
-                Hairline()
-            }
-        }
-
-        private func barButton(symbol: String, color: Color, label: String, action: @escaping () -> Void)
-            -> some View
-        {
-            Button(action: action) {
-                Image(systemName: symbol)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: EmmSpacing.s5, height: EmmSpacing.s5)
-                    .foregroundStyle(color)
-                    .frame(width: EmmSpacing.s12, height: EmmSpacing.s12)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel(label)
-        }
-    }
-
     struct SummaryCard: View {
         let summary: LoanSummaryUi
 

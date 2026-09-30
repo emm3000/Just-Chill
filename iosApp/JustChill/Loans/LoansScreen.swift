@@ -63,7 +63,11 @@ extension LoansScreen {
                 TopBar(
                     title: "Préstamos",
                     onBack: onBack,
-                    add: TopBar.Action(label: "Nuevo préstamo") { send(LoansIntentOnAddLoanClick.shared) }
+                    trailing: [
+                        TopBar.Action(symbol: "plus", label: "Nuevo préstamo") {
+                            send(LoansIntentOnAddLoanClick.shared)
+                        }
+                    ]
                 )
                 if state.people.isEmpty {
                     EmptyState()
