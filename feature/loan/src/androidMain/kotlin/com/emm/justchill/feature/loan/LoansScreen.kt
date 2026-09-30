@@ -29,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import com.emm.justchill.core.presentation.loan.PersonBalanceUi
+import com.emm.justchill.core.presentation.loan.PersonRemainingTone
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.Hairline
@@ -89,7 +91,7 @@ fun LoansScreen(
 }
 
 @Composable
-private fun PersonRow(person: PersonRowUi, onClick: () -> Unit) {
+private fun PersonRow(person: PersonBalanceUi, onClick: () -> Unit) {
     val colors = LocalEmmColors.current
     val type = LocalEmmType.current
     val spacing = LocalEmmSpacing.current
@@ -187,14 +189,14 @@ private fun LoansScreenPreview() {
         LoansScreen(
             state = LoansUiState(
                 people = listOf(
-                    PersonRowUi(
+                    PersonBalanceUi(
                         personKey = "juan",
                         personName = "Juan",
                         remaining = "+S/ 250.00",
                         isSettled = false,
                         tone = PersonRemainingTone.Positive,
                     ),
-                    PersonRowUi(
+                    PersonBalanceUi(
                         personKey = "maria",
                         personName = "María",
                         remaining = "S/ 0.00",
@@ -230,7 +232,7 @@ private fun LoansScreenEmptyPreview() {
 private fun PersonRowOverflowPreview() {
     EmmTheme {
         PersonRow(
-            person = PersonRowUi(
+            person = PersonBalanceUi(
                 personKey = "maria-fernanda",
                 personName = "María Fernanda Rodríguez Quispe",
                 remaining = "+S/ 999,999.99",

@@ -155,7 +155,7 @@ extension LoansScreen {
                     .padding(.horizontal, EmmSpacing.s4)
                     .padding(.bottom, EmmSpacing.s2)
                 SaveButton(
-                    label: "Listo · S/ " + CentsFormatterKt.formatCentsForDisplay(digits: draftDigits),
+                    label: "Listo · " + draftAmount,
                     isEnabled: true,
                     isSaving: false,
                     onSave: {
@@ -168,6 +168,10 @@ extension LoansScreen {
             .background(EmmColors.bg)
             .presentationBackground(EmmColors.bg)
             .presentationDetents([.large])
+        }
+
+        private var draftAmount: String {
+            CurrencyFormatKt.formatNeutral(value: CentsFormatterKt.formatCentsForDisplay(digits: draftDigits))
         }
 
         private var hero: some View {
@@ -184,7 +188,7 @@ extension LoansScreen {
             .padding(.horizontal, EmmSpacing.s6)
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("S/ " + CentsFormatterKt.formatCentsForDisplay(digits: draftDigits))
+            .accessibilityLabel(draftAmount)
         }
     }
 }

@@ -53,4 +53,4 @@ Stored in basis points. `percentTextToBps` deliberately does not clamp: `MAX_INT
 
 ## Tone
 
-Positive remaining takes `success`, a settled balance takes the muted step, and an unsettled non-positive remaining stays monochrome. `LoansSection` on the accounts screen shows the same total and must keep matching. `PersonBalanceUi` and its `toUi` are shared vocabulary in `:core:presentation`'s `core/presentation/loan/`, not a copy of this module's models.
+Positive remaining takes `success`, a settled balance takes the muted step, and an unsettled non-positive remaining stays monochrome. `LoansSection` on the accounts screen shows the same total and must keep matching. `PersonBalanceUi` carries that tone as `PersonRemainingTone`, set by its `toUi` in `:core:presentation`'s `core/presentation/loan/`; `LoansUiState.people` is that model, and `PersonBalanceUiTest` pins the three tones.

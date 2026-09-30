@@ -26,6 +26,21 @@ class PersonBalanceUiTest {
     }
 
     @Test
+    fun `a positive remaining takes success, same as LoansSection's total`() {
+        assertEquals(PersonRemainingTone.Positive, listOf(balance(remaining = 100L)).toUi().single().tone)
+    }
+
+    @Test
+    fun `a settled balance is the muted step, not success`() {
+        assertEquals(PersonRemainingTone.Muted, listOf(balance(remaining = 0L)).toUi().single().tone)
+    }
+
+    @Test
+    fun `an unsettled, non-positive remaining stays monochrome, not muted`() {
+        assertEquals(PersonRemainingTone.Neutral, listOf(balance(remaining = -100L)).toUi().single().tone)
+    }
+
+    @Test
     fun `two balances that offset to zero total, owingNames still names the positive half`() {
         val balances = listOf(
             balance(remaining = 50_000L, personKey = "carlos", personName = "Carlos"),

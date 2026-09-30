@@ -3,7 +3,7 @@ import SwiftUI
 
 extension LoansScreen {
     struct PersonRow: View {
-        let person: PersonRowUi
+        let person: PersonBalanceUi
         let onOpen: () -> Void
 
         var body: some View {
