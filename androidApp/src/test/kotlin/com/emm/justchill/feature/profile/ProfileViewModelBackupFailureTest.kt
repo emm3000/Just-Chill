@@ -63,7 +63,9 @@ class ProfileViewModelBackupFailureTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val backupRepository = mockk<BackupRepository>(relaxed = true)
+    private val backupRepository: BackupRepository = mockk(relaxed = true) {
+        every { observeLatestLocalChangeAt() } returns flowOf(null)
+    }
     private val uploader = mockk<BackupUploader>(relaxed = true)
     private val pruner = mockk<BackupPruner>(relaxed = true)
     private val metadata = mockk<BackupMetadataStore>(relaxed = true)

@@ -98,12 +98,11 @@ class ProfileViewModel(
             state.map { it.session }.distinctUntilChanged(),
             backupController.health,
             backupController.isBackingUp,
-            ::Triple,
-        )
-            .onEach { (sessionUiState, health, backingUp) ->
-                val row: BackupRowUi = resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness, logger)
-                updateState { copy(backupRow = row) }
-            }
+            backupRepository.observeLatestLocalChangeAt(),
+        ) { sessionUiState, health, backingUp, _ ->
+            resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness, logger)
+        }
+            .onEach { row -> updateState { copy(backupRow = row) } }
             .launchSafeIn(onError = onDomainError)
     }
 
@@ -305,7 +304,6 @@ private suspend fun resolveBackupRow(
     }
 }
 
-// Intentional broad catch: a frozen Perfil screen is the alternative — see snapshotRow's callers.
 @Suppress("TooGenericExceptionCaught")
 private suspend fun snapshotRow(
     lastSuccessfulBackupAt: Long,

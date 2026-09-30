@@ -55,7 +55,9 @@ class ProfileViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val backupRepository = mockk<BackupRepository>()
+    private val backupRepository: BackupRepository = mockk {
+        every { observeLatestLocalChangeAt() } returns flowOf(null)
+    }
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)

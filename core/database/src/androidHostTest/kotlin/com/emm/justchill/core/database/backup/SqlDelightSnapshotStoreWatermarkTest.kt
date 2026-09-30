@@ -4,6 +4,8 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.emm.justchill.core.database.JustChillDatabase
 import com.emm.justchill.core.domain.shared.backup.SnapshotStore
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -140,6 +142,18 @@ class SqlDelightSnapshotStoreWatermarkTest {
         insertAccount(updatedAt = 0L)
 
         assertEquals(0L, store.latestLocalChangeAt())
+    }
+
+    @Test
+    fun `inserting a transaction makes the observed watermark emit its updatedAt`() = runTest {
+        insertAccount(updatedAt = 1L)
+        val watermarks: Channel<Long?> = Channel(Channel.UNLIMITED)
+        backgroundScope.launch { store.observeLatestLocalChangeAt().collect(watermarks::send) }
+        val beforeInsert: Long? = watermarks.receive()
+
+        insertTransaction(updatedAt = 333L)
+
+        assertEquals(listOf<Long?>(1L, 333L), listOf(beforeInsert, watermarks.receive()))
     }
 
     private fun insertAccount(accountId: String = "acc-1", updatedAt: Long) {
