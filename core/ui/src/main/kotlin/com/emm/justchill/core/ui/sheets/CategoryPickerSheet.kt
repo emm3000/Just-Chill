@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +32,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -66,12 +66,13 @@ private const val LIST_MAX_HEIGHT_FRACTION: Float = 0.55f
 
 @Composable
 fun CategoryPickerSheet(
-    categories: List<SelectableCategory>,
+    frequent: List<SelectableCategory>,
+    other: List<SelectableCategory>,
+    search: (String) -> List<SelectableCategory>,
     selectedCategoryId: String?,
     onSelect: (SelectableCategory) -> Unit,
     onAddNew: () -> Unit,
     onDismiss: () -> Unit,
-    frequentCategoryIds: List<String> = emptyList(),
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
@@ -84,30 +85,10 @@ fun CategoryPickerSheet(
     val maxListHeight: Dp = screenHeightDp * LIST_MAX_HEIGHT_FRACTION
 
     var query: String by rememberSaveable { mutableStateOf("") }
-    val filtered: List<SelectableCategory> = remember(categories, query) {
-        if (query.isBlank()) {
-            categories
-        } else {
-            categories.filter { it.name.contains(query.trim(), ignoreCase = true) }
-        }
+    val pick: (SelectableCategory) -> Unit = { category ->
+        onSelect(category)
+        onDismiss()
     }
-    val sections: Pair<List<SelectableCategory>, List<SelectableCategory>>? =
-        remember(categories, frequentCategoryIds, query) {
-            if (query.isNotBlank()) {
-                null
-            } else {
-                val frequent: List<SelectableCategory> = frequentCategoryIds.mapNotNull { id ->
-                    categories.firstOrNull { it.categoryId.value == id }
-                }
-                if (frequent.size < 2) {
-                    null
-                } else {
-                    val frequentIdSet: Set<String> = frequentCategoryIds.toSet()
-                    val rest: List<SelectableCategory> = categories.filter { it.categoryId.value !in frequentIdSet }
-                    Pair(frequent, rest)
-                }
-            }
-        }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -191,7 +172,7 @@ fun CategoryPickerSheet(
             }
         }
 
-        if (categories.isEmpty()) {
+        if (frequent.isEmpty() && other.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -210,43 +191,16 @@ fun CategoryPickerSheet(
                     .fillMaxWidth()
                     .heightIn(max = maxListHeight),
             ) {
-                if (sections != null) {
-                    val (frequent, rest) = sections
-                    item("header_frequent") { SectionHeader("Frecuentes") }
-                    items(frequent, key = { "freq_" + it.categoryId.value }) { category ->
-                        val isActive: Boolean = category.categoryId.value == selectedCategoryId
-                        CategoryRow(
-                            category = category,
-                            isActive = isActive,
-                            onClick = {
-                                onSelect(category)
-                                onDismiss()
-                            },
-                        )
-                    }
-                    item("header_all") { SectionHeader("Todas") }
-                    items(rest, key = { "rest_" + it.categoryId.value }) { category ->
-                        val isActive: Boolean = category.categoryId.value == selectedCategoryId
-                        CategoryRow(
-                            category = category,
-                            isActive = isActive,
-                            onClick = {
-                                onSelect(category)
-                                onDismiss()
-                            },
-                        )
-                    }
-                } else {
-                    items(filtered, key = { it.categoryId.value }) { category ->
-                        val isActive: Boolean = category.categoryId.value == selectedCategoryId
-                        CategoryRow(
-                            category = category,
-                            isActive = isActive,
-                            onClick = {
-                                onSelect(category)
-                                onDismiss()
-                            },
-                        )
+                when {
+                    query.isNotBlank() -> categoryRows(search(query), "found_", selectedCategoryId, pick)
+
+                    frequent.isEmpty() -> categoryRows(other, "all_", selectedCategoryId, pick)
+
+                    else -> {
+                        item("header_frequent") { SectionHeader("Frecuentes") }
+                        categoryRows(frequent, "freq_", selectedCategoryId, pick)
+                        item("header_all") { SectionHeader("Todas") }
+                        categoryRows(other, "rest_", selectedCategoryId, pick)
                     }
                 }
             }
@@ -280,6 +234,21 @@ fun CategoryPickerSheet(
                 color = colors.textPrimary,
             )
         }
+    }
+}
+
+private fun LazyListScope.categoryRows(
+    categories: List<SelectableCategory>,
+    keyPrefix: String,
+    selectedCategoryId: String?,
+    onPick: (SelectableCategory) -> Unit,
+) {
+    items(categories, key = { keyPrefix + it.categoryId.value }) { category ->
+        CategoryRow(
+            category = category,
+            isActive = category.categoryId.value == selectedCategoryId,
+            onClick = { onPick(category) },
+        )
     }
 }
 

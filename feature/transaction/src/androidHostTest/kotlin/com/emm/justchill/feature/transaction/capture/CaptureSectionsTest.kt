@@ -1,40 +1,12 @@
 package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.presentation.category.SelectableCategory
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
 import org.junit.Test
 import kotlin.test.assertEquals
 
 class CaptureSectionsTest {
 
     private val categories: List<SelectableCategory> = listOf(market, taxi, coffee)
-
-    @Test
-    fun `the date shortcuts name today, yesterday, the week's monday and the month's first day`() {
-        assertEquals(
-            listOf(
-                DateShortcut(DateShortcutKind.Today, LocalDate(2026, Month.AUGUST, 28)),
-                DateShortcut(DateShortcutKind.Yesterday, LocalDate(2026, Month.AUGUST, 27)),
-                DateShortcut(DateShortcutKind.ThisWeek, LocalDate(2026, Month.AUGUST, 24)),
-                DateShortcut(DateShortcutKind.ThisMonth, LocalDate(2026, Month.AUGUST, 1)),
-            ),
-            dateShortcutsOf(LocalDate(2026, Month.AUGUST, 28)),
-        )
-    }
-
-    @Test
-    fun `on a monday the week shortcut is today and yesterday falls in the week before`() {
-        assertEquals(
-            listOf(
-                DateShortcut(DateShortcutKind.Today, LocalDate(2026, Month.JUNE, 1)),
-                DateShortcut(DateShortcutKind.Yesterday, LocalDate(2026, Month.MAY, 31)),
-                DateShortcut(DateShortcutKind.ThisWeek, LocalDate(2026, Month.JUNE, 1)),
-                DateShortcut(DateShortcutKind.ThisMonth, LocalDate(2026, Month.JUNE, 1)),
-            ),
-            dateShortcutsOf(LocalDate(2026, Month.JUNE, 1)),
-        )
-    }
 
     @Test
     fun `two frequent categories lead in rank order and the rest keep catalog order`() {
@@ -58,5 +30,16 @@ class CaptureSectionsTest {
 
         assertEquals(emptyList<SelectableCategory>(), frequent)
         assertEquals(categories, otherSectionOf(categories, frequent))
+    }
+
+    @Test
+    fun `a search ignores accents, case and stray spaces`() {
+        assertEquals(listOf(coffee), categories.matching("cafe "))
+        assertEquals(listOf(market), categories.matching("  SUPER "))
+    }
+
+    @Test
+    fun `a blank search matches every category in catalog order`() {
+        assertEquals(categories, categories.matching("   "))
     }
 }

@@ -72,7 +72,7 @@ private const val HERO_WEIGHT: Float = 8f
 
 private fun ctaInteraction(state: AddTransactionUiState): CtaInteraction = when {
     state.isSaving -> CtaInteraction.Loading
-    state.missingField == null -> CtaInteraction.Enabled
+    state.isSaveEnabled -> CtaInteraction.Enabled
     else -> CtaInteraction.Disabled
 }
 
@@ -261,16 +261,19 @@ private fun OpenSheet(
         )
 
         TransactionSheet.Category -> CategoryPickerSheet(
-            categories = state.categories,
+            frequent = state.frequentCategories,
+            other = state.otherCategories,
+            search = state::categoriesMatching,
             selectedCategoryId = state.categorySelected?.categoryId?.value,
             onSelect = { onIntent(AddTransactionIntent.OnCategorySelected(it)) },
             onAddNew = { onAddNewCategory(state.transactionType.categoryType) },
             onDismiss = { onIntent(AddTransactionIntent.OnSheetDismissed) },
-            frequentCategoryIds = state.frequentCategoryIds,
         )
 
         TransactionSheet.Date -> DatePickerSheet(
             currentDate = state.pickerDate,
+            today = state.today,
+            shortcuts = state.dateShortcuts,
             onConfirm = { date -> onIntent(AddTransactionIntent.OnDateSelected(date)) },
             onDismiss = { onIntent(AddTransactionIntent.OnSheetDismissed) },
         )
