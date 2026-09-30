@@ -63,7 +63,7 @@ struct DateSheet: View {
     private var shortcuts: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: EmmSpacing.s2) {
-                ForEach(dateShortcuts, id: \.self) { shortcut in
+                ForEach(dateShortcuts, id: \.kind) { shortcut in
                     ShortcutPill(label: shortcut.label, isActive: shortcut.isActiveFor(day: selectedDay)) {
                         confirm(shortcut.date)
                     }

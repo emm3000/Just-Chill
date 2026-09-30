@@ -4,6 +4,7 @@ struct OutlinedButton: View {
     let title: String
     var leadingSymbol: String?
     var trailingSymbol: String?
+    var symbolSize: CGFloat?
     let action: () -> Void
 
     var body: some View {
@@ -27,8 +28,17 @@ struct OutlinedButton: View {
         }
     }
 
+    @ViewBuilder
     private func symbol(_ name: String) -> some View {
-        Image(systemName: name)
-            .accessibilityHidden(true)
+        if let symbolSize {
+            Image(systemName: name)
+                .resizable()
+                .scaledToFit()
+                .frame(width: symbolSize, height: symbolSize)
+                .accessibilityHidden(true)
+        } else {
+            Image(systemName: name)
+                .accessibilityHidden(true)
+        }
     }
 }

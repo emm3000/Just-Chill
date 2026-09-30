@@ -27,6 +27,7 @@ struct ManifestoScreen: View {
                 .padding(.bottom, EmmSpacing.s4)
             }
             startButton
+                .buttonStyle(.plain)
                 .padding(.horizontal, EmmSpacing.s6)
                 .padding(.top, EmmSpacing.s4)
                 .padding(.bottom, EmmSpacing.s6)
