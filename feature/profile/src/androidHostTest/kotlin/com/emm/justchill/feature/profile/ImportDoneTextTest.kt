@@ -3,7 +3,7 @@ package com.emm.justchill.feature.profile
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ImportDoneCopyTest {
+class ImportDoneTextTest {
 
     @Test
     fun `leaves the original sentence untouched when nothing else landed`() {
