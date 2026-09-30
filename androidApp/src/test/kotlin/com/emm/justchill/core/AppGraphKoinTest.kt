@@ -97,8 +97,8 @@ class AppGraphKoinTest {
         )
 
         registered.forEach { name ->
-            val definition = koin.definitions().first { it.primaryType.simpleName == name }
-            val viewModel = koin.get<Any>(
+            val definition: BeanDefinition<*> = koin.definitions().first { it.primaryType.simpleName == name }
+            val viewModel: Any = koin.get(
                 definition.primaryType,
                 definition.qualifier,
                 runtimeParametersFor(definition.primaryType),
@@ -119,7 +119,7 @@ class AppGraphKoinTest {
 
     @Test
     fun `every graph-built class holds the Clock and TimeZone the graph bound`() {
-        val boundClock = object : Clock {
+        val boundClock: Clock = object : Clock {
             override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
         }
         val boundZone: TimeZone = TimeZone.of("Asia/Karachi")
@@ -211,7 +211,7 @@ class AppGraphKoinTest {
         // A floor, deliberately under the real count: adding an injected date field must not fail this.
         const val MIN_EXPECTED_TIME_FIELDS: Int = 20
 
-        val EXPECTED_VIEW_MODELS = sortedSetOf(
+        val EXPECTED_VIEW_MODELS: Set<String> = sortedSetOf(
             "AccountsViewModel",
             "AddAccountViewModel",
             "AddCategoryViewModel",
