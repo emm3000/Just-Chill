@@ -236,8 +236,6 @@ class BackupOrchestrator(
         // both would only widen a process-wide lock across Storage calls the delete button waits on.
         val stillTheSameAccount: Boolean = remoteWriteMutex.withLock {
             uploader.upload(userId, backupSnapshotName(takenAt), payload)
-            // currentUserId read once and reused for both branches below: two reads of a @Volatile
-            // field can disagree.
             val sameAccount: Boolean = currentUserId == userId
             if (sameAccount) {
                 metadata.setLastSuccessfulBackupAt(userId, takenAt.toEpochMilliseconds())
