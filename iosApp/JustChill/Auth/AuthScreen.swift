@@ -62,7 +62,7 @@ extension AuthScreen {
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
-                TopBar(onBack: { send(AuthIntentBack.shared) })
+                TopBar(title: state.title, onBack: { send(AuthIntentBack.shared) })
                 switch onEnum(of: state) {
                 case .form(let form): FormStep(form: form, send: send)
                 case .checkEmail(let check): CheckEmailStep(check: check, send: send)
@@ -74,6 +74,7 @@ extension AuthScreen {
     }
 
     struct TopBar: View {
+        let title: String
         let onBack: () -> Void
 
         var body: some View {
@@ -89,7 +90,7 @@ extension AuthScreen {
                             .contentShape(Rectangle())
                     }
                     .accessibilityLabel("Volver")
-                    Text("Tu cuenta")
+                    Text(title)
                         .emmTextStyle(EmmType.titleL)
                         .foregroundStyle(EmmColors.textPrimary)
                         .lineLimit(1)

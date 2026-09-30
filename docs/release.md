@@ -38,7 +38,7 @@ person actually promotes in Play Console. Nothing on this page is optional.
     onto a clean install, and confirm all four figures and the ledger survive. The month net resets
     each month: run the drill within one calendar month or compare the named month.
   - Once `prod`'s flag flips, the drill runs over the newest verified snapshot instead.
-  - Read the figures from the app, not from the import snackbar: `buildImportDoneMessage` never
+  - Read the figures from the app, not from the import snackbar: `ProfileMessage.ImportDone.toText()` never
     reports accounts or categories, and omits any clause whose count is zero.
 - **The declarations agree.** The advertising-ID answer, the Data Safety form,
   [`play/privacy-policy.md`](play/privacy-policy.md) and [`play/listing.md`](play/listing.md)
