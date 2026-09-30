@@ -12,17 +12,33 @@ class IconCatalogTest {
 
     @Test
     fun `search matches a keyword whatever its case`() {
-        assertEquals(listOf("pizza"), AppIconCatalog.search("PIZZA").map(IconCatalog::id))
+        assertEquals(listOf("pizza"), AppIconCatalog.search("PIZZA").map(CategoryIcon::id))
     }
 
     @Test
     fun `search matches part of a keyword`() {
-        assertEquals(listOf("coffee"), AppIconCatalog.search("cafecit").map(IconCatalog::id))
+        assertEquals(listOf("coffee"), AppIconCatalog.search("cafecit").map(CategoryIcon::id))
     }
 
     @Test
     fun `search returns every icon sharing a keyword, in catalog order`() {
-        assertEquals(listOf("mortgage", "loan"), AppIconCatalog.search("banco").map(IconCatalog::id))
+        assertEquals(listOf("mortgage", "loan"), AppIconCatalog.search("banco").map(CategoryIcon::id))
+    }
+
+    @Test
+    fun `search ignores accents on the keyword`() {
+        assertEquals(listOf("coffee"), AppIconCatalog.search("cafe").map(CategoryIcon::id))
+        assertEquals(listOf("car"), AppIconCatalog.search("vehiculo").map(CategoryIcon::id))
+    }
+
+    @Test
+    fun `search ignores accents, case and stray spaces on the query`() {
+        assertEquals(listOf("coffee"), AppIconCatalog.search("CAFÉ ").map(CategoryIcon::id))
+    }
+
+    @Test
+    fun `a query of spaces alone offers the whole catalog`() {
+        assertEquals(AppIconCatalog.catalog, AppIconCatalog.search("   "))
     }
 
     @Test
@@ -42,7 +58,7 @@ class IconCatalogTest {
 
     @Test
     fun `every id is unique`() {
-        val ids: List<String> = AppIconCatalog.catalog.map(IconCatalog::id)
+        val ids: List<String> = AppIconCatalog.catalog.map(CategoryIcon::id)
 
         assertEquals(ids.size, ids.toSet().size)
     }

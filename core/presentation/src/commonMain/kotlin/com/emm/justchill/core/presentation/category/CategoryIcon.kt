@@ -2,7 +2,9 @@
 
 package com.emm.justchill.core.presentation.category
 
-enum class IconCatalog(val id: String, val label: String, val keywords: List<String>) {
+import com.emm.justchill.core.presentation.format.normalizeForSearch
+
+enum class CategoryIcon(val id: String, val label: String, val keywords: List<String>) {
     Food("food", "Restaurante", listOf("comida", "almuerzo", "cena", "menú", "restaurant")),
     FastFood("fast_food", "Comida rápida", listOf("hamburguesa", "fast food", "pollo broaster", "salchipapa")),
     Coffee("coffee", "Cafetería", listOf("café", "cafecito", "capuccino", "latte")),
@@ -86,11 +88,14 @@ enum class IconCatalog(val id: String, val label: String, val keywords: List<Str
 
 object AppIconCatalog {
 
-    val catalog: List<IconCatalog> = IconCatalog.entries
+    val catalog: List<CategoryIcon> = CategoryIcon.entries
 
-    fun findById(id: String): IconCatalog = catalog.firstOrNull { it.id == id } ?: catalog.first()
+    fun findById(id: String): CategoryIcon = catalog.firstOrNull { it.id == id } ?: catalog.first()
 
-    fun search(query: String): List<IconCatalog> = catalog.filter { icon: IconCatalog ->
-        icon.keywords.any { keyword: String -> keyword.contains(query, ignoreCase = true) }
+    fun search(query: String): List<CategoryIcon> {
+        val normalizedQuery: String = query.normalizeForSearch()
+        return catalog.filter { icon: CategoryIcon ->
+            icon.keywords.any { keyword: String -> keyword.normalizeForSearch().contains(normalizedQuery) }
+        }
     }
 }

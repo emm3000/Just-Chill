@@ -45,7 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.emm.justchill.core.domain.category.Category
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.presentation.category.AppIconCatalog
-import com.emm.justchill.core.presentation.category.IconCatalog
+import com.emm.justchill.core.presentation.category.CategoryIcon
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
@@ -142,7 +142,7 @@ private fun AddCategoryContent(
                 .padding(horizontal = spacing.s4),
             verticalArrangement = Arrangement.spacedBy(spacing.s5),
         ) {
-            val selectedIcon: IconCatalog = AppIconCatalog.findById(state.iconId)
+            val selectedIcon: CategoryIcon = AppIconCatalog.findById(state.iconId)
 
             Spacer(Modifier.height(spacing.s1))
 
