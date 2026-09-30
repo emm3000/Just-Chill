@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct Hairline: View {
+    var isFocused: Bool = false
+
     var body: some View {
         Rectangle()
-            .fill(EmmColors.border)
+            .fill(isFocused ? EmmColors.borderFocus : EmmColors.border)
             .frame(height: EmmSpacing.hairline)
             .accessibilityHidden(true)
     }

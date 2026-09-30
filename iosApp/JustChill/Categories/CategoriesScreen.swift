@@ -54,7 +54,11 @@ extension CategoriesScreen {
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
-                TopBar(onBack: onBack, onAdd: { isAddPresented = true })
+                TopBar(
+                    title: "Categorías",
+                    onBack: onBack,
+                    add: TopBar.Action(label: "Nueva categoría") { isAddPresented = true }
+                )
                 if state.categories.isEmpty {
                     EmptyState(onCreate: { isAddPresented = true })
                 } else {

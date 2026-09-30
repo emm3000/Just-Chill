@@ -86,7 +86,7 @@ extension LoanDetailScreen {
         }
 
         private var dateSheet: some View {
-            CaptureScreen.DateSheet(
+            DateSheet(
                 pickedDay: form.pickerDate,
                 today: form.today,
                 shortcuts: [],

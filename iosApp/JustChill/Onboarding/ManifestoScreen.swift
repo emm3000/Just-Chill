@@ -34,32 +34,13 @@ struct ManifestoScreen: View {
         .background(EmmColors.bg)
     }
 
+    @ViewBuilder
     private var startButton: some View {
-        let title: String = isRevisit ? "Volver" : "Empezar"
-        return Button(action: onStart) {
-            HStack(spacing: EmmSpacing.s2) {
-                if isRevisit {
-                    arrow(systemName: "arrow.backward")
-                }
-                Text(title)
-                    .emmTextStyle(EmmType.titleM)
-                if !isRevisit {
-                    arrow(systemName: "arrow.forward")
-                }
-            }
-            .foregroundStyle(EmmColors.textPrimary)
-            .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
-            .overlay(EmmRadii.rL.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline))
-            .contentShape(EmmRadii.rL)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(title)
+        if isRevisit {
+            OutlinedButton(title: "Volver", leadingSymbol: "arrow.backward", action: onStart)
+        } else {
+            OutlinedButton(title: "Empezar", trailingSymbol: "arrow.forward", action: onStart)
         }
-        .buttonStyle(.plain)
-    }
-
-    private func arrow(systemName: String) -> some View {
-        Image(systemName: systemName)
-            .accessibilityHidden(true)
     }
 }
 

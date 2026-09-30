@@ -57,7 +57,7 @@ extension AddEditLoanScreen {
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
-                LoansScreen.TopBar(title: state.isEdit ? "Editar préstamo" : "Nuevo préstamo", onBack: onClose)
+                TopBar(title: state.isEdit ? "Editar préstamo" : "Nuevo préstamo", onBack: onClose)
                 ScrollView {
                     VStack(spacing: EmmSpacing.s5) {
                         personSection
@@ -101,7 +101,7 @@ extension AddEditLoanScreen {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: EmmSpacing.s2) {
                             ForEach(state.personSuggestions, id: \.self) { name in
-                                CaptureScreen.ShortcutPill(label: name, isActive: false) {
+                                ShortcutPill(label: name, isActive: false) {
                                     send(AddEditLoanIntentOnPersonNameChange(value: name))
                                 }
                             }
@@ -122,7 +122,7 @@ extension AddEditLoanScreen {
         }
 
         private var dateSheet: some View {
-            CaptureScreen.DateSheet(
+            DateSheet(
                 pickedDay: state.pickerDate,
                 today: state.today,
                 shortcuts: [],

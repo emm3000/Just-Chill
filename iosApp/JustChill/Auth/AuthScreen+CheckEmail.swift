@@ -26,10 +26,10 @@ extension AuthScreen {
                     sentTo
                         .padding(.top, EmmSpacing.s3)
                     VStack(spacing: EmmSpacing.s3) {
-                        StepButton(label: "Abrir mi correo", isFilled: true) {
+                        StepButton(label: "Abrir mi correo") {
                             send(AuthIntentOpenEmailApp.shared)
                         }
-                        StepButton(label: "Volver a iniciar sesión", isFilled: false) {
+                        OutlinedButton(title: "Volver a iniciar sesión") {
                             send(AuthIntentBackToSignIn.shared)
                         }
                     }
@@ -84,21 +84,15 @@ extension AuthScreen {
 
     struct StepButton: View {
         let label: String
-        let isFilled: Bool
         let action: () -> Void
 
         var body: some View {
             Button(action: action) {
                 Text(label)
                     .emmTextStyle(EmmType.titleM)
-                    .foregroundStyle(isFilled ? EmmColors.bg : EmmColors.textPrimary)
+                    .foregroundStyle(EmmColors.bg)
                     .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
-                    .background(isFilled ? EmmColors.textPrimary : EmmColors.bg, in: EmmRadii.rL)
-                    .overlay {
-                        if !isFilled {
-                            EmmRadii.rL.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline)
-                        }
-                    }
+                    .background(EmmColors.textPrimary, in: EmmRadii.rL)
                     .contentShape(Rectangle())
             }
         }

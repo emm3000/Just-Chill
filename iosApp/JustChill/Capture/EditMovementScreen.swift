@@ -128,7 +128,7 @@ extension EditMovementScreen {
         }
 
         private var dateSheet: some View {
-            CaptureScreen.DateSheet(
+            DateSheet(
                 pickedDay: state.date,
                 today: state.today,
                 shortcuts: state.dateShortcuts,

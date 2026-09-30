@@ -59,7 +59,7 @@ extension PersonLoansScreen {
 
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
-                LoansScreen.TopBar(title: state.personName, onBack: onBack)
+                TopBar(title: state.personName, onBack: onBack)
                 if state.loans.isEmpty {
                     EmptyState(personName: state.personName)
                 } else {

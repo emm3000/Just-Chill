@@ -72,35 +72,4 @@ extension AuthScreen {
             .background(EmmColors.bg)
         }
     }
-
-    struct TopBar: View {
-        let title: String
-        let onBack: () -> Void
-
-        var body: some View {
-            VStack(spacing: EmmSpacing.s0) {
-                HStack(spacing: EmmSpacing.s2) {
-                    Button(action: onBack) {
-                        Image(systemName: "chevron.left")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: EmmSpacing.s5, height: EmmSpacing.s5)
-                            .foregroundStyle(EmmColors.textPrimary)
-                            .frame(width: EmmSpacing.s12, height: EmmSpacing.s12)
-                            .contentShape(Rectangle())
-                    }
-                    .accessibilityLabel("Volver")
-                    Text(title)
-                        .emmTextStyle(EmmType.titleL)
-                        .foregroundStyle(EmmColors.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .accessibilityAddTraits(.isHeader)
-                        .frame(maxWidth: .infinity, minHeight: EmmSpacing.s16, alignment: .leading)
-                }
-                .padding(.horizontal, EmmSpacing.s2)
-                Hairline()
-            }
-        }
-    }
 }

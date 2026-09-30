@@ -8,9 +8,7 @@ struct SaveButton: View {
 
     var body: some View {
         VStack(spacing: EmmSpacing.s0) {
-            Rectangle()
-                .fill(EmmColors.border)
-                .frame(height: EmmSpacing.hairline)
+            Hairline()
             Button(action: onSave) {
                 HStack(spacing: EmmSpacing.s2) {
                     if isSaving {

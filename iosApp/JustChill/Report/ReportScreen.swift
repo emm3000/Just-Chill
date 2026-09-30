@@ -97,7 +97,11 @@ extension ReportScreen {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .background(EmmColors.bg)
             .sheet(isPresented: isMonthSheetPresented) {
-                MonthSheet(current: state.month, send: send)
+                MonthSheet(
+                    current: state.month,
+                    onSelect: { send(ReportIntentSelectMonth(month: $0)) },
+                    onDismiss: { send(ReportIntentOnMonthSheetDismissed.shared) }
+                )
             }
         }
 
