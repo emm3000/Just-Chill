@@ -89,7 +89,8 @@ class ProfileViewModelBackupRowTest {
     private val localExportHistory = mockk<ExportHistory>(relaxed = true) {
         every { daysSinceLastExport(any()) } returns null
     }
-    private val todayFlow = FakeTodayFlow(MutableStateFlow(LocalDate(2026, 8, 28)))
+    private val todayDates: MutableStateFlow<LocalDate> = MutableStateFlow(LocalDate(2026, 8, 28))
+    private val todayFlow = FakeTodayFlow(todayDates)
 
     private val sessionFlow = MutableSharedFlow<SessionStatus>(replay = 1)
     private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true)
@@ -476,6 +477,33 @@ class ProfileViewModelBackupRowTest {
             advanceUntilIdle()
 
             assertEquals(listOf(BackupRowUi.NeedsAccount, BackupRowUi.UpToDate(5), BackupRowUi.Stale(5)), rows)
+        }
+
+    @Test
+    fun `crossing midnight with the screen open ages the row into stale without any other emission`() =
+        runTest(testDispatcher) {
+            var clockNow: Instant = fixedClock.now()
+            val movingClock: Clock = object : Clock {
+                override fun now(): Instant = clockNow
+            }
+            val lastBackupAt: Long = (clockNow - 3.days).toEpochMilliseconds()
+            val stalenessReadingTheClock = GetBackupStalenessUseCase(backupRepository, movingClock, TimeZone.UTC)
+            todayDates.value = LocalDate(2026, 8, 11)
+            latestLocalChangeFlow.value = lastBackupAt + 1
+            healthFlow.value = health(lastBackupAt, consecutiveFailures = 0, lastFailureReason = null)
+            val vm: ProfileViewModel = buildViewModel(getBackupStaleness = stalenessReadingTheClock)
+            val rows: MutableList<BackupRowUi> = mutableListOf()
+            val recordedRows: Flow<BackupRowUi> = vm.state.map { it.backupRow }.distinctUntilChanged()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { recordedRows.toList(rows) }
+
+            sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+            advanceUntilIdle()
+
+            clockNow += 1.days
+            todayDates.value = LocalDate(2026, 8, 12)
+            advanceUntilIdle()
+
+            assertEquals(listOf(BackupRowUi.NeedsAccount, BackupRowUi.UpToDate(3), BackupRowUi.Stale(4)), rows)
         }
 
     @Test
