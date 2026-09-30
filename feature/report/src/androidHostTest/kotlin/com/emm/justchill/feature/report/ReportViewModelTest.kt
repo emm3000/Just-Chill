@@ -325,7 +325,7 @@ class ReportViewModelTest {
             currentRatePercent = 30,
             deltaPointsVsPrior = 0,
         )
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         val trends: TrendsUiData = vm.state.value.trends
