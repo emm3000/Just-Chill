@@ -32,7 +32,7 @@ private object SilentPlatformHostActions : PlatformHostActions {
     override val supportsBackup: Boolean = false
     override val onShareText: (String) -> Unit = {}
     override val onOpenEmailApp: () -> Unit = {}
-    override val requestExport: (String, (Boolean) -> Unit) -> Unit = { _, _ -> }
+    override val requestExport: (String, String, (Boolean) -> Unit) -> Unit = { _, _, _ -> }
     override val requestImport: () -> Unit = {}
     override val shareCsv: (String, String, () -> Unit) -> Unit = { _, _, _ -> }
 }

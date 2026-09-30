@@ -161,7 +161,7 @@ class ProfileViewModel(
     }
 
     // The disclosure is written regardless of op, so the user's acknowledgement is never lost; only
-    // the follow-on cycle is gated, the same guard backUpNow applies to a direct tap.
+    // the follow-on cycle is gated.
     private fun acknowledgeBackupDestination() {
         backupController.acknowledgeDestination(requestCycle = currentState.op == ProfileOp.None)
     }
@@ -211,7 +211,7 @@ class ProfileViewModel(
             exportedAt = clock.now().toEpochMilliseconds(),
             appVersion = appVersion,
         )
-        sendEffect(ProfileEffect.ExportReady(json))
+        sendEffect(ProfileEffect.ExportReady(fileName = backupFileName(todayFlow.today()), json = json))
     }
 
     private fun exportFinished(saved: Boolean) {
@@ -344,3 +344,5 @@ private suspend fun snapshotRow(
         else -> BackupRowUi.UpToDate(staleness.daysSinceLastBackup)
     }
 }
+
+private fun backupFileName(today: LocalDate): String = "justchill-backup-$today.json"

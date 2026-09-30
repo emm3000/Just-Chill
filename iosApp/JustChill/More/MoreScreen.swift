@@ -65,7 +65,7 @@ struct MoreScreen: View {
             isPresented: isExporterPresented,
             document: pendingExport,
             contentType: .json,
-            defaultFilename: BackupDocument.suggestedFilename(),
+            defaultFilename: pendingExport?.fileName,
             onCompletion: finishExport
         )
         .fileImporter(isPresented: $isImporterPresented, allowedContentTypes: [.json], onCompletion: readBackup)
@@ -116,7 +116,7 @@ struct MoreScreen: View {
         switch onEnum(of: effect) {
         case .showError(let failure): notice = failure.error.toUserMessage()
         case .notify(let notify): notice = notify.message.toText()
-        case .exportReady(let ready): pendingExport = BackupDocument(json: ready.json)
+        case .exportReady(let ready): pendingExport = BackupDocument(fileName: ready.fileName, json: ready.json)
         case .csvReady(let csv): shareCsv(fileName: csv.fileName, content: csv.content)
         }
     }
