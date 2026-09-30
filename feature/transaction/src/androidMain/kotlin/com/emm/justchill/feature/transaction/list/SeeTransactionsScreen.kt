@@ -53,7 +53,6 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.presentation.category.CategoryUi
-import com.emm.justchill.core.presentation.format.balanceFormatted
 import com.emm.justchill.core.presentation.format.format
 import com.emm.justchill.core.presentation.format.formatExpense
 import com.emm.justchill.core.presentation.format.formatIncome
@@ -146,13 +145,10 @@ internal fun SeeTransactionsContent(
             )
         }
 
-        val activeCategory: ActiveCategoryInfo? = state.activeCategory
-        if (state.isCategoryOrAmountFilterActive) {
+        val bannerSegments: List<FilterBannerSegment> = state.filterBannerSegments
+        if (bannerSegments.isNotEmpty()) {
             ActiveFilterBanner(
-                categoryName = activeCategory?.name,
-                minAmount = state.minAmount,
-                maxAmount = state.maxAmount,
-                query = state.query.takeIf { it.isNotBlank() },
+                segments = bannerSegments,
                 onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
             )
         }
@@ -287,43 +283,23 @@ private fun FilterSheets(state: SeeTransactionsUiState, onIntent: (SeeTransactio
 }
 
 @Composable
-private fun ActiveFilterBanner(
-    categoryName: String?,
-    minAmount: Money?,
-    maxAmount: Money?,
-    query: String?,
-    onClear: () -> Unit,
-) {
+private fun ActiveFilterBanner(segments: List<FilterBannerSegment>, onClear: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val type: EmmType = LocalEmmType.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
 
-    val minText: String? = minAmount?.balanceFormatted()
-    val maxText: String? = maxAmount?.balanceFormatted()
-    val rangeText: String? = when {
-        minText != null && maxText != null -> "$minText – $maxText"
-        minText != null -> "desde $minText"
-        maxText != null -> "hasta $maxText"
-        else -> null
-    }
-
     val displayText: AnnotatedString = buildAnnotatedString {
-        if (categoryName != null) {
-            append("Filtrando por «")
-            withStyle(SpanStyle(fontWeight = FontWeight.W600)) {
-                append(categoryName)
+        segments.forEach { segment: FilterBannerSegment ->
+            when (segment.kind) {
+                FilterBannerSegmentKind.Plain -> append(segment.text)
+
+                FilterBannerSegmentKind.Emphasis ->
+                    withStyle(SpanStyle(fontWeight = FontWeight.W600)) { append(segment.text) }
+
+                FilterBannerSegmentKind.Query ->
+                    withStyle(SpanStyle(fontFamily = InterFontFamily)) { append(segment.text) }
             }
-            append("»")
-        }
-        if (rangeText != null) {
-            if (categoryName != null) append(", ")
-            withStyle(SpanStyle(fontWeight = FontWeight.W600)) { append(rangeText) }
-        }
-        if (query != null) {
-            append(" + \"")
-            withStyle(SpanStyle(fontFamily = InterFontFamily)) { append(query) }
-            append("\"")
         }
     }
 

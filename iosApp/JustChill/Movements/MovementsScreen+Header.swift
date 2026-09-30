@@ -2,10 +2,6 @@
 import SwiftUI
 
 extension MovementsScreen {
-    static func boundText(_ cents: KotlinLong?) -> String? {
-        cents.map { CurrencyFormatKt.balanceFormatted($0.int64Value) }
-    }
-
     struct Header: View {
         let isFilterActive: Bool
         let send: Send
@@ -293,28 +289,15 @@ extension MovementsScreen {
             .padding(.bottom, EmmSpacing.s3)
         }
 
-        private var bannerText: String {
-            var text: String = ""
-            if let category = state.activeCategory {
-                text += "Filtrando por «" + category.name + "»"
-            }
-            if let range = rangeText {
-                text += (state.activeCategory == nil ? "" : ", ") + range
-            }
-            if !state.query.isEmpty {
-                text += " + \"" + state.query + "\""
-            }
-            return text
-        }
-
-        private var rangeText: String? {
-            let minimum: String? = MovementsScreen.boundText(state.minAmountCents)
-            let maximum: String? = MovementsScreen.boundText(state.maxAmountCents)
-            switch (minimum, maximum) {
-            case (let minimum?, let maximum?): return minimum + " – " + maximum
-            case (let minimum?, nil): return "desde " + minimum
-            case (nil, let maximum?): return "hasta " + maximum
-            case (nil, nil): return nil
+        private var bannerText: AttributedString {
+            state.filterBannerSegments.reduce(into: AttributedString()) {
+                (text: inout AttributedString, segment: FilterBannerSegment) in
+                var piece: AttributedString = AttributedString(segment.text)
+                if segment.kind == .emphasis {
+                    piece.font = Font.custom(
+                        EmmFonts.interSemiBold, size: EmmType.labelM.size, relativeTo: EmmType.labelM.textStyle)
+                }
+                text += piece
             }
         }
     }

@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.presentation.format.CURRENCY_PREFIX
 import com.emm.justchill.core.ui.theme.EmmTheme
 import kotlinx.datetime.Month
 import org.junit.Rule
@@ -26,7 +27,7 @@ class SeeTransactionsRangeBannerTest {
     @Test
     fun `a range with no category renders its text and the clear intent fires`() {
         var cleared: Boolean = false
-        val state = SeeTransactionsUiState(
+        val state: SeeTransactionsUiState = SeeTransactionsUiState(
             month = YearMonth(2026, Month.AUGUST),
             movementCount = 3L,
             minAmount = Money(2_000L),
@@ -45,7 +46,7 @@ class SeeTransactionsRangeBannerTest {
             }
         }
 
-        composeRule.onNodeWithText("S/ 20.00 – S/ 50.00", substring = true).assertIsDisplayed()
+        composeRule.onNodeWithText("${CURRENCY_PREFIX}20.00 – ${CURRENCY_PREFIX}50.00").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Limpiar filtro").assertHasClickAction()
         composeRule.onNodeWithContentDescription("Limpiar filtro").performClick()
 
