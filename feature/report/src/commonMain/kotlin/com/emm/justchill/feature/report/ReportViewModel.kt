@@ -1,6 +1,7 @@
 package com.emm.justchill.feature.report
 
 import androidx.lifecycle.viewModelScope
+import com.emm.justchill.core.domain.report.CategoryAggregate
 import com.emm.justchill.core.domain.report.CategoryAmount
 import com.emm.justchill.core.domain.report.GetMonthlyAmountByCategoryUseCase
 import com.emm.justchill.core.domain.report.GetMonthlyComparisonUseCase
@@ -9,6 +10,7 @@ import com.emm.justchill.core.domain.report.GetSavingsRateUseCase
 import com.emm.justchill.core.domain.report.GetTopCategoriesOverMonthsUseCase
 import com.emm.justchill.core.domain.report.MonthlyComparison
 import com.emm.justchill.core.domain.report.MonthlySectionStats
+import com.emm.justchill.core.domain.report.SavingsRate
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.time.TodayFlow
@@ -144,30 +146,31 @@ class ReportViewModel(
     private fun reloadTrends() {
         trendsJob?.cancel()
         trendsJob = launchSafe(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) }) {
-            val currentYm = calendarMonth.value
+            val currentYm: YearMonth = calendarMonth.value
 
-            val savingsRate = getSavingsRate(currentYm, months = TRENDS_WINDOW_MONTHS)
-            val topExpenses = getTopCategories(
+            val savingsRate: SavingsRate = getSavingsRate(currentYm, months = TRENDS_WINDOW_MONTHS)
+            val topExpenses: List<CategoryAggregate> = getTopCategories(
                 TransactionType.Spend,
                 currentYm,
                 months = TRENDS_WINDOW_MONTHS,
                 topN = TOP_EXPENSES_SHOWN,
             )
 
-            val isEarlyState = savingsRate.monthsWithData < MONTHS_FOR_A_MEANINGFUL_TREND
+            val isEarlyState: Boolean = savingsRate.monthsWithData < MONTHS_FOR_A_MEANINGFUL_TREND
 
-            val deltaText = savingsRate.deltaPointsVsPrior?.let { delta -> "${abs(delta)} pts" }
-            val deltaIsPositive = savingsRate.deltaPointsVsPrior?.let { it >= 0 }
+            val deltaPoints: Int? = savingsRate.deltaPointsVsPrior
+            val deltaText: String? = deltaPoints?.let { points -> "${abs(points)} pts" }
+            val deltaIsPositive: Boolean? = deltaPoints?.takeIf { points -> points != 0 }?.let { points -> points > 0 }
 
-            val contextSentence = ReportShareFormatter.buildContextSentence(
+            val contextSentence: String = ReportShareFormatter.buildContextSentence(
                 ratePercent = savingsRate.currentRatePercent,
-                deltaPoints = savingsRate.deltaPointsVsPrior,
+                deltaPoints = deltaPoints,
             )
 
             val tallestBarCents: Long = savingsRate.monthly
                 .maxOfOrNull { total -> maxOf(total.income.cents, total.expense.cents) }
                 ?: 0L
-            val barItems = savingsRate.monthly.map { m ->
+            val barItems: List<MonthlyBarItem> = savingsRate.monthly.map { m ->
                 MonthlyBarItem(
                     monthShortLabel = m.yearMonth.monthAbbrevLabel(),
                     isCurrentMonth = m.yearMonth == currentYm,
@@ -180,7 +183,7 @@ class ReportViewModel(
                 )
             }
 
-            val topItems = topExpenses.map { it.toTopCategoryItem() }
+            val topItems: List<TopCategoryItem> = topExpenses.map { it.toTopCategoryItem() }
 
             updateState {
                 // The captured currentYm, not isCurrent(): the bars above used it, and one pass must not answer twice.
@@ -203,8 +206,8 @@ class ReportViewModel(
     }
 
     private fun buildAndShareReport() {
-        val state = currentState
-        val text = when (state.selectedTab) {
+        val state: ReportUiState = currentState
+        val text: String = when (state.selectedTab) {
             ReportTab.Month -> ReportShareFormatter.buildMonthShareText(state)
             ReportTab.Trends -> ReportShareFormatter.buildTrendsShareText(state)
         }

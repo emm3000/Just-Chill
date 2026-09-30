@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -66,9 +67,13 @@ fun SavingsRateBlock(
                 style = type.amountHero,
             )
 
-            if (deltaText != null && deltaIsPositive != null) {
-                val tone = if (deltaIsPositive) PillTone.Pos else PillTone.Neutral
-                val icon = if (deltaIsPositive) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward
+            if (deltaText != null) {
+                val tone: PillTone = if (deltaIsPositive == true) PillTone.Pos else PillTone.Neutral
+                val icon: ImageVector? = when (deltaIsPositive) {
+                    true -> Icons.Filled.ArrowUpward
+                    false -> Icons.Filled.ArrowDownward
+                    null -> null
+                }
                 Pill(
                     text = deltaText,
                     tone = tone,

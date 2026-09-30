@@ -38,6 +38,7 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private val FIXED_DATE = LocalDate(2026, Month.MAY, 15)
@@ -315,6 +316,21 @@ class ReportViewModelTest {
         val trends = vm.state.value.trends
         assertEquals("7 pts", trends.deltaText)
         assertEquals(true, trends.deltaIsPositive)
+    }
+
+    @Test
+    fun `an unchanged savings rate keeps the zero magnitude and reports no direction`() = runTest(testDispatcher) {
+        stubEmptyReport()
+        coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate().copy(
+            currentRatePercent = 30,
+            deltaPointsVsPrior = 0,
+        )
+        val vm = buildViewModel()
+        advanceUntilIdle()
+
+        val trends: TrendsUiData = vm.state.value.trends
+        assertEquals("0 pts", trends.deltaText)
+        assertNull(trends.deltaIsPositive)
     }
 
     @Test

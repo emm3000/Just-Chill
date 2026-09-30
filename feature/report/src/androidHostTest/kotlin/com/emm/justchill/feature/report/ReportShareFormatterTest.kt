@@ -175,6 +175,21 @@ class ReportShareFormatterTest {
     }
 
     @Test
+    fun `buildTrendsShareText writes an unchanged delta with no arrow`() {
+        val state: ReportUiState = ReportUiState(
+            month = may2026,
+            trends = TrendsUiData(savingsRatePercent = 30, deltaText = "0 pts", deltaIsPositive = null),
+        )
+
+        val result: String = ReportShareFormatter.buildTrendsShareText(state)
+
+        assertTrue(
+            result.contains("Tasa de ahorro: 30% (0 pts vs. 6 meses previos)"),
+            "Expected no arrow in: $result",
+        )
+    }
+
+    @Test
     fun `buildTrendsShareText omits the delta entirely when there is no baseline`() {
         val state = ReportUiState(month = may2026, trends = TrendsUiData(savingsRatePercent = 20, deltaText = null))
         val result = ReportShareFormatter.buildTrendsShareText(state)
