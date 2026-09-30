@@ -14,7 +14,6 @@ extension MoreScreen {
                     symbol: "rectangle.portrait.and.arrow.right",
                     label: "Cerrar sesión",
                     meta: state.signOutMeta,
-                    isNavigable: true,
                     isEnabled: state.op == ProfileOp.none,
                     isBusy: state.op == ProfileOp.signingOut,
                     action: { send(ProfileIntentSignOut.shared) }
@@ -23,7 +22,6 @@ extension MoreScreen {
                     symbol: "trash",
                     label: "Eliminar cuenta",
                     meta: state.deleteAccountMeta,
-                    isNavigable: true,
                     isEnabled: state.op == ProfileOp.none,
                     isBusy: state.op == ProfileOp.deletingAccount,
                     action: { send(ProfileIntentDeleteAccountClicked.shared) }

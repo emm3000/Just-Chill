@@ -8,7 +8,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.emm.justchill.core.ui.atoms.ChevronTrailing
 
 @Composable
 internal fun AccountSection(
@@ -44,11 +43,7 @@ internal fun AccountSection(
                 enabled = state.op == ProfileOp.None,
                 busy = state.op == ProfileOp.SigningOut,
                 onClick = onSignOutClick,
-                trailing = {
-                    ChevronTrailing(
-                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.SigningOut,
-                    )
-                },
+                trailing = {},
             )
             ProfileRowWithTrailing(
                 icon = Icons.Outlined.Delete,
@@ -58,11 +53,7 @@ internal fun AccountSection(
                 enabled = state.op == ProfileOp.None,
                 busy = state.op == ProfileOp.DeletingAccount,
                 onClick = onDeleteAccountClick,
-                trailing = {
-                    ChevronTrailing(
-                        enabled = state.op == ProfileOp.None || state.op == ProfileOp.DeletingAccount,
-                    )
-                },
+                trailing = {},
             )
         }
     }

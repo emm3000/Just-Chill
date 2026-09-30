@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.emm.justchill.core.ui.atoms.ChevronTrailing
 import com.emm.justchill.core.ui.atoms.FilledCta
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -101,9 +100,7 @@ private fun CloudBackupRows(state: ProfileUiState, onSignIn: () -> Unit, snapsho
             enabled = state.op == ProfileOp.None,
             busy = state.op == ProfileOp.BackingUp,
             onClick = snapshotActions.onBackUpNow,
-            trailing = {
-                ChevronTrailing(enabled = state.op == ProfileOp.None || state.op == ProfileOp.BackingUp)
-            },
+            trailing = {},
         )
         VerifyBackupRow(op = state.op, onVerifyClick = snapshotActions.onVerify)
         LastBackupRow(row = state.backupRow)
@@ -125,7 +122,7 @@ private fun VerifyBackupRow(op: ProfileOp, onVerifyClick: () -> Unit) {
         enabled = idle,
         busy = busy,
         onClick = onVerifyClick,
-        trailing = { ChevronTrailing(enabled = idle || busy) },
+        trailing = {},
     )
 }
 
