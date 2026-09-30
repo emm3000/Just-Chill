@@ -32,7 +32,7 @@ extension MovementsScreen {
                     }
                 }
                 if state.isCategoryOrAmountFilterActive {
-                    OutlinedButton(title: "Limpiar filtro", leadingSymbol: "xmark") {
+                    OutlinedButton(title: "Limpiar filtro", leadingSymbol: "xmark", symbolSize: EmmSpacing.s3) {
                         send(SeeTransactionsIntentOnClearCategoryFilter.shared)
                         dismiss()
                     }
