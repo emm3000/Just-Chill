@@ -41,7 +41,7 @@ class LoansViewModelTest {
         val person = viewModel.state.value.people.single()
         assertEquals("ana", person.personKey)
         assertEquals("Ana", person.personName)
-        assertEquals("+S/ 1,500.00", person.remaining)
+        assertEquals("+S/\u00A01,500.00", person.remaining)
         assertEquals(PersonRemainingTone.Positive, person.tone)
     }
 

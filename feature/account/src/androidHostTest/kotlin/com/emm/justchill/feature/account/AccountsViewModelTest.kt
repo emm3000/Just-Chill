@@ -112,9 +112,9 @@ class AccountsViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals("−S/ 193.45", rowFor(bcp).net)
+        assertEquals("−S/\u00A0193.45", rowFor(bcp).net)
         assertEquals(1, rowFor(bcp).movementCount)
-        assertEquals("S/ 0.00", rowFor(cash).net)
+        assertEquals("S/\u00A00.00", rowFor(cash).net)
         assertEquals(0, rowFor(cash).movementCount)
         // Proves the exact bounds queried, not just that some list came back and got filtered: an
         // inverted start/end would still pass every assertion above via the mock's `any()` stub.
@@ -136,10 +136,10 @@ class AccountsViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals("+S/ 3,000.00", rowFor(bcp).net)
+        assertEquals("+S/\u00A03,000.00", rowFor(bcp).net)
         assertTrue(rowFor(bcp).netIsPositive)
         assertEquals(2, rowFor(bcp).movementCount)
-        assertEquals("−S/ 25.50", rowFor(cash).net)
+        assertEquals("−S/\u00A025.50", rowFor(cash).net)
         assertFalse(rowFor(cash).netIsPositive)
     }
 
@@ -158,8 +158,8 @@ class AccountsViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals("S/ 218.95", viewModel.state.value.monthSpent)
-        assertEquals("S/ 3,500.00", viewModel.state.value.monthIncome)
+        assertEquals("S/\u00A0218.95", viewModel.state.value.monthSpent)
+        assertEquals("S/\u00A03,500.00", viewModel.state.value.monthIncome)
     }
 
     @Test
@@ -172,7 +172,7 @@ class AccountsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(YearMonth(2026, Month.AUGUST), viewModel.state.value.month)
-        assertEquals("S/ 193.45", viewModel.state.value.monthSpent)
+        assertEquals("S/\u00A0193.45", viewModel.state.value.monthSpent)
         val august = YearMonth(2026, Month.AUGUST)
         verify { transactionRepository.allInRange(august.startInclusiveDay(), august.endExclusiveDay()) }
 
@@ -180,8 +180,8 @@ class AccountsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(YearMonth(2026, Month.SEPTEMBER), viewModel.state.value.month)
-        assertEquals("S/ 0.00", viewModel.state.value.monthSpent)
-        assertEquals("S/ 0.00", rowFor(bcp).net)
+        assertEquals("S/\u00A00.00", viewModel.state.value.monthSpent)
+        assertEquals("S/\u00A00.00", rowFor(bcp).net)
         // Proves the rollover re-queries rather than only relabeling the August result: a dead
         // flatMapLatest would leave this call never made, while the assertions above still pass.
         val september = YearMonth(2026, Month.SEPTEMBER)
@@ -202,7 +202,7 @@ class AccountsViewModelTest {
     fun `loansTotalOwed defaults to zero, unsigned, when there are no loans`() = runTest {
         advanceUntilIdle()
 
-        assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
+        assertEquals("S/\u00A00.00", viewModel.state.value.loansTotalOwed)
         assertEquals(emptyList(), viewModel.state.value.loansPeople)
     }
 
@@ -218,7 +218,7 @@ class AccountsViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals("+S/ 350.00", viewModel.state.value.loansTotalOwed)
+        assertEquals("+S/\u00A0350.00", viewModel.state.value.loansTotalOwed)
         assertEquals(listOf("Juan", "María"), viewModel.state.value.loansPeople)
     }
 
@@ -244,12 +244,12 @@ class AccountsViewModelTest {
         viewModel = accountsViewModel()
         advanceUntilIdle()
 
-        assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
+        assertEquals("S/\u00A00.00", viewModel.state.value.loansTotalOwed)
 
         loansFlow.value = listOf(personBalance(remaining = Money(50_000L)))
         advanceUntilIdle()
 
-        assertEquals("+S/ 500.00", viewModel.state.value.loansTotalOwed)
+        assertEquals("+S/\u00A0500.00", viewModel.state.value.loansTotalOwed)
     }
 
     @Test
@@ -264,7 +264,7 @@ class AccountsViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals("S/ 0.00", viewModel.state.value.loansTotalOwed)
+        assertEquals("S/\u00A00.00", viewModel.state.value.loansTotalOwed)
         assertFalse(viewModel.state.value.loansTotalOwedIsPositive)
         assertEquals(listOf("Carlos"), viewModel.state.value.loansPeople)
     }
@@ -282,13 +282,13 @@ class AccountsViewModelTest {
         viewModel = accountsViewModel()
         advanceUntilIdle()
 
-        assertEquals("−S/ 193.45", rowFor(bcp).net)
+        assertEquals("−S/\u00A0193.45", rowFor(bcp).net)
 
         loansFlow.value = listOf(personBalance(remaining = Money(999_999_999L)))
         advanceUntilIdle()
 
-        assertEquals("−S/ 193.45", rowFor(bcp).net)
-        assertEquals("S/ 193.45", viewModel.state.value.monthSpent)
-        assertEquals("+S/ 9,999,999.99", viewModel.state.value.loansTotalOwed)
+        assertEquals("−S/\u00A0193.45", rowFor(bcp).net)
+        assertEquals("S/\u00A0193.45", viewModel.state.value.monthSpent)
+        assertEquals("+S/\u00A09,999,999.99", viewModel.state.value.loansTotalOwed)
     }
 }

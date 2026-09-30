@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.presentation.format.MAX_AMOUNT_DIGITS
 import com.emm.justchill.core.presentation.format.centsToSoles
 import com.emm.justchill.core.presentation.format.formatCentsForDisplay
+import com.emm.justchill.core.presentation.format.formatNeutral
 import com.emm.justchill.core.presentation.format.sanitizeCentsInput
 import com.emm.justchill.core.ui.Numpad
 import com.emm.justchill.core.ui.atoms.AmountHero
@@ -158,7 +159,7 @@ private fun AmountInputSheetContent(
         val confirmEnabled: Boolean = draftDigits.isNotEmpty() && draftDigits.toLongOrNull() != 0L
 
         FilledCta(
-            label = "Listo · S/ $formattedDraft",
+            label = "Listo · ${formatNeutral(formattedDraft)}",
             onClick = {
                 onAmountConfirm(draftDigits)
                 onDismiss()

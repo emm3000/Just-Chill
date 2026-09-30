@@ -36,7 +36,7 @@ class MonthSpendLineTapTest {
         }
 
         composeRule
-            .onNodeWithContentDescription("Gastado en Agosto: S/ 0.00. Toca para ver tus movimientos.")
+            .onNodeWithContentDescription("Gastado en Agosto: S/\u00A00.00. Toca para ver tus movimientos.")
             .performClick()
 
         assertEquals(1, opened)
