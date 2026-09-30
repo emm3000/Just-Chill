@@ -211,7 +211,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "tag=$(git -C \"$SRCROOT/..\" describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null) || exit 0\nplutil -replace CFBundleShortVersionString -string \"${tag#v}\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
+			shellScript = "tag=$(git -C \"$SRCROOT/..\" describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null) || tag=\"$MARKETING_VERSION\"\nplutil -replace CFBundleShortVersionString -string \"${tag#v}\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
 		};
 		A1000000000000000000001D /* Supabase From Properties */ = {
 			isa = PBXShellScriptBuildPhase;
