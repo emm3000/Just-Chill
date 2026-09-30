@@ -21,11 +21,13 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -38,34 +40,36 @@ import kotlin.time.Instant
 
 class ProfileViewModelImportTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val backupRepository = mockk<BackupRepository>(relaxed = true)
-    private val importData = mockk<ImportDataUseCase>()
-    private val signOut = mockk<SignOutUseCase>(relaxed = true)
-    private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
-    private val backupController = mockk<BackupController>(relaxed = true) {
+    private val backupRepository: BackupRepository = mockk(relaxed = true) {
+        every { observeLatestLocalChangeAt() } returns flowOf(null)
+    }
+    private val importData: ImportDataUseCase = mockk()
+    private val signOut: SignOutUseCase = mockk(relaxed = true)
+    private val deleteUserAccount: DeleteUserAccountUseCase = mockk(relaxed = true)
+    private val backupController: BackupController = mockk(relaxed = true) {
         every { isBackingUp } returns MutableStateFlow(false)
         every { events } returns emptyFlow()
         every { health } returns MutableStateFlow(BackupHealth.None)
     }
-    private val backupVerifier = mockk<BackupVerifier>()
+    private val backupVerifier: BackupVerifier = mockk()
 
-    private val getBackupStaleness = mockk<GetBackupStalenessUseCase>(relaxed = true)
-    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
-    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true)
-    private val categoryRepository = mockk<CategoryRepository> {
+    private val getBackupStaleness: GetBackupStalenessUseCase = mockk(relaxed = true)
+    private val logger: DiagnosticsLogger = mockk(relaxed = true)
+    private val getSessionStatus: GetSessionStatusUseCase = mockk(relaxed = true)
+    private val categoryRepository: CategoryRepository = mockk {
         every { all() } returns flowOf(emptyList())
     }
-    private val localExportHistory = mockk<ExportHistory>(relaxed = true) {
+    private val localExportHistory: ExportHistory = mockk(relaxed = true) {
         every { daysSinceLastExport(any()) } returns null
     }
     private val todayFlow = FakeTodayFlow(MutableStateFlow(LocalDate(2026, 8, 28)))
 
-    private val fixedClock = object : Clock {
+    private val fixedClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
     }
 
@@ -100,9 +104,9 @@ class ProfileViewModelImportTest {
                 loanPayments = 40,
             )
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()
@@ -124,9 +128,9 @@ class ProfileViewModelImportTest {
     fun `ImportJson on ValidationError emits ShowError with the domain exception`() = runTest(testDispatcher) {
         coEvery { importData(any()) } throws DomainException.ValidationError("Archivo corrupto")
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.ImportJson("{ bad }"))
         advanceUntilIdle()
@@ -144,9 +148,9 @@ class ProfileViewModelImportTest {
     fun `ImportJson on non-ValidationError emits ImportFailed notify`() = runTest(testDispatcher) {
         coEvery { importData(any()) } throws DomainException.DatabaseError(RuntimeException("db"))
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()
@@ -172,7 +176,7 @@ class ProfileViewModelImportTest {
                 loanPayments = 0,
             )
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
 
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()
@@ -182,21 +186,21 @@ class ProfileViewModelImportTest {
 
     @Test
     fun `ImportJson while export in flight is a no-op that reports OperationInProgress`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<Unit>()
+        val gate: CompletableDeferred<Unit> = CompletableDeferred()
         coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
             gate.await()
             ""
         }
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
         assertEquals(ProfileOp.Exporting, vm.state.value.op)
 
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.ImportJson("{}"))
         advanceUntilIdle()

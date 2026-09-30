@@ -23,6 +23,7 @@ import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
 import com.emm.justchill.core.testing.FakeBackupAvailability
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,6 +37,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -51,7 +53,7 @@ import kotlin.time.Instant
 
 class ProfileViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
@@ -59,41 +61,43 @@ class ProfileViewModelTest {
     private val backupRepository: BackupRepository = mockk {
         every { observeLatestLocalChangeAt() } returns flowOf(null)
     }
-    private val importData = mockk<ImportDataUseCase>(relaxed = true)
-    private val signOut = mockk<SignOutUseCase>(relaxed = true)
-    private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
+    private val importData: ImportDataUseCase = mockk(relaxed = true)
+    private val signOut: SignOutUseCase = mockk(relaxed = true)
+    private val deleteUserAccount: DeleteUserAccountUseCase = mockk(relaxed = true)
 
-    private val backingUpFlow = MutableStateFlow(false)
-    private val backupEvents = MutableSharedFlow<BackupEvent>(extraBufferCapacity = 4)
+    private val backingUpFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val backupEvents: MutableSharedFlow<BackupEvent> = MutableSharedFlow<BackupEvent>(extraBufferCapacity = 4)
 
     // Disclosed: this suite is about the ops, and an undisclosed destination refuses every one of
     // the manual taps below. The gate has its own tests.
-    private val healthFlow = MutableStateFlow(BackupHealth.None.copy(canUploadToDestination = true))
-    private val backupController = mockk<BackupController>(relaxed = true) {
+    private val healthFlow: MutableStateFlow<BackupHealth> = MutableStateFlow(
+        BackupHealth.None.copy(canUploadToDestination = true),
+    )
+    private val backupController: BackupController = mockk(relaxed = true) {
         every { isBackingUp } returns backingUpFlow
         every { events } returns backupEvents
         every { health } returns healthFlow
     }
 
-    private val backupVerifier = mockk<BackupVerifier>()
+    private val backupVerifier: BackupVerifier = mockk()
 
-    private val getBackupStaleness = mockk<GetBackupStalenessUseCase>()
-    private val logger = mockk<DiagnosticsLogger>(relaxed = true)
-    private val categoryRepository = mockk<CategoryRepository> {
+    private val getBackupStaleness: GetBackupStalenessUseCase = mockk()
+    private val logger: DiagnosticsLogger = mockk(relaxed = true)
+    private val categoryRepository: CategoryRepository = mockk {
         every { all() } returns flowOf(emptyList())
     }
-    private val localExportHistory = mockk<ExportHistory>(relaxed = true) {
+    private val localExportHistory: ExportHistory = mockk(relaxed = true) {
         every { daysSinceLastExport(any()) } returns null
     }
 
-    private val today = MutableStateFlow(LocalDate(2026, 8, 28))
+    private val today: MutableStateFlow<LocalDate> = MutableStateFlow(LocalDate(2026, 8, 28))
     private val todayFlow = FakeTodayFlow(today)
 
-    private val sessionFlow = MutableSharedFlow<SessionStatus>(replay = 1)
-    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true)
+    private val sessionFlow: MutableSharedFlow<SessionStatus> = MutableSharedFlow<SessionStatus>(replay = 1)
+    private val getSessionStatus: GetSessionStatusUseCase = mockk(relaxed = true)
 
-    private val fixedNow = Instant.parse("2026-08-11T15:04:05Z")
-    private val fixedClock = object : Clock {
+    private val fixedNow: Instant = Instant.parse("2026-08-11T15:04:05Z")
+    private val fixedClock: Clock = object : Clock {
         override fun now(): Instant = fixedNow
     }
 
@@ -137,29 +141,29 @@ class ProfileViewModelTest {
 
     @Test
     fun `session emits Authenticated maps to SignedIn with email`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid1", email = "user@example.com")))
         advanceUntilIdle()
 
-        val session = vm.state.value.session
+        val session: SessionUiState = vm.state.value.session
         assertIs<SessionUiState.SignedIn>(session)
         assertEquals("user@example.com", session.email)
     }
 
     @Test
     fun `session emits Authenticated with null email maps to SignedIn with null email`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid2", email = null)))
         advanceUntilIdle()
 
-        val session = vm.state.value.session
+        val session: SessionUiState = vm.state.value.session
         assertIs<SessionUiState.SignedIn>(session)
         assertEquals(null, session.email)
     }
 
     @Test
     fun `session emits NotAuthenticated maps to SignedOut`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         sessionFlow.emit(SessionStatus.NotAuthenticated)
         advanceUntilIdle()
 
@@ -171,9 +175,9 @@ class ProfileViewModelTest {
         runTest(testDispatcher) {
             coEvery { signOut.invoke() } returns SignOutResult.Revoked
 
-            val vm = buildViewModel()
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val vm: ProfileViewModel = buildViewModel()
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.SignOut)
             advanceUntilIdle()
@@ -192,9 +196,9 @@ class ProfileViewModelTest {
         runTest(testDispatcher) {
             coEvery { signOut.invoke() } returns SignOutResult.LocalOnly
 
-            val vm = buildViewModel()
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val vm: ProfileViewModel = buildViewModel()
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.SignOut)
             advanceUntilIdle()
@@ -216,9 +220,9 @@ class ProfileViewModelTest {
     fun `SignOut failure emits ShowError effect`() = runTest(testDispatcher) {
         coEvery { signOut.invoke() } throws DomainException.NetworkUnavailable(RuntimeException("no network"))
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.SignOut)
         advanceUntilIdle()
@@ -233,17 +237,18 @@ class ProfileViewModelTest {
 
     @Test
     fun `ExportRequested happy path emits ExportReady with the generated json`() = runTest(testDispatcher) {
-        val expectedJson = """{"version":"1.0","data":[]}"""
+        val expectedJson: String = """{"version":"1.0","data":[]}"""
         coEvery { backupRepository.exportToJson(any(), any()) } returns expectedJson
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
-        val exportReady = effects.filterIsInstance<ProfileEffect.ExportReady>().firstOrNull()
+        val exportReady: ProfileEffect.ExportReady? =
+            effects.filterIsInstance<ProfileEffect.ExportReady>().firstOrNull()
         assertEquals(expectedJson, exportReady?.json, "Expected ExportReady($expectedJson) not found in $effects")
         assertEquals(ProfileOp.None, vm.state.value.op)
 
@@ -272,18 +277,18 @@ class ProfileViewModelTest {
 
     @Test
     fun `a saved ExportFinished tells the user the export is done`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
 
-        val messages = notifiedBy(vm, ProfileIntent.ExportFinished(saved = true))
+        val messages: List<ProfileMessage> = notifiedBy(vm, ProfileIntent.ExportFinished(saved = true))
 
         assertEquals(listOf(ProfileMessage.ExportDone), messages)
     }
 
     @Test
     fun `a failed ExportFinished tells the user the export failed`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
 
-        val messages = notifiedBy(vm, ProfileIntent.ExportFinished(saved = false))
+        val messages: List<ProfileMessage> = notifiedBy(vm, ProfileIntent.ExportFinished(saved = false))
 
         assertEquals(listOf(ProfileMessage.ExportFailed), messages)
     }
@@ -292,7 +297,7 @@ class ProfileViewModelTest {
     fun `ExportRequested stamps the injected app version into the backup`() = runTest(testDispatcher) {
         coEvery { backupRepository.exportToJson(any(), any()) } returns "{}"
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
@@ -302,10 +307,10 @@ class ProfileViewModelTest {
 
     @Test
     fun `ExportRequested stamps exportedAt from the injected clock`() = runTest(testDispatcher) {
-        val exportedAt = slot<Long>()
+        val exportedAt: CapturingSlot<Long> = slot()
         coEvery { backupRepository.exportToJson(capture(exportedAt), any()) } returns "{}"
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
@@ -318,9 +323,9 @@ class ProfileViewModelTest {
         val cause = RuntimeException("db failure")
         coEvery { backupRepository.exportToJson(any(), any()) } throws DomainException.DatabaseError(cause)
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
@@ -339,9 +344,9 @@ class ProfileViewModelTest {
         coEvery { backupRepository.exportToJson(any(), any()) } throws
             DomainException.Unknown(RuntimeException("serialize error"))
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
@@ -358,21 +363,21 @@ class ProfileViewModelTest {
     @Test
     fun `ExportRequested while import in flight is a no-op that reports OperationInProgress`() =
         runTest(testDispatcher) {
-            val gate = CompletableDeferred<Unit>()
+            val gate: CompletableDeferred<Unit> = CompletableDeferred()
             coEvery { importData(any()) } coAnswers {
                 gate.await()
                 error("unreachable")
             }
 
-            val vm = buildViewModel()
+            val vm: ProfileViewModel = buildViewModel()
 
             vm.onIntent(ProfileIntent.ImportJson("{}"))
             advanceUntilIdle()
 
             assertEquals(ProfileOp.Importing, vm.state.value.op)
 
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.ExportRequested)
             advanceUntilIdle()
@@ -389,15 +394,15 @@ class ProfileViewModelTest {
     @Test
     fun `ExportRequested re-fire while in flight emits OperationInProgress and does not re-invoke`() =
         runTest(testDispatcher) {
-            val gate = CompletableDeferred<Unit>()
+            val gate: CompletableDeferred<Unit> = CompletableDeferred()
             coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
                 gate.await()
                 ""
             }
 
-            val vm = buildViewModel()
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val vm: ProfileViewModel = buildViewModel()
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.ExportRequested)
             advanceUntilIdle()
@@ -421,9 +426,9 @@ class ProfileViewModelTest {
     fun `DeleteAccount success emits AccountDeleted notify`() = runTest(testDispatcher) {
         coEvery { deleteUserAccount.invoke() } returns Unit
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
         advanceUntilIdle()
@@ -441,9 +446,9 @@ class ProfileViewModelTest {
     fun `DeleteAccount failure emits ShowError and resets op`() = runTest(testDispatcher) {
         coEvery { deleteUserAccount.invoke() } throws DomainException.NetworkUnavailable(RuntimeException("no network"))
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
         advanceUntilIdle()
@@ -460,12 +465,12 @@ class ProfileViewModelTest {
     @Test
     fun `DeleteAccount re-fire while in flight emits OperationInProgress, ignores the re-fire, and resets op`() =
         runTest(testDispatcher) {
-            val gate = CompletableDeferred<Unit>()
+            val gate: CompletableDeferred<Unit> = CompletableDeferred()
             coEvery { deleteUserAccount.invoke() } coAnswers { gate.await() }
 
-            val vm = buildViewModel()
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val vm: ProfileViewModel = buildViewModel()
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.DeleteAccountConfirmed)
             advanceUntilIdle()
@@ -493,7 +498,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `BackUpNow asks the orchestrator for a MANUAL cycle`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         signIn()
         advanceUntilIdle()
 
@@ -506,18 +511,18 @@ class ProfileViewModelTest {
     @Test
     fun `BackUpNow while another op is in flight reports OperationInProgress and asks for nothing`() =
         runTest(testDispatcher) {
-            val gate = CompletableDeferred<Unit>()
+            val gate: CompletableDeferred<Unit> = CompletableDeferred()
             coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
                 gate.await()
                 ""
             }
 
-            val vm = buildViewModel()
+            val vm: ProfileViewModel = buildViewModel()
             signIn()
             advanceUntilIdle()
 
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
             vm.onIntent(ProfileIntent.ExportRequested)
             advanceUntilIdle()
@@ -538,12 +543,12 @@ class ProfileViewModelTest {
 
     @Test
     fun `BackUpNow while signed out is refused at the button and asks for nothing`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         sessionFlow.emit(SessionStatus.NotAuthenticated)
         advanceUntilIdle()
 
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ProfileIntent.BackUpNow)
         advanceUntilIdle()
@@ -559,7 +564,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `isBackingUp drives the op into BackingUp and back out`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals(ProfileOp.None, vm.state.value.op)
 
@@ -574,13 +579,13 @@ class ProfileViewModelTest {
 
     @Test
     fun `an automatic backup starting mid-export does not steal the op slot`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<Unit>()
+        val gate: CompletableDeferred<Unit> = CompletableDeferred()
         coEvery { backupRepository.exportToJson(any(), any()) } coAnswers {
             gate.await()
             ""
         }
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.ExportRequested)
@@ -600,9 +605,9 @@ class ProfileViewModelTest {
 
     @Test
     fun `a successful backup cycle notifies BackupDone`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ProfileViewModel = buildViewModel()
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
         advanceUntilIdle()
 
         backupEvents.emit(BackupEvent.Succeeded)
@@ -619,9 +624,9 @@ class ProfileViewModelTest {
     @Test
     fun `a failed backup notifies BackupFailed and never signs out or raises a session error`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val vm: ProfileViewModel = buildViewModel()
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
             advanceUntilIdle()
 
             backupEvents.emit(BackupEvent.Failed(DomainException.Unauthorized("the signed-in account changed")))
@@ -643,9 +648,9 @@ class ProfileViewModelTest {
     @Test
     fun `an Unauthorized backup failure is not rendered as the expired-credentials message`() =
         runTest(testDispatcher) {
-            val vm = buildViewModel()
-            val effects = mutableListOf<ProfileEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
+            val vm: ProfileViewModel = buildViewModel()
+            val effects: MutableList<ProfileEffect> = mutableListOf()
+            val job: Job = launch { vm.effect.collect { effects.add(it) } }
             advanceUntilIdle()
 
             backupEvents.emit(BackupEvent.Failed(DomainException.Unauthorized("the signed-in account changed")))
@@ -662,8 +667,8 @@ class ProfileViewModelTest {
         }
 
     private fun TestScope.notifiedBy(vm: ProfileViewModel, intent: ProfileIntent): List<ProfileMessage> {
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
         advanceUntilIdle()
 
         vm.onIntent(intent)
@@ -677,10 +682,10 @@ class ProfileViewModelTest {
     fun `VerifyBackup reports the snapshot that verified, naming the file and the counts it holds`() =
         runTest(testDispatcher) {
             coEvery { backupVerifier.verifyLatest() } returns VERIFIED_NEWEST
-            val vm = buildViewModel()
+            val vm: ProfileViewModel = buildViewModel()
             signIn()
 
-            val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
+            val messages: List<ProfileMessage> = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
             assertEquals(listOf(ProfileMessage.BackupVerified(VERIFIED_NEWEST)), messages)
             assertEquals(
@@ -694,7 +699,7 @@ class ProfileViewModelTest {
     fun `VerifyBackup that walked back to an older pair says so instead of reading as a plain success`() =
         runTest(testDispatcher) {
             coEvery { backupVerifier.verifyLatest() } returns VERIFIED_NEWEST.copy(isNewestPair = false)
-            val vm = buildViewModel()
+            val vm: ProfileViewModel = buildViewModel()
             signIn()
 
             val shown: String = notifiedBy(vm, ProfileIntent.VerifyBackup).single().toText()
@@ -705,10 +710,10 @@ class ProfileViewModelTest {
     @Test
     fun `VerifyBackup that found nothing to verify is not reported as pairs that failed`() = runTest(testDispatcher) {
         coEvery { backupVerifier.verifyLatest() } returns BackupVerification.NoSnapshots
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         signIn()
 
-        val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
+        val messages: List<ProfileMessage> = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
         assertEquals(listOf(ProfileMessage.BackupNotVerified(pairsInspected = 0)), messages)
     }
@@ -716,20 +721,20 @@ class ProfileViewModelTest {
     @Test
     fun `VerifyBackup where no pair verified reports how many were inspected`() = runTest(testDispatcher) {
         coEvery { backupVerifier.verifyLatest() } returns BackupVerification.NothingVerified(pairsInspected = 5)
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         signIn()
 
-        val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
+        val messages: List<ProfileMessage> = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
         assertEquals(listOf(ProfileMessage.BackupNotVerified(pairsInspected = 5)), messages)
     }
 
     @Test
     fun `VerifyBackup while signed out asks for an account instead of inviting a retry`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         sessionFlow.emit(SessionStatus.NotAuthenticated)
 
-        val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
+        val messages: List<ProfileMessage> = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
         coVerify(exactly = 0) { backupVerifier.verifyLatest() }
         assertEquals(listOf(ProfileMessage.BackupNeedsAccount), messages)
@@ -742,10 +747,10 @@ class ProfileViewModelTest {
             backupVerifier.verifyLatest()
         } throws DomainException.NetworkUnavailable(IllegalStateException("the socket died mid-download"))
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         signIn()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.VerifyBackup)
@@ -764,13 +769,13 @@ class ProfileViewModelTest {
 
     @Test
     fun `VerifyBackup holds the op slot while it runs, and refuses a second tap`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<BackupVerification>()
+        val gate: CompletableDeferred<BackupVerification> = CompletableDeferred()
         coEvery { backupVerifier.verifyLatest() } coAnswers { gate.await() }
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         signIn()
-        val effects = mutableListOf<ProfileEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effects: MutableList<ProfileEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.VerifyBackup)
@@ -795,12 +800,12 @@ class ProfileViewModelTest {
 
     @Test
     fun `VerifyBackup while a backup cycle is running asks the verifier for nothing`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         signIn()
         backingUpFlow.value = true
         advanceUntilIdle()
 
-        val messages = notifiedBy(vm, ProfileIntent.VerifyBackup)
+        val messages: List<ProfileMessage> = notifiedBy(vm, ProfileIntent.VerifyBackup)
 
         coVerify(exactly = 0) { backupVerifier.verifyLatest() }
         assertEquals(listOf(ProfileMessage.OperationInProgress), messages)
@@ -808,7 +813,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `the delete account dialog opens and closes through intents`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.DeleteAccountClicked)
@@ -822,7 +827,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `the import dialog opens and closes through intents`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.ImportClicked)
@@ -837,7 +842,7 @@ class ProfileViewModelTest {
     @Test
     fun `confirming the account deletion closes its dialog`() = runTest(testDispatcher) {
         coEvery { deleteUserAccount.invoke() } returns Unit
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.DeleteAccountClicked)
@@ -848,7 +853,7 @@ class ProfileViewModelTest {
     }
 }
 
-private val VERIFIED_NEWEST = BackupVerification.Verified(
+private val VERIFIED_NEWEST: BackupVerification.Verified = BackupVerification.Verified(
     fileName = "backup-v3-2026-08-16T14-22-08Z.json",
     rowCounts = BackupRowCounts(
         accounts = 1,

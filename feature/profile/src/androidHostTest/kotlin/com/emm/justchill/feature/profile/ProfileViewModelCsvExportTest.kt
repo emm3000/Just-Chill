@@ -70,7 +70,9 @@ class ProfileViewModelCsvExportTest {
     }
 
     private fun buildViewModel(): ProfileViewModel = ProfileViewModel(
-        backupRepository = mockk(relaxed = true),
+        backupRepository = mockk(relaxed = true) {
+            every { observeLatestLocalChangeAt() } returns flowOf(null)
+        },
         importData = mockk(relaxed = true),
         signOut = mockk(relaxed = true),
         deleteUserAccount = mockk(relaxed = true),

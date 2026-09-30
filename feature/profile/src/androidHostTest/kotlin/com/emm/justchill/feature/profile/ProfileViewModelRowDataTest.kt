@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DateTimeUnit
@@ -41,7 +42,7 @@ import kotlin.time.Instant
 
 class ProfileViewModelRowDataTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
@@ -50,22 +51,22 @@ class ProfileViewModelRowDataTest {
         every { observeLatestLocalChangeAt() } returns flowOf(null)
     }
 
-    private val backupController = mockk<BackupController>(relaxed = true) {
+    private val backupController: BackupController = mockk(relaxed = true) {
         every { isBackingUp } returns MutableStateFlow(false)
         every { events } returns MutableSharedFlow<BackupEvent>()
         every { health } returns MutableStateFlow(BackupHealth.None)
     }
 
-    private val categoryRepository = mockk<CategoryRepository> {
+    private val categoryRepository: CategoryRepository = mockk {
         every { all() } returns flowOf(emptyList())
     }
-    private val localExportHistory = mockk<ExportHistory>(relaxed = true) {
+    private val localExportHistory: ExportHistory = mockk(relaxed = true) {
         every { daysSinceLastExport(any()) } returns null
     }
 
-    private val today = MutableStateFlow(LocalDate(2026, 8, 28))
+    private val today: MutableStateFlow<LocalDate> = MutableStateFlow(LocalDate(2026, 8, 28))
 
-    private val getSessionStatus = mockk<GetSessionStatusUseCase>(relaxed = true) {
+    private val getSessionStatus: GetSessionStatusUseCase = mockk(relaxed = true) {
         every { this@mockk.invoke() } returns MutableSharedFlow<SessionStatus>(replay = 1)
     }
 
@@ -100,14 +101,14 @@ class ProfileViewModelRowDataTest {
 
     @Test
     fun `the categories row splits the ledger's own categories by type`() = runTest(testDispatcher) {
-        val categories = listOf(
+        val categories: List<Category> = listOf(
             category("c1", CategoryType.Income),
             category("c2", CategoryType.Spend),
             category("c3", CategoryType.Spend),
         )
         every { categoryRepository.all() } returns flowOf(categories)
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(3, vm.state.value.categoryCount)
@@ -116,7 +117,7 @@ class ProfileViewModelRowDataTest {
 
     @Test
     fun `a saved ExportFinished records the export, so the row stops saying Nunca`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals(LastExportUi.Never, vm.state.value.lastExport)
 
@@ -130,7 +131,7 @@ class ProfileViewModelRowDataTest {
 
     @Test
     fun `a failed ExportFinished records nothing, so the row keeps saying Nunca`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ProfileIntent.ExportFinished(saved = false))
@@ -144,7 +145,7 @@ class ProfileViewModelRowDataTest {
     fun `requesting an export does not record one`() = runTest(testDispatcher) {
         coEvery { backupRepository.exportToJson(any(), any()) } returns "{}"
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
 
@@ -154,12 +155,12 @@ class ProfileViewModelRowDataTest {
 
     @Test
     fun `the export label ages across midnight with no intent in between`() = runTest(testDispatcher) {
-        val exportDay = today.value
-        val nextDay = exportDay.plus(1, DateTimeUnit.DAY)
+        val exportDay: LocalDate = today.value
+        val nextDay: LocalDate = exportDay.plus(1, DateTimeUnit.DAY)
         every { localExportHistory.daysSinceLastExport(exportDay) } returns 0
         every { localExportHistory.daysSinceLastExport(nextDay) } returns 1
 
-        val vm = buildViewModel()
+        val vm: ProfileViewModel = buildViewModel()
         advanceUntilIdle()
         assertEquals(LastExportUi.DaysAgo(0), vm.state.value.lastExport)
 
