@@ -48,6 +48,7 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 ## Changes
 
+- 2026-09-30: row 3 held at opus:high despite two first-review FIX FIRST judgment in Recent (#599 a false doc claim, #603 a size drift reported as intended): high is the table's top effort and Fable is reserved for design. The raise goes into the dispatch instead: every row-3 dispatch names both errors (check each doc claim with `rg`; any non-zero pixel diff against trunk is drift until the ticket names it).
 - 2026-09-30: row 2 sonnet:high -> opus:medium: two first-review FIX FIRST judgment in Recent (#569; #596, the report hero split on a plain space, visible in the peer's own shot). High is the table's top effort, so the raise moves the model. #595 counts as FIX FIRST judgment: the reviewer said MERGE and the orchestrator promoted its minor (an uncaught observed query froze the backup row).
 - 2026-09-29: row 3 opus:medium -> opus:high: two first-review FIX FIRST judgment in Recent (#519, #552). Row 4 not raised: of its two judgment verdicts, #520 came from an orchestrator relay, not the model.
 - 2026-09-28: ported Anthropic's Opus 5.5, Sonnet 5.5 and Fable 5.1 prompting guides. Row 2 sonnet:medium -> sonnet:high; autonomy paragraph and reporting rule in every dispatch; Time sentence rows 1-2; @orch nudges capped at 3; Review, Nudges and Minutes columns; five-MERGE downward pilot; fable:low pilot allowed on row 3.
