@@ -130,8 +130,9 @@ extension ReportScreen {
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                 if let pillText = state.comparisonPillText,
-                   let pillDescription = state.comparisonPillDescription,
-                   let comparisonText = state.comparisonText {
+                    let pillDescription = state.comparisonPillDescription,
+                    let comparisonText = state.comparisonText
+                {
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
                             pill(text: pillText, description: pillDescription)
