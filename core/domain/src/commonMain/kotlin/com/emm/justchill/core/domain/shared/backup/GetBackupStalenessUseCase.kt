@@ -1,5 +1,6 @@
 package com.emm.justchill.core.domain.shared.backup
 
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
@@ -19,8 +20,8 @@ class GetBackupStalenessUseCase(
 
     suspend operator fun invoke(lastSuccessfulBackupAt: Long): BackupStaleness {
         val now: Instant = clock.now()
-        val today = now.toLocalDateTime(timeZone).date
-        val lastBackupDay = Instant.fromEpochMilliseconds(lastSuccessfulBackupAt)
+        val today: LocalDate = now.toLocalDateTime(timeZone).date
+        val lastBackupDay: LocalDate = Instant.fromEpochMilliseconds(lastSuccessfulBackupAt)
             .toLocalDateTime(timeZone).date
 
         val days: Int = lastBackupDay.daysUntil(today).coerceAtLeast(0)

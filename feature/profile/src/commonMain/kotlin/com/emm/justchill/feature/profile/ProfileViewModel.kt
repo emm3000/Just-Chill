@@ -13,11 +13,13 @@ import com.emm.justchill.core.domain.shared.backup.BackupEvent
 import com.emm.justchill.core.domain.shared.backup.BackupFailureReason
 import com.emm.justchill.core.domain.shared.backup.BackupHealth
 import com.emm.justchill.core.domain.shared.backup.BackupRepository
+import com.emm.justchill.core.domain.shared.backup.BackupStaleness
 import com.emm.justchill.core.domain.shared.backup.BackupVerification
 import com.emm.justchill.core.domain.shared.backup.BackupVerifier
 import com.emm.justchill.core.domain.shared.backup.ExportHistory
 import com.emm.justchill.core.domain.shared.backup.GetBackupStalenessUseCase
 import com.emm.justchill.core.domain.shared.backup.ImportDataUseCase
+import com.emm.justchill.core.domain.shared.backup.ImportStats
 import com.emm.justchill.core.domain.shared.backup.toBackupFailureReason
 import com.emm.justchill.core.domain.shared.error.DomainException
 import com.emm.justchill.core.domain.shared.logging.DiagnosticsLogger
@@ -79,7 +81,7 @@ class ProfileViewModel(
 
         getSessionStatus()
             .onEach { status ->
-                val sessionUiState = when (status) {
+                val sessionUiState: SessionUiState = when (status) {
                     is SessionStatus.Authenticated -> SessionUiState.SignedIn(status.user.email)
                     SessionStatus.NotAuthenticated -> SessionUiState.SignedOut
                     SessionStatus.Initializing -> SessionUiState.Initializing
@@ -101,7 +103,8 @@ class ProfileViewModel(
             backupController.health,
             backupController.isBackingUp,
             backupRepository.observeLatestLocalChangeAt().unobservedOnFailure(logger),
-        ) { sessionUiState, health, backingUp, _ ->
+            todayFlow(),
+        ) { sessionUiState, health, backingUp, _, _ ->
             resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness, logger)
         }
             .onEach { row -> updateState { copy(backupRow = row) } }
@@ -185,7 +188,7 @@ class ProfileViewModel(
         op = ProfileOp.SigningOut,
         onError = onDomainError,
     ) {
-        val message = when (signOut.invoke()) {
+        val message: ProfileMessage = when (signOut.invoke()) {
             SignOutResult.Revoked -> ProfileMessage.SessionClosed
             SignOutResult.LocalOnly -> ProfileMessage.SessionClosedLocallyOnly
         }
@@ -207,7 +210,7 @@ class ProfileViewModel(
         op = ProfileOp.Exporting,
         onError = onDomainError,
     ) {
-        val json = backupRepository.exportToJson(
+        val json: String = backupRepository.exportToJson(
             exportedAt = clock.now().toEpochMilliseconds(),
             appVersion = appVersion,
         )
@@ -246,7 +249,7 @@ class ProfileViewModel(
             }
         },
     ) {
-        val stats = importData(json)
+        val stats: ImportStats = importData(json)
         sendEffect(
             ProfileEffect.Notify(
                 ProfileMessage.ImportDone(
@@ -324,7 +327,7 @@ private suspend fun snapshotRow(
     getBackupStaleness: GetBackupStalenessUseCase,
     logger: DiagnosticsLogger,
 ): BackupRowUi {
-    val staleness = try {
+    val staleness: BackupStaleness = try {
         getBackupStaleness(lastSuccessfulBackupAt)
     } catch (e: CancellationException) {
         throw e
@@ -337,7 +340,7 @@ private suspend fun snapshotRow(
         )
         return if (failing) BackupRowUi.Failed(reason, LastSnapshot.AgeUnknown) else BackupRowUi.Unreadable
     }
-    val snapshot = LastSnapshot.DaysAgo(days = staleness.daysSinceLastBackup, isStale = staleness.isStale)
+    val snapshot: LastSnapshot = LastSnapshot.DaysAgo(days = staleness.daysSinceLastBackup, isStale = staleness.isStale)
     return when {
         failing -> BackupRowUi.Failed(reason, snapshot)
         staleness.isStale -> BackupRowUi.Stale(staleness.daysSinceLastBackup)

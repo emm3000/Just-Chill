@@ -21,7 +21,7 @@ class SqlDelightSnapshotStoreWatermarkTest {
     private lateinit var db: JustChillDatabase
     private lateinit var store: SnapshotStore
 
-    private val clock = object : Clock {
+    private val clock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2026-08-14T00:00:00Z")
     }
 
