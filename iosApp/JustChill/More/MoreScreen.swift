@@ -10,8 +10,7 @@ struct MoreScreen: View {
         case manifesto
         case privacy
         case categories
-        case loans
-        case personLoans(String)
+        case loans(LoansRoute)
         case auth
     }
 
@@ -40,7 +39,7 @@ struct MoreScreen: View {
                     send: { store.send($0) },
                     actions: Actions(
                         onOpenCategories: { path.append(.categories) },
-                        onOpenLoans: { path.append(.loans) },
+                        onOpenLoans: { path.append(.loans(.people)) },
                         onOpenManifesto: { path.append(.manifesto) },
                         onOpenPrivacy: { path.append(.privacy) },
                         onPickBackup: { isImporterPresented = true },
@@ -100,14 +99,12 @@ struct MoreScreen: View {
             CategoriesScreen(onBack: { path.removeLast() })
                 .toolbar(.hidden, for: .navigationBar)
                 .toolbar(.hidden, for: .tabBar)
-        case .loans:
-            LoansScreen(onBack: { path.removeLast() }, onOpenPerson: { path.append(.personLoans($0)) })
-                .toolbar(.hidden, for: .navigationBar)
-                .toolbar(.hidden, for: .tabBar)
-        case .personLoans(let personKey):
-            PersonLoansScreen(personKey: personKey, onBack: { path.removeLast() })
-                .toolbar(.hidden, for: .navigationBar)
-                .toolbar(.hidden, for: .tabBar)
+        case .loans(let route):
+            LoansFlow(
+                route: route,
+                onBack: { path.removeLast() },
+                onOpenPerson: { path.append(.loans(.personLoans($0))) }
+            )
         case .auth:
             AuthScreen(onBack: { path.removeLast() })
                 .toolbar(.hidden, for: .navigationBar)

@@ -6,8 +6,7 @@ struct AccountsScreen: View {
     typealias Send = (any AccountsIntent) -> Void
 
     enum Destination: Hashable {
-        case loans
-        case personLoans(String)
+        case loans(LoansRoute)
     }
 
     @State private var store: Store?
@@ -25,7 +24,7 @@ struct AccountsScreen: View {
     private var root: some View {
         Group {
             if let store {
-                Content(state: store.state, send: { store.send($0) }, onOpenLoans: { path.append(.loans) })
+                Content(state: store.state, send: { store.send($0) }, onOpenLoans: { path.append(.loans(.people)) })
             } else {
                 EmmColors.bg
             }
@@ -49,14 +48,12 @@ struct AccountsScreen: View {
     @ViewBuilder
     private func destination(_ destination: Destination) -> some View {
         switch destination {
-        case .loans:
-            LoansScreen(onBack: { path.removeLast() }, onOpenPerson: { path.append(.personLoans($0)) })
-                .toolbar(.hidden, for: .navigationBar)
-                .toolbar(.hidden, for: .tabBar)
-        case .personLoans(let personKey):
-            PersonLoansScreen(personKey: personKey, onBack: { path.removeLast() })
-                .toolbar(.hidden, for: .navigationBar)
-                .toolbar(.hidden, for: .tabBar)
+        case .loans(let route):
+            LoansFlow(
+                route: route,
+                onBack: { path.removeLast() },
+                onOpenPerson: { path.append(.loans(.personLoans($0))) }
+            )
         }
     }
 

@@ -4,6 +4,7 @@ import com.emm.justchill.core.domain.loan.LoanRepository
 import com.emm.justchill.core.domain.loan.PersonBalance
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.presentation.loan.PersonRemainingTone
 import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -30,7 +31,7 @@ class LoansViewModelTest {
     private val loanRepository = mockk<LoanRepository>()
 
     @Test
-    fun `balancesByPerson maps to PersonRowUi with the money signed positive`() = runTest {
+    fun `balancesByPerson maps to PersonBalanceUi with the money signed positive`() = runTest {
         every { loanRepository.balancesByPerson() } returns flowOf(
             listOf(PersonBalance(personKey = "ana", personName = "Ana", remaining = Money(150_000L))),
         )
