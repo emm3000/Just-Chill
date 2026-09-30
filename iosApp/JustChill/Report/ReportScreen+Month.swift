@@ -153,7 +153,7 @@ extension ReportScreen {
         private func pill(text: String) -> some View {
             Pill(
                 text: text,
-                symbol: state.comparisonDirectionUp?.boolValue == false ? "arrow.down" : "arrow.up",
+                symbol: state.comparisonDirectionUp.map { $0.boolValue ? "arrow.up" : "arrow.down" },
                 isTinted: state.comparisonIsPositive?.boolValue == true
             )
             .accessibilityElement(children: .ignore)

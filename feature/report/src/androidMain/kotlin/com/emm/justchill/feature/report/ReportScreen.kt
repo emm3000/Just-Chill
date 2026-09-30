@@ -217,18 +217,19 @@ private fun TotalHeroBlock(state: ReportUiState) {
             type = state.selectedType,
         )
 
-        val comparisonAmt = state.comparisonAmountFormatted
-        val comparisonTxt = state.comparisonText
-        if (comparisonAmt != null && comparisonTxt != null) {
+        val pillText: String? = state.comparisonPillText
+        val pillDescription: String? = state.comparisonPillDescription
+        val comparisonTxt: String? = state.comparisonText
+        if (pillText != null && pillDescription != null && comparisonTxt != null) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(spacing.s2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ComparisonPill(
-                    absoluteDeltaFormatted = comparisonAmt,
-                    percent = state.comparisonPercent,
-                    directionUp = state.comparisonDirectionUp ?: true,
-                    isPositive = state.comparisonIsPositive ?: true,
+                    text = pillText,
+                    description = pillDescription,
+                    directionUp = state.comparisonDirectionUp,
+                    isPositive = state.comparisonIsPositive,
                 )
                 Text(
                     text = comparisonTxt,

@@ -7,6 +7,8 @@ import com.emm.justchill.core.domain.report.GetMonthlyComparisonUseCase
 import com.emm.justchill.core.domain.report.GetMonthlySectionStatsUseCase
 import com.emm.justchill.core.domain.report.GetSavingsRateUseCase
 import com.emm.justchill.core.domain.report.GetTopCategoriesOverMonthsUseCase
+import com.emm.justchill.core.domain.report.MonthlyComparison
+import com.emm.justchill.core.domain.report.MonthlySectionStats
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.time.TodayFlow
@@ -38,8 +40,6 @@ class ReportViewModel(
     private val getTopCategories: GetTopCategoriesOverMonthsUseCase,
     todayFlow: TodayFlow,
 ) : MviViewModel<ReportUiState, ReportIntent, ReportEffect>(
-    // Same seed calendarMonth's stateIn below uses, read before that StateFlow's first collection
-    // — so it always equals calendarMonth.value here, and the opening month is always "current".
     ReportUiState(
         month = YearMonth.of(todayFlow.today()),
         isCurrentMonth = true,
@@ -56,9 +56,8 @@ class ReportViewModel(
 
     init {
         reloadReport()
-        // The seed emission is also the initial trends load, which is why init does not call
-        // reloadTrends() itself; and this updateState is the only isCurrentMonth correction that
-        // survives a trends load that fails.
+        // The seed emission is the initial trends load, so init never calls reloadTrends() itself;
+        // this updateState is the only isCurrentMonth correction that survives a failed trends load.
         calendarMonth
             .onEach {
                 updateState { copy(isCurrentMonth = isCurrent(month)) }
@@ -92,7 +91,6 @@ class ReportViewModel(
         }
     }
 
-    // The single place the shown month changes, so month and its flag always move together.
     private fun showMonth(month: YearMonth) {
         updateState { copy(month = month, isCurrentMonth = isCurrent(month)) }
         reloadReport()
@@ -103,33 +101,26 @@ class ReportViewModel(
     private fun reloadReport() {
         reportJob?.cancel()
         reportJob = launchSafe(onError = { e -> ReportEffect.ShowError(e.toUserMessage()) }) {
-            val month = currentState.month
-            val type = currentState.selectedType
+            val month: YearMonth = currentState.month
+            val type: TransactionType = currentState.selectedType
 
             val incomeAmounts: List<CategoryAmount> = getMonthlyAmountByCategory(month, TransactionType.Income)
             val spendAmounts: List<CategoryAmount> = getMonthlyAmountByCategory(month, TransactionType.Spend)
-            val isMonthEmpty = incomeAmounts.isEmpty() && spendAmounts.isEmpty()
+            val isMonthEmpty: Boolean = incomeAmounts.isEmpty() && spendAmounts.isEmpty()
 
-            val amounts = if (type == TransactionType.Income) incomeAmounts else spendAmounts
-            val comparison = getMonthlyComparison(month, type)
-            val stats = getMonthlySectionStats(month, type)
+            val amounts: List<CategoryAmount> = if (type == TransactionType.Income) incomeAmounts else spendAmounts
+            val comparison: MonthlyComparison? = getMonthlyComparison(month, type)
+            val stats: MonthlySectionStats = getMonthlySectionStats(month, type)
 
             val total: Money = amounts.fold(Money.Zero) { acc, item -> acc + item.amount }
 
-            val comparisonText = comparison?.let { "vs ${month.previous().monthLabel()}" }
-            val comparisonAmountFormatted = comparison?.let { mc ->
-                val abs = if (mc.absoluteDelta.cents < 0) -mc.absoluteDelta else mc.absoluteDelta
-                formatSoles(abs.cents)
-            }
-            val directionUp = comparison?.let { it.deltaPercent >= 0 }
-            val isPositive = comparison?.let { mc ->
-                when (type) {
-                    TransactionType.Income -> mc.deltaPercent >= 0
-                    TransactionType.Spend -> mc.deltaPercent <= 0
-                }
-            }
+            val comparisonText: String? = comparison?.let { "vs ${month.previous().monthLabel()}" }
+            val deltaCents: Long? = comparison?.absoluteDelta?.cents
+            val comparisonAmountFormatted: String? = deltaCents?.let { cents -> formatSoles(abs(cents)) }
+            val directionUp: Boolean? = deltaCents?.takeIf { cents -> cents != 0L }?.let { cents -> cents > 0 }
+            val isPositive: Boolean? = directionUp?.let { up -> up == (type == TransactionType.Income) }
 
-            val shares = buildShares(amounts, total)
+            val shares: List<CategoryShare> = buildShares(amounts, total)
 
             updateState {
                 copy(

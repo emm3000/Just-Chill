@@ -14,6 +14,7 @@ import com.emm.justchill.core.domain.shared.CategoryId
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.format.CURRENCY_PREFIX
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
 import com.emm.justchill.core.ui.atoms.PillTone
@@ -353,18 +354,22 @@ class ReportViewModelTest {
         assertTrue(vm.state.value.isMonthEmpty)
     }
 
-    private fun stubComparison(deltaPercent: Int) {
+    private fun stubComparison(deltaPercent: Int, absoluteDelta: Money) {
         stubEmptyReport()
         coEvery { getMonthlyComparison(any(), any()) } returns MonthlyComparison(
             currentTotal = Money(100_00L),
             previousTotal = Money(80_00L),
             deltaPercent = deltaPercent,
-            absoluteDelta = Money(20_00L),
+            absoluteDelta = absoluteDelta,
         )
     }
 
-    private fun TestScope.viewModelFor(type: TransactionType, deltaPercent: Int): ReportViewModel {
-        stubComparison(deltaPercent)
+    private fun TestScope.viewModelFor(
+        type: TransactionType,
+        deltaPercent: Int,
+        absoluteDelta: Money = Money(if (deltaPercent < 0) -20_00L else 20_00L),
+    ): ReportViewModel {
+        stubComparison(deltaPercent, absoluteDelta)
         val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
         vm.onIntent(ReportIntent.SelectType(type))
@@ -378,7 +383,7 @@ class ReportViewModelTest {
 
         assertEquals(true, vm.state.value.comparisonDirectionUp)
         assertEquals(false, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
+        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive))
     }
 
     @Test
@@ -387,7 +392,7 @@ class ReportViewModelTest {
 
         assertEquals(false, vm.state.value.comparisonDirectionUp)
         assertEquals(true, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
+        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive))
     }
 
     @Test
@@ -396,7 +401,7 @@ class ReportViewModelTest {
 
         assertEquals(false, vm.state.value.comparisonDirectionUp)
         assertEquals(false, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
+        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive))
     }
 
     @Test
@@ -405,7 +410,7 @@ class ReportViewModelTest {
 
         assertEquals(true, vm.state.value.comparisonDirectionUp)
         assertEquals(true, vm.state.value.comparisonIsPositive)
-        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive ?: true))
+        assertEquals(PillTone.Pos, comparisonPillTone(vm.state.value.comparisonIsPositive))
     }
 
     @Test
@@ -447,16 +452,23 @@ class ReportViewModelTest {
     }
 
     @Test
-    fun `a pill amount with no direction has no description rather than a guessed verb`() {
-        val state = ReportUiState(
-            month = currentMonth,
-            comparisonAmountFormatted = "S/\u00A020",
-            comparisonDirectionUp = null,
-            comparisonPercent = 25,
-        )
+    fun `a small fall that rounds to 0 percent reads Bajó`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = 0, absoluteDelta = Money(-5_00L))
 
-        assertEquals("S/\u00A020 · 25%", state.comparisonPillText)
-        assertEquals(null, state.comparisonPillDescription)
+        assertEquals(false, vm.state.value.comparisonDirectionUp)
+        assertEquals(true, vm.state.value.comparisonIsPositive)
+        assertEquals("Bajó ${CURRENCY_PREFIX}5, 0%", vm.state.value.comparisonPillDescription)
+    }
+
+    @Test
+    fun `an unchanged month has no direction, no tint and reads Sin cambio`() = runTest(testDispatcher) {
+        val vm: ReportViewModel = viewModelFor(TransactionType.Income, deltaPercent = 0, absoluteDelta = Money.Zero)
+
+        assertEquals(null, vm.state.value.comparisonDirectionUp)
+        assertEquals(null, vm.state.value.comparisonIsPositive)
+        assertEquals(PillTone.Neutral, comparisonPillTone(vm.state.value.comparisonIsPositive))
+        assertEquals("${CURRENCY_PREFIX}0 · 0%", vm.state.value.comparisonPillText)
+        assertEquals("Sin cambio, 0%", vm.state.value.comparisonPillDescription)
     }
 
     @Test

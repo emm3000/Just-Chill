@@ -180,16 +180,18 @@ extension ReportScreen {
 
     struct Pill: View {
         let text: String
-        let symbol: String
+        let symbol: String?
         let isTinted: Bool
 
         var body: some View {
             HStack(spacing: EmmSpacing.s1) {
-                Image(systemName: symbol)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
-                    .accessibilityHidden(true)
+                if let symbol {
+                    Image(systemName: symbol)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                        .accessibilityHidden(true)
+                }
                 Text(text)
                     .emmTextStyle(EmmType.labelM)
                     .lineLimit(1)
