@@ -1,5 +1,7 @@
 package com.emm.justchill.core.database.backup
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToOne
 import com.emm.justchill.core.database.JustChillDatabase
 import com.emm.justchill.core.database.account.asEntity
 import com.emm.justchill.core.database.account.asExternalModel
@@ -9,6 +11,7 @@ import com.emm.justchill.core.database.loan.asEntity
 import com.emm.justchill.core.database.loan.asExternalModel
 import com.emm.justchill.core.database.recurring.asEntity
 import com.emm.justchill.core.database.recurring.asExternalModel
+import com.emm.justchill.core.database.shared.catchAsDomainException
 import com.emm.justchill.core.database.shared.ioDispatcher
 import com.emm.justchill.core.database.shared.nowMillis
 import com.emm.justchill.core.database.shared.safeDbCall
@@ -17,6 +20,8 @@ import com.emm.justchill.core.database.transaction.asExternalModel
 import com.emm.justchill.core.domain.shared.backup.ImportStats
 import com.emm.justchill.core.domain.shared.backup.LocalSnapshot
 import com.emm.justchill.core.domain.shared.backup.SnapshotStore
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
@@ -39,6 +44,12 @@ class SqlDelightSnapshotStore(private val db: JustChillDatabase, private val clo
             db.backupQueries.latestLocalChange().executeAsOne().updatedAt
         }
     }
+
+    override fun observeLatestLocalChangeAt(): Flow<Long?> = db.backupQueries.latestLocalChange()
+        .asFlow()
+        .mapToOne(ioDispatcher)
+        .map { row -> row.updatedAt }
+        .catchAsDomainException()
 }
 
 private fun JustChillDatabase.readLive(): LocalSnapshot = LocalSnapshot(

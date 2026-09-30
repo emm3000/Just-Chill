@@ -28,20 +28,27 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
 // The fixture is duplicated with ProfileViewModelTest on purpose — a shared base class would
@@ -53,7 +60,11 @@ class ProfileViewModelBackupRowTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val backupRepository = mockk<BackupRepository>(relaxed = true)
+    private val latestLocalChangeFlow: MutableStateFlow<Long?> = MutableStateFlow(null)
+    private val backupRepository: BackupRepository = mockk(relaxed = true) {
+        every { observeLatestLocalChangeAt() } returns latestLocalChangeFlow
+        coEvery { latestLocalChangeAt() } coAnswers { latestLocalChangeFlow.value }
+    }
     private val importData = mockk<ImportDataUseCase>(relaxed = true)
     private val signOut = mockk<SignOutUseCase>(relaxed = true)
     private val deleteUserAccount = mockk<DeleteUserAccountUseCase>(relaxed = true)
@@ -86,7 +97,9 @@ class ProfileViewModelBackupRowTest {
         override fun now(): Instant = Instant.parse("2026-08-11T15:04:05Z")
     }
 
-    private fun buildViewModel(): ProfileViewModel {
+    private fun buildViewModel(
+        getBackupStaleness: GetBackupStalenessUseCase = this.getBackupStaleness,
+    ): ProfileViewModel {
         every { getSessionStatus.invoke() } returns sessionFlow
         return ProfileViewModel(
             backupRepository = backupRepository,
@@ -353,8 +366,6 @@ class ProfileViewModelBackupRowTest {
             coVerify(exactly = 0) { getBackupStaleness(any()) }
         }
 
-    // The orchestrator raises `isBackingUp` for the cycle it is about to refuse, so a lower rank
-    // would flash "Respaldando…" over a device uploading nothing.
     @Test
     fun `a pending disclosure outranks a running cycle`() = runTest(testDispatcher) {
         val vm = buildViewModel()
@@ -442,6 +453,28 @@ class ProfileViewModelBackupRowTest {
             verify(exactly = 0) { backupController.requestBackup(any<Boolean>()) }
 
             job.cancel()
+        }
+
+    @Test
+    fun `a movement saved after the last backup turns an old row stale without any other emission`() =
+        runTest(testDispatcher) {
+            val lastBackupAt: Long = (fixedClock.now() - 5.days).toEpochMilliseconds()
+            val stalenessReadingTheStore = GetBackupStalenessUseCase(backupRepository, fixedClock, TimeZone.UTC)
+            latestLocalChangeFlow.value = lastBackupAt
+            healthFlow.value = health(lastBackupAt, consecutiveFailures = 0, lastFailureReason = null)
+            val vm: ProfileViewModel = buildViewModel(getBackupStaleness = stalenessReadingTheStore)
+            val rows: MutableList<BackupRowUi> = mutableListOf()
+            val recordedRows: Flow<BackupRowUi> = vm.state.map { it.backupRow }.distinctUntilChanged()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { recordedRows.toList(rows) }
+
+            sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+            advanceUntilIdle()
+            assertEquals(BackupRowUi.UpToDate(5), rows.last())
+
+            latestLocalChangeFlow.value = lastBackupAt + 1
+            advanceUntilIdle()
+
+            assertEquals(listOf(BackupRowUi.NeedsAccount, BackupRowUi.UpToDate(5), BackupRowUi.Stale(5)), rows)
         }
 
     private fun health(

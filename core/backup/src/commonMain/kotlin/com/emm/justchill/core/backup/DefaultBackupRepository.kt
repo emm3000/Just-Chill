@@ -6,6 +6,7 @@ import com.emm.justchill.core.domain.shared.backup.ImportStats
 import com.emm.justchill.core.domain.shared.backup.LocalSnapshot
 import com.emm.justchill.core.domain.shared.backup.SnapshotStore
 import com.emm.justchill.core.domain.shared.error.DomainException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -29,6 +30,8 @@ class DefaultBackupRepository(private val store: SnapshotStore) : BackupReposito
     }
 
     override suspend fun latestLocalChangeAt(): Long? = store.latestLocalChangeAt()
+
+    override fun observeLatestLocalChangeAt(): Flow<Long?> = store.observeLatestLocalChangeAt()
 }
 
 private fun LocalSnapshot.toPayload(exportedAt: Long, appVersion: String): ExportPayloadDto {

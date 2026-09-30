@@ -46,7 +46,9 @@ class ProfileViewModelRowDataTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val backupRepository = mockk<BackupRepository>()
+    private val backupRepository: BackupRepository = mockk {
+        every { observeLatestLocalChangeAt() } returns flowOf(null)
+    }
 
     private val backupController = mockk<BackupController>(relaxed = true) {
         every { isBackingUp } returns MutableStateFlow(false)
