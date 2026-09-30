@@ -78,7 +78,7 @@ internal fun accountSubtitle(typeLabel: String, movementCount: Int): String = wh
     else -> "$typeLabel · $movementCount movimientos"
 }
 
-private fun AccountNetTone.toAmountTone(): AmountTone = when (this) {
+internal fun AccountNetTone.toAmountTone(): AmountTone = when (this) {
     AccountNetTone.Muted -> AmountTone.Mute
     AccountNetTone.Positive -> AmountTone.Pos
     AccountNetTone.Neutral -> AmountTone.Neutral
