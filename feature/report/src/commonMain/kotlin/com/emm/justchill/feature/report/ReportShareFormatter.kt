@@ -10,13 +10,13 @@ internal object ReportShareFormatter {
 
     fun buildContextSentence(ratePercent: Int, deltaPoints: Int?): String {
         val perHundred: String = formatNeutral(PERCENT_BASE.toString())
-        val base = if (ratePercent < 0) {
+        val base: String = if (ratePercent < 0) {
             "De cada $perHundred que entró, gastaste ${formatNeutral((PERCENT_BASE - ratePercent).toString())}."
         } else {
             "De cada $perHundred que entró, ahorraste ${formatNeutral(ratePercent.toString())}."
         }
         if (deltaPoints == null) return base
-        val comparison = when {
+        val comparison: String = when {
             deltaPoints > 0 -> " Mejoraste vs. los $TRENDS_WINDOW_MONTHS meses previos."
             deltaPoints < 0 -> " Empeoraste vs. los $TRENDS_WINDOW_MONTHS meses previos."
             else -> " Mantuviste el mismo ritmo que los $TRENDS_WINDOW_MONTHS meses previos."
@@ -28,35 +28,37 @@ internal object ReportShareFormatter {
 
     fun buildMonthShareText(state: ReportUiState): String = buildString {
         appendLine("Reporte de ${state.month.monthLabel()} ${state.month.year}")
-        val typeLabel = when (state.selectedType) {
+        val typeLabel: String = when (state.selectedType) {
             TransactionType.Income -> "Ingresos"
             TransactionType.Spend -> "Gastos"
         }
         appendLine("$typeLabel: ${state.totalFormatted}")
-        val deltaAmt = state.comparisonAmountFormatted
-        val deltaPct = state.comparisonPercent
-        val vsText = state.comparisonText
+        val deltaAmt: String? = state.comparisonAmountFormatted
+        val deltaPct: Int = state.comparisonPercent
+        val vsText: String? = state.comparisonText
         if (deltaAmt != null && vsText != null) {
-            val sign = if (state.comparisonDirectionUp == true) "↑" else "↓"
-            appendLine("$sign $deltaAmt · ${comparisonPercentLabel(deltaPct)} $vsText")
+            val sign: String = when (state.comparisonDirectionUp) {
+                true -> "↑ "
+                false -> "↓ "
+                null -> ""
+            }
+            appendLine("$sign$deltaAmt · ${comparisonPercentLabel(deltaPct)} $vsText")
         }
         appendLine("Por categoría:")
         state.shares.forEach { share ->
             appendLine("– ${share.name}: ${share.amountFormatted} (${share.percentage}%)")
         }
-        val movText = "${state.movementCount} ${if (state.movementCount == 1) "movimiento" else "movimientos"}"
+        val movText: String = "${state.movementCount} ${if (state.movementCount == 1) "movimiento" else "movimientos"}"
         appendLine("$movText · Promedio ${state.averageFormatted}")
         append("— JustChill")
     }
 
     fun buildTrendsShareText(state: ReportUiState): String {
-        val t = state.trends
+        val t: TrendsUiData = state.trends
         return buildString {
             appendLine("Reporte · Tendencias $TRENDS_WINDOW_MONTHS meses")
-            // Shared text has no pill and no icon, so the arrow the screen draws has to be
-            // written out here or the reader cannot tell an improvement from a slip.
-            val deltaStr = t.deltaText?.let { text ->
-                val sign = if (t.deltaIsPositive == true) "↑" else "↓"
+            val deltaStr: String = t.deltaText?.let { text ->
+                val sign: String = if (t.deltaIsPositive == true) "↑" else "↓"
                 " ($sign $text vs. $TRENDS_WINDOW_MONTHS meses previos)"
             }.orEmpty()
             appendLine("Tasa de ahorro: ${t.savingsRatePercent}%$deltaStr")

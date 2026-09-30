@@ -8,7 +8,9 @@ internal fun comparisonPercentLabel(percent: Int): String =
 internal fun comparisonPillText(absoluteDeltaFormatted: String, percent: Int): String =
     "$absoluteDeltaFormatted · ${comparisonPercentLabel(percent)}"
 
-internal fun comparisonPillDescription(absoluteDeltaFormatted: String, percent: Int, directionUp: Boolean): String {
-    val verb: String = if (directionUp) "Subió" else "Bajó"
-    return "$verb $absoluteDeltaFormatted, ${comparisonPercentLabel(percent)}"
-}
+internal fun comparisonPillDescription(absoluteDeltaFormatted: String, percent: Int, directionUp: Boolean?): String =
+    when (directionUp) {
+        true -> "Subió $absoluteDeltaFormatted, ${comparisonPercentLabel(percent)}"
+        false -> "Bajó $absoluteDeltaFormatted, ${comparisonPercentLabel(percent)}"
+        null -> "Sin cambio, ${comparisonPercentLabel(percent)}"
+    }

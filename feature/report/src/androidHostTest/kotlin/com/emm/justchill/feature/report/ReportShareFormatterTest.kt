@@ -2,6 +2,7 @@ package com.emm.justchill.feature.report
 
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
+import com.emm.justchill.core.presentation.format.CURRENCY_PREFIX
 import kotlinx.datetime.Month
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -117,6 +118,19 @@ class ReportShareFormatterTest {
         )
         val result: String = ReportShareFormatter.buildMonthShareText(state)
         assertTrue(result.contains("S/\u00A0712 · más de 999% vs"), "Capped percent missing from: $result")
+    }
+
+    @Test
+    fun `buildMonthShareText writes an unchanged month without an arrow`() {
+        val state = ReportUiState(
+            month = may2026,
+            comparisonAmountFormatted = "${CURRENCY_PREFIX}0",
+            comparisonPercent = 0,
+            comparisonText = "vs Abril",
+            comparisonDirectionUp = null,
+        )
+        val result: String = ReportShareFormatter.buildMonthShareText(state)
+        assertTrue(result.lines().contains("${CURRENCY_PREFIX}0 · 0% vs Abril"), "Arrowless line missing from: $result")
     }
 
     @Test
