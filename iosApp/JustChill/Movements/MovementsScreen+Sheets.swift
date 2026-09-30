@@ -50,14 +50,7 @@ extension MovementsScreen {
         }
 
         private var visibleItems: [CategorySheetItem] {
-            let needle: String = normalized(search)
-            return state.sheetItems.filter { item in
-                item.type == segment && (needle.isEmpty || normalized(item.name).contains(needle))
-            }
-        }
-
-        private func normalized(_ text: String) -> String {
-            SpanishSearchKt.stripSpanishAccents(text.trimmingCharacters(in: .whitespaces).lowercased())
+            state.sheetItemsMatching(segment: segment, query: search)
         }
 
         private func dismiss() {

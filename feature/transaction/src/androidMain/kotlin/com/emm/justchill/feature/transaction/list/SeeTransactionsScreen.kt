@@ -249,6 +249,7 @@ private fun FilterSheets(state: SeeTransactionsUiState, onIntent: (SeeTransactio
                 ?: CategoryType.Spend,
             minAmount = state.minAmount,
             maxAmount = state.maxAmount,
+            search = state::sheetItemsMatching,
             onSelect = { onIntent(SeeTransactionsIntent.OnCategorySelected(it)) },
             onClear = { onIntent(SeeTransactionsIntent.OnClearCategoryFilter) },
             onAmountBoundClick = {

@@ -1,8 +1,13 @@
 package com.emm.justchill.feature.transaction.list
 
+import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.presentation.category.SelectableCategory
 import com.emm.justchill.core.presentation.format.CURRENCY_PREFIX
+import com.emm.justchill.feature.transaction.capture.coffee
+import com.emm.justchill.feature.transaction.capture.market
+import com.emm.justchill.feature.transaction.capture.selectableCategory
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlin.test.Test
@@ -260,4 +265,43 @@ class SeeTransactionsUiStateTest {
 
         assertEquals(3, state.filterBannerSegments.size)
     }
+
+    @Test
+    fun `a sheet search ignores accents and trailing spaces`() {
+        assertEquals(listOf(coffee.toSheetItem()), sheetState.sheetItemsMatching(CategoryType.Spend, "cafe "))
+    }
+
+    @Test
+    fun `a sheet search ignores case and surrounding spaces`() {
+        assertEquals(listOf(market.toSheetItem()), sheetState.sheetItemsMatching(CategoryType.Spend, "  SUPER "))
+    }
+
+    @Test
+    fun `a blank sheet search returns the whole segment`() {
+        assertEquals(
+            listOf(market.toSheetItem(), coffee.toSheetItem()),
+            sheetState.sheetItemsMatching(CategoryType.Spend, "  "),
+        )
+    }
+
+    @Test
+    fun `a sheet search never reaches the other segment`() {
+        assertEquals(listOf(cafeteriaTips.toSheetItem()), sheetState.sheetItemsMatching(CategoryType.Income, "cafe"))
+    }
+
+    private val cafeteriaTips: SelectableCategory =
+        selectableCategory("tips", "Propinas cafetería").copy(categoryType = CategoryType.Income)
+
+    private val sheetState: SeeTransactionsUiState = SeeTransactionsUiState(
+        month = august,
+        sheetItems = listOf(market, cafeteriaTips, coffee).map { it.toSheetItem() },
+    )
+
+    private fun SelectableCategory.toSheetItem(): CategorySheetItem = CategorySheetItem(
+        id = categoryId.value,
+        name = name,
+        iconId = iconId,
+        type = categoryType,
+        isActive = false,
+    )
 }
