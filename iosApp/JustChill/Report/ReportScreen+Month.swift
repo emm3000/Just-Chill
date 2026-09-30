@@ -129,14 +129,16 @@ extension ReportScreen {
                     .foregroundStyle(isIncome ? EmmColors.success : EmmColors.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                if let pillText = state.comparisonPillText, let comparisonText = state.comparisonText {
+                if let pillText = state.comparisonPillText,
+                   let pillDescription = state.comparisonPillDescription,
+                   let comparisonText = state.comparisonText {
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
-                            pill(text: pillText)
+                            pill(text: pillText, description: pillDescription)
                             comparisonLabel(comparisonText)
                         }
                         VStack(alignment: .leading, spacing: EmmSpacing.s2) {
-                            pill(text: pillText)
+                            pill(text: pillText, description: pillDescription)
                             comparisonLabel(comparisonText)
                         }
                     }
@@ -150,14 +152,14 @@ extension ReportScreen {
             return (isIncome ? "TOTAL INGRESOS · " : "TOTAL GASTOS · ") + month
         }
 
-        private func pill(text: String) -> some View {
+        private func pill(text: String, description: String) -> some View {
             Pill(
                 text: text,
                 symbol: state.comparisonDirectionUp.map { $0.boolValue ? "arrow.up" : "arrow.down" },
                 isTinted: state.comparisonIsPositive?.boolValue == true
             )
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(state.comparisonPillDescription ?? text)
+            .accessibilityLabel(description)
         }
 
         private func comparisonLabel(_ text: String) -> some View {

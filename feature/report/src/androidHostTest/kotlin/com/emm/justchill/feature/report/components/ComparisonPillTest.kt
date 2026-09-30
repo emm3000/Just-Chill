@@ -1,5 +1,8 @@
 package com.emm.justchill.feature.report.components
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -10,6 +13,8 @@ import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class ComparisonPillTest {
@@ -36,6 +41,13 @@ class ComparisonPillTest {
         renderPill(text = "${CURRENCY_PREFIX}0 · 0%", description = "Sin cambio, 0%", directionUp = null)
 
         composeRule.onNodeWithContentDescription("Sin cambio, 0%").assertExists()
+        assertNull(comparisonPillIcon(directionUp = null))
+    }
+
+    @Test
+    fun `draws the arrow of the direction`() {
+        assertEquals(Icons.Filled.ArrowUpward, comparisonPillIcon(directionUp = true))
+        assertEquals(Icons.Filled.ArrowDownward, comparisonPillIcon(directionUp = false))
     }
 
     private fun renderPill(
