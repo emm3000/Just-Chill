@@ -3,6 +3,7 @@ package com.emm.justchill.feature.transaction.list
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
+import com.emm.justchill.core.presentation.format.balanceFormatted
 import com.emm.justchill.core.presentation.mvi.UiState
 
 data class CategorySheetItem(
@@ -20,6 +21,14 @@ data class MonthSummaryUi(val income: Money, val spend: Money) {
         get() = income - spend
 }
 
+enum class FilterBannerSegmentKind {
+    Plain,
+    Emphasis,
+    Query,
+}
+
+data class FilterBannerSegment(val text: String, val kind: FilterBannerSegmentKind)
+
 enum class ListDisplayState {
     Loading,
     EmptyLedger,
@@ -35,7 +44,6 @@ data class SeeTransactionsUiState(
     val movementCount: Long? = null,
     val query: String = "",
     val activeCategory: ActiveCategoryInfo? = null,
-    // Every category, most-used first — the filter sheet is the only way into a category filter.
     val sheetItems: List<CategorySheetItem> = emptyList(),
     val incomeCount: Int = 0,
     val spendCount: Int = 0,
@@ -45,7 +53,6 @@ data class SeeTransactionsUiState(
     val amountSheetTarget: AmountRangeTarget? = null,
     val currentMonth: YearMonth = month,
     val showFilterSheet: Boolean = false,
-    // Closing this is isSearchOpen's other half, alongside a non-blank query (ADR 012 Decision 2).
     val searchRequested: Boolean = false,
     val showMonthPicker: Boolean = false,
 ) : UiState {
@@ -82,4 +89,39 @@ data class SeeTransactionsUiState(
 
     val isEyebrowVisible: Boolean
         get() = !isFilterActive && !isSearchOpen && listDisplayState != ListDisplayState.EmptyLedger
+
+    val filterBannerSegments: List<FilterBannerSegment>
+        get() {
+            if (!isCategoryOrAmountFilterActive) return emptyList()
+            val categoryName: String? = activeCategory?.name
+            val range: String? = amountRangeText
+            return buildList {
+                if (categoryName != null) {
+                    add(FilterBannerSegment("Filtrando por «", FilterBannerSegmentKind.Plain))
+                    add(FilterBannerSegment(categoryName, FilterBannerSegmentKind.Emphasis))
+                    add(FilterBannerSegment("»", FilterBannerSegmentKind.Plain))
+                }
+                if (range != null) {
+                    if (categoryName != null) add(FilterBannerSegment(", ", FilterBannerSegmentKind.Plain))
+                    add(FilterBannerSegment(range, FilterBannerSegmentKind.Emphasis))
+                }
+                if (query.isNotBlank()) {
+                    add(FilterBannerSegment(" + \"", FilterBannerSegmentKind.Plain))
+                    add(FilterBannerSegment(query, FilterBannerSegmentKind.Query))
+                    add(FilterBannerSegment("\"", FilterBannerSegmentKind.Plain))
+                }
+            }
+        }
+
+    private val amountRangeText: String?
+        get() {
+            val minimum: String? = minAmount?.balanceFormatted()
+            val maximum: String? = maxAmount?.balanceFormatted()
+            return when {
+                minimum != null && maximum != null -> "$minimum – $maximum"
+                minimum != null -> "desde $minimum"
+                maximum != null -> "hasta $maximum"
+                else -> null
+            }
+        }
 }

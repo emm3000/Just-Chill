@@ -156,9 +156,12 @@ extension MovementsScreen {
                             .emmTextStyle(EmmType.bodyM)
                             .foregroundStyle(EmmColors.textSecondary)
                         Spacer()
-                        Text(MovementsScreen.boundText(amount) ?? "Sin límite")
-                            .emmTextStyle(EmmType.amountS)
-                            .foregroundStyle(EmmColors.textPrimary)
+                        Text(
+                            amount.map { (cents: KotlinLong) in CurrencyFormatKt.balanceFormatted(cents.int64Value) }
+                                ?? "Sin límite"
+                        )
+                        .emmTextStyle(EmmType.amountS)
+                        .foregroundStyle(EmmColors.textPrimary)
                     }
                     .contentShape(Rectangle())
                 }
@@ -253,7 +256,7 @@ extension MovementsScreen {
                     send(SeeTransactionsIntentAmountFilterIntentOnAmountConfirmed(digits: digits))
                     dismiss()
                 } label: {
-                    Text("Listo · S/ " + formattedDigits)
+                    Text("Listo · " + CurrencyFormatKt.formatNeutral(value: formattedDigits))
                         .emmTextStyle(EmmType.titleM)
                         .foregroundStyle(isConfirmEnabled ? EmmColors.bg : EmmColors.textTertiary)
                         .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12 + EmmSpacing.s1)
