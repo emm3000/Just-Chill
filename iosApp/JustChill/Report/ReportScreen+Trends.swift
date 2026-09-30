@@ -62,11 +62,11 @@ extension ReportScreen {
 
         @ViewBuilder
         private var delta: some View {
-            if let deltaText = trends.deltaText, let deltaIsPositive = trends.deltaIsPositive {
+            if let deltaText = trends.deltaText {
                 Pill(
                     text: deltaText,
-                    symbol: deltaIsPositive.boolValue ? "arrow.up" : "arrow.down",
-                    isTinted: deltaIsPositive.boolValue
+                    symbol: trends.deltaIsPositive.map { $0.boolValue ? "arrow.up" : "arrow.down" },
+                    isTinted: trends.deltaIsPositive?.boolValue == true
                 )
             }
         }

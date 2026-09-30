@@ -4,7 +4,7 @@ import com.emm.justchill.core.presentation.format.NumberFormatEs
 import com.emm.justchill.core.presentation.format.formatNeutral
 
 internal fun formatSoles(cents: Long): String {
-    val soles = cents.toDouble() / 100.0
+    val soles: Double = cents.toDouble() / 100.0
     return formatNeutral(NumberFormatEs.integerRounded(soles))
 }
 

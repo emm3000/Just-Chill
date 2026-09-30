@@ -58,8 +58,12 @@ internal object ReportShareFormatter {
         return buildString {
             appendLine("Reporte · Tendencias $TRENDS_WINDOW_MONTHS meses")
             val deltaStr: String = t.deltaText?.let { text ->
-                val sign: String = if (t.deltaIsPositive == true) "↑" else "↓"
-                " ($sign $text vs. $TRENDS_WINDOW_MONTHS meses previos)"
+                val sign: String = when (t.deltaIsPositive) {
+                    true -> "↑ "
+                    false -> "↓ "
+                    null -> ""
+                }
+                " ($sign$text vs. $TRENDS_WINDOW_MONTHS meses previos)"
             }.orEmpty()
             appendLine("Tasa de ahorro: ${t.savingsRatePercent}%$deltaStr")
             appendLine("Promedio mensual: ingresos ${t.averageIncomeFormatted} · gastos ${t.averageExpenseFormatted}")
