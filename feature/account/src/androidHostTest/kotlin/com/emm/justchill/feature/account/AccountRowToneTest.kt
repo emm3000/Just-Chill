@@ -2,6 +2,7 @@ package com.emm.justchill.feature.account
 
 import com.emm.justchill.core.domain.account.Account
 import com.emm.justchill.core.domain.shared.AccountId
+import com.emm.justchill.core.ui.atoms.AmountTone
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -20,6 +21,14 @@ class AccountRowToneTest {
     @Test
     fun `an account that spent more than it earned stays monochrome`() {
         assertEquals(AccountNetTone.Neutral, accountRow(movementCount = 1, netIsPositive = false).netTone)
+    }
+
+    @Test
+    fun `the row paints muted as mute, positive as success and neutral as monochrome`() {
+        assertEquals(
+            listOf(AmountTone.Mute, AmountTone.Pos, AmountTone.Neutral),
+            listOf(AccountNetTone.Muted, AccountNetTone.Positive, AccountNetTone.Neutral).map { it.toAmountTone() },
+        )
     }
 
     @Test
