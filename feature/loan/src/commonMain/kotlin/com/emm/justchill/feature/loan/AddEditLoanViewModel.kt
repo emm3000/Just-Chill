@@ -1,11 +1,13 @@
 package com.emm.justchill.feature.loan
 
 import com.emm.justchill.core.domain.loan.CreateLoanUseCase
+import com.emm.justchill.core.domain.loan.Loan
 import com.emm.justchill.core.domain.loan.LoanInsert
 import com.emm.justchill.core.domain.loan.LoanRepository
 import com.emm.justchill.core.domain.loan.LoanUpdate
 import com.emm.justchill.core.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.core.domain.shared.LoanId
+import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.presentation.error.toUserMessage
 import com.emm.justchill.core.presentation.format.centsToMoney
@@ -87,7 +89,7 @@ class AddEditLoanViewModel(
     }
 
     private suspend fun loadLoan(id: String) {
-        val loan = loanRepository.byId(LoanId(id)).first()
+        val loan: Loan? = loanRepository.byId(LoanId(id)).first()
         if (loan == null) {
             sendEffect(AddEditLoanEffect.NavigateBack)
             return
@@ -116,32 +118,32 @@ class AddEditLoanViewModel(
     ) {
         if (currentState.isSaving) return@launchSafe
         updateState { copy(isSaving = true) }
-        val s = currentState
+        val form: AddEditLoanUiState = currentState
         // The day is the user's pick or, untouched, TodayFlow's answer; the clock is here only
         // for the hour, and only when this loan has no recorded one to preserve.
         val timeOfDay: LocalTime = clock.now().toLocalDateTime(zone).time
-        val lentAt = LocalDateTime(s.date ?: todayFlow.today(), loadedLentAt?.time ?: timeOfDay)
-        val principal = centsToMoney(s.amountDigits)
-        val interestBps = percentTextToBps(s.interestPercentText)
-        val id = loanId
+        val lentAt = LocalDateTime(form.date ?: todayFlow.today(), loadedLentAt?.time ?: timeOfDay)
+        val principal: Money = centsToMoney(form.amountDigits)
+        val interestBps: Int = percentTextToBps(form.interestPercentText)
+        val id: String? = loanId
         if (id != null) {
             updateLoan(
                 LoanId(id),
                 LoanUpdate(
-                    personName = s.personName,
+                    personName = form.personName,
                     principal = principal,
                     interestBps = interestBps,
-                    note = s.note,
+                    note = form.note,
                     lentAt = lentAt,
                 ),
             )
         } else {
             createLoan(
                 LoanInsert(
-                    personName = s.personName,
+                    personName = form.personName,
                     principal = principal,
                     interestBps = interestBps,
-                    note = s.note,
+                    note = form.note,
                     lentAt = lentAt,
                 ),
             )
