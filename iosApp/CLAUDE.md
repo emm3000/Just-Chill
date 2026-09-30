@@ -1,6 +1,6 @@
 # iosApp — CLAUDE.md
 
-The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.emm.justchill.ios`, iOS 17.0, iPhone only, no signing identity. Swift, UI copy in Spanish addressing the user as tú.
+The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.emm.justchill.ios`, iOS 17.0, iPhone only. The simulator build is ad-hoc signed (`CODE_SIGN_IDENTITY[sdk=iphonesimulator*] = "-"`); a device build is not signed (`CODE_SIGNING_ALLOWED = NO`). Swift, UI copy in Spanish addressing the user as tú.
 
 ## Build
 
@@ -15,8 +15,9 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 
 ## Launch
 
-- `JustChillApp.init` starts Koin once with a `KitConfig` whose Supabase fields are blank, `isSnapshotBackupEnabled` false and `appVersion` from `CFBundleShortVersionString`, so the app runs offline (PRD §2).
-- `CFBundleShortVersionString` is the latest `v*` tag without its `v`, as Android's `versionName`: the last phase, `Version From Git Tag`, runs `git describe --tags --abbrev=0 --match 'v[0-9]*'` and writes it into the built `Info.plist`. It is `alwaysOutOfDate`, so a new tag shows without `clean`. With no tag (a `--no-tags` clone) the phase leaves `MARKETING_VERSION`, `0.0.0-dev`, Android's fallback. `CURRENT_PROJECT_VERSION` stays `1`.
+- `JustChillApp.init` starts Koin once with a `KitConfig` whose Supabase fields are the built `Info.plist`'s `SupabaseUrl` / `SupabaseAnonKey`, `isSnapshotBackupEnabled` true only when both are set, and `appVersion` from `CFBundleShortVersionString`.
+- On Debug, the last phase, `Supabase From Properties`, writes `SupabaseUrl` from `supabase.properties`' `ios.supabase.url` and `SupabaseAnonKey` from its `dev.supabase.anonKey`. With no file, or on Release, they are blank or absent, backup is off and the app runs offline (PRD §2). A fresh clone has no `supabase.properties`; it is git-ignored, never committed.
+- `CFBundleShortVersionString` is the latest `v*` tag without its `v`, as Android's `versionName`: the `Version From Git Tag` phase runs `git describe --tags --abbrev=0 --match 'v[0-9]*'` and writes it into the built `Info.plist`. With no tag (a `--no-tags` clone) it writes `MARKETING_VERSION`, `0.0.0-dev`, Android's fallback. It is `alwaysOutOfDate` and writes on every build, so a new or deleted tag shows without `clean`. `CURRENT_PROJECT_VERSION` stays `1`.
 
 ## Simulator
 
