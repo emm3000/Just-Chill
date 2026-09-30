@@ -50,7 +50,6 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.presentation.category.AppIconCatalog
 import com.emm.justchill.core.presentation.category.CategoryIcon
 import com.emm.justchill.core.presentation.format.balanceFormatted
-import com.emm.justchill.core.presentation.format.normalizeForSearch
 import com.emm.justchill.core.ui.atoms.CtaHeight
 import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -81,6 +80,7 @@ internal fun CategoryFilterSheet(
     initialSegment: CategoryType,
     minAmount: Money?,
     maxAmount: Money?,
+    search: (CategoryType, String) -> List<CategorySheetItem>,
     onSelect: (String) -> Unit,
     onClear: () -> Unit,
     onAmountBoundClick: (AmountRangeTarget) -> Unit,
@@ -98,14 +98,7 @@ internal fun CategoryFilterSheet(
 
     val totalCount: Int = items.size
 
-    val filtered: List<CategorySheetItem> = remember(items, segment, query) {
-        val normalizedQuery: String = query.normalizeForSearch()
-        items
-            .asSequence()
-            .filter { it.type == segment }
-            .filter { normalizedQuery.isBlank() || it.name.normalizeForSearch().contains(normalizedQuery) }
-            .toList()
-    }
+    val filtered: List<CategorySheetItem> = remember(items, segment, query) { search(segment, query) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
