@@ -252,11 +252,12 @@ class ProfileViewModelTest {
 
     @Test
     fun `the backup export is named after the injected today`() = runTest(testDispatcher) {
-        today.value = LocalDate(2026, 9, 30)
         coEvery { backupRepository.exportToJson(any(), any()) } returns "{}"
         val vm: ProfileViewModel = buildViewModel()
         val effects: MutableList<ProfileEffect> = mutableListOf()
         val job: Job = launch { vm.effect.collect { effects.add(it) } }
+        advanceUntilIdle()
+        today.value = LocalDate(2026, 9, 30)
 
         vm.onIntent(ProfileIntent.ExportRequested)
         advanceUntilIdle()
