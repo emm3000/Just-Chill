@@ -294,8 +294,7 @@ extension MovementsScreen {
                 (text: inout AttributedString, segment: FilterBannerSegment) in
                 var piece: AttributedString = AttributedString(segment.text)
                 if segment.kind == .emphasis {
-                    piece.font = Font.custom(
-                        EmmFonts.interSemiBold, size: EmmType.labelM.size, relativeTo: EmmType.labelM.textStyle)
+                    piece.font = EmmType.labelMEmphasis
                 }
                 text += piece
             }
