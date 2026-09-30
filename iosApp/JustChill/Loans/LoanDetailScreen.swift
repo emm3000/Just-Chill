@@ -64,8 +64,14 @@ extension LoanDetailScreen {
                 TopBar(
                     title: state.summary?.personName ?? "",
                     onBack: onClose,
-                    onEdit: { send(LoanDetailIntentOnEditLoanClick.shared) },
-                    onDelete: { send(LoanDetailIntentOnDeleteLoanClick.shared) }
+                    trailing: [
+                        TopBar.Action(symbol: "pencil", label: "Editar préstamo") {
+                            send(LoanDetailIntentOnEditLoanClick.shared)
+                        },
+                        TopBar.Action(symbol: "trash", label: "Eliminar préstamo", tone: .danger) {
+                            send(LoanDetailIntentOnDeleteLoanClick.shared)
+                        },
+                    ]
                 )
                 if let summary = state.summary {
                     loaded(summary)

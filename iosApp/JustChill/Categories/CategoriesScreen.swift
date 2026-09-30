@@ -57,7 +57,7 @@ extension CategoriesScreen {
                 TopBar(
                     title: "Categorías",
                     onBack: onBack,
-                    add: TopBar.Action(label: "Nueva categoría") { isAddPresented = true }
+                    trailing: [TopBar.Action(symbol: "plus", label: "Nueva categoría") { isAddPresented = true }]
                 )
                 if state.categories.isEmpty {
                     EmptyState(onCreate: { isAddPresented = true })
