@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import com.emm.justchill.core.domain.category.CategoryType
-import com.emm.justchill.core.presentation.category.IconCatalog
+import com.emm.justchill.core.presentation.category.CategoryIcon
 import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.category.resolvedColor
@@ -34,7 +34,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmType
 internal fun PreviewChip(
     name: String,
     isPlaceholder: Boolean,
-    icon: IconCatalog,
+    icon: CategoryIcon,
     colorId: String,
     type: CategoryType,
     modifier: Modifier = Modifier,

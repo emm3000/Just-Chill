@@ -48,9 +48,9 @@ import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.presentation.category.AppIconCatalog
-import com.emm.justchill.core.presentation.category.IconCatalog
+import com.emm.justchill.core.presentation.category.CategoryIcon
 import com.emm.justchill.core.presentation.format.balanceFormatted
-import com.emm.justchill.core.presentation.format.stripSpanishAccents
+import com.emm.justchill.core.presentation.format.normalizeForSearch
 import com.emm.justchill.core.ui.atoms.CtaHeight
 import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.IconTile
@@ -271,7 +271,7 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val type: EmmType = LocalEmmType.current
-    val icon: IconCatalog = remember(item.iconId) { AppIconCatalog.findById(item.iconId) }
+    val icon: CategoryIcon = remember(item.iconId) { AppIconCatalog.findById(item.iconId) }
 
     Row(
         modifier = Modifier
@@ -310,8 +310,6 @@ private fun SheetCategoryRow(item: CategorySheetItem, onClick: () -> Unit) {
         }
     }
 }
-
-private fun String.normalizeForSearch(): String = this.trim().lowercase().stripSpanishAccents()
 
 @Composable
 private fun MontoSection(

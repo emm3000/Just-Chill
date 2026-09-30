@@ -5,7 +5,7 @@ repo="${0:A:h:h}"
 cd "$repo"
 
 kotlin_ui=core/ui/src/main/kotlin/com/emm/justchill/core/ui
-kotlin_catalog=core/presentation/src/commonMain/kotlin/com/emm/justchill/core/presentation/category/IconCatalog.kt
+kotlin_catalog=core/presentation/src/commonMain/kotlin/com/emm/justchill/core/presentation/category/CategoryIcon.kt
 swift_theme=iosApp/JustChill/Theme
 failed=0
 

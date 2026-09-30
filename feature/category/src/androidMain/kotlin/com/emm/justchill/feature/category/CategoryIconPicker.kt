@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.presentation.category.AppIconCatalog
-import com.emm.justchill.core.presentation.category.IconCatalog
+import com.emm.justchill.core.presentation.category.CategoryIcon
 import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -31,7 +31,7 @@ import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 private const val ICON_GRID_ROWS: Int = 2
 
 @Composable
-internal fun IconGrid(selected: IconCatalog, onSelect: (IconCatalog) -> Unit) {
+internal fun IconGrid(selected: CategoryIcon, onSelect: (CategoryIcon) -> Unit) {
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val gridHeight: Dp = spacing.s12 * ICON_GRID_ROWS + spacing.s2 * (ICON_GRID_ROWS - 1)
 
@@ -43,7 +43,7 @@ internal fun IconGrid(selected: IconCatalog, onSelect: (IconCatalog) -> Unit) {
             .fillMaxWidth()
             .height(gridHeight),
     ) {
-        items(AppIconCatalog.catalog, key = IconCatalog::id) { icon: IconCatalog ->
+        items(AppIconCatalog.catalog, key = CategoryIcon::id) { icon: CategoryIcon ->
             IconCell(
                 icon = icon,
                 selected = icon == selected,
@@ -54,7 +54,7 @@ internal fun IconGrid(selected: IconCatalog, onSelect: (IconCatalog) -> Unit) {
 }
 
 @Composable
-private fun IconCell(icon: IconCatalog, selected: Boolean, onClick: () -> Unit) {
+private fun IconCell(icon: CategoryIcon, selected: Boolean, onClick: () -> Unit) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current

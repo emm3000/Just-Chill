@@ -6,8 +6,8 @@ import androidx.compose.material.icons.rounded.LocalPizza
 import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.emm.justchill.core.presentation.category.CategoryIcon
 import com.emm.justchill.core.presentation.category.CategoryUi
-import com.emm.justchill.core.presentation.category.IconCatalog
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -15,16 +15,16 @@ class CategoryIconTest {
 
     @Test
     fun `every catalog icon draws a vector`() {
-        val drawn: List<ImageVector> = IconCatalog.entries.map(IconCatalog::icon)
+        val drawn: List<ImageVector> = CategoryIcon.entries.map(CategoryIcon::icon)
 
-        assertEquals(IconCatalog.entries.size, drawn.size)
+        assertEquals(CategoryIcon.entries.size, drawn.size)
     }
 
     @Test
     fun `an icon draws the vector it always drew`() {
         assertEquals(
             listOf(Icons.Rounded.LocalPizza, Icons.Rounded.AccountBalance, Icons.Rounded.AccountBalance),
-            listOf(IconCatalog.Pizza.icon, IconCatalog.Mortgage.icon, IconCatalog.Loan.icon),
+            listOf(CategoryIcon.Pizza.icon, CategoryIcon.Mortgage.icon, CategoryIcon.Loan.icon),
         )
     }
 

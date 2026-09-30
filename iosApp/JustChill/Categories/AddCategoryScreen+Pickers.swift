@@ -92,7 +92,7 @@ extension AddCategoryScreen {
             }
         }
 
-        private var icons: [IconCatalog] {
+        private var icons: [CategoryIcon] {
             AppIconCatalog.shared.search(query: query)
         }
 
@@ -111,7 +111,7 @@ extension AddCategoryScreen {
             Array(repeating: GridItem(.fixed(EmmSpacing.s12), spacing: EmmSpacing.s2), count: Self.rowCount)
         }
 
-        private func cell(_ icon: IconCatalog) -> some View {
+        private func cell(_ icon: CategoryIcon) -> some View {
             let isSelected: Bool = icon.id == selectedId
             return Button {
                 onSelect(icon.id)
