@@ -18,7 +18,7 @@ extension MoreScreen {
             guard let data = configuration.file.regularFileContents else {
                 throw CocoaError(.fileReadCorruptFile)
             }
-            fileName = configuration.file.filename ?? ""
+            fileName = ""
             json = String(decoding: data, as: UTF8.self)
         }
 

@@ -365,21 +365,16 @@ private fun CheckEmailStep(
                 style = type.bodyM,
                 color = colors.textTertiary,
             )
-            val resendActive: Boolean = state.isResendEnabled
             Box(
                 contentAlignment = Alignment.Center,
-                // The height sits outside the branch so the row keeps it when the link
-                // disables mid-cooldown.
-                modifier = if (resendActive) {
-                    Modifier.clickable(role = Role.Button) { onIntent(AuthIntent.ResendEmail) }
-                } else {
-                    Modifier
-                }.height(spacing.s12),
+                modifier = Modifier
+                    .clickable(enabled = state.isResendEnabled, role = Role.Button) { onIntent(AuthIntent.ResendEmail) }
+                    .height(spacing.s12),
             ) {
                 Text(
                     text = state.resendLabel,
                     style = type.bodyM,
-                    color = if (resendActive) colors.textPrimary else colors.textTertiary,
+                    color = if (state.isResendEnabled) colors.textPrimary else colors.textTertiary,
                 )
             }
         }
