@@ -29,7 +29,7 @@ class CapturePadHeroTest(private val width: Int, private val height: Int) {
             heroFontSize = with(density) { amountHero.fontSize.toDp() }
         }
 
-        val hero: DpRect = composeRule.onNodeWithContentDescription("Gasto de S/ 0.00").getBoundsInRoot()
+        val hero: DpRect = composeRule.onNodeWithContentDescription("Gasto de S/\u00A00.00").getBoundsInRoot()
         val note: DpRect = composeRule.onNodeWithText("Agregar nota").getBoundsInRoot()
         val firstKey: DpRect = composeRule.onNodeWithText("1").getBoundsInRoot()
         val room: Dp = (hero.bottom - hero.top) + (firstKey.top - note.bottom)

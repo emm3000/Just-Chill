@@ -67,10 +67,10 @@ class PersonLoansViewModelTest {
         assertEquals("Ana", state.personName)
         val row = state.loans.single()
         assertEquals("loan-1", row.loanId)
-        assertEquals("S/ 1,000.00", row.principal)
-        assertEquals("S/ 1,100.00", row.totalDue)
-        assertEquals("S/ 100.00", row.paidSoFar)
-        assertEquals("S/ 1,000.00", row.remaining)
+        assertEquals("S/\u00A01,000.00", row.principal)
+        assertEquals("S/\u00A01,100.00", row.totalDue)
+        assertEquals("S/\u00A0100.00", row.paidSoFar)
+        assertEquals("S/\u00A01,000.00", row.remaining)
         assertEquals("10 de agosto de 2026", row.readableLentAt)
     }
 
@@ -97,8 +97,8 @@ class PersonLoansViewModelTest {
         advanceUntilIdle()
 
         val row = vm.state.value.loans.single()
-        assertEquals("S/ 500.00", row.paidSoFar)
-        assertEquals("S/ 600.00", row.remaining)
+        assertEquals("S/\u00A0500.00", row.paidSoFar)
+        assertEquals("S/\u00A0600.00", row.remaining)
     }
 
     @Test

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.presentation.format.formatCentsForDisplay
+import com.emm.justchill.core.presentation.format.formatNeutral
 import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.EmmDialog
 import com.emm.justchill.core.ui.atoms.IconBtnTone
@@ -93,7 +94,7 @@ private fun TransactionSummaryRow(
     val radii: EmmRadii = LocalEmmRadii.current
 
     val amountColor: Color = if (isSpend) colors.textPrimary else colors.success
-    val amountDisplay: String = "S/ " + formatCentsForDisplay(amountCents)
+    val amountDisplay: String = formatNeutral(formatCentsForDisplay(amountCents))
 
     Row(
         verticalAlignment = Alignment.CenterVertically,

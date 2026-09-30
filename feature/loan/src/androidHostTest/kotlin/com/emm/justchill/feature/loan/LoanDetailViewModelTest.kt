@@ -118,8 +118,8 @@ class LoanDetailViewModelTest {
 
         val summary = checkNotNull(vm.state.value.summary)
         assertEquals("Ana", summary.personName)
-        assertEquals("S/ 500.00", summary.paidSoFar)
-        assertEquals("S/ 600.00", summary.remaining)
+        assertEquals("S/\u00A0500.00", summary.paidSoFar)
+        assertEquals("S/\u00A0600.00", summary.remaining)
         assertEquals(listOf("pay-1", "pay-2"), vm.state.value.payments.map { it.paymentId })
     }
 
@@ -260,13 +260,13 @@ class LoanDetailViewModelTest {
         }
         val vm = viewModel()
         advanceUntilIdle()
-        assertEquals("S/ 600.00", checkNotNull(vm.state.value.summary).remaining)
+        assertEquals("S/\u00A0600.00", checkNotNull(vm.state.value.summary).remaining)
 
         vm.onIntent(LoanDetailIntent.OnDeletePaymentClick("pay-2"))
         vm.onIntent(LoanDetailIntent.OnDeletePaymentConfirm)
         advanceUntilIdle()
 
-        assertEquals("S/ 800.00", checkNotNull(vm.state.value.summary).remaining)
+        assertEquals("S/\u00A0800.00", checkNotNull(vm.state.value.summary).remaining)
         assertEquals(listOf("pay-1"), vm.state.value.payments.map { it.paymentId })
     }
 
@@ -494,7 +494,7 @@ class LoanDetailViewModelTest {
         vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnAddPaymentClick)
         advanceUntilIdle()
 
-        assertEquals("S/ 600.00", vm.state.value.payment?.maxAmountLabel)
+        assertEquals("S/\u00A0600.00", vm.state.value.payment?.maxAmountLabel)
     }
 
     @Test
@@ -513,7 +513,7 @@ class LoanDetailViewModelTest {
             // Plain remaining is S/ 600.00 (110_000 totalDue - 50_000 paid); editing pay-2 (20_000)
             // must add its own amount back so the ceiling reflects what UpdateLoanPaymentUseCase
             // actually allows, not the balance including the abono being edited.
-            assertEquals("S/ 800.00", vm.state.value.payment?.maxAmountLabel)
+            assertEquals("S/\u00A0800.00", vm.state.value.payment?.maxAmountLabel)
         }
 
     @Test
@@ -527,14 +527,14 @@ class LoanDetailViewModelTest {
         }
         val vm = viewModel()
         advanceUntilIdle()
-        assertEquals("S/ 600.00", checkNotNull(vm.state.value.summary).remaining)
+        assertEquals("S/\u00A0600.00", checkNotNull(vm.state.value.summary).remaining)
 
         vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnEditPaymentClick("pay-2"))
         vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentAmountChange("5000"))
         vm.onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentConfirm)
         advanceUntilIdle()
 
-        assertEquals("S/ 750.00", checkNotNull(vm.state.value.summary).remaining)
+        assertEquals("S/\u00A0750.00", checkNotNull(vm.state.value.summary).remaining)
     }
 
     @Test

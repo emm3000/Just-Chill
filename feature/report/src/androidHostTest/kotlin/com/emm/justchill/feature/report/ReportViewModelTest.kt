@@ -426,36 +426,36 @@ class ReportViewModelTest {
     fun `a rising spend pill reads its direction in words with the percent`() = runTest(testDispatcher) {
         val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = 25)
 
-        assertEquals("S/ 20 · 25%", vm.state.value.comparisonPillText)
-        assertEquals("Subió S/ 20, 25%", vm.state.value.comparisonPillDescription)
+        assertEquals("S/\u00A020 · 25%", vm.state.value.comparisonPillText)
+        assertEquals("Subió S/\u00A020, 25%", vm.state.value.comparisonPillDescription)
     }
 
     @Test
     fun `a falling income pill reads its direction in words with the percent`() = runTest(testDispatcher) {
         val vm: ReportViewModel = viewModelFor(TransactionType.Income, deltaPercent = -66)
 
-        assertEquals("S/ 20 · 66%", vm.state.value.comparisonPillText)
-        assertEquals("Bajó S/ 20, 66%", vm.state.value.comparisonPillDescription)
+        assertEquals("S/\u00A020 · 66%", vm.state.value.comparisonPillText)
+        assertEquals("Bajó S/\u00A020, 66%", vm.state.value.comparisonPillDescription)
     }
 
     @Test
     fun `a tiny-base percent caps in the pill text and its description`() = runTest(testDispatcher) {
         val vm: ReportViewModel = viewModelFor(TransactionType.Spend, deltaPercent = 44499)
 
-        assertEquals("S/ 20 · más de 999%", vm.state.value.comparisonPillText)
-        assertEquals("Subió S/ 20, más de 999%", vm.state.value.comparisonPillDescription)
+        assertEquals("S/\u00A020 · más de 999%", vm.state.value.comparisonPillText)
+        assertEquals("Subió S/\u00A020, más de 999%", vm.state.value.comparisonPillDescription)
     }
 
     @Test
     fun `a pill amount with no direction has no description rather than a guessed verb`() {
         val state = ReportUiState(
             month = currentMonth,
-            comparisonAmountFormatted = "S/ 20",
+            comparisonAmountFormatted = "S/\u00A020",
             comparisonDirectionUp = null,
             comparisonPercent = 25,
         )
 
-        assertEquals("S/ 20 · 25%", state.comparisonPillText)
+        assertEquals("S/\u00A020 · 25%", state.comparisonPillText)
         assertEquals(null, state.comparisonPillDescription)
     }
 

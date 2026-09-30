@@ -53,6 +53,7 @@ import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.domain.transaction.TransactionType
 import com.emm.justchill.core.presentation.category.CategoryUi
+import com.emm.justchill.core.presentation.format.balanceFormatted
 import com.emm.justchill.core.presentation.format.format
 import com.emm.justchill.core.presentation.format.formatExpense
 import com.emm.justchill.core.presentation.format.formatIncome
@@ -298,12 +299,12 @@ private fun ActiveFilterBanner(
     val spacing: EmmSpacing = LocalEmmSpacing.current
     val radii: EmmRadii = LocalEmmRadii.current
 
-    val nbspMin: String? = minAmount?.balanceFormattedNonBreaking()
-    val nbspMax: String? = maxAmount?.balanceFormattedNonBreaking()
+    val minText: String? = minAmount?.balanceFormatted()
+    val maxText: String? = maxAmount?.balanceFormatted()
     val rangeText: String? = when {
-        nbspMin != null && nbspMax != null -> "$nbspMin – $nbspMax"
-        nbspMin != null -> "desde $nbspMin"
-        nbspMax != null -> "hasta $nbspMax"
+        minText != null && maxText != null -> "$minText – $maxText"
+        minText != null -> "desde $minText"
+        maxText != null -> "hasta $maxText"
         else -> null
     }
 

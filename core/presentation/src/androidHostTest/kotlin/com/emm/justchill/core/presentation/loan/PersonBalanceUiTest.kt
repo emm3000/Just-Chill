@@ -33,7 +33,7 @@ class PersonBalanceUiTest {
         )
 
         assertFalse(balances.totalOwedIsPositive())
-        assertEquals("S/ 0.00", balances.totalOwedFormatted())
+        assertEquals("S/\u00A00.00", balances.totalOwedFormatted())
         assertEquals(listOf("Carlos"), balances.owingNames())
     }
 }

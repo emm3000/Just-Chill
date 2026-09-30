@@ -1,13 +1,15 @@
 package com.emm.justchill.feature.report
 
+import com.emm.justchill.core.presentation.format.formatNeutral
+
 data class TrendsUiData(
     val savingsRatePercent: Int = 0,
     val deltaText: String? = null,
     val deltaIsPositive: Boolean? = null,
     val contextSentence: String = "",
     val monthlyBars: List<MonthlyBarItem> = emptyList(),
-    val averageIncomeFormatted: String = "S/ 0",
-    val averageExpenseFormatted: String = "S/ 0",
+    val averageIncomeFormatted: String = formatNeutral("0"),
+    val averageExpenseFormatted: String = formatNeutral("0"),
     val topExpenses: List<TopCategoryItem> = emptyList(),
     val isEarlyState: Boolean = false,
 ) {
