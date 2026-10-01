@@ -250,8 +250,38 @@ extension MovementsScreen {
     struct FilterBanner: View {
         let state: SeeTransactionsUiState
         let send: Send
+        @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
 
         var body: some View {
+            content
+                .padding(.leading, EmmSpacing.s3)
+                .frame(minHeight: EmmSpacing.s12)
+                .fixedSize(horizontal: false, vertical: true)
+                .background(EmmColors.surface1, in: EmmRadii.rS)
+                .overlay { EmmRadii.rS.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+                .padding(.horizontal, EmmSpacing.s6)
+                .padding(.bottom, EmmSpacing.s3)
+        }
+
+        @ViewBuilder
+        private var content: some View {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: EmmSpacing.s0) {
+                    label
+                        .padding(.top, EmmSpacing.s3)
+                        .padding(.trailing, EmmSpacing.s3)
+                    clearButton
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            } else {
+                HStack(spacing: EmmSpacing.s2) {
+                    label
+                    clearButton
+                }
+            }
+        }
+
+        private var label: some View {
             HStack(spacing: EmmSpacing.s2) {
                 Image(systemName: "list.bullet")
                     .resizable()
@@ -263,31 +293,27 @@ extension MovementsScreen {
                     .emmTextStyle(EmmType.labelM)
                     .foregroundStyle(EmmColors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    send(SeeTransactionsIntentOnClearCategoryFilter.shared)
-                } label: {
-                    HStack(spacing: EmmSpacing.s1) {
-                        Text("Limpiar")
-                            .emmTextStyle(EmmType.labelM)
-                            .fixedSize()
-                        Image(systemName: "xmark")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
-                    }
-                    .foregroundStyle(EmmColors.textSecondary)
-                    .padding(.horizontal, EmmSpacing.s3)
-                    .frame(minHeight: EmmSpacing.s12)
-                }
-                .accessibilityLabel("Limpiar filtro")
             }
-            .padding(.leading, EmmSpacing.s3)
-            .frame(minHeight: EmmSpacing.s12)
-            .fixedSize(horizontal: false, vertical: true)
-            .background(EmmColors.surface1, in: EmmRadii.rS)
-            .overlay { EmmRadii.rS.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
-            .padding(.horizontal, EmmSpacing.s6)
-            .padding(.bottom, EmmSpacing.s3)
+        }
+
+        private var clearButton: some View {
+            Button {
+                send(SeeTransactionsIntentOnClearCategoryFilter.shared)
+            } label: {
+                HStack(spacing: EmmSpacing.s1) {
+                    Text("Limpiar")
+                        .emmTextStyle(EmmType.labelM)
+                        .fixedSize()
+                    Image(systemName: "xmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                }
+                .foregroundStyle(EmmColors.textSecondary)
+                .padding(.horizontal, EmmSpacing.s3)
+                .frame(minHeight: EmmSpacing.s12)
+            }
+            .accessibilityLabel("Limpiar filtro")
         }
 
         private var bannerText: AttributedString {
