@@ -6,10 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -50,6 +48,7 @@ import com.emm.justchill.core.ui.atoms.CategoryDot
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
+import com.emm.justchill.core.ui.atoms.OutlinedCta
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
@@ -206,34 +205,22 @@ fun CategoryPickerSheet(
             }
         }
 
-        val addButtonShape: RoundedCornerShape = radii.rM
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4)
-                .height(spacing.s12)
-                .clip(addButtonShape)
-                .border(spacing.hairline, colors.borderFocus, addButtonShape)
-                .clickable {
-                    onAddNew()
-                    onDismiss()
-                },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = null,
-                tint = colors.textPrimary,
-                modifier = Modifier.size(spacing.s3),
-            )
-            Spacer(Modifier.size(spacing.s2))
-            Text(
-                text = "Nueva categoría",
-                style = type.labelL.copy(fontWeight = FontWeight.W600),
-                color = colors.textPrimary,
-            )
-        }
+        OutlinedCta(
+            label = "Nueva categoría",
+            onClick = {
+                onAddNew()
+                onDismiss()
+            },
+            modifier = Modifier.padding(start = spacing.s4, end = spacing.s4, top = spacing.s3, bottom = spacing.s4),
+            leading = {
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = null,
+                    tint = colors.textPrimary,
+                    modifier = Modifier.size(spacing.s3),
+                )
+            },
+        )
     }
 }
 
