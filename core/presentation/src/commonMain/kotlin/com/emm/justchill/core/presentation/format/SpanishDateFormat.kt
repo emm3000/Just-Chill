@@ -51,7 +51,7 @@ object SpanishDateFormat {
     }
 
     fun monthDayPadded(date: LocalDate): String {
-        val day = date.dayOfMonth.toString().padStart(2, '0')
+        val day: String = date.dayOfMonth.toString().padStart(2, '0')
         return "${fullMonth(date.month)} $day"
     }
 

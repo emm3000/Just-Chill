@@ -63,7 +63,7 @@ class MviViewModelTest {
         viewModel.runSafe { throw failure }
         settle()
 
-        val unknown = assertIs<DomainException.Unknown>(effects.single().error)
+        val unknown: DomainException.Unknown = assertIs<DomainException.Unknown>(effects.single().error)
         assertSame(failure, unknown.cause, "the original throwable must survive as the cause")
     }
 
@@ -109,7 +109,7 @@ class MviViewModelTest {
     fun `a collector that keeps failing is subscribed four times and reports once`() = runTest {
         val viewModel = FunnelViewModel()
         val effects: List<TestEffect> = collectEffects(viewModel)
-        var subscriptions = 0
+        var subscriptions: Int = 0
 
         viewModel.collectSafe(
             flow {
@@ -127,7 +127,7 @@ class MviViewModelTest {
     fun `a collector that fails once recovers on its retry, silently`() = runTest {
         val viewModel = FunnelViewModel()
         val effects: List<TestEffect> = collectEffects(viewModel)
-        var subscriptions = 0
+        var subscriptions: Int = 0
 
         val job: Job = viewModel.collectSafe(
             flow {
@@ -147,7 +147,7 @@ class MviViewModelTest {
     fun `a CancellationException raised inside the collected flow is neither retried nor reported`() = runTest {
         val viewModel = FunnelViewModel()
         val effects: List<TestEffect> = collectEffects(viewModel)
-        var subscriptions = 0
+        var subscriptions: Int = 0
 
         val job: Job = viewModel.collectSafe(
             flow {
@@ -171,12 +171,12 @@ class MviViewModelTest {
         viewModel.collectSafe(flow { throw failure })
         settle()
 
-        val unknown = assertIs<DomainException.Unknown>(effects.single().error)
+        val unknown: DomainException.Unknown = assertIs<DomainException.Unknown>(effects.single().error)
         assertSame(failure, unknown.cause, "the original throwable must survive as the cause")
     }
 
     private fun TestScope.collectEffects(viewModel: FunnelViewModel): List<TestEffect> {
-        val effects = mutableListOf<TestEffect>()
+        val effects: MutableList<TestEffect> = mutableListOf<TestEffect>()
         backgroundScope.launch { viewModel.effect.collect { effects += it } }
         runCurrent()
         return effects

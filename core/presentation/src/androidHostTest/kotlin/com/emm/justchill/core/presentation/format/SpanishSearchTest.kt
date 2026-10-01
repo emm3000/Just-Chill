@@ -26,4 +26,34 @@ class SpanishSearchTest {
     fun `a text does not match a query it does not contain`() {
         assertFalse("Taxi".matchesSearch("café"))
     }
+
+    @Test
+    fun `an acute accent matches its plain vowel`() {
+        assertTrue("café".matchesSearch("cafe"))
+        assertTrue("cafe".matchesSearch("café"))
+    }
+
+    @Test
+    fun `a tilde ñ matches a plain n`() {
+        assertTrue("niño".matchesSearch("nino"))
+        assertTrue("nino".matchesSearch("niño"))
+    }
+
+    @Test
+    fun `every accented lowercase vowel matches its plain vowel`() {
+        assertTrue("áéíóú".matchesSearch("aeiou"))
+        assertTrue("aeiou".matchesSearch("áéíóú"))
+    }
+
+    @Test
+    fun `uppercase accented letters and Ñ match their plain lowercase`() {
+        assertTrue("ÁÉÍÓÚÜÑ".matchesSearch("aeiouun"))
+        assertTrue("aeiouun".matchesSearch("ÁÉÍÓÚÜÑ"))
+    }
+
+    @Test
+    fun `a diaeresis ü matches a plain u`() {
+        assertTrue("pingüino".matchesSearch("pinguino"))
+        assertTrue("pinguino".matchesSearch("pingüino"))
+    }
 }

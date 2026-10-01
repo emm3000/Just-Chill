@@ -50,7 +50,7 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(protected v
     private fun <T> Flow<T>.retryOnFailure(): Flow<T> = retryWhen { cause, attempt ->
         // retryWhen rethrows only the collecting job's own cancellation cause; any other one reaches
         // this predicate and would otherwise count as retryable.
-        val retryable = cause !is CancellationException && attempt < COLLECTOR_RETRIES
+        val retryable: Boolean = cause !is CancellationException && attempt < COLLECTOR_RETRIES
         if (retryable) delay(COLLECTOR_RETRY_BASE_DELAY_MS shl attempt.toInt())
         retryable
     }

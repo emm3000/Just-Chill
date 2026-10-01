@@ -42,7 +42,7 @@ class PersonBalanceUiTest {
 
     @Test
     fun `two balances that offset to zero total, owingNames still names the positive half`() {
-        val balances = listOf(
+        val balances: List<PersonBalance> = listOf(
             balance(remaining = 50_000L, personKey = "carlos", personName = "Carlos"),
             balance(remaining = -50_000L, personKey = "diego", personName = "Diego"),
         )

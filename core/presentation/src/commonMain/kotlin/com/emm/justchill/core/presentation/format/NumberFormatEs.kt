@@ -16,8 +16,8 @@ object NumberFormatEs {
     private fun groupDigits(digits: String): String {
         if (digits.length <= DIGITS_PER_GROUP) return digits
         val sb = StringBuilder()
-        val firstGroup = digits.length % DIGITS_PER_GROUP
-        var index = 0
+        val firstGroup: Int = digits.length % DIGITS_PER_GROUP
+        var index: Int = 0
         if (firstGroup > 0) {
             sb.append(digits, 0, firstGroup)
             index = firstGroup
@@ -40,9 +40,9 @@ object NumberFormatEs {
     private const val MIDPOINT = 0.5
 
     private fun roundHalfEven(value: Double): Long {
-        val floorValue = floor(value)
-        val diff = value - floorValue
-        val floorLong = floorValue.toLong()
+        val floorValue: Double = floor(value)
+        val diff: Double = value - floorValue
+        val floorLong: Long = floorValue.toLong()
         return when {
             diff < MIDPOINT -> floorLong
             diff > MIDPOINT -> floorLong + 1
@@ -55,9 +55,9 @@ object NumberFormatEs {
 
     // Callers needing a sign prefix add it themselves.
     fun cents(cents: Long): String {
-        val abs = abs(cents)
-        val grouped = groupDigits((abs / CENTS_PER_SOL).toString())
-        val centsStr = (abs % CENTS_PER_SOL).toString().padStart(2, '0')
+        val abs: Long = abs(cents)
+        val grouped: String = groupDigits((abs / CENTS_PER_SOL).toString())
+        val centsStr: String = (abs % CENTS_PER_SOL).toString().padStart(2, '0')
         return "$grouped$DECIMAL$centsStr"
     }
 

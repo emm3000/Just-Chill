@@ -94,12 +94,4 @@ class SpanishFormatGoldenTest {
         assertEquals("23:59", SpanishDateFormat.time(LocalTime(23, 59)))
         assertEquals("00:00", SpanishDateFormat.time(LocalTime(0, 0)))
     }
-
-    @Test fun stripSpanishAccents_maps_accented_to_base() {
-        assertEquals("cafe", "café".stripSpanishAccents())
-        assertEquals("nino", "niño".stripSpanishAccents())
-        assertEquals("aeiou", "áéíóú".stripSpanishAccents())
-        assertEquals("AEIOUUN", "ÁÉÍÓÚÜÑ".stripSpanishAccents())
-        assertEquals("pinguino", "pingüino".stripSpanishAccents())
-    }
 }

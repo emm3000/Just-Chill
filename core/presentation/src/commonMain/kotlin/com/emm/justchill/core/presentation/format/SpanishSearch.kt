@@ -5,7 +5,7 @@ private val ACCENT_MAP: Map<Char, Char> = mapOf(
     'Á' to 'A', 'É' to 'E', 'Í' to 'I', 'Ó' to 'O', 'Ú' to 'U', 'Ü' to 'U', 'Ñ' to 'N',
 )
 
-fun String.stripSpanishAccents(): String = map { ACCENT_MAP[it] ?: it }.joinToString("")
+private fun String.stripSpanishAccents(): String = map { ACCENT_MAP[it] ?: it }.joinToString("")
 
 private fun String.normalizeForSearch(): String = trim().lowercase().stripSpanishAccents()
 
