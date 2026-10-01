@@ -52,6 +52,9 @@ extension EditMovementScreen {
         let send: Send
         let onClose: () -> Void
 
+        @State private var isAddCategoryRequested: Bool = false
+        @State private var isAddCategoryPresented: Bool = false
+
         var body: some View {
             VStack(spacing: EmmSpacing.s0) {
                 TopBar(isSpend: isSpend, onClose: onClose) { send(EditTransactionIntentOnDeleteClick.shared) }
@@ -87,7 +90,17 @@ extension EditMovementScreen {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(EmmColors.bg)
             .sheet(isPresented: sheetBinding(.account)) { accountSheet }
-            .sheet(isPresented: sheetBinding(.category)) { categorySheet }
+            .sheet(isPresented: sheetBinding(.category), onDismiss: openRequestedAddCategory) { categorySheet }
+            .sheet(isPresented: $isAddCategoryPresented) {
+                AddCategoryScreen(
+                    initialType: state.transactionType.categoryType,
+                    onClose: { isAddCategoryPresented = false },
+                    onSaved: { created in
+                        send(EditTransactionIntentOnNewValueFromOthers(value: created.toSelectable()))
+                        isAddCategoryPresented = false
+                    }
+                )
+            }
             .sheet(isPresented: sheetBinding(.date)) { dateSheet }
             .sheet(isPresented: sheetBinding(.note)) {
                 NoteSheet(
@@ -123,6 +136,7 @@ extension EditMovementScreen {
                 selected: state.categorySelected,
                 search: { state.categoriesMatching(query: $0) },
                 onSelect: { send(EditTransactionIntentOnCategorySelected(value: $0)) },
+                onAddNew: { isAddCategoryRequested = true },
                 onDismiss: dismissSheet
             )
         }
@@ -155,6 +169,12 @@ extension EditMovementScreen {
                     if !isPresented, state.showDeleteDialog { send(EditTransactionIntentOnDeleteDismiss.shared) }
                 }
             )
+        }
+
+        private func openRequestedAddCategory() {
+            guard isAddCategoryRequested else { return }
+            isAddCategoryRequested = false
+            isAddCategoryPresented = true
         }
 
         private func request(_ sheet: TransactionSheet) {
