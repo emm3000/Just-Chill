@@ -97,6 +97,7 @@ extension ReportScreen {
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
                             .foregroundStyle(bar.isCurrentMonth ? EmmColors.textPrimary : EmmColors.textSecondary)
+                            .padding(.horizontal, EmmSpacing.s1)
                             .frame(maxWidth: .infinity)
                             .accessibilityLabel(
                                 "\(bar.monthShortLabel): entró \(bar.incomeFormatted), salió \(bar.expenseFormatted)")
@@ -186,7 +187,7 @@ extension ReportScreen {
         let item: TopCategoryItem
 
         var body: some View {
-            HStack(spacing: EmmSpacing.s3) {
+            RowLayout {
                 Image(systemName: EmmCategory.resolvedSymbol(item.iconKey))
                     .resizable()
                     .scaledToFit()
@@ -195,17 +196,9 @@ extension ReportScreen {
                     .frame(width: EmmSpacing.s10, height: EmmSpacing.s10)
                     .background(EmmColors.surface1, in: EmmRadii.rS)
                     .accessibilityHidden(true)
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
-                        labels
-                        Spacer(minLength: EmmSpacing.s2)
-                        total
-                    }
-                    VStack(alignment: .leading, spacing: EmmSpacing.s1) {
-                        labels
-                        total
-                    }
-                }
+                labels
+                total
+                longestWords
             }
             .accessibilityElement(children: .combine)
         }
@@ -227,6 +220,73 @@ extension ReportScreen {
                 .foregroundStyle(EmmColors.textPrimary)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
+        }
+
+        private var longestWords: some View {
+            VStack(alignment: .leading, spacing: EmmSpacing.s0) {
+                Text(item.name.replacing(" ", with: "\n"))
+                    .emmTextStyle(EmmType.labelL)
+                Text(item.topMetaText.replacing(" ", with: "\n"))
+                    .emmTextStyle(EmmType.bodyM)
+            }
+            .hidden()
+            .accessibilityHidden(true)
+        }
+
+        struct RowLayout: Layout {
+            private struct Arrangement {
+                let size: CGSize
+                let frames: [CGRect]
+            }
+
+            func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+                arrangement(width: proposal.width ?? idealWidth(of: subviews), subviews: subviews).size
+            }
+
+            func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+                let frames = arrangement(width: bounds.width, subviews: subviews).frames
+                for (subview, frame) in zip(subviews, frames) {
+                    subview.place(
+                        at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                        proposal: ProposedViewSize(frame.size)
+                    )
+                }
+            }
+
+            private func idealWidth(of subviews: Subviews) -> CGFloat {
+                subviews.prefix(3).map { $0.sizeThatFits(.unspecified).width }.reduce(EmmSpacing.s3 * 2, +)
+            }
+
+            private func arrangement(width: CGFloat, subviews: Subviews) -> Arrangement {
+                let icon = subviews[0].sizeThatFits(.unspecified)
+                let labelsX = icon.width + EmmSpacing.s3
+                let labelsSpace = max(0, width - labelsX)
+                let amount = subviews[2].dimensions(in: ProposedViewSize(width: labelsSpace, height: nil))
+                let besideSpace = max(0, labelsSpace - amount.width - EmmSpacing.s3)
+                let fitsBeside = subviews[3].sizeThatFits(.unspecified).width <= besideSpace
+                let labels = subviews[1].dimensions(
+                    in: ProposedViewSize(width: fitsBeside ? besideSpace : labelsSpace, height: nil))
+                let amountTop =
+                    fitsBeside
+                    ? labels[.firstTextBaseline] - amount[.firstTextBaseline]
+                    : labels.height + EmmSpacing.s1
+                let contentTop = min(0, amountTop)
+                let contentHeight = max(labels.height, amountTop + amount.height) - contentTop
+                let height = max(icon.height, contentHeight)
+                let labelsY = (height - contentHeight) / 2 - contentTop
+                let frames = [
+                    CGRect(x: 0, y: (height - icon.height) / 2, width: icon.width, height: icon.height),
+                    CGRect(x: labelsX, y: labelsY, width: labels.width, height: labels.height),
+                    CGRect(
+                        x: fitsBeside ? width - amount.width : labelsX,
+                        y: labelsY + amountTop,
+                        width: amount.width,
+                        height: amount.height
+                    ),
+                    CGRect.zero,
+                ]
+                return Arrangement(size: CGSize(width: width, height: height), frames: frames)
+            }
         }
     }
 

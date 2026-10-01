@@ -153,14 +153,12 @@ extension ReportScreen {
         let options: [Option]
 
         var body: some View {
-            HStack(spacing: EmmSpacing.s0) {
+            SegmentsLayout {
                 ForEach(options) { option in
                     Button(action: option.select) {
                         Text(option.label)
                             .emmTextStyle(EmmType.labelL)
                             .foregroundStyle(option.isSelected ? EmmColors.textPrimary : EmmColors.textSecondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
                             .padding(.horizontal, EmmSpacing.s3)
                             .frame(maxWidth: .infinity, minHeight: EmmSpacing.s10)
                             .background(option.isSelected ? EmmColors.surface2 : Color.clear, in: EmmRadii.rS)
@@ -171,6 +169,46 @@ extension ReportScreen {
                 }
             }
             .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+        }
+
+        struct SegmentsLayout: Layout {
+            func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+                let width = proposal.width ?? widestIdealWidth(of: subviews) * CGFloat(subviews.count)
+                let frames = segmentFrames(width: width, subviews: subviews)
+                return CGSize(width: width, height: frames.map(\.maxY).max() ?? 0)
+            }
+
+            func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+                let frames = segmentFrames(width: bounds.width, subviews: subviews)
+                for (subview, frame) in zip(subviews, frames) {
+                    subview.place(
+                        at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                        proposal: ProposedViewSize(frame.size)
+                    )
+                }
+            }
+
+            private func segmentFrames(width: CGFloat, subviews: Subviews) -> [CGRect] {
+                guard !subviews.isEmpty else { return [] }
+                let segmentWidth = width / CGFloat(subviews.count)
+                if widestIdealWidth(of: subviews) <= segmentWidth {
+                    let proposal = ProposedViewSize(width: segmentWidth, height: nil)
+                    let height = subviews.map { $0.sizeThatFits(proposal).height }.max() ?? 0
+                    return subviews.indices.map { index in
+                        CGRect(x: segmentWidth * CGFloat(index), y: 0, width: segmentWidth, height: height)
+                    }
+                }
+                var top: CGFloat = 0
+                return subviews.map { subview in
+                    let height = subview.sizeThatFits(ProposedViewSize(width: width, height: nil)).height
+                    defer { top += height }
+                    return CGRect(x: 0, y: top, width: width, height: height)
+                }
+            }
+
+            private func widestIdealWidth(of subviews: Subviews) -> CGFloat {
+                subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+            }
         }
     }
 
