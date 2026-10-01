@@ -29,7 +29,7 @@ Rows are ordered by blast radius: how much a mistake breaks and whether a gate c
 | Row | Work | Model:effort | Extra instruction |
 |---|---|---|---|
 | 1 | `.md` edits, strings, renames, applying a diff already designed; every criterion is a command with empty output | sonnet:low | none: tests and the criteria fail loudly |
-| 2 | Code where the compiler or a test catches the error: one screen, a ViewModel rule, a use case | opus:medium | load `mattpocock-skills:tdd` for behavior; visual check on the peer's pool AVD for a screen |
+| 2 | Code where the compiler or a test catches the error: one screen, a ViewModel rule, a use case | opus:high | load `mattpocock-skills:tdd` for behavior; visual check on the peer's pool AVD for a screen |
 | 3 | Code on the trap list, where nothing catches the error: a route, a Koin binding, ViewModel purity, an atom default that changes N screens, `.github/` | opus:high | visual check of every affected screen |
 | 4 | Migration, backup/restore, auth, DI graph, cross-module architecture | opus:high | the restore drill in `.claude/rules/sqldelight.md` when the schema moves |
 
@@ -41,6 +41,7 @@ Every row is a bet; the thresholds that move a row up or down live in `docs/agen
 - A dispatch that names a reference file to model the work on inherits that file's debt, so name its known gaps in the same breath. Wave #208-#220 pointed three tickets at `DeleteCategoryDialog`, whose `val type` carries no explicit type: #223 and #224 both came back FIX FIRST on exactly that line. Raising the row would have been the wrong lesson, because the model was not the cause.
 - Row 2 runs sonnet:high since 2026-09-28. The Summary showed 10 FIX FIRST judgment on 45 row-2 PRs at sonnet:medium, which the raise rule already required; the raise went one effort step, not to Opus, and the log decides whether it holds.
 - Row 2 runs opus:medium since 2026-09-30. Recent held two first-review FIX FIRST judgment on row 2 at sonnet:high (#569; #596 split the report hero on a plain space its own screenshot showed broken); high is the top effort, so the raise moved the model.
+- Row 2 runs opus:high since 2026-10-01. Recent held two first-review FIX FIRST judgment on row 2 at opus:medium (#645 claimed a pixel-identical row its own shots contradicted; #648 added a duplicate TalkBack label); the raise went one effort step, and the log decides whether it holds.
 - Row 3 runs opus:high since 2026-09-29. Recent held two first-review FIX FIRST judgment on row 3 at opus:medium (#519 policy wording, #552 line pitch that ignored each font's own line height), which the raise rule requires; the raise went one effort step, and the log decides whether it holds.
 
 ## Execution Steps

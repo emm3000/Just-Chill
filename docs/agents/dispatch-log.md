@@ -15,7 +15,7 @@ Totals of rows already folded out of Recent.
 | 1 | sonnet:low | 8 | 8 | 0 | 0 | 0 | - | - |
 | 2 | sonnet:medium | 47 | 22 | 12 | 10 | 3 | - | - |
 | 2 | sonnet:high | 10 | 3 | 4 | 2 | 1 | 0 | 0 |
-| 2 | opus:medium | 3 | 1 | 1 | 1 | 0 | 0 | 0 |
+| 2 | opus:medium | 5 | 3 | 1 | 1 | 0 | 0 | 0 |
 | 3 | opus:medium | 102 | 69 | 8 | 15 | 10 | 0 | 0 |
 | 3 | opus:high | 10 | 4 | 4 | 2 | 0 | 0 | 0 |
 | 4 | opus:high | 54 | 30 | 15 | 6 | 3 | 1 | 0 |
@@ -26,9 +26,7 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause | Review | Nudges | Minutes |
 |---|---|---|---|---|---|---|---|---|
-| #602 | #588 | 2 | opus:medium | MERGE | - | ok | 0 | 11 |
 | #603 | #587 | 3 | opus:high | FIX FIRST | judgment | ok | 0 | 36 |
-| #604 | #589 | 2 | opus:medium | MERGE | - | ok | 0 | 15 |
 | #605 | #590 | 2 | opus:medium | FIX FIRST | checklist | ok | 0 | 15 |
 | #606 | #591 | 2 | opus:medium | MERGE | - | ok | 0 | 7 |
 | #617 | #609 | 2 | opus:medium | MERGE | - | ok | 0 | 10 |
@@ -46,9 +44,12 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #644 | #630 | 3 | opus:high | FIX FIRST | judgment | ok | 0 | 19 |
 | #645 | #632 | 2 | opus:medium | FIX FIRST | judgment | ok | 0 | 14 |
 | #646 | #631 | 2 | opus:medium | FIX FIRST | checklist | ok | 0 | 15 |
+| #647 | #633 | 2 | opus:medium | MERGE | - | ok | 0 | 9 |
+| #648 | #634 | 2 | opus:medium | FIX FIRST | judgment | ok | 0 | 12 |
 
 ## Changes
 
+- 2026-10-01: row 2 opus:medium -> opus:high: two first-review FIX FIRST judgment in Recent (#645 asserted a 1.0 row unchanged against trunk while its own shots moved the amount 1px; #648 added a duplicate TalkBack label neither neighbour field carries, promoted from a reviewer minor). The raise goes one effort step on the same model.
 - 2026-10-01: row 3 held at opus:high on a third first-review FIX FIRST judgment in Recent (#644: the reviewer said MERGE, the orchestrator promoted a test that could never fail, presented as a reproduction that fails on trunk). High is the top effort and Fable stays reserved for design. Every row-3 dispatch now also names it: a test offered as proof must go red when the fix is reverted, and the PR body states only what a run showed.
 - 2026-09-30: row 3 held at opus:high on a third first-review FIX FIRST judgment in Recent (#627: a new precondition, the main checkout holding `.worktreeinclude`, shipped with no guard and no doc line). #618 and #619 merged clean in between, and Fable stays reserved for design. Every row-3 dispatch now also names it: a precondition the change introduces gets a guard in code and one line in the doc that drives it.
 - 2026-09-30: row 3 held at opus:high despite two first-review FIX FIRST judgment in Recent (#599 a false doc claim, #603 a size drift reported as intended): high is the table's top effort and Fable is reserved for design. The raise goes into the dispatch instead: every row-3 dispatch names both errors (check each doc claim with `rg`; any non-zero pixel diff against trunk is drift until the ticket names it).
