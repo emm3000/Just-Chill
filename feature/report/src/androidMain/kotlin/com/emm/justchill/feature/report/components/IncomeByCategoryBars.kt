@@ -7,13 +7,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +25,7 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -102,22 +100,22 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
                     text = share.name,
                     style = type.bodyL,
                     color = colors.textPrimary,
+                    overflow = TextOverflow.Ellipsis,
                 )
             },
-            figures = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = share.amountFormatted,
-                        style = type.amountS,
-                        color = colors.textPrimary,
-                    )
-                    Spacer(Modifier.width(spacing.s2))
-                    Text(
-                        text = "${share.percentage}%",
-                        style = type.caption,
-                        color = colors.textSecondary,
-                    )
-                }
+            amount = {
+                Text(
+                    text = share.amountFormatted,
+                    style = type.amountS,
+                    color = colors.textPrimary,
+                )
+            },
+            percent = {
+                Text(
+                    text = "${share.percentage}%",
+                    style = type.caption,
+                    color = colors.textSecondary,
+                )
             },
         )
 
@@ -142,38 +140,53 @@ private fun CategoryShareHeader(
     gap: Dp,
     dot: @Composable () -> Unit,
     name: @Composable () -> Unit,
-    figures: @Composable () -> Unit,
+    amount: @Composable () -> Unit,
+    percent: @Composable () -> Unit,
 ) {
     Layout(
-        contents = listOf(dot, name, figures),
+        contents = listOf(dot, name, amount, percent),
         modifier = Modifier.fillMaxWidth(),
     ) { measurables: List<List<Measurable>>, constraints: Constraints ->
         val gapPx: Int = gap.roundToPx()
+        val center: Alignment.Vertical = Alignment.CenterVertically
         val dotPlaceable: Placeable = measurables[0].single().measure(Constraints())
-        val figuresPlaceable: Placeable = measurables[2].single().measure(Constraints(maxWidth = constraints.maxWidth))
+        val amountPlaceable: Placeable = measurables[2].single().measure(Constraints(maxWidth = constraints.maxWidth))
+        val percentPlaceable: Placeable = measurables[3].single().measure(Constraints(maxWidth = constraints.maxWidth))
+        val figuresWidth: Int = amountPlaceable.width + gapPx + percentPlaceable.width
+        val figuresHeight: Int = maxOf(amountPlaceable.height, percentPlaceable.height)
         val nameMeasurable: Measurable = measurables[1].single()
         val nameX: Int = dotPlaceable.width + gapPx
         val nameSpace: Int = (constraints.maxWidth - nameX).coerceAtLeast(0)
-        val besideSpace: Int = (nameSpace - figuresPlaceable.width).coerceAtLeast(0)
-        val fitsBeside: Boolean = nameMeasurable.minIntrinsicWidth(Constraints.Infinity) <= besideSpace
+        val besideSpace: Int = (nameSpace - figuresWidth).coerceAtLeast(0)
+        val longestWordWidth: Int = nameMeasurable.minIntrinsicWidth(Constraints.Infinity)
+        val fitsBeside: Boolean = longestWordWidth <= besideSpace
         val nameWidth: Int = if (fitsBeside) besideSpace else nameSpace
-        val namePlaceable: Placeable = nameMeasurable.measure(Constraints(minWidth = nameWidth, maxWidth = nameWidth))
-        val figuresX: Int = constraints.maxWidth - figuresPlaceable.width
-        if (fitsBeside) {
-            val height: Int = maxOf(dotPlaceable.height, namePlaceable.height, figuresPlaceable.height)
-            layout(constraints.maxWidth, height) {
-                dotPlaceable.placeRelative(0, (height - dotPlaceable.height) / 2)
-                namePlaceable.placeRelative(nameX, (height - namePlaceable.height) / 2)
-                figuresPlaceable.placeRelative(figuresX, (height - figuresPlaceable.height) / 2)
-            }
+        val nameMaxHeight: Int = if (longestWordWidth <= nameWidth) {
+            Constraints.Infinity
         } else {
-            val topHeight: Int = maxOf(dotPlaceable.height, namePlaceable.height)
-            val figuresY: Int = topHeight + gapPx
-            layout(constraints.maxWidth, figuresY + figuresPlaceable.height) {
-                dotPlaceable.placeRelative(0, (topHeight - dotPlaceable.height) / 2)
-                namePlaceable.placeRelative(nameX, 0)
-                figuresPlaceable.placeRelative(figuresX, figuresY)
-            }
+            nameMeasurable.minIntrinsicHeight(Constraints.Infinity)
+        }
+        val namePlaceable: Placeable = nameMeasurable.measure(
+            Constraints(minWidth = nameWidth, maxWidth = nameWidth, maxHeight = nameMaxHeight),
+        )
+        val nameBandHeight: Int = if (fitsBeside) {
+            maxOf(dotPlaceable.height, namePlaceable.height, figuresHeight)
+        } else {
+            maxOf(dotPlaceable.height, namePlaceable.height)
+        }
+        val figuresY: Int = if (fitsBeside) 0 else nameBandHeight + gapPx
+        val figuresBandHeight: Int = if (fitsBeside) nameBandHeight else figuresHeight
+        layout(constraints.maxWidth, figuresY + figuresBandHeight) {
+            dotPlaceable.placeRelative(0, center.align(dotPlaceable.height, nameBandHeight))
+            namePlaceable.placeRelative(nameX, center.align(namePlaceable.height, nameBandHeight))
+            amountPlaceable.placeRelative(
+                constraints.maxWidth - figuresWidth,
+                figuresY + center.align(amountPlaceable.height, figuresBandHeight),
+            )
+            percentPlaceable.placeRelative(
+                constraints.maxWidth - percentPlaceable.width,
+                figuresY + center.align(percentPlaceable.height, figuresBandHeight),
+            )
         }
     }
 }
