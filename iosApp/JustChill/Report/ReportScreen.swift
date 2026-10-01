@@ -7,7 +7,7 @@ struct ReportScreen: View {
 
     @State private var store: Store?
     @State private var errorMessage: String?
-    @State private var isCapturePresented: Bool = false
+    @State private var captureCover = CaptureCover()
 
     var body: some View {
         Group {
@@ -15,7 +15,7 @@ struct ReportScreen: View {
                 Content(
                     state: store.state,
                     send: { store.send($0) },
-                    onAddTransaction: { isCapturePresented = true }
+                    onAddTransaction: { captureCover.present() }
                 )
             } else {
                 EmmColors.bg
@@ -34,14 +34,14 @@ struct ReportScreen: View {
             store = newStore
         }
         .onAppear { reloadVisibleTab() }
-        .fullScreenCover(isPresented: $isCapturePresented) {
+        .fullScreenCover(isPresented: isCapturePresented, onDismiss: finishLeavingCapture) {
             CaptureScreen(
-                onClose: { isCapturePresented = false },
+                onClose: { captureCover.close() },
                 onSaved: { month in
                     store?.send(ReportIntentSelectMonth(month: month))
-                    isCapturePresented = false
+                    captureCover.close()
                 },
-                onOpenMovements: { isCapturePresented = false }
+                onOpenMovements: { captureCover.close() }
             )
         }
         .alert(errorMessage ?? "", isPresented: isErrorPresented) {
@@ -52,6 +52,17 @@ struct ReportScreen: View {
     private func reloadVisibleTab() {
         guard let store else { return }
         store.send(ReportIntentSelectTab(tab: store.state.selectedTab))
+    }
+
+    private func finishLeavingCapture() {
+        captureCover.finishLeaving()
+    }
+
+    private var isCapturePresented: Binding<Bool> {
+        Binding(
+            get: { captureCover.isShown },
+            set: { isShown in isShown ? captureCover.present() : captureCover.close() }
+        )
     }
 
     private var isErrorPresented: Binding<Bool> {
