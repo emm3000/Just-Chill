@@ -7,4 +7,5 @@ data class AddAccountUiState(
     val name: String = "",
     val selectedType: AccountType = AccountType.Bank,
     val isEnabled: Boolean = false,
+    val nameError: String? = null,
 ) : UiState

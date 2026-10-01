@@ -139,6 +139,7 @@ private fun AddAccountContent(
                     value = state.name,
                     onValueChange = { onIntent(AddAccountIntent.OnNameChange(it)) },
                     placeholder = "ejm. Yape",
+                    error = state.nameError,
                 )
             }
 
