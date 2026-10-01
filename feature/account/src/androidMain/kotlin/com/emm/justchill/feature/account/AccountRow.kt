@@ -54,23 +54,23 @@ internal fun AccountRow(row: AccountMonthUi, onEdit: () -> Unit, onDelete: () ->
                 gap = spacing.s3,
                 stackGap = spacing.s1,
                 tile = { IconTile(icon = row.account.type.toIcon(), size = IconTileSize.Lg) },
-                texts = {
-                    Column(verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
-                        Text(
-                            text = row.account.name,
-                            style = type.titleM,
-                            color = colors.textPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = accountSubtitle(row.account.type.toLabel(), row.movementCount),
-                            style = type.labelM,
-                            color = colors.textTertiary,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                name = {
+                    Text(
+                        text = row.account.name,
+                        style = type.titleM,
+                        color = colors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                subtitle = {
+                    Text(
+                        text = accountSubtitle(row.account.type.toLabel(), row.movementCount),
+                        style = type.labelM,
+                        color = colors.textTertiary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 },
                 net = {
                     Column(
@@ -99,48 +99,69 @@ private fun AccountRowContent(
     gap: Dp,
     stackGap: Dp,
     tile: @Composable () -> Unit,
-    texts: @Composable () -> Unit,
+    name: @Composable () -> Unit,
+    subtitle: @Composable () -> Unit,
     net: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Layout(
-        contents = listOf(tile, texts, net),
+        contents = listOf(tile, name, subtitle, net),
         modifier = modifier,
     ) { measurables: List<List<Measurable>>, constraints: Constraints ->
         val gapPx: Int = gap.roundToPx()
+        val stackGapPx: Int = stackGap.roundToPx()
         val tilePlaceable: Placeable = measurables[0].single().measure(Constraints())
-        val netPlaceable: Placeable = measurables[2].single().measure(Constraints())
-        val textsMeasurable: Measurable = measurables[1].single()
+        val subtitleMeasurable: Measurable = measurables[2].single()
+        val netPlaceable: Placeable = measurables[3].single().measure(Constraints())
         val textsSpace: Int = (constraints.maxWidth - tilePlaceable.width - gapPx).coerceAtLeast(0)
-        val besideSpace: Int = (textsSpace - gapPx - netPlaceable.width).coerceAtLeast(0)
-        val fitsBeside: Boolean = textsMeasurable.maxIntrinsicWidth(Constraints.Infinity) <= besideSpace
-        val textsWidth: Int = if (fitsBeside) besideSpace else textsSpace
-        val textsPlaceable: Placeable = textsMeasurable.measure(
-            Constraints(minWidth = textsWidth, maxWidth = textsWidth),
+        val placement: BesideOrStacked = accountNetPlacement(
+            subtitleWidth = subtitleMeasurable.maxIntrinsicWidth(Constraints.Infinity),
+            netWidth = netPlaceable.width,
+            gap = gapPx,
+            textsSpace = textsSpace,
         )
+        val textsWidth: Int = when (placement) {
+            BesideOrStacked.Beside -> (textsSpace - gapPx - netPlaceable.width).coerceAtLeast(0)
+            BesideOrStacked.Stacked -> textsSpace
+        }
+        val textsConstraints: Constraints = Constraints(maxWidth = textsWidth)
+        val namePlaceable: Placeable = measurables[1].single().measure(textsConstraints)
+        val subtitlePlaceable: Placeable = subtitleMeasurable.measure(textsConstraints)
+        val textsHeight: Int = namePlaceable.height + stackGapPx + subtitlePlaceable.height
         val textsX: Int = tilePlaceable.width + gapPx
-        if (fitsBeside) {
-            val height: Int = maxOf(tilePlaceable.height, textsPlaceable.height, netPlaceable.height)
-            val centered: Alignment.Vertical = Alignment.CenterVertically
-            layout(constraints.maxWidth, height) {
-                tilePlaceable.placeRelative(0, centered.align(tilePlaceable.height, height))
-                textsPlaceable.placeRelative(textsX, centered.align(textsPlaceable.height, height))
-                netPlaceable.placeRelative(
-                    constraints.maxWidth - netPlaceable.width,
-                    centered.align(netPlaceable.height, height),
-                )
+        when (placement) {
+            BesideOrStacked.Beside -> {
+                val height: Int = maxOf(tilePlaceable.height, textsHeight, netPlaceable.height)
+                val centered: Alignment.Vertical = Alignment.CenterVertically
+                val textsY: Int = centered.align(textsHeight, height)
+                layout(constraints.maxWidth, height) {
+                    tilePlaceable.placeRelative(0, centered.align(tilePlaceable.height, height))
+                    namePlaceable.placeRelative(textsX, textsY)
+                    subtitlePlaceable.placeRelative(textsX, textsY + namePlaceable.height + stackGapPx)
+                    netPlaceable.placeRelative(
+                        constraints.maxWidth - netPlaceable.width,
+                        centered.align(netPlaceable.height, height),
+                    )
+                }
             }
-        } else {
-            val topHeight: Int = maxOf(tilePlaceable.height, textsPlaceable.height)
-            val netY: Int = topHeight + stackGap.roundToPx()
-            layout(constraints.maxWidth, netY + netPlaceable.height) {
-                tilePlaceable.placeRelative(0, 0)
-                textsPlaceable.placeRelative(textsX, 0)
-                netPlaceable.placeRelative(0, netY)
+
+            BesideOrStacked.Stacked -> {
+                val netY: Int = maxOf(tilePlaceable.height, textsHeight) + stackGapPx
+                layout(constraints.maxWidth, netY + netPlaceable.height) {
+                    tilePlaceable.placeRelative(0, 0)
+                    namePlaceable.placeRelative(textsX, 0)
+                    subtitlePlaceable.placeRelative(textsX, namePlaceable.height + stackGapPx)
+                    netPlaceable.placeRelative(0, netY)
+                }
             }
         }
     }
 }
+
+internal enum class BesideOrStacked { Beside, Stacked }
+
+internal fun accountNetPlacement(subtitleWidth: Int, netWidth: Int, gap: Int, textsSpace: Int): BesideOrStacked =
+    if (subtitleWidth + gap + netWidth <= textsSpace) BesideOrStacked.Beside else BesideOrStacked.Stacked
 
 internal fun accountSubtitle(typeLabel: String, movementCount: Int): String = when (movementCount) {
     0 -> "Sin movimientos este mes"
