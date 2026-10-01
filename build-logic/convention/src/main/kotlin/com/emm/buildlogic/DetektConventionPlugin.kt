@@ -40,7 +40,7 @@ class DetektConventionPlugin : Plugin<Project> {
             disableDefaultRuleSets.set(false)
             autoCorrect.set(corrects)
             outputs.cacheIf { !corrects.get() }
-            parallel.set(true)
+            parallel.set(false)
             debug.set(false)
             ignoreFailures.set(false)
             failOnSeverity.set(FailOnSeverity.Error)

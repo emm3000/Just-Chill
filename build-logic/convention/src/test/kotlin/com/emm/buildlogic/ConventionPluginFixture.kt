@@ -260,6 +260,7 @@ internal class ConventionPluginFixture(
                         println("REPORT detektBuildUponDefaultConfig=" + detekt.buildUponDefaultConfig.get())
                         println("REPORT detektAllRules=" + detekt.allRules.get())
                         println("REPORT detektAutoCorrect=" + detekt.autoCorrect.get())
+                        println("REPORT detektParallel=" + detekt.parallel.get())
                         println("REPORT detektBaseline=" + detekt.baseline.orNull)
                         println("REPORT detektClasspath=" + detekt.classpath.files.joinToString(","))
                         println("REPORT detektReports=" + listOf(detekt.reports.checkstyle, detekt.reports.html, detekt.reports.markdown, detekt.reports.sarif).filter { it.required.get() }.map { it.outputLocation.get().asFile.relativeTo(project.projectDir).invariantSeparatorsPath }.joinToString(","))
