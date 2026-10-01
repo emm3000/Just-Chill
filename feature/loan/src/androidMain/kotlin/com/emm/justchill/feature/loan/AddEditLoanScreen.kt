@@ -31,6 +31,7 @@ import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.BackBtn
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
+import com.emm.justchill.core.ui.atoms.FieldError
 import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.FrequentComboChip
 import com.emm.justchill.core.ui.atoms.JcTopBar
@@ -133,15 +134,19 @@ private fun AddEditLoanContent(
             }
 
             FormSection(eyebrow = "MONTO") {
-                AmountCard(
-                    amountDigits = state.amountDigits,
-                    onClick = { onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Amount)) },
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
+                    AmountCard(
+                        amountDigits = state.amountDigits,
+                        onClick = { onIntent(AddEditLoanIntent.OnSheetRequested(LoanFormSheet.Amount)) },
+                    )
+                    FieldError(message = state.amountError)
+                }
             }
 
             FormSection(eyebrow = "INTERÉS %") {
                 InterestPercentField(
                     text = state.interestPercentText,
+                    error = state.interestError,
                     onTextChange = { onIntent(AddEditLoanIntent.OnInterestPercentChange(it)) },
                 )
             }
@@ -201,7 +206,7 @@ private fun AddEditLoanContent(
 // the text that came back, not the text that went in. lastEdit caches only that caret; what
 // renders is always text, straight off the state.
 @Composable
-private fun InterestPercentField(text: String, onTextChange: (String) -> Unit) {
+private fun InterestPercentField(text: String, error: String?, onTextChange: (String) -> Unit) {
     var lastEdit by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(text, TextRange(text.length)))
     }
@@ -213,6 +218,7 @@ private fun InterestPercentField(text: String, onTextChange: (String) -> Unit) {
         },
         placeholder = "0",
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        error = error,
     )
 }
 
