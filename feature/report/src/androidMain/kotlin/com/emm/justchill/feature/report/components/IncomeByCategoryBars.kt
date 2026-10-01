@@ -1,6 +1,7 @@
 package com.emm.justchill.feature.report.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,12 +23,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -37,7 +46,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun IncomeByCategoryBars(shares: List<CategoryShare>, modifier: Modifier = Modifier) {
-    val spacing = LocalEmmSpacing.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -54,12 +63,12 @@ fun IncomeByCategoryBars(shares: List<CategoryShare>, modifier: Modifier = Modif
 
 @Composable
 private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    val targetFraction = (share.percentage / 100f).coerceIn(0f, 1f)
-    val animatedFraction = remember(share.categoryId) { Animatable(0f) }
+    val targetFraction: Float = (share.percentage / 100f).coerceIn(0f, 1f)
+    val animatedFraction: Animatable<Float, AnimationVector1D> = remember(share.categoryId) { Animatable(0f) }
     LaunchedEffect(share.categoryId, share.percentage) {
         delay(animationDelayMs)
         animatedFraction.animateTo(
@@ -78,35 +87,39 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
             .semantics { contentDescription = description },
         verticalArrangement = Arrangement.spacedBy(spacing.s2),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(spacing.s2)
-                    .clip(CircleShape)
-                    .background(dotColor),
-            )
-            Spacer(Modifier.width(spacing.s2))
-            Text(
-                text = share.name,
-                style = type.bodyL,
-                color = colors.textPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = share.amountFormatted,
-                style = type.amountS,
-                color = colors.textPrimary,
-            )
-            Spacer(Modifier.width(spacing.s2))
-            Text(
-                text = "${share.percentage}%",
-                style = type.caption,
-                color = colors.textSecondary,
-            )
-        }
+        CategoryShareHeader(
+            gap = spacing.s2,
+            dot = {
+                Box(
+                    modifier = Modifier
+                        .size(spacing.s2)
+                        .clip(CircleShape)
+                        .background(dotColor),
+                )
+            },
+            name = {
+                Text(
+                    text = share.name,
+                    style = type.bodyL,
+                    color = colors.textPrimary,
+                )
+            },
+            figures = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = share.amountFormatted,
+                        style = type.amountS,
+                        color = colors.textPrimary,
+                    )
+                    Spacer(Modifier.width(spacing.s2))
+                    Text(
+                        text = "${share.percentage}%",
+                        style = type.caption,
+                        color = colors.textSecondary,
+                    )
+                }
+            },
+        )
 
         Box(
             modifier = Modifier
@@ -124,11 +137,52 @@ private fun CategoryShareRow(share: CategoryShare, animationDelayMs: Long) {
     }
 }
 
+@Composable
+private fun CategoryShareHeader(
+    gap: Dp,
+    dot: @Composable () -> Unit,
+    name: @Composable () -> Unit,
+    figures: @Composable () -> Unit,
+) {
+    Layout(
+        contents = listOf(dot, name, figures),
+        modifier = Modifier.fillMaxWidth(),
+    ) { measurables: List<List<Measurable>>, constraints: Constraints ->
+        val gapPx: Int = gap.roundToPx()
+        val dotPlaceable: Placeable = measurables[0].single().measure(Constraints())
+        val figuresPlaceable: Placeable = measurables[2].single().measure(Constraints(maxWidth = constraints.maxWidth))
+        val nameMeasurable: Measurable = measurables[1].single()
+        val nameX: Int = dotPlaceable.width + gapPx
+        val nameSpace: Int = (constraints.maxWidth - nameX).coerceAtLeast(0)
+        val besideSpace: Int = (nameSpace - figuresPlaceable.width).coerceAtLeast(0)
+        val fitsBeside: Boolean = nameMeasurable.minIntrinsicWidth(Constraints.Infinity) <= besideSpace
+        val nameWidth: Int = if (fitsBeside) besideSpace else nameSpace
+        val namePlaceable: Placeable = nameMeasurable.measure(Constraints(minWidth = nameWidth, maxWidth = nameWidth))
+        val figuresX: Int = constraints.maxWidth - figuresPlaceable.width
+        if (fitsBeside) {
+            val height: Int = maxOf(dotPlaceable.height, namePlaceable.height, figuresPlaceable.height)
+            layout(constraints.maxWidth, height) {
+                dotPlaceable.placeRelative(0, (height - dotPlaceable.height) / 2)
+                namePlaceable.placeRelative(nameX, (height - namePlaceable.height) / 2)
+                figuresPlaceable.placeRelative(figuresX, (height - figuresPlaceable.height) / 2)
+            }
+        } else {
+            val topHeight: Int = maxOf(dotPlaceable.height, namePlaceable.height)
+            val figuresY: Int = topHeight + gapPx
+            layout(constraints.maxWidth, figuresY + figuresPlaceable.height) {
+                dotPlaceable.placeRelative(0, (topHeight - dotPlaceable.height) / 2)
+                namePlaceable.placeRelative(nameX, 0)
+                figuresPlaceable.placeRelative(figuresX, figuresY)
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun IncomeByCategoryBarsPreview() {
     EmmTheme {
-        val colors = LocalEmmColors.current
+        val colors: EmmColors = LocalEmmColors.current
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -152,7 +206,7 @@ private fun IncomeByCategoryBarsPreview() {
 @Composable
 private fun CategoryShareRowOverflowPreview() {
     EmmTheme {
-        val colors = LocalEmmColors.current
+        val colors: EmmColors = LocalEmmColors.current
         Box(
             modifier = Modifier
                 .fillMaxWidth()
