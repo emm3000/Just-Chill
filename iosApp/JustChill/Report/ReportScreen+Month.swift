@@ -56,6 +56,10 @@ extension ReportScreen {
                     selector
                     if !state.isCurrentMonth { todayButton }
                 }
+                VStack(spacing: EmmSpacing.s2) {
+                    stackedSelector
+                    if !state.isCurrentMonth { todayButton }
+                }
             }
             .frame(maxWidth: .infinity)
         }
@@ -63,29 +67,46 @@ extension ReportScreen {
         private var selector: some View {
             HStack(spacing: EmmSpacing.s1) {
                 chevron(symbol: "chevron.left", label: "Mes anterior", intent: ReportIntentPreviousMonth.shared)
-                Button {
-                    send(ReportIntentOnMonthSheetRequested.shared)
-                } label: {
-                    HStack(spacing: EmmSpacing.s1) {
-                        Text(state.month.monthYearLabel())
-                            .emmTextStyle(EmmType.labelL)
-                            .foregroundStyle(EmmColors.textPrimary)
-                            .multilineTextAlignment(.center)
-                        Image(systemName: "chevron.down")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
-                            .foregroundStyle(EmmColors.textTertiary)
-                    }
-                    .padding(.horizontal, EmmSpacing.s2)
-                    .frame(minHeight: EmmSpacing.s12)
-                    .contentShape(Rectangle())
-                }
-                .accessibilityLabel(state.month.monthYearLabel() + ". Cambiar de mes")
+                monthButton
                 chevron(symbol: "chevron.right", label: "Mes siguiente", intent: ReportIntentNextMonth.shared)
             }
             .padding(.horizontal, EmmSpacing.s1)
             .overlay { EmmRadii.rFull.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+        }
+
+        private var stackedSelector: some View {
+            VStack(spacing: EmmSpacing.s0) {
+                monthButton
+                HStack(spacing: EmmSpacing.s1) {
+                    chevron(symbol: "chevron.left", label: "Mes anterior", intent: ReportIntentPreviousMonth.shared)
+                    Spacer(minLength: EmmSpacing.s0)
+                    chevron(symbol: "chevron.right", label: "Mes siguiente", intent: ReportIntentNextMonth.shared)
+                }
+            }
+            .padding(EmmSpacing.s1)
+            .overlay { EmmRadii.rL.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+        }
+
+        private var monthButton: some View {
+            Button {
+                send(ReportIntentOnMonthSheetRequested.shared)
+            } label: {
+                HStack(spacing: EmmSpacing.s1) {
+                    Text(state.month.monthYearLabel())
+                        .emmTextStyle(EmmType.labelL)
+                        .foregroundStyle(EmmColors.textPrimary)
+                        .multilineTextAlignment(.center)
+                    Image(systemName: "chevron.down")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
+                        .foregroundStyle(EmmColors.textTertiary)
+                }
+                .padding(.horizontal, EmmSpacing.s2)
+                .frame(minHeight: EmmSpacing.s12)
+                .contentShape(Rectangle())
+            }
+            .accessibilityLabel(state.month.monthYearLabel() + ". Cambiar de mes")
         }
 
         private var todayButton: some View {

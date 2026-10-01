@@ -195,24 +195,38 @@ extension ReportScreen {
                     .frame(width: EmmSpacing.s10, height: EmmSpacing.s10)
                     .background(EmmColors.surface1, in: EmmRadii.rS)
                     .accessibilityHidden(true)
-                HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
-                    VStack(alignment: .leading, spacing: EmmSpacing.s1) {
-                        Text(item.name)
-                            .emmTextStyle(EmmType.labelL)
-                            .foregroundStyle(EmmColors.textPrimary)
-                        Text(item.topMetaText)
-                            .emmTextStyle(EmmType.bodyM)
-                            .foregroundStyle(EmmColors.textSecondary)
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: EmmSpacing.s2) {
+                        labels
+                        Spacer(minLength: EmmSpacing.s2)
+                        total
                     }
-                    Spacer(minLength: EmmSpacing.s2)
-                    Text(item.totalFormatted)
-                        .emmTextStyle(EmmType.amountS)
-                        .foregroundStyle(EmmColors.textPrimary)
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
+                    VStack(alignment: .leading, spacing: EmmSpacing.s1) {
+                        labels
+                        total
+                    }
                 }
             }
             .accessibilityElement(children: .combine)
+        }
+
+        private var labels: some View {
+            VStack(alignment: .leading, spacing: EmmSpacing.s1) {
+                Text(item.name)
+                    .emmTextStyle(EmmType.labelL)
+                    .foregroundStyle(EmmColors.textPrimary)
+                Text(item.topMetaText)
+                    .emmTextStyle(EmmType.bodyM)
+                    .foregroundStyle(EmmColors.textSecondary)
+            }
+        }
+
+        private var total: some View {
+            Text(item.totalFormatted)
+                .emmTextStyle(EmmType.amountS)
+                .foregroundStyle(EmmColors.textPrimary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
     }
 
