@@ -4,7 +4,7 @@ import com.emm.justchill.core.domain.category.CategoryType
 import com.emm.justchill.core.domain.shared.Money
 import com.emm.justchill.core.domain.shared.YearMonth
 import com.emm.justchill.core.presentation.format.balanceFormatted
-import com.emm.justchill.core.presentation.format.normalizeForSearch
+import com.emm.justchill.core.presentation.format.matchesSearch
 import com.emm.justchill.core.presentation.mvi.UiState
 
 data class CategorySheetItem(
@@ -114,10 +114,8 @@ data class SeeTransactionsUiState(
             }
         }
 
-    fun sheetItemsMatching(segment: CategoryType, query: String): List<CategorySheetItem> {
-        val needle: String = query.normalizeForSearch()
-        return sheetItems.filter { it.type == segment && it.name.normalizeForSearch().contains(needle) }
-    }
+    fun sheetItemsMatching(segment: CategoryType, query: String): List<CategorySheetItem> =
+        sheetItems.filter { it.type == segment && it.name.matchesSearch(query) }
 
     private val amountRangeText: String?
         get() {

@@ -1,7 +1,7 @@
 package com.emm.justchill.feature.transaction.capture
 
 import com.emm.justchill.core.presentation.category.SelectableCategory
-import com.emm.justchill.core.presentation.format.normalizeForSearch
+import com.emm.justchill.core.presentation.format.matchesSearch
 
 internal fun frequentSectionOf(
     categories: List<SelectableCategory>,
@@ -16,9 +16,7 @@ internal fun otherSectionOf(
     frequent: List<SelectableCategory>,
 ): List<SelectableCategory> = categories.filterNot { it in frequent }
 
-internal fun List<SelectableCategory>.matching(query: String): List<SelectableCategory> {
-    val needle: String = query.normalizeForSearch()
-    return filter { it.name.normalizeForSearch().contains(needle) }
-}
+internal fun List<SelectableCategory>.matching(query: String): List<SelectableCategory> =
+    filter { it.name.matchesSearch(query) }
 
 private const val MIN_FREQUENT_SECTION_SIZE: Int = 2

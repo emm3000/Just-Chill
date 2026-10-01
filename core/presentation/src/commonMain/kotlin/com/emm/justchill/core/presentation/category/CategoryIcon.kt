@@ -2,7 +2,7 @@
 
 package com.emm.justchill.core.presentation.category
 
-import com.emm.justchill.core.presentation.format.normalizeForSearch
+import com.emm.justchill.core.presentation.format.matchesSearch
 
 enum class CategoryIcon(val id: String, val label: String, val keywords: List<String>) {
     Food("food", "Restaurante", listOf("comida", "almuerzo", "cena", "menú", "restaurant")),
@@ -92,10 +92,7 @@ object AppIconCatalog {
 
     fun findById(id: String): CategoryIcon = catalog.firstOrNull { it.id == id } ?: catalog.first()
 
-    fun search(query: String): List<CategoryIcon> {
-        val normalizedQuery: String = query.normalizeForSearch()
-        return catalog.filter { icon: CategoryIcon ->
-            icon.keywords.any { keyword: String -> keyword.normalizeForSearch().contains(normalizedQuery) }
-        }
+    fun search(query: String): List<CategoryIcon> = catalog.filter { icon: CategoryIcon ->
+        icon.keywords.any { keyword: String -> keyword.matchesSearch(query) }
     }
 }
