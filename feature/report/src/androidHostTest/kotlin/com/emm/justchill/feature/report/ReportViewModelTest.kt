@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -46,13 +47,12 @@ private val FIXED_DATE = LocalDate(2026, Month.MAY, 15)
 
 class ReportViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher: TestDispatcher = StandardTestDispatcher()
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val getMonthlyAmountByCategory: GetMonthlyAmountByCategoryUseCase =
-        mockk<GetMonthlyAmountByCategoryUseCase>()
+    private val getMonthlyAmountByCategory: GetMonthlyAmountByCategoryUseCase = mockk()
     private val getMonthlyComparison: GetMonthlyComparisonUseCase = mockk()
     private val getMonthlySectionStats: GetMonthlySectionStatsUseCase = mockk()
     private val getSavingsRate: GetSavingsRateUseCase = mockk()
@@ -149,7 +149,7 @@ class ReportViewModelTest {
     @Test
     fun `a month rollover corrects isCurrentMonth with no month move`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val dates = MutableStateFlow(LocalDate(2026, Month.AUGUST, 31))
+        val dates: MutableStateFlow<LocalDate> = MutableStateFlow(LocalDate(2026, Month.AUGUST, 31))
 
         val vm: ReportViewModel = buildViewModel(dates)
         advanceUntilIdle()
@@ -189,7 +189,7 @@ class ReportViewModelTest {
         coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate().copy(
             monthly = listOf(monthlyTotal(august), monthlyTotal(september)),
         )
-        val dates = MutableStateFlow(LocalDate(2026, Month.AUGUST, 31))
+        val dates: MutableStateFlow<LocalDate> = MutableStateFlow(LocalDate(2026, Month.AUGUST, 31))
 
         val vm: ReportViewModel = buildViewModel(dates)
         advanceUntilIdle()
@@ -589,7 +589,7 @@ class ReportViewModelTest {
 
     @Test
     fun `the reducer applies the new month before the in-flight load settles`() = runTest(testDispatcher) {
-        val gate = CompletableDeferred<Unit>()
+        val gate: CompletableDeferred<Unit> = CompletableDeferred()
 
         coEvery { getMonthlyAmountByCategory(any(), any()) } coAnswers {
             gate.await()
@@ -611,7 +611,6 @@ class ReportViewModelTest {
         vm.onIntent(ReportIntent.SelectMonth(secondMonth))
         testDispatcher.scheduler.runCurrent()
 
-        // The reducer runs synchronously, so state already reflects the second month before the gate opens.
         assertEquals(secondMonth, vm.state.value.month, "State must reflect the second request's month")
 
         gate.complete(Unit)
