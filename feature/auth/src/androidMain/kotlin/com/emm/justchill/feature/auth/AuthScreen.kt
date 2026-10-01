@@ -222,6 +222,7 @@ private fun AuthFormStep(
                 onValueChange = { onIntent(AuthIntent.EmailChanged(it)) },
                 placeholder = "hola@ejemplo.com",
                 keyboardType = KeyboardType.Email,
+                error = state.emailError,
             )
 
             Spacer(Modifier.height(spacing.s5))
@@ -237,6 +238,7 @@ private fun AuthFormStep(
                 } else {
                     PasswordVisualTransformation()
                 },
+                error = state.passwordError,
                 trailing = {
                     PasswordVisibilityToggle(
                         passwordVisible = passwordVisible,
@@ -389,6 +391,7 @@ private fun AuthFieldInput(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
+    error: String?,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailing: (@Composable () -> Unit)? = null,
@@ -401,6 +404,7 @@ private fun AuthFieldInput(
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             visualTransformation = visualTransformation,
             trailing = trailing,
+            error = error,
         )
     }
 }

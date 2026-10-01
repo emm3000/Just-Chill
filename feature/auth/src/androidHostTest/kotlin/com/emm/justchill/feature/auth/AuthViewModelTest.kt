@@ -7,21 +7,26 @@ import com.emm.justchill.core.domain.auth.SignInWithGoogleUseCase
 import com.emm.justchill.core.domain.auth.SignUpResult
 import com.emm.justchill.core.domain.auth.SignUpUseCase
 import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
+import com.emm.justchill.core.presentation.error.toUserMessage
 import com.emm.justchill.core.testing.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class AuthViewModelTest {
@@ -53,6 +58,135 @@ class AuthViewModelTest {
         vm.onIntent(AuthIntent.PasswordChanged("pass1234"))
         vm.onIntent(AuthIntent.Submit)
         advanceUntilIdle()
+    }
+
+    private fun validation(code: ValidationCode): DomainException.ValidationError =
+        DomainException.ValidationError("refused", code)
+
+    private fun TestScope.submitRefusedBy(vm: AuthViewModel, error: DomainException): List<AuthEffect> {
+        coEvery { signIn.invoke(any(), any()) } throws error
+        coEvery { signUp.invoke(any(), any()) } throws error
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
+        vm.onIntent(AuthIntent.Submit)
+        advanceUntilIdle()
+        job.cancel()
+        return effects
+    }
+
+    private fun TestScope.recordForms(vm: AuthViewModel, intent: AuthIntent): List<AuthUiState.Form> {
+        val forms: MutableList<AuthUiState.Form> = mutableListOf()
+        val job: Job = launch { vm.state.collect { forms.add(assertIs<AuthUiState.Form>(it)) } }
+        runCurrent()
+        vm.onIntent(intent)
+        advanceUntilIdle()
+        job.cancel()
+        return forms
+    }
+
+    private fun TestScope.assertEmailRefusal(code: ValidationCode) {
+        val vm: AuthViewModel = buildViewModel()
+
+        val effects: List<AuthEffect> = submitRefusedBy(vm, validation(code))
+
+        val form: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
+        assertEquals(code.toUserMessage(), form.emailError)
+        assertNull(form.passwordError)
+        assertTrue(effects.isEmpty())
+    }
+
+    private fun TestScope.assertPasswordRefusal(code: ValidationCode) {
+        val vm: AuthViewModel = buildViewModel()
+
+        val effects: List<AuthEffect> = submitRefusedBy(vm, validation(code))
+
+        val form: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
+        assertEquals(code.toUserMessage(), form.passwordError)
+        assertNull(form.emailError)
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun `an invalid email lands under the email field with no effect`() = runTest(testDispatcher) {
+        assertEmailRefusal(ValidationCode.EmailInvalid)
+    }
+
+    @Test
+    fun `an already registered email lands under the email field with no effect`() = runTest(testDispatcher) {
+        assertEmailRefusal(ValidationCode.EmailAlreadyRegistered)
+    }
+
+    @Test
+    fun `a missing password lands under the password field with no effect`() = runTest(testDispatcher) {
+        assertPasswordRefusal(ValidationCode.PasswordRequired)
+    }
+
+    @Test
+    fun `a too short password lands under the password field with no effect`() = runTest(testDispatcher) {
+        assertPasswordRefusal(ValidationCode.PasswordTooShort)
+    }
+
+    @Test
+    fun `a too weak password lands under the password field with no effect`() = runTest(testDispatcher) {
+        assertPasswordRefusal(ValidationCode.PasswordTooWeak)
+    }
+
+    @Test
+    fun `refusals naming no field stay a ShowError and leave both fields clean`() = runTest(testDispatcher) {
+        val refusals: List<DomainException> = listOf(
+            DomainException.Unauthorized("Bad credentials"),
+            DomainException.NetworkUnavailable(RuntimeException("no net")),
+            DomainException.RemoteRejected("rejected", statusCode = 500, cause = RuntimeException("boom")),
+            validation(ValidationCode.Unspecified),
+        )
+
+        refusals.forEach { refusal ->
+            val vm: AuthViewModel = buildViewModel()
+
+            val effects: List<AuthEffect> = submitRefusedBy(vm, refusal)
+
+            assertEquals(listOf<AuthEffect>(AuthEffect.ShowError(refusal)), effects)
+            val form: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
+            assertNull(form.emailError)
+            assertNull(form.passwordError)
+        }
+    }
+
+    @Test
+    fun `typing in the email clears its error`() = runTest(testDispatcher) {
+        val vm: AuthViewModel = buildViewModel()
+        submitRefusedBy(vm, validation(ValidationCode.EmailInvalid))
+
+        val forms: List<AuthUiState.Form> = recordForms(vm, AuthIntent.EmailChanged("u"))
+
+        assertEquals(listOf(ValidationCode.EmailInvalid.toUserMessage(), null), forms.map { it.emailError })
+    }
+
+    @Test
+    fun `typing in the password clears its error`() = runTest(testDispatcher) {
+        val vm: AuthViewModel = buildViewModel()
+        submitRefusedBy(vm, validation(ValidationCode.PasswordTooShort))
+
+        val forms: List<AuthUiState.Form> = recordForms(vm, AuthIntent.PasswordChanged("p"))
+
+        assertEquals(listOf(ValidationCode.PasswordTooShort.toUserMessage(), null), forms.map { it.passwordError })
+    }
+
+    @Test
+    fun `toggling the mode clears both field errors`() = runTest(testDispatcher) {
+        val vm: AuthViewModel = buildViewModel()
+        submitRefusedBy(vm, validation(ValidationCode.EmailInvalid))
+        submitRefusedBy(vm, validation(ValidationCode.PasswordRequired))
+
+        val forms: List<AuthUiState.Form> = recordForms(vm, AuthIntent.ToggleMode)
+
+        assertEquals(
+            listOf(
+                ValidationCode.EmailInvalid.toUserMessage() to ValidationCode.PasswordRequired.toUserMessage(),
+                null to null,
+            ),
+            forms.map { it.emailError to it.passwordError },
+        )
     }
 
     @Test
