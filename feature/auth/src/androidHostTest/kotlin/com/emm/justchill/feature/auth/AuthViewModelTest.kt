@@ -74,33 +74,26 @@ class AuthViewModelTest {
         return effects
     }
 
-    private fun TestScope.recordForms(vm: AuthViewModel, intent: AuthIntent): List<AuthUiState.Form> {
-        val forms: MutableList<AuthUiState.Form> = mutableListOf()
-        val job: Job = launch { vm.state.collect { forms.add(assertIs<AuthUiState.Form>(it)) } }
-        runCurrent()
-        vm.onIntent(intent)
-        advanceUntilIdle()
-        job.cancel()
-        return forms
-    }
-
-    private class SubmitRecording(val forms: List<AuthUiState.Form>, val effects: List<AuthEffect>) {
+    private class Recording(val forms: List<AuthUiState.Form>, val effects: List<AuthEffect>) {
         val fieldErrors: List<Pair<String?, String?>>
             get() = forms.map { it.emailError to it.passwordError }
     }
 
-    private fun TestScope.recordSubmit(vm: AuthViewModel): SubmitRecording {
+    private fun TestScope.record(vm: AuthViewModel, intent: AuthIntent): Recording {
         val forms: MutableList<AuthUiState.Form> = mutableListOf()
         val effects: MutableList<AuthEffect> = mutableListOf()
         val stateJob: Job = launch { vm.state.collect { forms.add(assertIs<AuthUiState.Form>(it)) } }
         val effectJob: Job = launch { vm.effect.collect { effects.add(it) } }
         runCurrent()
-        vm.onIntent(AuthIntent.Submit)
+        vm.onIntent(intent)
         advanceUntilIdle()
         stateJob.cancel()
         effectJob.cancel()
-        return SubmitRecording(forms, effects)
+        return Recording(forms, effects)
     }
+
+    private fun TestScope.recordForms(vm: AuthViewModel, intent: AuthIntent): List<AuthUiState.Form> =
+        record(vm, intent).forms
 
     private fun TestScope.assertFieldRefusal(
         code: ValidationCode,
@@ -215,7 +208,7 @@ class AuthViewModelTest {
         submitRefusedBy(vm, validation(ValidationCode.PasswordTooShort))
         coEvery { signIn.invoke(any(), any()) } throws validation(ValidationCode.EmailInvalid)
 
-        val recording: SubmitRecording = recordSubmit(vm)
+        val recording: Recording = record(vm, AuthIntent.Submit)
 
         assertEquals(
             listOf(
@@ -235,7 +228,7 @@ class AuthViewModelTest {
         val unauthorized: DomainException.Unauthorized = DomainException.Unauthorized("Bad credentials")
         coEvery { signIn.invoke(any(), any()) } throws unauthorized
 
-        val recording: SubmitRecording = recordSubmit(vm)
+        val recording: Recording = record(vm, AuthIntent.Submit)
 
         assertEquals(
             listOf(ValidationCode.EmailInvalid.toUserMessage() to null, null to null, null to null),
@@ -250,7 +243,7 @@ class AuthViewModelTest {
         submitRefusedBy(vm, validation(ValidationCode.EmailInvalid))
         coEvery { signIn.invoke(any(), any()) } returns AuthUser("uid1", "user@example.com")
 
-        val recording: SubmitRecording = recordSubmit(vm)
+        val recording: Recording = record(vm, AuthIntent.Submit)
 
         assertEquals(
             listOf(ValidationCode.EmailInvalid.toUserMessage() to null, null to null, null to null),

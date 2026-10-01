@@ -32,7 +32,9 @@ class AuthViewModel(
         AuthIntent.Back -> back()
     }
 
-    private fun submit() = launchSubmitting(via = Submitting.Email) { form ->
+    private fun submit() = launchSubmitting(
+        start = { copy(submitting = Submitting.Email, emailError = null, passwordError = null) },
+    ) { form ->
         val email: String = form.email.trim()
         when (form.mode) {
             AuthMode.SignIn -> {
@@ -49,7 +51,7 @@ class AuthViewModel(
         }
     }
 
-    private fun submitWithGoogle() = launchSubmitting(via = Submitting.Google) {
+    private fun submitWithGoogle() = launchSubmitting(start = { copy(submitting = Submitting.Google) }) {
         if (googleServerClientId.isBlank()) {
             sendEffect(AuthEffect.Notify(AuthMessage.GoogleSignInFailed))
             return@launchSubmitting
@@ -100,10 +102,13 @@ class AuthViewModel(
         is AuthUiState.Form -> sendEffect(AuthEffect.NavigateBack)
     }
 
-    private fun launchSubmitting(via: Submitting, block: suspend (AuthUiState.Form) -> Unit) {
+    private fun launchSubmitting(
+        start: AuthUiState.Form.() -> AuthUiState.Form,
+        block: suspend (AuthUiState.Form) -> Unit,
+    ) {
         val form: AuthUiState.Form = currentState as? AuthUiState.Form ?: return
         if (form.submitting != Submitting.None) return
-        updateForm { copy(submitting = via, emailError = null, passwordError = null) }
+        updateForm { start() }
         launchSafe(onError = ::refuse) {
             try {
                 block(form)
