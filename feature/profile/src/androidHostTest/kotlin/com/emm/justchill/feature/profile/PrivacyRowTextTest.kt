@@ -30,4 +30,13 @@ class PrivacyRowTextTest {
             signedInProfile.copy(isCloudBackupAvailable = true).privacyMeta,
         )
     }
+
+    @Test
+    fun `an unresolved session claims no account either way`() {
+        assertEquals("100 % local", ProfileUiState(session = SessionUiState.Initializing).privacyMeta)
+        assertEquals(
+            "100 % local",
+            ProfileUiState(session = SessionUiState.Initializing, isCloudBackupAvailable = true).privacyMeta,
+        )
+    }
 }

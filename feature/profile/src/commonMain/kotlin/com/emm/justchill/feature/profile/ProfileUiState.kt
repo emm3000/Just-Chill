@@ -91,6 +91,21 @@ data class ProfileUiState(
     val cloudBackupActionsEnabled: Boolean
         get() = isSignedIn && op == ProfileOp.None
 
+    val canBackUpNow: Boolean
+        get() = cloudBackupActionsEnabled && !showsBackupDestinationDisclosure
+
+    val isBackingUp: Boolean
+        get() = op == ProfileOp.BackingUp
+
+    val backUpNowMeta: String
+        get() = if (isBackingUp) "Respaldando…" else "Sube una copia a la nube"
+
+    val isVerifyingBackup: Boolean
+        get() = op == ProfileOp.VerifyingBackup
+
+    val verifyBackupMeta: String
+        get() = if (isVerifyingBackup) "Verificando…" else "Revisa que el último se pueda restaurar"
+
     val showsSignInRow: Boolean
         get() = isCloudBackupAvailable && !isSignedIn
 
@@ -99,7 +114,8 @@ data class ProfileUiState(
 
     val privacyMeta: String
         get() = when {
-            !isSignedIn -> "100 % local, sin cuenta"
+            session == SessionUiState.SignedOut -> "100 % local, sin cuenta"
+            !isSignedIn -> "100 % local"
             isCloudBackupAvailable -> "En tu celular, con respaldo en tu cuenta"
             else -> "100 % local"
         }
