@@ -24,8 +24,8 @@ extension AuthScreen {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, EmmSpacing.s2)
                         VStack(alignment: .leading, spacing: EmmSpacing.s5) {
-                            EmailField(email: emailBinding)
-                            PasswordField(password: passwordBinding)
+                            EmailField(email: emailBinding, error: form.emailError)
+                            PasswordField(password: passwordBinding, error: form.passwordError)
                         }
                         .padding(.top, EmmSpacing.s6)
                         toggle
@@ -67,10 +67,11 @@ extension AuthScreen {
 
     struct EmailField: View {
         @Binding var email: String
+        let error: String?
         @FocusState private var isFocused: Bool
 
         var body: some View {
-            FieldSection(eyebrow: "Correo", isFocused: isFocused) {
+            FieldSection(eyebrow: "Correo", isFocused: isFocused, error: error) {
                 TextField(
                     "",
                     text: $email,
@@ -90,11 +91,12 @@ extension AuthScreen {
 
     struct PasswordField: View {
         @Binding var password: String
+        let error: String?
         @State private var isVisible: Bool = false
         @FocusState private var isFocused: Bool
 
         var body: some View {
-            FieldSection(eyebrow: "Contraseña", isFocused: isFocused) {
+            FieldSection(eyebrow: "Contraseña", isFocused: isFocused, error: error) {
                 HStack(spacing: EmmSpacing.s2) {
                     field
                         .emmTextStyle(EmmType.bodyL)
@@ -132,6 +134,7 @@ extension AuthScreen {
     struct FieldSection<Field: View>: View {
         let eyebrow: String
         let isFocused: Bool
+        let error: String?
         @ViewBuilder let field: () -> Field
 
         var body: some View {
@@ -140,7 +143,9 @@ extension AuthScreen {
                 VStack(spacing: EmmSpacing.s2) {
                     field()
                         .frame(minHeight: EmmSpacing.s12)
-                    Hairline(isFocused: isFocused)
+                    Hairline(isFocused: isFocused, isError: error != nil)
+                    FieldError(message: error)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
