@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -28,6 +29,7 @@ import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.preview.PreviewRedmi15CWidth
 import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
 import com.emm.justchill.core.ui.theme.EmmType
@@ -39,10 +41,10 @@ import com.emm.justchill.feature.report.TopCategoryItem
 
 @Composable
 fun TopExpensesCard(items: List<TopCategoryItem>, modifier: Modifier = Modifier) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val type = LocalEmmType.current
-    val radii = LocalEmmRadii.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val radii: EmmRadii = LocalEmmRadii.current
 
     Column(
         modifier = modifier
@@ -91,11 +93,13 @@ private fun TopCategoryRow(item: TopCategoryItem) {
                     text = item.name,
                     style = type.bodyM.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.W600),
                     color = colors.textPrimary,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = item.topMetaText,
                     style = type.bodyM,
                     color = colors.textSecondary,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         },
@@ -128,10 +132,16 @@ private fun TopCategoryRowLayout(
         val amountPlaceable: Placeable = measurables[2].single().measure(Constraints(maxWidth = labelsSpace))
         val labelsMeasurable: Measurable = measurables[1].single()
         val besideSpace: Int = (labelsSpace - amountPlaceable.width - gapPx).coerceAtLeast(0)
-        val fitsBeside: Boolean = labelsMeasurable.minIntrinsicWidth(Constraints.Infinity) <= besideSpace
+        val longestWordWidth: Int = labelsMeasurable.minIntrinsicWidth(Constraints.Infinity)
+        val fitsBeside: Boolean = longestWordWidth <= besideSpace
         val labelsWidth: Int = if (fitsBeside) besideSpace else labelsSpace
+        val labelsMaxHeight: Int = if (longestWordWidth <= labelsWidth) {
+            Constraints.Infinity
+        } else {
+            labelsMeasurable.minIntrinsicHeight(Constraints.Infinity)
+        }
         val labelsPlaceable: Placeable = labelsMeasurable.measure(
-            Constraints(minWidth = labelsWidth, maxWidth = labelsWidth),
+            Constraints(minWidth = labelsWidth, maxWidth = labelsWidth, maxHeight = labelsMaxHeight),
         )
         val labelsBandHeight: Int = if (fitsBeside) {
             maxOf(iconPlaceable.height, labelsPlaceable.height, amountPlaceable.height)

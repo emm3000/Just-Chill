@@ -17,7 +17,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -31,10 +35,10 @@ fun CategoryBarsCard(
     averageFormatted: String,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
 
     val categoryCountText = "${shares.size} ${if (shares.size == 1) "categoría" else "categorías"}"
     val movementText = "$movementCount ${if (movementCount == 1) "movimiento" else "movimientos"}"
