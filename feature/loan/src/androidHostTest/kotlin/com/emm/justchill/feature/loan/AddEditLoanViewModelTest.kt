@@ -164,7 +164,8 @@ class AddEditLoanViewModelTest {
         vm.onIntent(AddEditLoanIntent.Save)
         advanceUntilIdle()
 
-        val showError: AddEditLoanEffect.ShowError? = effects.filterIsInstance<AddEditLoanEffect.ShowError>().firstOrNull()
+        val showError: AddEditLoanEffect.ShowError? =
+            effects.filterIsInstance<AddEditLoanEffect.ShowError>().firstOrNull()
         checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
         assertEquals(error.toUserMessage(), showError.message)
         assertEquals("Escribe a quién le prestaste", showError.message)
