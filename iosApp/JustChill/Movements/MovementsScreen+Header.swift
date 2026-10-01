@@ -262,7 +262,6 @@ extension MovementsScreen {
                 Text(bannerText)
                     .emmTextStyle(EmmType.labelM)
                     .foregroundStyle(EmmColors.textPrimary)
-                    .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     send(SeeTransactionsIntentOnClearCategoryFilter.shared)
@@ -270,6 +269,7 @@ extension MovementsScreen {
                     HStack(spacing: EmmSpacing.s1) {
                         Text("Limpiar")
                             .emmTextStyle(EmmType.labelM)
+                            .fixedSize()
                         Image(systemName: "xmark")
                             .resizable()
                             .scaledToFit()
@@ -283,6 +283,7 @@ extension MovementsScreen {
             }
             .padding(.leading, EmmSpacing.s3)
             .frame(minHeight: EmmSpacing.s12)
+            .fixedSize(horizontal: false, vertical: true)
             .background(EmmColors.surface1, in: EmmRadii.rS)
             .overlay { EmmRadii.rS.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
             .padding(.horizontal, EmmSpacing.s6)
