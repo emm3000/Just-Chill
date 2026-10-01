@@ -26,6 +26,7 @@ import com.emm.justchill.feature.profile.ProfileMessage
 import com.emm.justchill.feature.profile.toText
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -43,8 +44,10 @@ internal suspend fun <D : Any> settleExportResult(
 ) {
     if (document == null) return
     if (pending != null) {
-        val saved: Boolean = withContext(io) { write(document, pending.json) }
-        pending.onResult(saved)
+        withContext(NonCancellable) {
+            val saved: Boolean = withContext(io) { write(document, pending.json) }
+            pending.onResult(saved)
+        }
         return
     }
     withContext(io) { delete(document) }

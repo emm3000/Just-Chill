@@ -4,12 +4,10 @@ import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.feature.profile.ProfileMessage
 import com.emm.justchill.feature.profile.toText
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import java.io.IOException
-import java.util.concurrent.Executors
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -62,7 +60,7 @@ class ImportResultTest {
         val importThreads: MutableList<String> = mutableListOf()
         val callerThread: String = Thread.currentThread().name
 
-        Executors.newSingleThreadExecutor { task -> Thread(task, "io-probe") }.asCoroutineDispatcher().use { io ->
+        ioProbe().use { io ->
             settleImportResult(
                 document = "backup-document",
                 io = io,
@@ -72,7 +70,7 @@ class ImportResultTest {
             )
         }
 
-        assertEquals(listOf("io-probe"), readThreads)
+        assertEquals(listOf(IO_PROBE_THREAD), readThreads)
         assertEquals(listOf(callerThread), importThreads)
     }
 
