@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -221,9 +222,10 @@ private fun TotalHeroBlock(state: ReportUiState) {
         val pillDescription: String? = state.comparisonPillDescription
         val comparisonTxt: String? = state.comparisonText
         if (pillText != null && pillDescription != null && comparisonTxt != null) {
-            Row(
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(spacing.s2),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(spacing.s2),
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 ComparisonPill(
                     text = pillText,
