@@ -16,12 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -36,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.WindowInfo
@@ -49,15 +45,14 @@ import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.OutlinedCta
+import com.emm.justchill.core.ui.atoms.SearchField
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
 import com.emm.justchill.core.ui.category.resolvedColor
 import com.emm.justchill.core.ui.category.resolvedIcon
 import com.emm.justchill.core.ui.theme.EmmColors
-import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
-import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
@@ -75,7 +70,6 @@ fun CategoryPickerSheet(
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val spacing: EmmSpacing = LocalEmmSpacing.current
-    val radii: EmmRadii = LocalEmmRadii.current
     val type: EmmType = LocalEmmType.current
     val sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val windowInfo: WindowInfo = LocalWindowInfo.current
@@ -133,43 +127,14 @@ fun CategoryPickerSheet(
             }
         }
 
-        val searchShape: RoundedCornerShape = radii.rM
-        Row(
+        SearchField(
+            query = query,
+            onQueryChange = { query = it },
+            placeholder = "Buscar o crear",
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(horizontal = spacing.s5)
-                .padding(bottom = spacing.s4)
-                .clip(searchShape)
-                .background(colors.surface1)
-                .border(spacing.hairline, colors.border, searchShape)
-                .padding(horizontal = spacing.s3, vertical = spacing.s3),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.s3),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Search,
-                contentDescription = null,
-                tint = colors.textTertiary,
-                modifier = Modifier.size(spacing.s4),
-            )
-            Box(modifier = Modifier.weight(1f)) {
-                if (query.isEmpty()) {
-                    Text(
-                        text = "Buscar o crear",
-                        style = type.bodyM,
-                        color = colors.textTertiary,
-                    )
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    singleLine = true,
-                    cursorBrush = SolidColor(colors.borderFocus),
-                    textStyle = type.bodyM.copy(color = colors.textPrimary),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        }
+                .padding(bottom = spacing.s4),
+        )
 
         if (frequent.isEmpty() && other.isEmpty()) {
             Box(
