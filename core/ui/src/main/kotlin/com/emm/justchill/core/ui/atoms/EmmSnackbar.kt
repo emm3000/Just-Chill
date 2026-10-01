@@ -50,13 +50,16 @@ import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
 
-enum class EmmSnackbarTone { Success, Error }
+enum class EmmSnackbarTone(val defaultDuration: SnackbarDuration) {
+    Success(SnackbarDuration.Short),
+    Error(SnackbarDuration.Long),
+}
 
 class EmmSnackbarVisuals(
     override val message: String,
     val tone: EmmSnackbarTone = EmmSnackbarTone.Success,
     override val actionLabel: String? = null,
-    override val duration: SnackbarDuration = SnackbarDuration.Short,
+    override val duration: SnackbarDuration = tone.defaultDuration,
 ) : SnackbarVisuals {
     override val withDismissAction: Boolean = false
 }
@@ -174,7 +177,7 @@ suspend fun SnackbarHostState.showEmmSnackbar(
     message: String,
     tone: EmmSnackbarTone = EmmSnackbarTone.Success,
     actionLabel: String? = null,
-    duration: SnackbarDuration = SnackbarDuration.Short,
+    duration: SnackbarDuration = tone.defaultDuration,
 ): SnackbarResult = showSnackbar(
     EmmSnackbarVisuals(
         message = message,
