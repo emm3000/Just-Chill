@@ -42,7 +42,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 
 ### Colour
 
-- **Surface** (`bg`, `surface1`…`surface3`, `border`, `borderFocus`): `bg` is black and is the ground of every screen. The steps above it are for a sheet and a pressed row, never for containing content.
+- **Surface** (`bg`, `surface1`…`surface3`, `border`, `borderFocus`): `bg` is black and is the ground of every screen and every sheet. The steps above it are for a pressed row and small tiles, never for containing content.
 - **Text** (`textPrimary`, `textSecondary`, `textTertiary`, `textDisabled`): the ladder is the whole hierarchy. The app's one white surface, a screen's primary button, labels itself in `bg`.
 - **Colour is a datum, never a style.** A hue says something the data said, not something a designer chose: `success` for money in, a status token for a system state, the dot for a category. There is no brand hue to spend.
 - **Status** (`success`, `warning`, `danger`, `info`, `posMuted`, `negMuted`): system state, plus `success` for income. The `*Muted` washes are the ground behind an icon or inside a `Pill`; the readable mark on top is the full-strength token.
@@ -59,7 +59,7 @@ Nothing enforces these rules mechanically: the gate sees Kotlin, not dp, and goe
 
 - Base unit 4dp: `EmmSpacing` `s0`…`s16`, plus `hairline`, the one sub-unit value, for every border, rule and selected ring. Screen horizontal padding `s4`, never less; `s6` between sections of distinct purpose.
 - Touch targets are 48×48dp, non-negotiable. A child of a fixed-height row is not 48dp by inheritance: `Alignment.CenterVertically` measures at intrinsic height, so a clickable inside a 48dp band carries `fillMaxHeight()` itself. A 48dp header target keeps its glyph on the rows' column by giving the padding back at the edge, never by shrinking the target; the giveback is `EmmSpacing.edgeGiveback(artwork)` in `core/ui/theme/EdgeGiveback.kt`, never a per-module copy of `(s12 - artwork) / 2`.
-- `EmmRadii` `r0`…`rXXL`, `rLTop` for sheet tops, `rFull` for circles. Default to the smallest radius that reads right. No shadows: a modal that must read as "above" gets `surface1`, a hairline and rounded top corners.
+- `EmmRadii` `r0`…`rXXL`, `rLTop` for sheet tops, `rFull` for circles. Default to the smallest radius that reads right. No shadows: a sheet's container is `bg` with `SheetDragHandle`, black and flat (ADR 017), and the scrim is what lifts it; `surface1`…`surface3` fill only the pressed ground and small tiles, never a sheet or screen container.
 - `Icons.Outlined.*`; filled only when the icon represents a state. 24dp standard, 20dp inline with body text, 32dp rare. An icon is `textSecondary` or `textTertiary`, never tinted: an account shows its type's icon in grey. Never a brand logo or a bank's registered colours. The icon and label maps stay in `:feature:account`'s `AccountPalette.kt`.
 
 ### Component invariants
