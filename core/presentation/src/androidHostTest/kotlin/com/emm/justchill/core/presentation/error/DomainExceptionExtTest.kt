@@ -16,7 +16,7 @@ class DomainExceptionExtTest {
     @Test
     fun `every validation code maps to a non-blank message`() {
         ValidationCode.entries.forEach { code ->
-            val message = DomainException.ValidationError(diagnosticMessage, code).toUserMessage()
+            val message: String = DomainException.ValidationError(diagnosticMessage, code).toUserMessage()
             assertTrue(message.isNotBlank(), "ValidationCode.$code has no user-facing message")
         }
     }
@@ -24,7 +24,7 @@ class DomainExceptionExtTest {
     @Test
     fun `no validation code echoes the diagnostic message`() {
         ValidationCode.entries.forEach { code ->
-            val message = DomainException.ValidationError(diagnosticMessage, code).toUserMessage()
+            val message: String = DomainException.ValidationError(diagnosticMessage, code).toUserMessage()
             assertFalse(
                 message == diagnosticMessage,
                 "ValidationCode.$code leaks the English diagnostic message to the user",
@@ -34,8 +34,13 @@ class DomainExceptionExtTest {
 
     @Test
     fun `every code except Unspecified has its own message`() {
-        val specified = ValidationCode.entries - ValidationCode.Unspecified
-        val messages = specified.map { DomainException.ValidationError(diagnosticMessage, it).toUserMessage() }
+        val specified: List<ValidationCode> = ValidationCode.entries - ValidationCode.Unspecified
+        val messages: List<String> = specified.map {
+            DomainException.ValidationError(
+                diagnosticMessage,
+                it,
+            ).toUserMessage()
+        }
         assertEquals(specified.size, messages.toSet().size, "two validation codes share the same message: $messages")
     }
 
@@ -53,7 +58,7 @@ class DomainExceptionExtTest {
             statusCode = 413,
             cause = RuntimeException("rest"),
         )
-        val message = rejected.toUserMessage()
+        val message: String = rejected.toUserMessage()
 
         assertTrue(message.isNotBlank())
         assertFalse(message.contains("413"), "the status code is diagnosis, not user-facing copy: $message")
@@ -61,7 +66,7 @@ class DomainExceptionExtTest {
 
     @Test
     fun `password length message states the actual minimum`() {
-        val message = DomainException.ValidationError(
+        val message: String = DomainException.ValidationError(
             diagnosticMessage,
             ValidationCode.PasswordTooShort,
         ).toUserMessage()
