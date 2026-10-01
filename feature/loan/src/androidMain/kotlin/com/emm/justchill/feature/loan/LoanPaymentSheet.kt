@@ -21,7 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.domain.loan.PaymentMethod
-import com.emm.justchill.core.presentation.date.dateShortcutsOf
 import com.emm.justchill.core.ui.atoms.AmountTone
 import com.emm.justchill.core.ui.atoms.CtaInteraction
 import com.emm.justchill.core.ui.atoms.FormSection
@@ -87,7 +86,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
         DatePickerSheet(
             currentDate = form.date ?: form.today,
             today = form.today,
-            shortcuts = dateShortcutsOf(form.today),
+            shortcuts = form.dateShortcuts,
             onConfirm = { date -> onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDateSelected(date)) },
             onDismiss = { onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentSheetDismissed) },
         )

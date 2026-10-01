@@ -125,7 +125,7 @@ extension AddEditLoanScreen {
             DateSheet(
                 pickedDay: state.pickerDate,
                 today: state.today,
-                shortcuts: [],
+                shortcuts: state.dateShortcuts,
                 onSelect: { send(AddEditLoanIntentOnDateSelected(value: $0)) },
                 onDismiss: dismissSheet
             )

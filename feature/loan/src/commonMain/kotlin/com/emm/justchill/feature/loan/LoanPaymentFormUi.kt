@@ -2,6 +2,8 @@ package com.emm.justchill.feature.loan
 
 import com.emm.justchill.core.domain.loan.PaymentMethod
 import com.emm.justchill.core.domain.shared.error.ValidationCode
+import com.emm.justchill.core.presentation.date.DateShortcut
+import com.emm.justchill.core.presentation.date.dateShortcutsOf
 import com.emm.justchill.core.presentation.error.toUserMessage
 import com.emm.justchill.core.presentation.format.isSavableAmount
 import com.emm.justchill.core.presentation.format.relativeDayLabel
@@ -28,6 +30,8 @@ data class LoanPaymentFormUi(
         get() = PaymentMethod.entries.map { PaymentMethodOptionUi(it, it.label, it == method) }
 
     val dateLabel: String get() = relativeDayLabel(pickerDate, today)
+
+    val dateShortcuts: List<DateShortcut> get() = dateShortcutsOf(today)
 
     val isSaveEnabled: Boolean get() = amountDigits.isSavableAmount() && !exceedsRemaining
 
