@@ -73,6 +73,7 @@ extension LoansScreen {
         @Binding var text: String
         var keyboard: UIKeyboardType = .default
         var isAutocorrectionDisabled: Bool = false
+        var isError: Bool = false
 
         var body: some View {
             TextField(
@@ -86,7 +87,9 @@ extension LoansScreen {
             .frame(minHeight: EmmSpacing.s12)
             .padding(.horizontal, EmmSpacing.s4)
             .background(EmmColors.surface1, in: EmmRadii.rM)
-            .overlay { EmmRadii.rM.stroke(EmmColors.border, lineWidth: EmmSpacing.hairline) }
+            .overlay {
+                EmmRadii.rM.stroke(isError ? EmmColors.danger : EmmColors.border, lineWidth: EmmSpacing.hairline)
+            }
         }
     }
 
@@ -96,22 +99,24 @@ extension LoansScreen {
         let current: @MainActor () -> String
         let onChange: (String) -> Void
         var keyboard: UIKeyboardType = .default
+        var isError: Bool = false
         @State private var draft: String
 
         init(
             placeholder: String, text: String, current: @escaping @MainActor () -> String,
-            keyboard: UIKeyboardType = .default, onChange: @escaping (String) -> Void
+            keyboard: UIKeyboardType = .default, isError: Bool = false, onChange: @escaping (String) -> Void
         ) {
             self.placeholder = placeholder
             self.text = text
             self.current = current
             self.keyboard = keyboard
+            self.isError = isError
             self.onChange = onChange
             _draft = State(initialValue: text)
         }
 
         var body: some View {
-            TextEntry(placeholder: placeholder, text: $draft, keyboard: keyboard)
+            TextEntry(placeholder: placeholder, text: $draft, keyboard: keyboard, isError: isError)
                 .onChange(of: text) { _, latest in draft = latest }
                 .onChange(of: draft) { _, typed in
                     guard typed != text else { return }

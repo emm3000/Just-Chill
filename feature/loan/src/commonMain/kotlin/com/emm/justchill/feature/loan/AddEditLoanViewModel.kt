@@ -8,6 +8,8 @@ import com.emm.justchill.core.domain.loan.LoanUpdate
 import com.emm.justchill.core.domain.loan.UpdateLoanUseCase
 import com.emm.justchill.core.domain.shared.LoanId
 import com.emm.justchill.core.domain.shared.Money
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
 import com.emm.justchill.core.domain.time.TodayFlow
 import com.emm.justchill.core.presentation.error.toUserMessage
 import com.emm.justchill.core.presentation.format.centsToMoney
@@ -40,7 +42,6 @@ class AddEditLoanViewModel(
     // lentAt to "now", which loansWithBalance and balancesByPerson both order and pick by.
     private var loadedLentAt: LocalDateTime? = null
 
-    // Backs the autocomplete filter below; the state's personSuggestions is always the filtered view.
     private var allPersonNames: List<String> = emptyList()
 
     init {
@@ -69,11 +70,17 @@ class AddEditLoanViewModel(
             }
 
             is AddEditLoanIntent.OnAmountChange -> {
-                updateState { copy(amountDigits = intent.digits).recalcSaveEnabled() }
+                updateState { copy(amountDigits = intent.digits, amountError = null).recalcSaveEnabled() }
             }
 
             is AddEditLoanIntent.OnInterestPercentChange -> {
-                updateState { copy(interestPercentText = sanitizeInterestPercentInput(intent.value)) }
+                updateState {
+                    copy(
+                        interestPercentText = sanitizeInterestPercentInput(intent.value),
+                        interestError = null,
+                        amountError = null,
+                    )
+                }
             }
 
             is AddEditLoanIntent.OnDateSelected -> updateState { copy(date = intent.value) }
@@ -110,12 +117,7 @@ class AddEditLoanViewModel(
     private fun filterPersonSuggestions(personName: String): List<String> =
         allPersonNames.filter { it.contains(personName, ignoreCase = true) && it != personName }
 
-    private fun save() = launchSafe(
-        onError = { e ->
-            updateState { copy(isSaving = false) }
-            AddEditLoanEffect.ShowError(e.toUserMessage())
-        },
-    ) {
+    private fun save() = launchSafe(onError = ::refuse) {
         if (currentState.isSaving) return@launchSafe
         updateState { copy(isSaving = true) }
         val form: AddEditLoanUiState = currentState
@@ -147,6 +149,25 @@ class AddEditLoanViewModel(
             )
         }
         sendEffect(AddEditLoanEffect.NavigateBack)
+    }
+
+    private fun refuse(error: DomainException): AddEditLoanEffect? {
+        val code: ValidationCode = (error as? DomainException.ValidationError)?.code ?: ValidationCode.Unspecified
+        val message: String = error.toUserMessage()
+        updateState { copy(isSaving = false) }
+        return when (code) {
+            ValidationCode.InterestOutOfRange -> {
+                updateState { copy(interestError = message) }
+                null
+            }
+
+            ValidationCode.TotalBelowPaid -> {
+                updateState { copy(amountError = message) }
+                null
+            }
+
+            else -> AddEditLoanEffect.ShowError(message)
+        }
     }
 }
 

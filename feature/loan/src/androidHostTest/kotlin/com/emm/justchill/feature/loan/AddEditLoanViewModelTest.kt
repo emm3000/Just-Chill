@@ -160,27 +160,125 @@ class AddEditLoanViewModelTest {
     }
 
     @Test
-    fun `create with CreateLoanUseCase throwing InterestOutOfRange emits ShowError with the Spanish message`() =
-        runTest {
-            val error = DomainException.ValidationError(
-                "Interest must be between 0 and 10000 bps, got 50000",
-                ValidationCode.InterestOutOfRange,
-            )
-            coEvery { createLoan(any()) } throws error
-            val vm = viewModel()
-            val effects = mutableListOf<AddEditLoanEffect>()
-            val job = launch { vm.effect.collect { effects.add(it) } }
-
-            vm.onIntent(AddEditLoanIntent.Save)
-            advanceUntilIdle()
-
-            val showError = effects.filterIsInstance<AddEditLoanEffect.ShowError>().firstOrNull()
-            checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
-            assertEquals(error.toUserMessage(), showError.message)
-            assertEquals("El interés debe estar entre 0% y 100%", showError.message)
-            assertFalse(showError.message.contains("bps"), "must not leak the English diagnostic message")
-            job.cancel()
+    fun `an interest above the ceiling refuses under the interest field, with no effect`() = runTest {
+        val outOfRange: DomainException = DomainException.ValidationError(
+            "Interest must be between 0 and 10000 bps, got 15000",
+            ValidationCode.InterestOutOfRange,
+        )
+        coEvery { createLoan(any()) } throws outOfRange
+        val vm: AddEditLoanViewModel = viewModel()
+        val effects: MutableList<AddEditLoanEffect> = mutableListOf()
+        val savingFlags: MutableList<Boolean> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effect.collect { effects += it } }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.isSaving }.distinctUntilChanged().collect { savingFlags += it }
         }
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditLoanIntent.OnPersonNameChange("Ana"))
+        vm.onIntent(AddEditLoanIntent.OnAmountChange("150000"))
+        vm.onIntent(AddEditLoanIntent.OnInterestPercentChange("150"))
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+
+        assertEquals("El interés debe estar entre 0% y 100%", vm.state.value.interestError)
+        assertNull(vm.state.value.amountError)
+        assertEquals(emptyList(), effects)
+        assertEquals(listOf(false, true, false), savingFlags)
+    }
+
+    @Test
+    fun `an edited total below what was paid refuses under the amount field, with no effect`() = runTest {
+        val belowPaid: DomainException = DomainException.ValidationError(
+            "New total is below what has already been paid",
+            ValidationCode.TotalBelowPaid,
+        )
+        every { loanRepository.byId(LoanId("loan-1")) } returns flowOf(storedLoan)
+        coEvery { updateLoan(LoanId("loan-1"), any()) } throws belowPaid
+        val vm: AddEditLoanViewModel = viewModel(loanId = "loan-1")
+        val effects: MutableList<AddEditLoanEffect> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effect.collect { effects += it } }
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditLoanIntent.OnAmountChange("1000"))
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+
+        assertEquals("El nuevo total es menor de lo que ya te pagaron", vm.state.value.amountError)
+        assertNull(vm.state.value.interestError)
+        assertEquals(emptyList(), effects)
+        assertFalse(vm.state.value.isSaving)
+    }
+
+    @Test
+    fun `a keystroke in the interest field clears its refusal`() = runTest {
+        val outOfRange: DomainException = DomainException.ValidationError(
+            "Interest must be between 0 and 10000 bps, got 15000",
+            ValidationCode.InterestOutOfRange,
+        )
+        coEvery { createLoan(any()) } throws outOfRange
+        val vm: AddEditLoanViewModel = viewModel()
+        val interestErrors: MutableList<String?> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.interestError }.distinctUntilChanged().collect { interestErrors += it }
+        }
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditLoanIntent.OnInterestPercentChange("150"))
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+        vm.onIntent(AddEditLoanIntent.OnInterestPercentChange("15"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, "El interés debe estar entre 0% y 100%", null), interestErrors)
+    }
+
+    @Test
+    fun `a keystroke in the amount or the interest field clears the total refusal`() = runTest {
+        val belowPaid: DomainException = DomainException.ValidationError(
+            "New total is below what has already been paid",
+            ValidationCode.TotalBelowPaid,
+        )
+        every { loanRepository.byId(LoanId("loan-1")) } returns flowOf(storedLoan)
+        coEvery { updateLoan(LoanId("loan-1"), any()) } throws belowPaid
+        val vm: AddEditLoanViewModel = viewModel(loanId = "loan-1")
+        val amountErrors: MutableList<String?> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.state.map { it.amountError }.distinctUntilChanged().collect { amountErrors += it }
+        }
+        advanceUntilIdle()
+        val refusal: String = "El nuevo total es menor de lo que ya te pagaron"
+
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+        vm.onIntent(AddEditLoanIntent.OnAmountChange("1000"))
+        advanceUntilIdle()
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+        vm.onIntent(AddEditLoanIntent.OnInterestPercentChange("5"))
+        advanceUntilIdle()
+
+        assertEquals(listOf(null, refusal, null, refusal, null), amountErrors)
+    }
+
+    @Test
+    fun `a database failure on save stays an effect and refuses neither field`() = runTest {
+        coEvery { createLoan(any()) } throws DomainException.DatabaseError(IllegalStateException("disk I/O error"))
+        val vm: AddEditLoanViewModel = viewModel()
+        val effects: MutableList<AddEditLoanEffect> = mutableListOf()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.effect.collect { effects += it } }
+        advanceUntilIdle()
+
+        vm.onIntent(AddEditLoanIntent.Save)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf<AddEditLoanEffect>(AddEditLoanEffect.ShowError("Hubo un problema guardando tu data")),
+            effects,
+        )
+        assertNull(vm.state.value.amountError)
+        assertNull(vm.state.value.interestError)
+    }
 
     @Test
     fun `a null loanId calls CreateLoanUseCase and never UpdateLoanUseCase`() = runTest {

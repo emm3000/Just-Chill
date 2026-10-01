@@ -62,13 +62,19 @@ extension AddEditLoanScreen {
                     VStack(spacing: EmmSpacing.s5) {
                         personSection
                         LoansScreen.FormSection(eyebrow: "MONTO") {
-                            LoansScreen.AmountCard(amountDigits: state.amountDigits) { request(.amount) }
+                            VStack(alignment: .leading, spacing: EmmSpacing.s1) {
+                                LoansScreen.AmountCard(amountDigits: state.amountDigits) { request(.amount) }
+                                FieldError(message: state.amountError)
+                            }
                         }
                         LoansScreen.FormSection(eyebrow: "INTERÉS %") {
-                            LoansScreen.SanitizedEntry(
-                                placeholder: "0", text: state.interestPercentText, current: currentInterest,
-                                keyboard: .decimalPad
-                            ) { send(AddEditLoanIntentOnInterestPercentChange(value: $0)) }
+                            VStack(alignment: .leading, spacing: EmmSpacing.s1) {
+                                LoansScreen.SanitizedEntry(
+                                    placeholder: "0", text: state.interestPercentText, current: currentInterest,
+                                    keyboard: .decimalPad, isError: state.interestError != nil
+                                ) { send(AddEditLoanIntentOnInterestPercentChange(value: $0)) }
+                                FieldError(message: state.interestError)
+                            }
                         }
                         LoansScreen.FormSection(eyebrow: "FECHA") {
                             LoansScreen.DateRow(label: state.dateLabel) { request(.date) }

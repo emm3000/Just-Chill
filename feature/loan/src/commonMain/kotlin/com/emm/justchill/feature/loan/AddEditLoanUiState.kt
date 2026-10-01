@@ -17,6 +17,8 @@ data class AddEditLoanUiState(
     val note: String = "",
     val isSaveEnabled: Boolean = false,
     val isSaving: Boolean = false,
+    val amountError: String? = null,
+    val interestError: String? = null,
     // null means no sheet is open (ADR 012 Decision 2).
     val openSheet: LoanFormSheet? = null,
 ) : UiState {
