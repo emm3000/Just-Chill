@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,13 +22,31 @@ import com.emm.justchill.core.ioDispatcher
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.navigation.PlatformHostActions
+import com.emm.justchill.feature.profile.ProfileMessage
+import com.emm.justchill.feature.profile.toText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 
-private class PendingExport(val json: String, val onResult: (Boolean) -> Unit)
+internal class PendingExport(val json: String, val onResult: (Boolean) -> Unit)
+
+internal fun <D : Any> settleExportResult(
+    document: D?,
+    pending: PendingExport?,
+    write: (D, String) -> Boolean,
+    delete: (D) -> Unit,
+    notify: (String, EmmSnackbarTone) -> Unit,
+) {
+    if (document == null) return
+    if (pending != null) {
+        pending.onResult(write(document, pending.json))
+        return
+    }
+    delete(document)
+    notify(ProfileMessage.ExportFailed.toText(), EmmSnackbarTone.Error)
+}
 
 // Call at the AppNavHost root, never inside an `entry<...> { }` body: a picker result arriving after
 // its entry left composition is dropped.
@@ -47,14 +66,33 @@ fun rememberPlatformHostActions(
     ) { uri ->
         val pending: PendingExport? = pendingExport
         pendingExport = null
-        if (uri != null && pending != null) {
-            val saved: Boolean = runCatching {
-                context.contentResolver.openOutputStream(uri)?.use { stream ->
-                    stream.bufferedWriter().use { it.write(pending.json) }
-                } != null
-            }.getOrDefault(false)
-            pending.onResult(saved)
-        }
+        settleExportResult(
+            document = uri,
+            pending = pending,
+            write = { document, json ->
+                runCatching {
+                    context.contentResolver.openOutputStream(document)?.use { stream ->
+                        stream.bufferedWriter().use { it.write(json) }
+                    } != null
+                }.getOrDefault(false)
+            },
+            delete = { document ->
+                runCatching {
+                    DocumentsContract.deleteDocument(
+                        context.contentResolver,
+                        document,
+                    )
+                }
+            },
+            notify = { message, tone ->
+                scope.launch {
+                    snackbarHostState.showEmmSnackbar(
+                        message = message,
+                        tone = tone,
+                    )
+                }
+            },
+        )
     }
 
     val importLauncher: ManagedActivityResultLauncher<Array<String>, Uri?> = rememberLauncherForActivityResult(
