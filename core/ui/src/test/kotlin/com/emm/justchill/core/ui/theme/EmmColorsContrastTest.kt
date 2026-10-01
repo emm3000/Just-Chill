@@ -20,6 +20,7 @@ class EmmColorsContrastTest {
             "textPrimary" to emmDarkColors.textPrimary,
             "textSecondary" to emmDarkColors.textSecondary,
             "textTertiary" to emmDarkColors.textTertiary,
+            "danger" to emmDarkColors.danger,
         )
 
         readableTokens.forEach { (name: String, token: Color) ->
