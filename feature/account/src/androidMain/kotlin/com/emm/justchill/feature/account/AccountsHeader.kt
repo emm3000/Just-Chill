@@ -26,13 +26,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.emm.justchill.core.presentation.format.monthLabel
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Hairline
 import com.emm.justchill.core.ui.atoms.JcTopBar
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmRadii
 import com.emm.justchill.core.ui.theme.EmmSpacing
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmRadii
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
@@ -59,10 +66,10 @@ internal fun AccountsHeader(state: AccountsUiState, addAccount: () -> Unit) {
 
 @Composable
 private fun NewAccountButton(onClick: () -> Unit) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
-    val radii = LocalEmmRadii.current
-    val type = LocalEmmType.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+    val radii: EmmRadii = LocalEmmRadii.current
+    val type: EmmType = LocalEmmType.current
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 
     Box(
@@ -98,47 +105,89 @@ private fun NewAccountButton(onClick: () -> Unit) {
     }
 }
 
-/**
- * The month's spend is this screen's one hero; income shares its size and steps down a tone
- * rather than competing for the glance.
- */
 @Composable
 private fun MonthSummaryStrip(state: AccountsUiState) {
-    val colors = LocalEmmColors.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
-    Row(
+    SummaryStripLayout(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = spacing.s6, end = spacing.s6, top = spacing.s6, bottom = spacing.s5),
-        horizontalArrangement = Arrangement.spacedBy(spacing.s6),
-    ) {
-        SummaryColumn(
-            eyebrow = "Gastado en ${state.month.monthLabel()}",
-            amount = state.monthSpent,
-            amountColor = colors.textPrimary,
-        )
-        Box(
-            modifier = Modifier
-                .width(spacing.hairline)
-                .height(SummaryDividerHeight)
-                .background(colors.border),
-        )
-        SummaryColumn(
-            eyebrow = "Ingresado",
-            amount = state.monthIncome,
-            amountColor = colors.textSecondary,
-        )
+        gap = spacing.s6,
+        stackGap = spacing.s4,
+        spent = {
+            SummaryColumn(
+                eyebrow = "Gastado en ${state.month.monthLabel()}",
+                amount = state.monthSpent,
+                amountColor = colors.textPrimary,
+            )
+        },
+        divider = {
+            Box(
+                modifier = Modifier
+                    .width(spacing.hairline)
+                    .height(SummaryDividerHeight)
+                    .background(colors.border),
+            )
+        },
+        income = {
+            SummaryColumn(
+                eyebrow = "Ingresado",
+                amount = state.monthIncome,
+                amountColor = colors.textSecondary,
+            )
+        },
+    )
+}
+
+@Composable
+private fun SummaryStripLayout(
+    gap: Dp,
+    stackGap: Dp,
+    spent: @Composable () -> Unit,
+    divider: @Composable () -> Unit,
+    income: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Layout(
+        contents = listOf(spent, divider, income),
+        modifier = modifier,
+    ) { measurables: List<List<Measurable>>, constraints: Constraints ->
+        val gapPx: Int = gap.roundToPx()
+        val columnConstraints: Constraints = Constraints(maxWidth = constraints.maxWidth)
+        val spentMeasurable: Measurable = measurables[0].single()
+        val incomeMeasurable: Measurable = measurables[2].single()
+        val dividerPlaceable: Placeable = measurables[1].single().measure(Constraints())
+        val besideWidth: Int = spentMeasurable.maxIntrinsicWidth(Constraints.Infinity) + gapPx +
+            dividerPlaceable.width + gapPx + incomeMeasurable.maxIntrinsicWidth(Constraints.Infinity)
+        val spentPlaceable: Placeable = spentMeasurable.measure(columnConstraints)
+        val incomePlaceable: Placeable = incomeMeasurable.measure(columnConstraints)
+        if (besideWidth <= constraints.maxWidth) {
+            val dividerX: Int = spentPlaceable.width + gapPx
+            val height: Int = maxOf(spentPlaceable.height, dividerPlaceable.height, incomePlaceable.height)
+            layout(constraints.maxWidth, height) {
+                spentPlaceable.placeRelative(0, 0)
+                dividerPlaceable.placeRelative(dividerX, 0)
+                incomePlaceable.placeRelative(dividerX + dividerPlaceable.width + gapPx, 0)
+            }
+        } else {
+            val incomeY: Int = spentPlaceable.height + stackGap.roundToPx()
+            layout(constraints.maxWidth, incomeY + incomePlaceable.height) {
+                spentPlaceable.placeRelative(0, 0)
+                incomePlaceable.placeRelative(0, incomeY)
+            }
+        }
     }
 }
 
 @Composable
 private fun SummaryColumn(eyebrow: String, amount: String, amountColor: Color) {
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
         Eyebrow(text = eyebrow)
-        Text(text = amount, style = type.amountLead, color = amountColor)
+        Text(text = amount, style = type.amountLead, color = amountColor, softWrap = false)
     }
 }

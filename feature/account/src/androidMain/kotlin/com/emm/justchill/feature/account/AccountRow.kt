@@ -56,7 +56,13 @@ internal fun AccountRow(row: AccountMonthUi, onEdit: () -> Unit, onDelete: () ->
                 tile = { IconTile(icon = row.account.type.toIcon(), size = IconTileSize.Lg) },
                 texts = {
                     Column(verticalArrangement = Arrangement.spacedBy(spacing.s1)) {
-                        Text(text = row.account.name, style = type.titleM, color = colors.textPrimary)
+                        Text(
+                            text = row.account.name,
+                            style = type.titleM,
+                            color = colors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                         Text(
                             text = accountSubtitle(row.account.type.toLabel(), row.movementCount),
                             style = type.labelM,
@@ -115,18 +121,22 @@ private fun AccountRowContent(
         val textsX: Int = tilePlaceable.width + gapPx
         if (fitsBeside) {
             val height: Int = maxOf(tilePlaceable.height, textsPlaceable.height, netPlaceable.height)
+            val centered: Alignment.Vertical = Alignment.CenterVertically
             layout(constraints.maxWidth, height) {
-                tilePlaceable.place(0, (height - tilePlaceable.height) / 2)
-                textsPlaceable.place(textsX, (height - textsPlaceable.height) / 2)
-                netPlaceable.place(constraints.maxWidth - netPlaceable.width, (height - netPlaceable.height) / 2)
+                tilePlaceable.placeRelative(0, centered.align(tilePlaceable.height, height))
+                textsPlaceable.placeRelative(textsX, centered.align(textsPlaceable.height, height))
+                netPlaceable.placeRelative(
+                    constraints.maxWidth - netPlaceable.width,
+                    centered.align(netPlaceable.height, height),
+                )
             }
         } else {
             val topHeight: Int = maxOf(tilePlaceable.height, textsPlaceable.height)
             val netY: Int = topHeight + stackGap.roundToPx()
             layout(constraints.maxWidth, netY + netPlaceable.height) {
-                tilePlaceable.place(0, 0)
-                textsPlaceable.place(textsX, 0)
-                netPlaceable.place(0, netY)
+                tilePlaceable.placeRelative(0, 0)
+                textsPlaceable.placeRelative(textsX, 0)
+                netPlaceable.placeRelative(0, netY)
             }
         }
     }
