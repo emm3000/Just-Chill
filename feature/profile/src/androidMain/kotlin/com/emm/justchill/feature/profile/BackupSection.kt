@@ -95,18 +95,14 @@ private fun CloudBackupRows(state: ProfileUiState, onSignIn: () -> Unit, snapsho
         ProfileRowWithTrailing(
             icon = Icons.Outlined.CloudUpload,
             label = "Respaldar ahora",
-            meta = if (state.op == ProfileOp.BackingUp) "Respaldando…" else "Sube una copia a la nube",
+            meta = state.backUpNowMeta,
             metaIsPrimary = true,
-            enabled = state.cloudBackupActionsEnabled,
-            busy = state.op == ProfileOp.BackingUp,
+            enabled = state.canBackUpNow,
+            busy = state.isBackingUp,
             onClick = snapshotActions.onBackUpNow,
             trailing = {},
         )
-        VerifyBackupRow(
-            op = state.op,
-            enabled = state.cloudBackupActionsEnabled,
-            onVerifyClick = snapshotActions.onVerify,
-        )
+        VerifyBackupRow(state = state, onVerifyClick = snapshotActions.onVerify)
         LastBackupRow(row = state.backupRow)
         if (state.showsBackupDestinationDisclosure) {
             BackupDestinationDisclosure(onAcknowledge = snapshotActions.onAcknowledgeDestination)
@@ -115,15 +111,14 @@ private fun CloudBackupRows(state: ProfileUiState, onSignIn: () -> Unit, snapsho
 }
 
 @Composable
-private fun VerifyBackupRow(op: ProfileOp, enabled: Boolean, onVerifyClick: () -> Unit) {
-    val busy: Boolean = op == ProfileOp.VerifyingBackup
+private fun VerifyBackupRow(state: ProfileUiState, onVerifyClick: () -> Unit) {
     ProfileRowWithTrailing(
         icon = Icons.Outlined.CloudSync,
         label = "Verificar respaldo",
-        meta = if (busy) "Verificando…" else "Revisa que el último se pueda restaurar",
+        meta = state.verifyBackupMeta,
         metaIsPrimary = true,
-        enabled = enabled,
-        busy = busy,
+        enabled = state.cloudBackupActionsEnabled,
+        busy = state.isVerifyingBackup,
         onClick = onVerifyClick,
         trailing = {},
     )

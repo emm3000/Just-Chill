@@ -14,19 +14,19 @@ extension MoreScreen {
                 Row(
                     symbol: "icloud.and.arrow.up",
                     label: "Respaldar ahora",
-                    meta: state.op == .backingUp ? "Respaldando…" : "Sube una copia a la nube",
+                    meta: state.backUpNowMeta,
                     metaTone: EmmColors.textSecondary,
-                    isEnabled: state.cloudBackupActionsEnabled,
-                    isBusy: state.op == .backingUp,
+                    isEnabled: state.canBackUpNow,
+                    isBusy: state.isBackingUp,
                     action: { send(ProfileIntentBackUpNow.shared) }
                 )
                 Row(
                     symbol: "checkmark.icloud",
                     label: "Verificar respaldo",
-                    meta: state.op == .verifyingBackup ? "Verificando…" : "Revisa que el último se pueda restaurar",
+                    meta: state.verifyBackupMeta,
                     metaTone: EmmColors.textSecondary,
                     isEnabled: state.cloudBackupActionsEnabled,
-                    isBusy: state.op == .verifyingBackup,
+                    isBusy: state.isVerifyingBackup,
                     action: { send(ProfileIntentVerifyBackup.shared) }
                 )
                 Row(
