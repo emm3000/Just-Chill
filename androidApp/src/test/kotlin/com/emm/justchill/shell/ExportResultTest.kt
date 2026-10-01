@@ -38,5 +38,18 @@ class ExportResultTest {
 
         assertTrue(deleted.isEmpty())
         assertTrue(notified.isEmpty())
+        assertTrue(written.isEmpty())
+    }
+
+    @Test
+    fun `a document with a pending payload is written and reported, never deleted`() {
+        val results: MutableList<Boolean> = mutableListOf()
+
+        settle(document = "export-document", pending = PendingExport(json = "{}", onResult = { results += it }))
+
+        assertEquals(listOf("export-document"), written)
+        assertEquals(listOf(true), results)
+        assertTrue(deleted.isEmpty())
+        assertTrue(notified.isEmpty())
     }
 }
