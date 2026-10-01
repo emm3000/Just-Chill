@@ -65,10 +65,10 @@ extension LoanDetailScreen {
                     title: state.summary?.personName ?? "",
                     onBack: onClose,
                     trailing: [
-                        TopBar.Action(symbol: "pencil", label: "Editar préstamo") {
+                        TopBar.Action(id: "edit", symbol: "pencil", label: "Editar préstamo") {
                             send(LoanDetailIntentOnEditLoanClick.shared)
                         },
-                        TopBar.Action(symbol: "trash", label: "Eliminar préstamo", tone: .danger) {
+                        TopBar.Action(id: "delete", symbol: "trash", label: "Eliminar préstamo", tone: .danger) {
                             send(LoanDetailIntentOnDeleteLoanClick.shared)
                         },
                     ]
