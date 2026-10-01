@@ -21,11 +21,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -42,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.domain.category.CategoryType
@@ -55,6 +52,7 @@ import com.emm.justchill.core.ui.atoms.FormSection
 import com.emm.justchill.core.ui.atoms.IconTile
 import com.emm.justchill.core.ui.atoms.IconTileSize
 import com.emm.justchill.core.ui.atoms.OutlinedCta
+import com.emm.justchill.core.ui.atoms.SearchField
 import com.emm.justchill.core.ui.atoms.SegmentOption
 import com.emm.justchill.core.ui.atoms.Segmented
 import com.emm.justchill.core.ui.atoms.SheetDragHandle
@@ -154,42 +152,14 @@ internal fun CategoryFilterSheet(
                 }
             }
 
-            Row(
+            SearchField(
+                query = query,
+                onQueryChange = { query = it },
+                placeholder = "Buscar entre $totalCount categorías",
                 modifier = Modifier
-                    .fillMaxWidth()
                     .padding(horizontal = spacing.s5)
-                    .padding(bottom = spacing.s3)
-                    .clip(radii.rM)
-                    .background(colors.surface1)
-                    .border(spacing.hairline, colors.border, radii.rM)
-                    .padding(horizontal = spacing.s3, vertical = spacing.s3),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(spacing.s3),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Search,
-                    contentDescription = null,
-                    tint = colors.textTertiary,
-                    modifier = Modifier.size(spacing.s4),
-                )
-                Box(modifier = Modifier.weight(1f)) {
-                    if (query.isEmpty()) {
-                        Text(
-                            text = "Buscar entre $totalCount categorías",
-                            style = type.bodyM,
-                            color = colors.textTertiary,
-                        )
-                    }
-                    BasicTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        singleLine = true,
-                        cursorBrush = SolidColor(colors.borderFocus),
-                        textStyle = type.bodyM.copy(color = colors.textPrimary),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
+                    .padding(bottom = spacing.s3),
+            )
 
             MontoSection(
                 minAmount = minAmount,
