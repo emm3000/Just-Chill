@@ -15,7 +15,7 @@ Totals of rows already folded out of Recent.
 | 1 | sonnet:low | 10 | 10 | 0 | 0 | 0 | - | - |
 | 2 | sonnet:medium | 47 | 22 | 12 | 10 | 3 | - | - |
 | 2 | sonnet:high | 10 | 3 | 4 | 2 | 1 | 0 | 0 |
-| 2 | opus:medium | 14 | 10 | 3 | 1 | 0 | 0 | 0 |
+| 2 | opus:medium | 17 | 11 | 4 | 2 | 0 | 0 | 0 |
 | 3 | opus:medium | 102 | 69 | 8 | 15 | 10 | 0 | 0 |
 | 3 | opus:high | 15 | 6 | 4 | 5 | 0 | 0 | 0 |
 | 4 | opus:high | 54 | 30 | 15 | 6 | 3 | 1 | 0 |
@@ -26,9 +26,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause | Review | Nudges | Minutes |
 |---|---|---|---|---|---|---|---|---|
-| #645 | #632 | 2 | opus:medium | FIX FIRST | judgment | ok | 0 | 14 |
-| #646 | #631 | 2 | opus:medium | FIX FIRST | checklist | ok | 0 | 15 |
-| #647 | #633 | 2 | opus:medium | MERGE | - | ok | 0 | 9 |
 | #648 | #634 | 2 | opus:medium | FIX FIRST | judgment | ok | 0 | 12 |
 | #649 | #636 | 2 | opus:high | FIX FIRST | judgment | ok | 0 | 19 |
 | #650 | #635 | 2 | opus:high | MERGE | - | ok | 0 | 33 |
@@ -46,9 +43,13 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #686 | #670 | 1 | sonnet:low | MERGE | - | ok | 0 | 10 |
 | #687 | #671 | 2 | opus:high | MERGE | - | ok | 0 | 15 |
 | #688 | #668 | 3 | opus:high | FIX FIRST | judgment | ok | 0 | 16 |
+| #689 | #673 | 2 | opus:high | MERGE | - | ok | 0 | 8 |
+| #690 | #672 | 2 | opus:high | MERGE | - | ok | 0 | 12 |
+| #691 | #669 | 2 | opus:high | MERGE | - | ok | 0 | 12 |
 
 ## Changes
 
+- 2026-10-01: row 2 at opus:high reached five consecutive MERGE across three kinds of ticket (#667 iOS chrome, #687 and #689 iOS screens, #690 an Android layout rule with tests, #691 an atom move), so one pilot one step down runs on #674 at opus:medium. Its outcome moves the row or keeps it.
 - 2026-10-01: row 3 held at opus:high on #688's first-review FIX FIRST judgment, the only one in Recent after the fold (the reviewer said MERGE, the orchestrator promoted its follow-up: the new search atom carried the hand-built field's 16dp glyph against `ui-components.md`'s 20dp inline rule, a default every taking screen inherits). No rule moves; the existing reference-debt line in the skill covers it.
 - 2026-10-01: row 3 held at opus:high on #652's first-review FIX FIRST spec: the ticket's Done-when item 1 asked for a 25 ms double tap `axe` cannot send, and the peer tuned a 1 s window to `axe`'s latency. The orchestrator rescoped the item on the issue (a state guard proven by a red unit test). A criterion that names a measurement tool gets its feasibility checked before dispatch.
 - 2026-10-01: row 2 opus:medium -> opus:high: two first-review FIX FIRST judgment in Recent (#645 asserted a 1.0 row unchanged against trunk while its own shots moved the amount 1px; #648 added a duplicate TalkBack label neither neighbour field carries, promoted from a reviewer minor). The raise goes one effort step on the same model.
