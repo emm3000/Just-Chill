@@ -12,8 +12,21 @@ import com.emm.justchill.feature.loan.LoanDetailViewModel
 import com.emm.justchill.feature.loan.PersonLoansViewModel
 import com.emm.justchill.feature.transaction.capture.EditTransactionViewModel
 import com.russhwolf.settings.SettingsInitializer
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.annotations.SupabaseInternal
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.user.UserSession
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Before
@@ -28,14 +41,17 @@ import org.koin.core.qualifier.Qualifier
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import java.lang.reflect.Field
+import kotlin.coroutines.ContinuationInterceptor
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-@OptIn(KoinInternalApi::class)
+@OptIn(KoinInternalApi::class, SupabaseInternal::class)
 class AppGraphKoinTest {
 
     private lateinit var koin: Koin
@@ -55,7 +71,23 @@ class AppGraphKoinTest {
 
     @After
     fun tearDown() {
-        koin.close()
+        koin.closeGraph()
+    }
+
+    @Test
+    fun `closing the graph leaves no Supabase Auth coroutine that can still touch the main dispatcher`() {
+        val stalled: Koin = koinApplication {
+            modules(appModules(testPlatformModule) + module { single<SessionManager> { StalledSessionManager() } })
+        }.koin
+        val authJob: Job = stalled.get<SupabaseClient>().auth.authScope.coroutineContext.job
+
+        stalled.closeGraph()
+
+        assertTrue(
+            authJob.offMainChildren().isEmpty(),
+            "Auth startup is still running off the main thread after the graph closed; its hop to " +
+                "Dispatchers.Main races the next MainDispatcherRule setMain.",
+        )
     }
 
     @Test
@@ -136,7 +168,7 @@ class AppGraphKoinTest {
         val timeFields: List<Pair<Any, Field>> = try {
             overridden.ownTimeFields()
         } finally {
-            overridden.close()
+            overridden.closeGraph()
         }
 
         val mismatches: List<String> = timeFields
@@ -176,6 +208,27 @@ class AppGraphKoinTest {
         }
     }
 
+    // supabase-kt's Auth startup runs on Dispatchers.Default and ends in a launch(Dispatchers.Main)
+    // (setupPlatform); left running past the test, that read races MainDispatcherRule's next setMain (#630).
+    private fun Koin.closeGraph() {
+        val authJob: Job = get<SupabaseClient>().auth.authScope.coroutineContext.job
+        authJob.cancel()
+        runBlocking {
+            withTimeout(AUTH_STARTUP_TIMEOUT) {
+                var pending: List<Job> = authJob.offMainChildren()
+                while (pending.isNotEmpty()) {
+                    pending.joinAll()
+                    pending = authJob.offMainChildren()
+                }
+            }
+        }
+        close()
+    }
+
+    private fun Job.offMainChildren(): List<Job> = children
+        .filter { (it as? CoroutineScope)?.coroutineContext?.get(ContinuationInterceptor) !== Dispatchers.Main }
+        .toList()
+
     private fun expectedFor(field: Field, boundClock: Clock, boundZone: TimeZone): Any =
         if (field.type == Clock::class.java) boundClock else boundZone
 
@@ -202,9 +255,17 @@ class AppGraphKoinTest {
         return (root.message ?: root::class.simpleName.orEmpty()).lineSequence().first().trim()
     }
 
+    private class StalledSessionManager : SessionManager {
+        override suspend fun saveSession(session: UserSession): Unit = Unit
+        override suspend fun loadSession(): UserSession = awaitCancellation()
+        override suspend fun deleteSession(): Unit = Unit
+    }
+
     private companion object {
 
         const val MIN_EXPECTED_BINDINGS: Int = 80
+
+        val AUTH_STARTUP_TIMEOUT: Duration = 5.seconds
 
         const val OWN_PACKAGE_PREFIX: String = "com.emm."
 
