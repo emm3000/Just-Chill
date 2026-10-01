@@ -482,34 +482,7 @@ class ProfileViewModelBackupRowTest {
         }
 
     @Test
-    fun `crossing midnight with the screen open ages the row into stale without any other emission`() =
-        runTest(testDispatcher) {
-            var clockNow: Instant = fixedClock.now()
-            val movingClock: Clock = object : Clock {
-                override fun now(): Instant = clockNow
-            }
-            val lastBackupAt: Long = (clockNow - 3.days).toEpochMilliseconds()
-            val stalenessReadingTheClock = GetBackupStalenessUseCase(backupRepository, movingClock, TimeZone.UTC)
-            todayDates.value = LocalDate(2026, 8, 11)
-            latestLocalChangeFlow.value = lastBackupAt + 1
-            healthFlow.value = health(lastBackupAt, consecutiveFailures = 0, lastFailureReason = null)
-            val vm: ProfileViewModel = buildViewModel(getBackupStaleness = stalenessReadingTheClock)
-            val rows: MutableList<BackupRowUi> = mutableListOf()
-            val recordedRows: Flow<BackupRowUi> = vm.state.map { it.backupRow }.distinctUntilChanged()
-            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { recordedRows.toList(rows) }
-
-            sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
-            advanceUntilIdle()
-
-            clockNow += 1.days
-            todayDates.value = LocalDate(2026, 8, 12)
-            advanceUntilIdle()
-
-            assertEquals(listOf(BackupRowUi.NeedsAccount, BackupRowUi.UpToDate(3), BackupRowUi.Stale(4)), rows)
-        }
-
-    @Test
-    fun `one today subscription moves both the last export and the backup row across midnight`() =
+    fun `crossing midnight on one today subscription ages both the row and the last export`() =
         runTest(testDispatcher) {
             var clockNow: Instant = fixedClock.now()
             val movingClock: Clock = object : Clock {

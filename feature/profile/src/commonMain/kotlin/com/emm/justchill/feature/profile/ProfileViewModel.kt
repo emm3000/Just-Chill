@@ -30,14 +30,14 @@ import com.emm.justchill.core.domain.transaction.TransactionsCsv
 import com.emm.justchill.core.presentation.mvi.MviViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
 
@@ -67,13 +67,11 @@ class ProfileViewModel(
 ) {
     private val onDomainError: (DomainException) -> ProfileEffect = ProfileEffect::ShowError
 
+    private val todayDates: StateFlow<LocalDate> = todayFlow()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, todayFlow.today())
+
     init {
-        val today: SharedFlow<LocalDate> = todayFlow().shareIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(),
-            replay = 1,
-        )
-        today
+        todayDates
             .onEach { today -> updateState { copy(lastExport = localExportHistory.toLastExportUi(today)) } }
             .launchSafeIn(onError = onDomainError)
 
@@ -112,7 +110,7 @@ class ProfileViewModel(
             backupController.health,
             backupController.isBackingUp,
             backupRepository.observeLatestLocalChangeAt().unobservedOnFailure(logger),
-            today,
+            todayDates,
         ) { sessionUiState, health, backingUp, _, _ ->
             resolveBackupRow(sessionUiState, health, backingUp, getBackupStaleness, logger)
         }
