@@ -14,12 +14,14 @@ import com.emm.justchill.core.presentation.error.toUserMessage
 import com.emm.justchill.core.presentation.format.moneyCentsString
 import com.emm.justchill.core.testing.FakeTodayFlow
 import com.emm.justchill.core.testing.MainDispatcherRule
+import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
@@ -111,7 +113,7 @@ class AddEditLoanViewModelTest {
         val christmas = LocalDate(2026, Month.DECEMBER, 25)
         todayDates.value = christmas
 
-        val vm = viewModel()
+        val vm: AddEditLoanViewModel = viewModel()
         advanceUntilIdle()
 
         assertEquals(christmas, vm.state.value.today)
@@ -139,14 +141,14 @@ class AddEditLoanViewModelTest {
         coEvery { createLoan(any()) } returns Unit
         val christmas = LocalDate(2026, Month.DECEMBER, 25)
         todayDates.value = christmas
-        val vm = viewModel()
+        val vm: AddEditLoanViewModel = viewModel()
 
         vm.onIntent(AddEditLoanIntent.OnPersonNameChange("Ana"))
         vm.onIntent(AddEditLoanIntent.OnAmountChange("150000"))
         vm.onIntent(AddEditLoanIntent.Save)
         advanceUntilIdle()
 
-        val insert = slot<LoanInsert>()
+        val insert: CapturingSlot<LoanInsert> = slot<LoanInsert>()
         coVerify { createLoan(capture(insert)) }
         assertEquals(LocalDateTime(christmas, LocalTime(14, 30)), insert.captured.lentAt)
     }
@@ -155,14 +157,14 @@ class AddEditLoanViewModelTest {
     fun `create with CreateLoanUseCase throwing PersonRequired emits ShowError with the Spanish message`() = runTest {
         val error = DomainException.ValidationError("Person is required", ValidationCode.PersonRequired)
         coEvery { createLoan(any()) } throws error
-        val vm = viewModel()
-        val effects = mutableListOf<AddEditLoanEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AddEditLoanViewModel = viewModel()
+        val effects: MutableList<AddEditLoanEffect> = mutableListOf<AddEditLoanEffect>()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AddEditLoanIntent.Save)
         advanceUntilIdle()
 
-        val showError = effects.filterIsInstance<AddEditLoanEffect.ShowError>().firstOrNull()
+        val showError: AddEditLoanEffect.ShowError? = effects.filterIsInstance<AddEditLoanEffect.ShowError>().firstOrNull()
         checkNotNull(showError) { "Expected ShowError effect but got: $effects" }
         assertEquals(error.toUserMessage(), showError.message)
         assertEquals("Escribe a quién le prestaste", showError.message)
@@ -277,7 +279,7 @@ class AddEditLoanViewModelTest {
 
     @Test
     fun `a null loanId calls CreateLoanUseCase and never UpdateLoanUseCase`() = runTest {
-        val vm = viewModel(loanId = null)
+        val vm: AddEditLoanViewModel = viewModel(loanId = null)
 
         vm.onIntent(AddEditLoanIntent.Save)
         advanceUntilIdle()
@@ -290,7 +292,7 @@ class AddEditLoanViewModelTest {
     fun `Save dispatched twice before the first resolves calls CreateLoanUseCase once`() = runTest {
         val gate = CompletableDeferred<Unit>()
         coEvery { createLoan(any()) } coAnswers { gate.await() }
-        val vm = viewModel()
+        val vm: AddEditLoanViewModel = viewModel()
 
         vm.onIntent(AddEditLoanIntent.Save)
         vm.onIntent(AddEditLoanIntent.Save)
@@ -303,7 +305,7 @@ class AddEditLoanViewModelTest {
     @Test
     fun `a non-null loanId calls UpdateLoanUseCase with that LoanId and never CreateLoanUseCase`() = runTest {
         every { loanRepository.byId(LoanId("loan-1")) } returns flowOf(storedLoan)
-        val vm = viewModel(loanId = "loan-1")
+        val vm: AddEditLoanViewModel = viewModel(loanId = "loan-1")
         advanceUntilIdle()
 
         vm.onIntent(AddEditLoanIntent.Save)
@@ -316,10 +318,10 @@ class AddEditLoanViewModelTest {
     @Test
     fun `loadLoan seeds every field from the loaded loan`() = runTest {
         every { loanRepository.byId(LoanId("loan-1")) } returns flowOf(storedLoan)
-        val vm = viewModel(loanId = "loan-1")
+        val vm: AddEditLoanViewModel = viewModel(loanId = "loan-1")
         advanceUntilIdle()
 
-        val state = vm.state.value
+        val state: AddEditLoanUiState = vm.state.value
         assertEquals("Ana", state.personName)
         assertEquals(moneyCentsString(storedLoan.principal), state.amountDigits)
         assertEquals("7.50", state.interestPercentText)
@@ -330,9 +332,9 @@ class AddEditLoanViewModelTest {
     @Test
     fun `a loanId whose loan no longer exists emits NavigateBack instead of an empty edit form`() = runTest {
         every { loanRepository.byId(LoanId("loan-gone")) } returns flowOf(null)
-        val vm = viewModel(loanId = "loan-gone")
-        val effects = mutableListOf<AddEditLoanEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AddEditLoanViewModel = viewModel(loanId = "loan-gone")
+        val effects: MutableList<AddEditLoanEffect> = mutableListOf<AddEditLoanEffect>()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
         advanceUntilIdle()
 
         assertEquals(listOf<AddEditLoanEffect>(AddEditLoanEffect.NavigateBack), effects)
@@ -342,21 +344,21 @@ class AddEditLoanViewModelTest {
     @Test
     fun `an interest-only edit preserves the loaded lentAt time-of-day`() = runTest {
         every { loanRepository.byId(LoanId("loan-1")) } returns flowOf(storedLoan)
-        val vm = viewModel(loanId = "loan-1")
+        val vm: AddEditLoanViewModel = viewModel(loanId = "loan-1")
         advanceUntilIdle()
 
         vm.onIntent(AddEditLoanIntent.OnInterestPercentChange("15"))
         vm.onIntent(AddEditLoanIntent.Save)
         advanceUntilIdle()
 
-        val update = slot<LoanUpdate>()
+        val update: CapturingSlot<LoanUpdate> = slot<LoanUpdate>()
         coVerify { updateLoan(LoanId("loan-1"), capture(update)) }
         assertEquals(marchLentAt, update.captured.lentAt)
     }
 
     @Test
     fun `OnSheetRequested opens the requested sheet and OnSheetDismissed closes it`() = runTest {
-        val vm = viewModel()
+        val vm: AddEditLoanViewModel = viewModel()
         advanceUntilIdle()
         assertNull(vm.state.value.openSheet)
 

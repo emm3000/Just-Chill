@@ -22,6 +22,7 @@ class AddTransactionUiStateTest {
     @Test
     fun `the shortcuts and the category sections come from the shared rules`() {
         val state: AddTransactionUiState = loadedState(accounts = emptyList()).copy(
+            date = LocalDate(2026, Month.AUGUST, 10),
             frequentUsage = FrequentUsage(TransactionType.Spend, categoryIds = listOf("coffee", "market")),
         )
 

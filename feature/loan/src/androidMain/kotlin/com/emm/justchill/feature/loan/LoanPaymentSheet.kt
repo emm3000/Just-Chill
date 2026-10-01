@@ -84,7 +84,7 @@ fun LoanPaymentSheet(form: LoanPaymentFormUi, onIntent: (LoanDetailIntent) -> Un
 
     if (form.openSheet == PaymentSheet.Date) {
         DatePickerSheet(
-            currentDate = form.date ?: form.today,
+            currentDate = form.pickerDate,
             today = form.today,
             shortcuts = form.dateShortcuts,
             onConfirm = { date -> onIntent(LoanDetailIntent.PaymentFormIntent.OnPaymentDateSelected(date)) },
