@@ -17,7 +17,7 @@ Totals of rows already folded out of Recent.
 | 2 | sonnet:high | 10 | 3 | 4 | 2 | 1 | 0 | 0 |
 | 2 | opus:medium | 8 | 5 | 2 | 1 | 0 | 0 | 0 |
 | 3 | opus:medium | 102 | 69 | 8 | 15 | 10 | 0 | 0 |
-| 3 | opus:high | 10 | 4 | 4 | 2 | 0 | 0 | 0 |
+| 3 | opus:high | 11 | 5 | 4 | 2 | 0 | 0 | 0 |
 | 4 | opus:high | 54 | 30 | 15 | 6 | 3 | 1 | 0 |
 
 ## Recent
@@ -27,7 +27,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | PR | Issue | Row | Model:effort | First review | Cause | Review | Nudges | Minutes |
 |---|---|---|---|---|---|---|---|---|
 | #603 | #587 | 3 | opus:high | FIX FIRST | judgment | ok | 0 | 36 |
-| #618 | #607 | 3 | opus:high | MERGE | - | ok | 0 | 14 |
 | #619 | #608 | 3 | opus:high | MERGE | - | ok | 0 | 17 |
 | #620 | #610 | 1 | sonnet:low | MERGE | - | ok | 0 | 7 |
 | #621 | #612 | 2 | opus:medium | MERGE | - | ok | 0 | 12 |
@@ -46,9 +45,11 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #649 | #636 | 2 | opus:high | FIX FIRST | judgment | ok | 0 | 19 |
 | #650 | #635 | 2 | opus:high | MERGE | - | ok | 0 | 33 |
 | #651 | #638 | 1 | sonnet:low | FIX FIRST | checklist | ok | 0 | 9 |
+| #652 | #639 | 3 | opus:high | FIX FIRST | spec | ok | 0 | 24 |
 
 ## Changes
 
+- 2026-10-01: row 3 held at opus:high on #652's first-review FIX FIRST spec: the ticket's Done-when item 1 asked for a 25 ms double tap `axe` cannot send, and the peer tuned a 1 s window to `axe`'s latency. The orchestrator rescoped the item on the issue (a state guard proven by a red unit test). A criterion that names a measurement tool gets its feasibility checked before dispatch.
 - 2026-10-01: row 2 opus:medium -> opus:high: two first-review FIX FIRST judgment in Recent (#645 asserted a 1.0 row unchanged against trunk while its own shots moved the amount 1px; #648 added a duplicate TalkBack label neither neighbour field carries, promoted from a reviewer minor). The raise goes one effort step on the same model.
 - 2026-10-01: row 3 held at opus:high on a third first-review FIX FIRST judgment in Recent (#644: the reviewer said MERGE, the orchestrator promoted a test that could never fail, presented as a reproduction that fails on trunk). High is the top effort and Fable stays reserved for design. Every row-3 dispatch now also names it: a test offered as proof must go red when the fix is reverted, and the PR body states only what a run showed.
 - 2026-09-30: row 3 held at opus:high on a third first-review FIX FIRST judgment in Recent (#627: a new precondition, the main checkout holding `.worktreeinclude`, shipped with no guard and no doc line). #618 and #619 merged clean in between, and Fable stays reserved for design. Every row-3 dispatch now also names it: a precondition the change introduces gets a guard in code and one line in the doc that drives it.
