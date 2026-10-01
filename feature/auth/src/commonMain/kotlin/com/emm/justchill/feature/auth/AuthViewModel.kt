@@ -100,9 +100,6 @@ class AuthViewModel(
         is AuthUiState.Form -> sendEffect(AuthEffect.NavigateBack)
     }
 
-    // try/finally guarantees the reset on every exit — success, domain error, and cancellation.
-    // Without it each path would need its own reset, and a missed one leaves the screen disabled
-    // forever.
     private fun launchSubmitting(via: Submitting, block: suspend (AuthUiState.Form) -> Unit) {
         val form = currentState as? AuthUiState.Form ?: return
         if (form.submitting != Submitting.None) return
