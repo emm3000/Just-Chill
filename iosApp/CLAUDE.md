@@ -35,7 +35,7 @@ The SwiftUI app over `JustChillKit` (ADR 024 Decisions 7 and 8). Bundle id `com.
 
 `JustChill/` is a synchronized folder (`PBXFileSystemSynchronizedRootGroup`): adding a Swift file never touches `project.pbxproj`.
 
-- `JustChillApp.swift` — the entry and Koin start. `AppShell.swift` — the `TabView`: Movimientos, Reporte, the add action, Cuentas, Más (ADR 022, `AppBottomBar.kt`); the add action opens `CaptureScreen` full screen instead of selecting a tab.
+- `JustChillApp.swift` — the entry and Koin start. `AppShell.swift` — the `TabView`: Movimientos, Reporte, the add action, Cuentas, Más (ADR 022, `AppBottomBar.kt`); the add action opens `CaptureScreen` full screen instead of selecting a tab. `AppShell` opens it only through `CaptureCover.present()`, which refuses until the cover's `onDismiss` has set it `.hidden` (#639).
 - One folder per screen family, one root type each: `Movements/`, `Report/`, `Accounts/`, `More/`, `Capture/`. A screen ticket works inside its own folder and never shares a file with another.
 - Every new screen family gets its own top-level folder under `JustChill/` (`Categories/`, `Loans/`, `Auth/`, `Onboarding/`); code more than one screen uses goes in `Bridge/`, `Theme/` (#527) or, for a view, `Components/` (#531), never inside a screen folder.
 - A tab item's spoken name goes on its `Label`'s `Text` (`Text("Anotar").accessibilityLabel("Anotar movimiento")`); a modifier on the tab's content view never reaches the tab bar.
