@@ -156,23 +156,9 @@ extension CaptureScreen {
         }
 
         private func addButton(_ onAddNew: @escaping () -> Void) -> some View {
-            Button {
+            OutlinedButton(title: "Nueva categoría", leadingSymbol: "plus", symbolSize: EmmSpacing.s3) {
                 onAddNew()
                 onDismiss()
-            } label: {
-                HStack(spacing: EmmSpacing.s2) {
-                    Image(systemName: "plus")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: EmmSpacing.s3, height: EmmSpacing.s3)
-                        .accessibilityHidden(true)
-                    Text("Nueva categoría")
-                        .emmTextStyle(EmmType.labelL)
-                }
-                .foregroundStyle(EmmColors.textPrimary)
-                .frame(maxWidth: .infinity, minHeight: EmmSpacing.s12)
-                .overlay { EmmRadii.rM.stroke(EmmColors.borderFocus, lineWidth: EmmSpacing.hairline) }
-                .contentShape(Rectangle())
             }
             .padding(.horizontal, EmmSpacing.s4)
             .padding(.top, EmmSpacing.s3)
