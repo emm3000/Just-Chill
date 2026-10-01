@@ -43,30 +43,52 @@ extension MovementsScreen {
     struct DayHeader: View {
         let day: DayGroup
         let showsMonthYear: Bool
+        @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
 
         var body: some View {
-            HStack(alignment: .bottom) {
-                Text(day.primaryLabel.uppercased())
-                    .emmTextStyle(EmmType.eyebrow)
-                    .foregroundStyle(EmmColors.textTertiary)
-                    .lineLimit(1)
-                Spacer()
-                if showsMonthYear {
-                    Text(day.monthYearCaption)
-                        .emmTextStyle(EmmType.caption)
-                        .foregroundStyle(EmmColors.textDisabled)
-                } else if let spendTotal = day.spendTotalCents?.int64Value {
-                    Text(CurrencyFormatKt.formatNeutral(value: MoneyFormatterKt.format(spendTotal)))
-                        .emmTextStyle(EmmType.amountS)
-                        .foregroundStyle(EmmColors.textTertiary)
+            content
+                .padding(.top, EmmSpacing.s4)
+                .padding(.horizontal, EmmSpacing.s6)
+                .padding(.bottom, EmmSpacing.s2)
+                .frame(maxWidth: .infinity)
+                .background(EmmColors.bg)
+                .accessibilityAddTraits(.isHeader)
+        }
+
+        @ViewBuilder
+        private var content: some View {
+            if showsMonthYear && dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: EmmSpacing.s1) {
+                    dayLabel
+                    monthYear
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(alignment: .bottom) {
+                    dayLabel
+                        .lineLimit(1)
+                    Spacer()
+                    if showsMonthYear {
+                        monthYear
+                    } else if let spendTotal = day.spendTotalCents?.int64Value {
+                        Text(CurrencyFormatKt.formatNeutral(value: MoneyFormatterKt.format(spendTotal)))
+                            .emmTextStyle(EmmType.amountS)
+                            .foregroundStyle(EmmColors.textTertiary)
+                    }
                 }
             }
-            .padding(.top, EmmSpacing.s4)
-            .padding(.horizontal, EmmSpacing.s6)
-            .padding(.bottom, EmmSpacing.s2)
-            .frame(maxWidth: .infinity)
-            .background(EmmColors.bg)
-            .accessibilityAddTraits(.isHeader)
+        }
+
+        private var dayLabel: some View {
+            Text(day.primaryLabel.uppercased())
+                .emmTextStyle(EmmType.eyebrow)
+                .foregroundStyle(EmmColors.textTertiary)
+        }
+
+        private var monthYear: some View {
+            Text(day.monthYearCaption)
+                .emmTextStyle(EmmType.caption)
+                .foregroundStyle(EmmColors.textDisabled)
         }
     }
 
@@ -201,6 +223,13 @@ extension MovementsScreen {
         let send: Send
 
         var body: some View {
+            ViewThatFits(in: .vertical) {
+                content
+                ScrollView { content }
+            }
+        }
+
+        private var content: some View {
             VStack(spacing: EmmSpacing.s2) {
                 Text(headline)
                     .emmTextStyle(EmmType.titleM)
