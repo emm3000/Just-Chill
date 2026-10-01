@@ -30,8 +30,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.presentation.category.AppIconCatalog
 import com.emm.justchill.core.presentation.category.CategoryIcon
@@ -130,9 +128,7 @@ private fun IconSearchField(query: String, onQueryChange: (String) -> Unit) {
                 singleLine = true,
                 cursorBrush = SolidColor(colors.borderFocus),
                 textStyle = type.bodyM.copy(color = colors.textPrimary),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Buscar" },
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
