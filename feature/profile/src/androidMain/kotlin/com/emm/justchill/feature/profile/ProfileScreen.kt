@@ -95,6 +95,7 @@ fun ProfileScreen(
 
         AppSection(
             appVersion = appVersion,
+            privacyMeta = state.privacyMeta,
             onAboutClick = onAboutClick,
             onPrivacyClick = onPrivacyClick,
         )
