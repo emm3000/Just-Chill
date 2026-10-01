@@ -1,12 +1,13 @@
 import SwiftUI
 
 struct TopBar: View {
-    struct Action {
+    struct Action: Identifiable {
         enum Tone {
             case neutral
             case danger
         }
 
+        let id: String
         let symbol: String
         let label: String
         var tone: Tone = .neutral
@@ -28,7 +29,7 @@ struct TopBar: View {
                     .minimumScaleFactor(0.5)
                     .accessibilityAddTraits(.isHeader)
                     .frame(maxWidth: .infinity, minHeight: EmmSpacing.s16, alignment: .leading)
-                ForEach(trailing, id: \.label) { action in
+                ForEach(trailing) { action in
                     barButton(
                         symbol: action.symbol,
                         label: action.label,
