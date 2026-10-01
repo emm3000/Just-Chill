@@ -3,12 +3,14 @@ package com.emm.justchill.shell
 import com.emm.justchill.core.ui.atoms.EmmSnackbarTone
 import com.emm.justchill.feature.profile.ProfileMessage
 import com.emm.justchill.feature.profile.toText
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
-import java.util.concurrent.Executors
+import java.util.concurrent.CountDownLatch
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -44,7 +46,7 @@ class ExportResultTest {
         val resultThreads: MutableList<String> = mutableListOf()
         val callerThread: String = Thread.currentThread().name
 
-        Executors.newSingleThreadExecutor { task -> Thread(task, "io-probe") }.asCoroutineDispatcher().use { io ->
+        ioProbe().use { io ->
             settleExportResult(
                 document = "export-document",
                 pending = PendingExport(json = "{}", onResult = { resultThreads += Thread.currentThread().name }),
@@ -55,8 +57,38 @@ class ExportResultTest {
             )
         }
 
-        assertEquals(listOf("io-probe"), writeThreads)
+        assertEquals(listOf(IO_PROBE_THREAD), writeThreads)
         assertEquals(listOf(callerThread), resultThreads)
+    }
+
+    @Test
+    fun `a host torn down mid-write still reports the saved export`() = runTest {
+        val results: MutableList<Boolean> = mutableListOf()
+        val writeStarted: CompletableDeferred<Unit> = CompletableDeferred()
+        val writeReleased: CountDownLatch = CountDownLatch(1)
+
+        ioProbe().use { io ->
+            val host: Job = launch {
+                settleExportResult(
+                    document = "export-document",
+                    pending = PendingExport(json = "{}", onResult = { results += it }),
+                    io = io,
+                    write = { _, _ ->
+                        writeStarted.complete(Unit)
+                        writeReleased.await()
+                        true
+                    },
+                    delete = { },
+                    notify = { _, _ -> },
+                )
+            }
+            writeStarted.await()
+            host.cancel()
+            writeReleased.countDown()
+            host.join()
+        }
+
+        assertEquals(listOf(true), results)
     }
 
     @Test
