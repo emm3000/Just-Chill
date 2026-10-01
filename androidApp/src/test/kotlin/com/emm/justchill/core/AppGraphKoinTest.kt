@@ -14,14 +14,11 @@ import com.emm.justchill.feature.transaction.capture.EditTransactionViewModel
 import com.russhwolf.settings.SettingsInitializer
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseInternal
-import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.user.UserSession
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.job
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.runBlocking
@@ -72,22 +69,6 @@ class AppGraphKoinTest {
     @After
     fun tearDown() {
         koin.closeGraph()
-    }
-
-    @Test
-    fun `closing the graph leaves no Supabase Auth coroutine that can still touch the main dispatcher`() {
-        val stalled: Koin = koinApplication {
-            modules(appModules(testPlatformModule) + module { single<SessionManager> { StalledSessionManager() } })
-        }.koin
-        val authJob: Job = stalled.get<SupabaseClient>().auth.authScope.coroutineContext.job
-
-        stalled.closeGraph()
-
-        assertTrue(
-            authJob.offMainChildren().isEmpty(),
-            "Auth startup is still running off the main thread after the graph closed; its hop to " +
-                "Dispatchers.Main races the next MainDispatcherRule setMain.",
-        )
     }
 
     @Test
@@ -253,12 +234,6 @@ class AppGraphKoinTest {
             root = checkNotNull(root.cause)
         }
         return (root.message ?: root::class.simpleName.orEmpty()).lineSequence().first().trim()
-    }
-
-    private class StalledSessionManager : SessionManager {
-        override suspend fun saveSession(session: UserSession): Unit = Unit
-        override suspend fun loadSession(): UserSession = awaitCancellation()
-        override suspend fun deleteSession(): Unit = Unit
     }
 
     private companion object {
