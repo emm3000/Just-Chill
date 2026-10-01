@@ -16,7 +16,7 @@ extension MoreScreen {
                     label: "Respaldar ahora",
                     meta: state.op == .backingUp ? "Respaldando…" : "Sube una copia a la nube",
                     metaTone: EmmColors.textSecondary,
-                    isEnabled: state.op == .none,
+                    isEnabled: state.cloudBackupActionsEnabled,
                     isBusy: state.op == .backingUp,
                     action: { send(ProfileIntentBackUpNow.shared) }
                 )
@@ -25,7 +25,7 @@ extension MoreScreen {
                     label: "Verificar respaldo",
                     meta: state.op == .verifyingBackup ? "Verificando…" : "Revisa que el último se pueda restaurar",
                     metaTone: EmmColors.textSecondary,
-                    isEnabled: state.op == .none,
+                    isEnabled: state.cloudBackupActionsEnabled,
                     isBusy: state.op == .verifyingBackup,
                     action: { send(ProfileIntentVerifyBackup.shared) }
                 )

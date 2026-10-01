@@ -88,6 +88,9 @@ data class ProfileUiState(
     val isSignedIn: Boolean
         get() = session is SessionUiState.SignedIn
 
+    val cloudBackupActionsEnabled: Boolean
+        get() = isSignedIn && op == ProfileOp.None
+
     val showsSignInRow: Boolean
         get() = isCloudBackupAvailable && !isSignedIn
 

@@ -23,6 +23,16 @@ class AccountRowTextTest {
     }
 
     @Test
+    fun `the cloud backup actions run only signed in and idle`() {
+        assertTrue(signedInProfile.cloudBackupActionsEnabled)
+        assertFalse(ProfileUiState(session = SessionUiState.SignedOut).cloudBackupActionsEnabled)
+        assertFalse(ProfileUiState(session = SessionUiState.Initializing).cloudBackupActionsEnabled)
+        ProfileOp.entries.filter { it != ProfileOp.None }.forEach { runningOp ->
+            assertFalse(signedInProfile.copy(op = runningOp).cloudBackupActionsEnabled, "$runningOp")
+        }
+    }
+
+    @Test
     fun `the account row names the email and falls back without one`() {
         assertEquals("qa@example.com", signedInProfile.accountLabel)
         assertEquals("Tu cuenta", ProfileUiState(session = SessionUiState.SignedIn(email = null)).accountLabel)

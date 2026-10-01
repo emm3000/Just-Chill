@@ -509,6 +509,40 @@ class ProfileViewModelBackupRowTest {
         }
 
     @Test
+    fun `one today subscription moves both the last export and the backup row across midnight`() =
+        runTest(testDispatcher) {
+            var clockNow: Instant = fixedClock.now()
+            val movingClock: Clock = object : Clock {
+                override fun now(): Instant = clockNow
+            }
+            val lastBackupAt: Long = (clockNow - 3.days).toEpochMilliseconds()
+            val stalenessReadingTheClock = GetBackupStalenessUseCase(backupRepository, movingClock, TimeZone.UTC)
+            todayDates.value = LocalDate(2026, 8, 11)
+            every { localExportHistory.daysSinceLastExport(LocalDate(2026, 8, 11)) } returns 2
+            every { localExportHistory.daysSinceLastExport(LocalDate(2026, 8, 12)) } returns 3
+            latestLocalChangeFlow.value = lastBackupAt + 1
+            healthFlow.value = health(lastBackupAt, consecutiveFailures = 0, lastFailureReason = null)
+            val vm: ProfileViewModel = buildViewModel(getBackupStaleness = stalenessReadingTheClock)
+            val rows: MutableList<BackupRowUi> = mutableListOf()
+            val exports: MutableList<LastExportUi> = mutableListOf()
+            val recordedRows: Flow<BackupRowUi> = vm.state.map { it.backupRow }.distinctUntilChanged()
+            val recordedExports: Flow<LastExportUi> = vm.state.map { it.lastExport }.distinctUntilChanged()
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { recordedRows.toList(rows) }
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { recordedExports.toList(exports) }
+
+            sessionFlow.emit(SessionStatus.Authenticated(AuthUser(userId = "uid", email = "a@b.com")))
+            advanceUntilIdle()
+            assertEquals(1, todayDates.subscriptionCount.value)
+
+            clockNow += 1.days
+            todayDates.value = LocalDate(2026, 8, 12)
+            advanceUntilIdle()
+
+            assertEquals(listOf(BackupRowUi.NeedsAccount, BackupRowUi.UpToDate(3), BackupRowUi.Stale(4)), rows)
+            assertEquals(listOf<LastExportUi>(LastExportUi.DaysAgo(2), LastExportUi.DaysAgo(3)), exports)
+        }
+
+    @Test
     fun `a failing local-change observation still lets session and health resolve the row`() = runTest(testDispatcher) {
         every { backupRepository.observeLatestLocalChangeAt() } returns
             flow { throw DomainException.DatabaseError(RuntimeException("disk I/O error")) }
