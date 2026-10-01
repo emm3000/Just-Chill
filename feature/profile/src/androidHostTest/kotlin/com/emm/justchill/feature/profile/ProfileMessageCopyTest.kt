@@ -11,8 +11,8 @@ class ProfileMessageCopyTest {
     }
 
     @Test
-    fun `a failed export blames the space on the phone`() {
-        assertEquals("No pude exportar — capaz no hay espacio en tu celu?", ProfileMessage.ExportFailed.toText())
+    fun `a failed export names the data and asks to retry`() {
+        assertEquals("No pude exportar tu data. Inténtalo de nuevo.", ProfileMessage.ExportFailed.toText())
     }
 
     @Test

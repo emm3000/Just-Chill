@@ -24,6 +24,7 @@ import com.emm.justchill.core.ui.atoms.showEmmSnackbar
 import com.emm.justchill.core.ui.navigation.PlatformHostActions
 import com.emm.justchill.feature.profile.ProfileMessage
 import com.emm.justchill.feature.profile.toText
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,20 +33,38 @@ import java.io.IOException
 
 internal class PendingExport(val json: String, val onResult: (Boolean) -> Unit)
 
-internal fun <D : Any> settleExportResult(
+internal suspend fun <D : Any> settleExportResult(
     document: D?,
     pending: PendingExport?,
+    io: CoroutineDispatcher,
     write: (D, String) -> Boolean,
     delete: (D) -> Unit,
-    notify: (String, EmmSnackbarTone) -> Unit,
+    notify: suspend (String, EmmSnackbarTone) -> Unit,
 ) {
     if (document == null) return
     if (pending != null) {
-        pending.onResult(write(document, pending.json))
+        val saved: Boolean = withContext(io) { write(document, pending.json) }
+        pending.onResult(saved)
         return
     }
-    delete(document)
+    withContext(io) { delete(document) }
     notify(ProfileMessage.ExportFailed.toText(), EmmSnackbarTone.Error)
+}
+
+internal suspend fun <D : Any> settleImportResult(
+    document: D?,
+    io: CoroutineDispatcher,
+    read: (D) -> String?,
+    onImport: (String) -> Unit,
+    notify: suspend (String, EmmSnackbarTone) -> Unit,
+) {
+    if (document == null) return
+    val text: String? = withContext(io) { runCatching { read(document) }.getOrNull() }
+    if (text == null) {
+        notify(ProfileMessage.ImportFailed.toText(), EmmSnackbarTone.Error)
+        return
+    }
+    onImport(text)
 }
 
 // Call at the AppNavHost root, never inside an `entry<...> { }` body: a picker result arriving after
@@ -66,43 +85,46 @@ fun rememberPlatformHostActions(
     ) { uri ->
         val pending: PendingExport? = pendingExport
         pendingExport = null
-        settleExportResult(
-            document = uri,
-            pending = pending,
-            write = { document, json ->
-                runCatching {
-                    context.contentResolver.openOutputStream(document)?.use { stream ->
-                        stream.bufferedWriter().use { it.write(json) }
-                    } != null
-                }.getOrDefault(false)
-            },
-            delete = { document ->
-                runCatching {
-                    DocumentsContract.deleteDocument(
-                        context.contentResolver,
-                        document,
-                    )
-                }
-            },
-            notify = { message, tone ->
-                scope.launch {
-                    snackbarHostState.showEmmSnackbar(
-                        message = message,
-                        tone = tone,
-                    )
-                }
-            },
-        )
+        scope.launch {
+            settleExportResult(
+                document = uri,
+                pending = pending,
+                io = ioDispatcher,
+                write = { document, json ->
+                    runCatching {
+                        context.contentResolver.openOutputStream(document)?.use { stream ->
+                            stream.bufferedWriter().use { it.write(json) }
+                        } != null
+                    }.getOrDefault(false)
+                },
+                delete = { document ->
+                    runCatching {
+                        DocumentsContract.deleteDocument(
+                            context.contentResolver,
+                            document,
+                        )
+                    }
+                },
+                notify = { message, tone -> snackbarHostState.showEmmSnackbar(message = message, tone = tone) },
+            )
+        }
     }
 
     val importLauncher: ManagedActivityResultLauncher<Array<String>, Uri?> = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri ->
-        if (uri != null) {
-            val text: String? = context.contentResolver.openInputStream(uri)
-                ?.bufferedReader()
-                ?.use { it.readText() }
-            if (text != null) currentOnImport(text)
+        scope.launch {
+            settleImportResult(
+                document = uri,
+                io = ioDispatcher,
+                read = { document ->
+                    context.contentResolver.openInputStream(document)
+                        ?.bufferedReader()
+                        ?.use { it.readText() }
+                },
+                onImport = { text -> currentOnImport(text) },
+                notify = { message, tone -> snackbarHostState.showEmmSnackbar(message = message, tone = tone) },
+            )
         }
     }
 

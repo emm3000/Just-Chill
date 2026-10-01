@@ -15,7 +15,7 @@ fun ProfileMessage.toText(): String = when (this) {
 
     ProfileMessage.ExportDone -> "Listo, tu data está guardada."
 
-    ProfileMessage.ExportFailed -> "No pude exportar — capaz no hay espacio en tu celu?"
+    ProfileMessage.ExportFailed -> "No pude exportar tu data. Inténtalo de nuevo."
 
     ProfileMessage.CsvExportFailed -> "No pude exportar tus movimientos. Inténtalo de nuevo."
 
