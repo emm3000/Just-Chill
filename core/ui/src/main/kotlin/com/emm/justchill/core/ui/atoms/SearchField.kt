@@ -54,7 +54,7 @@ fun SearchField(query: String, onQueryChange: (String) -> Unit, placeholder: Str
                     .clip(shape)
                     .background(colors.surface1)
                     .border(spacing.hairline, colors.border, shape)
-                    .padding(horizontal = spacing.s3),
+                    .padding(horizontal = spacing.s3, vertical = spacing.s2),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(spacing.s3),
             ) {
@@ -62,7 +62,7 @@ fun SearchField(query: String, onQueryChange: (String) -> Unit, placeholder: Str
                     imageVector = Icons.Outlined.Search,
                     contentDescription = null,
                     tint = colors.textTertiary,
-                    modifier = Modifier.size(spacing.s4),
+                    modifier = Modifier.size(spacing.s5),
                 )
                 Box(modifier = Modifier.weight(1f)) {
                     if (query.isEmpty()) {
