@@ -21,7 +21,7 @@ class LoanPaymentFormPickerDateTest {
 
     @Test
     fun `the date sheet offers the shortcuts of the form's day`() {
-        val form: LoanPaymentFormUi = paymentForm()
+        val form: LoanPaymentFormUi = paymentForm().copy(date = LocalDate(2026, 8, 10))
 
         assertEquals(dateShortcutsOf(form.today), form.dateShortcuts)
     }
