@@ -9,9 +9,37 @@ enum AppTab: Hashable {
     case more
 }
 
+struct CaptureCover {
+    private enum Phase {
+        case hidden
+        case shown
+        case leaving
+    }
+
+    private var phase: Phase = .hidden
+
+    var isShown: Bool { phase == .shown }
+
+    // The tab bar takes taps while the cover is still leaving; presenting then reopens a fresh pad under a double
+    // tap on its save (#639). Only .hidden, which the cover's onDismiss sets, may present.
+    mutating func present() {
+        guard phase == .hidden else { return }
+        phase = .shown
+    }
+
+    mutating func close() {
+        guard phase == .shown else { return }
+        phase = .leaving
+    }
+
+    mutating func finishLeaving() {
+        phase = .hidden
+    }
+}
+
 struct AppShell: View {
     @State private var selectedTab: AppTab = .movements
-    @State private var isCapturePresented: Bool = false
+    @State private var captureCover = CaptureCover()
     @State private var savedMonth: YearMonth?
     @State private var disclosureWatch: BackupDisclosureWatch?
     @State private var isDisclosurePending: Bool = false
@@ -49,9 +77,9 @@ struct AppShell: View {
         }
         .task { watchDisclosure() }
         .onDisappear(perform: stopWatchingDisclosure)
-        .fullScreenCover(isPresented: $isCapturePresented) {
+        .fullScreenCover(isPresented: isCapturePresented, onDismiss: finishLeavingCapture) {
             CaptureScreen(
-                onClose: { isCapturePresented = false },
+                onClose: { captureCover.close() },
                 onSaved: { month in
                     savedMonth = month
                     showMovements()
@@ -77,7 +105,18 @@ struct AppShell: View {
 
     private func showMovements() {
         selectedTab = .movements
-        isCapturePresented = false
+        captureCover.close()
+    }
+
+    private func finishLeavingCapture() {
+        captureCover.finishLeaving()
+    }
+
+    private var isCapturePresented: Binding<Bool> {
+        Binding(
+            get: { captureCover.isShown },
+            set: { isShown in isShown ? captureCover.present() : captureCover.close() }
+        )
     }
 
     private var tabSelection: Binding<AppTab> {
@@ -89,7 +128,7 @@ struct AppShell: View {
                     // .capture and back resyncs it, or the blank add tab shows once the pad closes.
                     let current: AppTab = selectedTab
                     selectedTab = .capture
-                    isCapturePresented = true
+                    captureCover.present()
                     Task { selectedTab = current }
                 } else {
                     selectedTab = tab
