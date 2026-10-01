@@ -313,7 +313,7 @@ class ConventionPluginTest {
     }
 
     @Test
-    fun `detekt lints every kotlin source under src with one config, no baseline and no type resolution`() {
+    fun `detekt lints every kotlin source under src with one config, no baseline, no type resolution and no in-task parallelism`() {
         val report: Map<String, String> = fixture.report(
             pluginIds = listOf("justchill.android.library"),
             files = PROBE_SOURCES,
@@ -328,6 +328,7 @@ class ConventionPluginTest {
         assertEquals("build/reports/detekt/detekt.sarif", report["detektReports"])
         assertEquals(DETEKT_RULES, report["detektRules"])
         assertEquals("true", report["detektAutoCorrect"])
+        assertEquals("false", report["detektParallel"])
     }
 
     @Test
