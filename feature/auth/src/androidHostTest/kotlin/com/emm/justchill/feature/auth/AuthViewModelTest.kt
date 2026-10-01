@@ -84,51 +84,44 @@ class AuthViewModelTest {
         return forms
     }
 
-    private fun TestScope.assertEmailRefusal(code: ValidationCode) {
+    private fun TestScope.assertFieldRefusal(
+        code: ValidationCode,
+        refusedField: (AuthUiState.Form) -> String?,
+        otherField: (AuthUiState.Form) -> String?,
+    ) {
         val vm: AuthViewModel = buildViewModel()
 
         val effects: List<AuthEffect> = submitRefusedBy(vm, validation(code))
 
         val form: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
-        assertEquals(code.toUserMessage(), form.emailError)
-        assertNull(form.passwordError)
-        assertTrue(effects.isEmpty())
-    }
-
-    private fun TestScope.assertPasswordRefusal(code: ValidationCode) {
-        val vm: AuthViewModel = buildViewModel()
-
-        val effects: List<AuthEffect> = submitRefusedBy(vm, validation(code))
-
-        val form: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
-        assertEquals(code.toUserMessage(), form.passwordError)
-        assertNull(form.emailError)
+        assertEquals(code.toUserMessage(), refusedField(form))
+        assertNull(otherField(form))
         assertTrue(effects.isEmpty())
     }
 
     @Test
     fun `an invalid email lands under the email field with no effect`() = runTest(testDispatcher) {
-        assertEmailRefusal(ValidationCode.EmailInvalid)
+        assertFieldRefusal(ValidationCode.EmailInvalid, { it.emailError }, { it.passwordError })
     }
 
     @Test
     fun `an already registered email lands under the email field with no effect`() = runTest(testDispatcher) {
-        assertEmailRefusal(ValidationCode.EmailAlreadyRegistered)
+        assertFieldRefusal(ValidationCode.EmailAlreadyRegistered, { it.emailError }, { it.passwordError })
     }
 
     @Test
     fun `a missing password lands under the password field with no effect`() = runTest(testDispatcher) {
-        assertPasswordRefusal(ValidationCode.PasswordRequired)
+        assertFieldRefusal(ValidationCode.PasswordRequired, { it.passwordError }, { it.emailError })
     }
 
     @Test
     fun `a too short password lands under the password field with no effect`() = runTest(testDispatcher) {
-        assertPasswordRefusal(ValidationCode.PasswordTooShort)
+        assertFieldRefusal(ValidationCode.PasswordTooShort, { it.passwordError }, { it.emailError })
     }
 
     @Test
     fun `a too weak password lands under the password field with no effect`() = runTest(testDispatcher) {
-        assertPasswordRefusal(ValidationCode.PasswordTooWeak)
+        assertFieldRefusal(ValidationCode.PasswordTooWeak, { it.passwordError }, { it.emailError })
     }
 
     @Test
