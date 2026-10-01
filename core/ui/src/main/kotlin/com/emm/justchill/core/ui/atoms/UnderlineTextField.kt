@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,10 +16,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +61,7 @@ fun UnderlineTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailing: (@Composable () -> Unit)? = null,
+    error: String? = null,
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -70,7 +76,9 @@ fun UnderlineTextField(
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .fieldErrorSemantics(error),
         decorationBox = { inner ->
             UnderlineDecoration(
                 placeholder = placeholder,
@@ -78,16 +86,14 @@ fun UnderlineTextField(
                 isFocused = isFocused,
                 innerTextField = inner,
                 trailing = trailing,
+                error = error,
             )
         },
     )
 }
 
-/**
- * The [TextFieldValue] form, for a field whose owner rewrites what was typed: only a caller holding
- * the caret can say where it lands once the rewrite arrives. Anything the owner passes through
- * untouched takes the [String] overload, where the framework keeps the caret itself.
- */
+// The TextFieldValue form is for an owner that rewrites what was typed: only it can say where the caret
+// lands once the rewrite arrives. A pass-through owner takes the String overload, which keeps the caret.
 @Composable
 fun UnderlineTextField(
     value: TextFieldValue,
@@ -95,6 +101,7 @@ fun UnderlineTextField(
     modifier: Modifier = Modifier,
     placeholder: String = "",
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    error: String? = null,
 ) {
     val colors: EmmColors = LocalEmmColors.current
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -108,7 +115,9 @@ fun UnderlineTextField(
         singleLine = true,
         interactionSource = interactionSource,
         keyboardOptions = keyboardOptions,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .fieldErrorSemantics(error),
         decorationBox = { inner ->
             UnderlineDecoration(
                 placeholder = placeholder,
@@ -116,6 +125,7 @@ fun UnderlineTextField(
                 isFocused = isFocused,
                 innerTextField = inner,
                 trailing = null,
+                error = error,
             )
         },
     )
@@ -126,6 +136,48 @@ private fun UnderlineDecoration(
     placeholder: String,
     isEmpty: Boolean,
     isFocused: Boolean,
+    innerTextField: @Composable () -> Unit,
+    trailing: (@Composable () -> Unit)?,
+    error: String?,
+) {
+    val spacing: EmmSpacing = LocalEmmSpacing.current
+
+    Column {
+        UnderlineLine(
+            placeholder = placeholder,
+            isEmpty = isEmpty,
+            lineColor = underlineColor(isFocused = isFocused, isError = error != null),
+            innerTextField = innerTextField,
+            trailing = trailing,
+        )
+        FieldError(
+            message = error,
+            modifier = Modifier
+                .padding(top = spacing.s1)
+                .clearAndSetSemantics {},
+        )
+    }
+}
+
+@Composable
+private fun underlineColor(isFocused: Boolean, isError: Boolean): Color {
+    val colors: EmmColors = LocalEmmColors.current
+
+    return when {
+        isError -> colors.danger
+        isFocused -> colors.borderFocus
+        else -> colors.border
+    }
+}
+
+private fun Modifier.fieldErrorSemantics(error: String?): Modifier =
+    if (error == null) this else semantics { error(error) }
+
+@Composable
+private fun UnderlineLine(
+    placeholder: String,
+    isEmpty: Boolean,
+    lineColor: Color,
     innerTextField: @Composable () -> Unit,
     trailing: (@Composable () -> Unit)?,
 ) {
@@ -149,7 +201,7 @@ private fun UnderlineDecoration(
             Box(
                 modifier = Modifier
                     .height(spacing.hairline)
-                    .background(if (isFocused) colors.borderFocus else colors.border),
+                    .background(lineColor),
             )
             trailing?.invoke()
         },
@@ -271,6 +323,41 @@ private fun UnderlineTextFieldTouchTargetTrailingPreview() {
                             .background(LocalEmmColors.current.surface1),
                     )
                 },
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun UnderlineTextFieldErrorPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(LocalEmmSpacing.current.s4),
+        ) {
+            UnderlineTextField(value = "", onValueChange = {}, placeholder = "Ej. Juan", error = "Escribe un nombre")
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun UnderlineTextFieldValueErrorPreview() {
+    EmmTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(LocalEmmColors.current.bg)
+                .padding(LocalEmmSpacing.current.s4),
+        ) {
+            UnderlineTextField(
+                value = TextFieldValue("0", TextRange(1)),
+                onValueChange = {},
+                placeholder = "0",
+                error = "El monto debe ser mayor a cero",
             )
         }
     }
