@@ -33,7 +33,7 @@ class AuthViewModel(
     }
 
     private fun submit() = launchSubmitting(via = Submitting.Email) { form ->
-        val email = form.email.trim()
+        val email: String = form.email.trim()
         when (form.mode) {
             AuthMode.SignIn -> {
                 signIn(email, form.password)
@@ -71,7 +71,7 @@ class AuthViewModel(
     }
 
     private fun resendEmail() {
-        val check = currentState as? AuthUiState.CheckEmail ?: return
+        val check: AuthUiState.CheckEmail = currentState as? AuthUiState.CheckEmail ?: return
         if (check.isResending || !check.canResend) return
         updateCheckEmail { copy(isResending = true) }
         launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
@@ -101,9 +101,9 @@ class AuthViewModel(
     }
 
     private fun launchSubmitting(via: Submitting, block: suspend (AuthUiState.Form) -> Unit) {
-        val form = currentState as? AuthUiState.Form ?: return
+        val form: AuthUiState.Form = currentState as? AuthUiState.Form ?: return
         if (form.submitting != Submitting.None) return
-        updateForm { copy(submitting = via) }
+        updateForm { copy(submitting = via, emailError = null, passwordError = null) }
         launchSafe(onError = ::refuse) {
             try {
                 block(form)

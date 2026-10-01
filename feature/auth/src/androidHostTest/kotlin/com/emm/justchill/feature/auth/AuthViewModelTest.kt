@@ -84,6 +84,24 @@ class AuthViewModelTest {
         return forms
     }
 
+    private class SubmitRecording(val forms: List<AuthUiState.Form>, val effects: List<AuthEffect>) {
+        val fieldErrors: List<Pair<String?, String?>>
+            get() = forms.map { it.emailError to it.passwordError }
+    }
+
+    private fun TestScope.recordSubmit(vm: AuthViewModel): SubmitRecording {
+        val forms: MutableList<AuthUiState.Form> = mutableListOf()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val stateJob: Job = launch { vm.state.collect { forms.add(assertIs<AuthUiState.Form>(it)) } }
+        val effectJob: Job = launch { vm.effect.collect { effects.add(it) } }
+        runCurrent()
+        vm.onIntent(AuthIntent.Submit)
+        advanceUntilIdle()
+        stateJob.cancel()
+        effectJob.cancel()
+        return SubmitRecording(forms, effects)
+    }
+
     private fun TestScope.assertFieldRefusal(
         code: ValidationCode,
         refusedField: (AuthUiState.Form) -> String?,
@@ -166,29 +184,88 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `toggling the mode clears both field errors`() = runTest(testDispatcher) {
+    fun `toggling the mode clears the email error`() = runTest(testDispatcher) {
         val vm: AuthViewModel = buildViewModel()
         submitRefusedBy(vm, validation(ValidationCode.EmailInvalid))
+
+        val forms: List<AuthUiState.Form> = recordForms(vm, AuthIntent.ToggleMode)
+
+        assertEquals(
+            listOf(ValidationCode.EmailInvalid.toUserMessage() to null, null to null),
+            forms.map { it.emailError to it.passwordError },
+        )
+    }
+
+    @Test
+    fun `toggling the mode clears the password error`() = runTest(testDispatcher) {
+        val vm: AuthViewModel = buildViewModel()
         submitRefusedBy(vm, validation(ValidationCode.PasswordRequired))
 
         val forms: List<AuthUiState.Form> = recordForms(vm, AuthIntent.ToggleMode)
 
         assertEquals(
-            listOf(
-                ValidationCode.EmailInvalid.toUserMessage() to ValidationCode.PasswordRequired.toUserMessage(),
-                null to null,
-            ),
+            listOf(null to ValidationCode.PasswordRequired.toUserMessage(), null to null),
             forms.map { it.emailError to it.passwordError },
         )
+    }
+
+    @Test
+    fun `a submit refused on the email clears the stale password error`() = runTest(testDispatcher) {
+        val vm: AuthViewModel = buildViewModel()
+        submitRefusedBy(vm, validation(ValidationCode.PasswordTooShort))
+        coEvery { signIn.invoke(any(), any()) } throws validation(ValidationCode.EmailInvalid)
+
+        val recording: SubmitRecording = recordSubmit(vm)
+
+        assertEquals(
+            listOf(
+                null to ValidationCode.PasswordTooShort.toUserMessage(),
+                null to null,
+                ValidationCode.EmailInvalid.toUserMessage() to null,
+            ),
+            recording.fieldErrors,
+        )
+        assertTrue(recording.effects.isEmpty())
+    }
+
+    @Test
+    fun `a submit refused on no field clears the stale email error and shows one error`() = runTest(testDispatcher) {
+        val vm: AuthViewModel = buildViewModel()
+        submitRefusedBy(vm, validation(ValidationCode.EmailInvalid))
+        val unauthorized: DomainException.Unauthorized = DomainException.Unauthorized("Bad credentials")
+        coEvery { signIn.invoke(any(), any()) } throws unauthorized
+
+        val recording: SubmitRecording = recordSubmit(vm)
+
+        assertEquals(
+            listOf(ValidationCode.EmailInvalid.toUserMessage() to null, null to null, null to null),
+            recording.fieldErrors,
+        )
+        assertEquals(listOf<AuthEffect>(AuthEffect.ShowError(unauthorized)), recording.effects)
+    }
+
+    @Test
+    fun `a successful sign-in clears the stale email error`() = runTest(testDispatcher) {
+        val vm: AuthViewModel = buildViewModel()
+        submitRefusedBy(vm, validation(ValidationCode.EmailInvalid))
+        coEvery { signIn.invoke(any(), any()) } returns AuthUser("uid1", "user@example.com")
+
+        val recording: SubmitRecording = recordSubmit(vm)
+
+        assertEquals(
+            listOf(ValidationCode.EmailInvalid.toUserMessage() to null, null to null, null to null),
+            recording.fieldErrors,
+        )
+        assertEquals(listOf<AuthEffect>(AuthEffect.NavigateBack), recording.effects)
     }
 
     @Test
     fun `sign-in submit happy path emits NavigateBack`() = runTest(testDispatcher) {
         coEvery { signIn.invoke(any(), any()) } returns AuthUser("uid1", "user@example.com")
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.EmailChanged("user@example.com"))
         vm.onIntent(AuthIntent.PasswordChanged("pass1234"))
@@ -196,7 +273,7 @@ class AuthViewModelTest {
         advanceUntilIdle()
 
         assertTrue(effects.any { it is AuthEffect.NavigateBack })
-        val formState = assertIs<AuthUiState.Form>(vm.state.value)
+        val formState: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
         assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
@@ -207,19 +284,19 @@ class AuthViewModelTest {
         val error = DomainException.Unauthorized("Bad credentials")
         coEvery { signIn.invoke(any(), any()) } throws error
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.EmailChanged("user@example.com"))
         vm.onIntent(AuthIntent.PasswordChanged("pass1234"))
         vm.onIntent(AuthIntent.Submit)
         advanceUntilIdle()
 
-        val showError = effects.filterIsInstance<AuthEffect.ShowError>().firstOrNull()
+        val showError: AuthEffect.ShowError? = effects.filterIsInstance<AuthEffect.ShowError>().firstOrNull()
         assertIs<AuthEffect.ShowError>(showError)
         assertEquals(error, showError.error)
-        val formState = assertIs<AuthUiState.Form>(vm.state.value)
+        val formState: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
         assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
@@ -229,14 +306,14 @@ class AuthViewModelTest {
     fun `signUp ConfirmationPending transitions to CheckEmail with trimmed email`() = runTest(testDispatcher) {
         coEvery { signUp.invoke(any(), any()) } returns SignUpResult.ConfirmationPending
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         vm.onIntent(AuthIntent.EmailChanged("  user@example.com  "))
         vm.onIntent(AuthIntent.PasswordChanged("password123"))
         vm.onIntent(AuthIntent.ToggleMode)
         vm.onIntent(AuthIntent.Submit)
         advanceUntilIdle()
 
-        val checkEmailState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        val checkEmailState: AuthUiState.CheckEmail = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertEquals("user@example.com", checkEmailState.email)
     }
 
@@ -244,9 +321,9 @@ class AuthViewModelTest {
     fun `signUp ConfirmationPending does not emit NavigateBack`() = runTest(testDispatcher) {
         coEvery { signUp.invoke(any(), any()) } returns SignUpResult.ConfirmationPending
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.ToggleMode)
         vm.onIntent(AuthIntent.EmailChanged("user@example.com"))
@@ -264,9 +341,9 @@ class AuthViewModelTest {
         coEvery { signUp.invoke(any(), any()) } returns
             SignUpResult.SignedIn(AuthUser("uid1", "user@example.com"))
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.ToggleMode)
         vm.onIntent(AuthIntent.EmailChanged("user@example.com"))
@@ -282,7 +359,7 @@ class AuthViewModelTest {
 
     @Test
     fun `Submit while in CheckEmail is a no-op`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
 
         assertIs<AuthUiState.CheckEmail>(vm.state.value)
@@ -300,7 +377,7 @@ class AuthViewModelTest {
 
     @Test
     fun `ResendEmail while in Form is a no-op`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         assertIs<AuthUiState.Form>(vm.state.value)
 
         vm.onIntent(AuthIntent.ResendEmail)
@@ -314,7 +391,7 @@ class AuthViewModelTest {
     fun `Back while CheckEmail transitions to fresh Form with SignIn mode and empty fields`() = runTest(
         testDispatcher,
     ) {
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
 
         assertIs<AuthUiState.CheckEmail>(vm.state.value)
@@ -322,7 +399,7 @@ class AuthViewModelTest {
         vm.onIntent(AuthIntent.Back)
         advanceUntilIdle()
 
-        val formState = assertIs<AuthUiState.Form>(vm.state.value)
+        val formState: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
         assertEquals(AuthMode.SignIn, formState.mode)
         assertEquals("", formState.email)
         assertEquals("", formState.password)
@@ -330,9 +407,9 @@ class AuthViewModelTest {
 
     @Test
     fun `Back while CheckEmail does not emit NavigateBack`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.Back)
@@ -345,9 +422,9 @@ class AuthViewModelTest {
 
     @Test
     fun `Back while Form emits NavigateBack`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.Back)
         advanceUntilIdle()
@@ -359,13 +436,13 @@ class AuthViewModelTest {
 
     @Test
     fun `BackToSignIn returns fresh Form with SignIn mode and empty fields`() = runTest(testDispatcher) {
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
 
         vm.onIntent(AuthIntent.BackToSignIn)
         advanceUntilIdle()
 
-        val formState = assertIs<AuthUiState.Form>(vm.state.value)
+        val formState: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
         assertEquals(AuthMode.SignIn, formState.mode)
         assertEquals("", formState.email)
         assertEquals("", formState.password)
@@ -379,16 +456,16 @@ class AuthViewModelTest {
             GoogleSignInResult.Success(idToken = "token", rawNonce = "nonce")
         coEvery { signInWithGoogle.invoke(any(), any()) } returns AuthUser("uid1", "g@g.com")
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.GoogleSignInClicked)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { signInWithGoogle.invoke("token", "nonce") }
         assertTrue(effects.any { it is AuthEffect.NavigateBack })
-        val formState = assertIs<AuthUiState.Form>(vm.state.value)
+        val formState: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
         assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
@@ -398,15 +475,15 @@ class AuthViewModelTest {
     fun `Google Cancelled produces no effect and submitting is None`() = runTest(testDispatcher) {
         coEvery { googleSignInLauncher.signIn(any()) } returns GoogleSignInResult.Cancelled
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.GoogleSignInClicked)
         advanceUntilIdle()
 
         assertTrue(effects.isEmpty())
-        val formState = assertIs<AuthUiState.Form>(vm.state.value)
+        val formState: AuthUiState.Form = assertIs<AuthUiState.Form>(vm.state.value)
         assertEquals(Submitting.None, formState.submitting)
 
         job.cancel()
@@ -416,14 +493,14 @@ class AuthViewModelTest {
     fun `Google NoCredentials emits Notify GoogleAccountUnavailable`() = runTest(testDispatcher) {
         coEvery { googleSignInLauncher.signIn(any()) } returns GoogleSignInResult.NoCredentials
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.GoogleSignInClicked)
         advanceUntilIdle()
 
-        val notify = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
+        val notify: AuthEffect.Notify? = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
         assertIs<AuthEffect.Notify>(notify)
         assertEquals(AuthMessage.GoogleAccountUnavailable, notify.message)
 
@@ -435,14 +512,14 @@ class AuthViewModelTest {
         coEvery { googleSignInLauncher.signIn(any()) } returns
             GoogleSignInResult.Failure(RuntimeException("crash"))
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.GoogleSignInClicked)
         advanceUntilIdle()
 
-        val notify = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
+        val notify: AuthEffect.Notify? = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
         assertIs<AuthEffect.Notify>(notify)
         assertEquals(AuthMessage.GoogleSignInFailed, notify.message)
 
@@ -451,14 +528,14 @@ class AuthViewModelTest {
 
     @Test
     fun `blank serverClientId emits Notify GoogleSignInFailed without calling launcher`() = runTest(testDispatcher) {
-        val vm = buildViewModel(googleClientId = "")
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel(googleClientId = "")
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(AuthIntent.GoogleSignInClicked)
         advanceUntilIdle()
 
-        val notify = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
+        val notify: AuthEffect.Notify? = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
         assertIs<AuthEffect.Notify>(notify)
         assertEquals(AuthMessage.GoogleSignInFailed, notify.message)
         coVerify(exactly = 0) { googleSignInLauncher.signIn(any()) }
@@ -470,7 +547,7 @@ class AuthViewModelTest {
     fun `GoogleSignInClicked while already submitting calls launcher exactly once`() = runTest(testDispatcher) {
         coEvery { googleSignInLauncher.signIn(any()) } returns GoogleSignInResult.Cancelled
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
 
         vm.onIntent(AuthIntent.GoogleSignInClicked)
         vm.onIntent(AuthIntent.GoogleSignInClicked)
@@ -485,19 +562,19 @@ class AuthViewModelTest {
     ) {
         coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { resendConfirmationEmail.invoke("user@example.com") }
-        val notify = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
+        val notify: AuthEffect.Notify? = effects.filterIsInstance<AuthEffect.Notify>().firstOrNull()
         assertIs<AuthEffect.Notify>(notify)
         assertEquals(AuthMessage.ConfirmationLinkResent, notify.message)
-        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        val checkState: AuthUiState.CheckEmail = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertFalse(checkState.isResending)
 
         job.cancel()
@@ -508,18 +585,18 @@ class AuthViewModelTest {
         val error = DomainException.NetworkUnavailable(RuntimeException("no net"))
         coEvery { resendConfirmationEmail.invoke(any()) } throws error
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<AuthEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: AuthViewModel = buildViewModel()
+        val effects: MutableList<AuthEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
         advanceUntilIdle()
 
-        val showError = effects.filterIsInstance<AuthEffect.ShowError>().firstOrNull()
+        val showError: AuthEffect.ShowError? = effects.filterIsInstance<AuthEffect.ShowError>().firstOrNull()
         assertIs<AuthEffect.ShowError>(showError)
         assertEquals(error, showError.error)
-        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        val checkState: AuthUiState.CheckEmail = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertFalse(checkState.isResending)
 
         job.cancel()
@@ -529,16 +606,16 @@ class AuthViewModelTest {
     fun `ResendEmail sets isResending true during call then resets`() = runTest(testDispatcher) {
         coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
 
         vm.onIntent(AuthIntent.ResendEmail)
-        val checkStateDuring = vm.state.value as? AuthUiState.CheckEmail
+        val checkStateDuring: AuthUiState.CheckEmail? = vm.state.value as? AuthUiState.CheckEmail
         assertTrue(checkStateDuring?.isResending == true)
 
         advanceUntilIdle()
 
-        val checkStateAfter = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        val checkStateAfter: AuthUiState.CheckEmail = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertFalse(checkStateAfter.isResending)
     }
 
@@ -546,12 +623,12 @@ class AuthViewModelTest {
     fun `ResendEmail success sets canResend false during cooldown`() = runTest(testDispatcher) {
         coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
         advanceTimeBy(100L)
 
-        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        val checkState: AuthUiState.CheckEmail = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertFalse(checkState.canResend)
     }
 
@@ -559,12 +636,12 @@ class AuthViewModelTest {
     fun `isResending resets as soon as the send completes, not after the cooldown`() = runTest(testDispatcher) {
         coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
         advanceTimeBy(100L)
 
-        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        val checkState: AuthUiState.CheckEmail = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertFalse(checkState.isResending)
         assertFalse(checkState.canResend)
     }
@@ -573,7 +650,7 @@ class AuthViewModelTest {
     fun `canResend becomes true after cooldown elapses`() = runTest(testDispatcher) {
         coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
         advanceTimeBy(100L)
@@ -588,7 +665,7 @@ class AuthViewModelTest {
     fun `ResendEmail intent while canResend is false is a no-op`() = runTest(testDispatcher) {
         coEvery { resendConfirmationEmail.invoke(any()) } returns Unit
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
 
         vm.onIntent(AuthIntent.ResendEmail)
@@ -606,12 +683,12 @@ class AuthViewModelTest {
         val error = DomainException.NetworkUnavailable(RuntimeException("no net"))
         coEvery { resendConfirmationEmail.invoke(any()) } throws error
 
-        val vm = buildViewModel()
+        val vm: AuthViewModel = buildViewModel()
         navigateToCheckEmail(vm)
         vm.onIntent(AuthIntent.ResendEmail)
         advanceUntilIdle()
 
-        val checkState = assertIs<AuthUiState.CheckEmail>(vm.state.value)
+        val checkState: AuthUiState.CheckEmail = assertIs<AuthUiState.CheckEmail>(vm.state.value)
         assertTrue(checkState.canResend)
     }
 }
