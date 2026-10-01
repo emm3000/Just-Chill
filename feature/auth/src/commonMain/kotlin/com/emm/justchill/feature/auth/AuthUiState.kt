@@ -16,6 +16,8 @@ sealed interface AuthUiState : UiState {
         val password: String = "",
         val mode: AuthMode = AuthMode.SignIn,
         val submitting: Submitting = Submitting.None,
+        val emailError: String? = null,
+        val passwordError: String? = null,
     ) : AuthUiState {
 
         val heading: String

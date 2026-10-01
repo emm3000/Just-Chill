@@ -5,6 +5,9 @@ import com.emm.justchill.core.domain.auth.SignInUseCase
 import com.emm.justchill.core.domain.auth.SignInWithGoogleUseCase
 import com.emm.justchill.core.domain.auth.SignUpResult
 import com.emm.justchill.core.domain.auth.SignUpUseCase
+import com.emm.justchill.core.domain.shared.error.DomainException
+import com.emm.justchill.core.domain.shared.error.ValidationCode
+import com.emm.justchill.core.presentation.error.toUserMessage
 import com.emm.justchill.core.presentation.mvi.MviViewModel
 import kotlinx.coroutines.delay
 
@@ -18,9 +21,9 @@ class AuthViewModel(
 ) : MviViewModel<AuthUiState, AuthIntent, AuthEffect>(AuthUiState.Form()) {
 
     override fun onIntent(intent: AuthIntent) = when (intent) {
-        is AuthIntent.EmailChanged -> updateForm { copy(email = intent.value) }
-        is AuthIntent.PasswordChanged -> updateForm { copy(password = intent.value) }
-        AuthIntent.ToggleMode -> updateForm { copy(mode = mode.toggled()) }
+        is AuthIntent.EmailChanged -> updateForm { copy(email = intent.value, emailError = null) }
+        is AuthIntent.PasswordChanged -> updateForm { copy(password = intent.value, passwordError = null) }
+        AuthIntent.ToggleMode -> updateForm { copy(mode = mode.toggled(), emailError = null, passwordError = null) }
         AuthIntent.BackToSignIn -> updateCheckEmail { AuthUiState.Form(mode = AuthMode.SignIn) }
         AuthIntent.Submit -> submit()
         AuthIntent.GoogleSignInClicked -> submitWithGoogle()
@@ -57,7 +60,6 @@ class AuthViewModel(
                 sendEffect(AuthEffect.NavigateBack)
             }
 
-            // User closed the sheet — silent per design.
             GoogleSignInResult.Cancelled -> Unit
 
             GoogleSignInResult.NoCredentials ->
@@ -76,7 +78,6 @@ class AuthViewModel(
             try {
                 resendConfirmationEmail(check.email)
             } finally {
-                // isResending only covers the network call; the cooldown below has its own flag.
                 updateCheckEmail { copy(isResending = false) }
             }
             sendEffect(AuthEffect.Notify(AuthMessage.ConfirmationLinkResent))
@@ -106,12 +107,30 @@ class AuthViewModel(
         val form = currentState as? AuthUiState.Form ?: return
         if (form.submitting != Submitting.None) return
         updateForm { copy(submitting = via) }
-        launchSafe(onError = { e -> AuthEffect.ShowError(e) }) {
+        launchSafe(onError = ::refuse) {
             try {
                 block(form)
             } finally {
                 updateForm { copy(submitting = Submitting.None) }
             }
+        }
+    }
+
+    private fun refuse(error: DomainException): AuthEffect? {
+        val code: ValidationCode = (error as? DomainException.ValidationError)?.code ?: ValidationCode.Unspecified
+        val message: String = error.toUserMessage()
+        return when (code) {
+            in EMAIL_REFUSALS -> {
+                updateForm { copy(emailError = message) }
+                null
+            }
+
+            in PASSWORD_REFUSALS -> {
+                updateForm { copy(passwordError = message) }
+                null
+            }
+
+            else -> AuthEffect.ShowError(error)
         }
     }
 
@@ -123,6 +142,15 @@ class AuthViewModel(
 
     private companion object {
         const val RESEND_COOLDOWN_MS = 30_000L
+        val EMAIL_REFUSALS: Set<ValidationCode> = setOf(
+            ValidationCode.EmailInvalid,
+            ValidationCode.EmailAlreadyRegistered,
+        )
+        val PASSWORD_REFUSALS: Set<ValidationCode> = setOf(
+            ValidationCode.PasswordRequired,
+            ValidationCode.PasswordTooShort,
+            ValidationCode.PasswordTooWeak,
+        )
     }
 }
 
