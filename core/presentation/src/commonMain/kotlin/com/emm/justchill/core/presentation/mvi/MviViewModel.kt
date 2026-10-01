@@ -38,7 +38,7 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(protected v
         viewModelScope.launch { _effect.send(effect) }
     }
 
-    protected fun launchSafe(onError: (DomainException) -> E, block: suspend () -> Unit): Job =
+    protected fun launchSafe(onError: (DomainException) -> E?, block: suspend () -> Unit): Job =
         viewModelScope.launch { funnel(onError, block) }
 
     protected fun <T> Flow<T>.launchSafeIn(onError: (DomainException) -> E): Job =
@@ -58,15 +58,15 @@ abstract class MviViewModel<S : UiState, I : UiIntent, E : UiEffect>(protected v
     // Intentional broad catch: CancellationException is rethrown first — it is an Exception, so the
     // broad catch below would otherwise turn every cancelled job into a spurious error effect.
     @Suppress("TooGenericExceptionCaught")
-    private suspend fun funnel(onError: (DomainException) -> E, block: suspend () -> Unit) {
+    private suspend fun funnel(onError: (DomainException) -> E?, block: suspend () -> Unit) {
         try {
             block()
         } catch (e: CancellationException) {
             throw e
         } catch (e: DomainException) {
-            sendEffect(onError(e))
+            onError(e)?.let(::sendEffect)
         } catch (e: Exception) {
-            sendEffect(onError(DomainException.Unknown(e)))
+            onError(DomainException.Unknown(e))?.let(::sendEffect)
         }
     }
 

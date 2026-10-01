@@ -71,6 +71,18 @@ class MviViewModelTest {
     }
 
     @Test
+    fun `a launchSafe failure whose onError returns null emits no effect`() = runTest {
+        val viewModel = FunnelViewModel()
+        val effects: List<TestEffect> = collectEffects(viewModel)
+
+        val job: Job = viewModel.runSafeWithoutEffect { throw DomainException.NotFound("Account") }
+        settle()
+
+        assertTrue(job.isCompleted, "the job must end once the failure is funnelled")
+        assertEquals(emptyList(), effects, "a null from onError means the failure lives in state, not an effect")
+    }
+
+    @Test
     fun `cancelling a launchSafeIn collector does not emit an error effect`() = runTest {
         val viewModel = FunnelViewModel()
         val effects: List<TestEffect> = collectEffects(viewModel)
@@ -195,6 +207,8 @@ private class FunnelViewModel : MviViewModel<TestState, TestIntent, TestEffect>(
 
     // launchSafe/launchSafeIn are protected; only a subclass can hand their Job to the test.
     fun runSafe(block: suspend () -> Unit): Job = launchSafe(onError = ::TestEffect, block = block)
+
+    fun runSafeWithoutEffect(block: suspend () -> Unit): Job = launchSafe(onError = { null }, block = block)
 
     fun collectSafe(source: Flow<Unit>): Job = source.launchSafeIn(onError = ::TestEffect)
 }
