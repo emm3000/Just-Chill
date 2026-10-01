@@ -49,7 +49,7 @@ Every row is a bet; the thresholds that move a row up or down live in `docs/agen
 2. Classify each ticket with the table. The table binds: deviate only with a one-line reason stated in the plan, never silently. Tell the owner the plan in one line per ticket: `@<name> #<n> <model>:<effort>`, before booting anything.
 3. Run `scripts/justchill-wave <name>:<model>:<effort> ...` once with every ticket.
 4. Poll `ListAgents` until every pane name is listed, at most 60 seconds.
-5. Send each peer one dispatch built from the playbook checklist: issue, docs to read, branch `<type>/<n>-<slug>`, its worktree `../justchill-<name>`, the acceptance-criteria line, the gate (`scripts/justchill-ci` after every push, before `gh pr create`), TDD or visual check per the table, `Closes #<n>`, no merge, reply with the PR URL, the autonomy paragraph and the reporting rule from the playbook checklist, the time sentence for rows 1-2, and every comment that clarifies or rescopes the body, quoted or pointed at. Ask for `notify_when_idle`.
+5. Send each peer one dispatch built from the playbook checklist: issue, docs to read, branch `<type>/<n>-<slug>`, its worktree `.claude/worktrees/<name>` under the main checkout, the acceptance-criteria line, the gate (`scripts/justchill-ci` after every push, before `gh pr create`), TDD or visual check per the table, `Closes #<n>`, no merge, reply with the PR URL, the autonomy paragraph and the reporting rule from the playbook checklist, the time sentence for rows 1-2, and every comment that clarifies or rescopes the body, quoted or pointed at. Ask for `notify_when_idle`.
 6. Report to the owner in one or two lines: peers booted, tickets dispatched.
 
 ## Output Contract
@@ -61,4 +61,4 @@ Return the list `@<name> #<n> <model>:<effort>` and nothing else until a peer re
 - `docs/agents/multi-session.md` — dispatch checklist, isolation, review cycle.
 - `docs/agents/dispatch-log.md` — the outcomes per table row.
 - `scripts/justchill-wave` — Warp tab config generator.
-- `scripts/justchill-session` — worktree plus `claude` launcher.
+- `scripts/justchill-session` — `claude -w` launcher; `.worktreeinclude` lists the gitignored files each worktree gets.
