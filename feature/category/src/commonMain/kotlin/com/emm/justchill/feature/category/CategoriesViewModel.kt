@@ -65,7 +65,10 @@ class CategoriesViewModel(
     }
 
     private fun confirmEdit() = launchSafe(
-        onError = { e -> CategoriesEffect.ShowMessage(e.toUserMessage()) },
+        onError = { e ->
+            updateState { copy(pendingEdit = null, editName = "") }
+            CategoriesEffect.ShowMessage(e.toUserMessage())
+        },
     ) {
         val target = currentState.pendingEdit ?: return@launchSafe
         val newName = currentState.editName
