@@ -11,5 +11,11 @@ model="$2"
 effort="$3"
 
 cd "${0:A:h:h}"
+include="$(git rev-parse --path-format=absolute --git-common-dir)/../.worktreeinclude"
+if [[ ! -f "$include" ]]; then
+  echo "missing ${include:a}: pull trunk in the main checkout first" >&2
+  exit 1
+fi
+
 git fetch -q origin
 exec claude -n "$name" -w "$name" --model "$model" --effort "$effort" --permission-mode bypassPermissions
