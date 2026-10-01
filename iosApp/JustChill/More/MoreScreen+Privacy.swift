@@ -38,14 +38,15 @@ extension MoreScreen {
                 + "ni la lleva entre tus celulares. No la vendemos ni la compartimos.",
             "Si exportas tu data a un archivo, tú decides qué hacer con él — "
                 + "guardarlo, mandarlo o borrarlo.",
-            "No usamos analytics ni cookies. La versión de Play Store reporta "
-                + "solo crashes (Crashlytics), nunca tu data financiera.",
+            "No usamos analytics, cookies ni reportes de crashes propios. Si en los "
+                + "Ajustes de tu iPhone compartes datos de análisis con los desarrolladores, "
+                + "Apple puede enviarnos reportes de crashes, nunca tu data financiera.",
             "Si cambias de celular sin exportar primero, tu data se pierde — "
                 + "pasa igual con cuenta o sin ella, porque tu data financiera no está "
                 + "en nuestros servidores. Para recuperarla necesitas un archivo JSON "
                 + "que hayas exportado tú.",
             "¿Quieres borrar tu cuenta y tu data del servidor? "
-                + "Puedes hacerlo directo desde la app: Perfil → \"Eliminar cuenta\". "
+                + "Puedes hacerlo directo desde la app: Más → \"Eliminar cuenta\". "
                 + "También puedes escribirnos a edgardo.emm20@gmail.com.",
         ]
     }

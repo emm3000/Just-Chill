@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-internal fun AppSection(appVersion: String, onAboutClick: () -> Unit, onPrivacyClick: () -> Unit) {
+internal fun AppSection(appVersion: String, privacyMeta: String, onAboutClick: () -> Unit, onPrivacyClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         SectionHeader(text = "App")
         ProfileGroup {
@@ -23,7 +23,7 @@ internal fun AppSection(appVersion: String, onAboutClick: () -> Unit, onPrivacyC
             ProfileRow(
                 icon = Icons.Outlined.Shield,
                 label = "Privacidad",
-                meta = "100 % local, sin cuenta",
+                meta = privacyMeta,
                 metaIsPrimary = false,
                 onClick = onPrivacyClick,
             )

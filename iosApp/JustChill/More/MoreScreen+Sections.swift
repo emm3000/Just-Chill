@@ -110,7 +110,7 @@ extension MoreScreen {
                 Row(
                     symbol: "checkmark.shield",
                     label: "Privacidad",
-                    meta: "100 % local, sin cuenta",
+                    meta: state.privacyMeta,
                     isNavigable: true,
                     action: actions.onOpenPrivacy
                 )

@@ -97,6 +97,13 @@ data class ProfileUiState(
     val showsBackupDestinationDisclosure: Boolean
         get() = backupRow == BackupRowUi.DisclosurePending
 
+    val privacyMeta: String
+        get() = when {
+            !isSignedIn -> "100 % local, sin cuenta"
+            isCloudBackupAvailable -> "En tu celular, con respaldo en tu cuenta"
+            else -> "100 % local"
+        }
+
     val accountLabel: String
         get() = (session as? SessionUiState.SignedIn)?.email ?: "Tu cuenta"
 
