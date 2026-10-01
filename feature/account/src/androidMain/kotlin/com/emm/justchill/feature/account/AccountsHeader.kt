@@ -159,11 +159,16 @@ private fun SummaryStripLayout(
         val spentMeasurable: Measurable = measurables[0].single()
         val incomeMeasurable: Measurable = measurables[2].single()
         val dividerPlaceable: Placeable = measurables[1].single().measure(Constraints())
-        val besideWidth: Int = spentMeasurable.maxIntrinsicWidth(Constraints.Infinity) + gapPx +
-            dividerPlaceable.width + gapPx + incomeMeasurable.maxIntrinsicWidth(Constraints.Infinity)
+        val placement: BesideOrStacked = summaryStripPlacement(
+            spentWidth = spentMeasurable.maxIntrinsicWidth(Constraints.Infinity),
+            dividerWidth = dividerPlaceable.width,
+            incomeWidth = incomeMeasurable.maxIntrinsicWidth(Constraints.Infinity),
+            gap = gapPx,
+            maxWidth = constraints.maxWidth,
+        )
         val spentPlaceable: Placeable = spentMeasurable.measure(columnConstraints)
         val incomePlaceable: Placeable = incomeMeasurable.measure(columnConstraints)
-        if (besideWidth <= constraints.maxWidth) {
+        if (placement == BesideOrStacked.Beside) {
             val dividerX: Int = spentPlaceable.width + gapPx
             val height: Int = maxOf(spentPlaceable.height, dividerPlaceable.height, incomePlaceable.height)
             layout(constraints.maxWidth, height) {
@@ -179,6 +184,18 @@ private fun SummaryStripLayout(
             }
         }
     }
+}
+
+internal fun summaryStripPlacement(
+    spentWidth: Int,
+    dividerWidth: Int,
+    incomeWidth: Int,
+    gap: Int,
+    maxWidth: Int,
+): BesideOrStacked = if (spentWidth + gap + dividerWidth + gap + incomeWidth <= maxWidth) {
+    BesideOrStacked.Beside
+} else {
+    BesideOrStacked.Stacked
 }
 
 @Composable
