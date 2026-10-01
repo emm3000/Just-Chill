@@ -23,6 +23,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -50,13 +51,14 @@ class ReportViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule(testDispatcher)
 
-    private val getMonthlyAmountByCategory = mockk<GetMonthlyAmountByCategoryUseCase>()
-    private val getMonthlyComparison = mockk<GetMonthlyComparisonUseCase>()
-    private val getMonthlySectionStats = mockk<GetMonthlySectionStatsUseCase>()
-    private val getSavingsRate = mockk<GetSavingsRateUseCase>()
-    private val getTopCategories = mockk<GetTopCategoriesOverMonthsUseCase>()
+    private val getMonthlyAmountByCategory: GetMonthlyAmountByCategoryUseCase =
+        mockk<GetMonthlyAmountByCategoryUseCase>()
+    private val getMonthlyComparison: GetMonthlyComparisonUseCase = mockk()
+    private val getMonthlySectionStats: GetMonthlySectionStatsUseCase = mockk()
+    private val getSavingsRate: GetSavingsRateUseCase = mockk()
+    private val getTopCategories: GetTopCategoriesOverMonthsUseCase = mockk()
 
-    private val currentMonth = YearMonth.of(FIXED_DATE)
+    private val currentMonth: YearMonth = YearMonth.of(FIXED_DATE)
 
     private fun buildViewModel(dates: MutableStateFlow<LocalDate> = MutableStateFlow(FIXED_DATE)): ReportViewModel =
         ReportViewModel(
@@ -88,7 +90,7 @@ class ReportViewModelTest {
     @Test
     fun `initial state has current month and Spend type`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertEquals(currentMonth, vm.state.value.month)
@@ -100,7 +102,7 @@ class ReportViewModelTest {
         stubEmptyReport()
         val date = LocalDate(2026, Month.SEPTEMBER, 1)
 
-        val vm = buildViewModel(MutableStateFlow(date))
+        val vm: ReportViewModel = buildViewModel(MutableStateFlow(date))
         advanceUntilIdle()
 
         assertEquals(YearMonth.of(date), vm.state.value.month)
@@ -110,7 +112,7 @@ class ReportViewModelTest {
     fun `the trends window is asked for the month TodayFlow reports`() = runTest(testDispatcher) {
         stubEmptyReport()
         val date = LocalDate(2026, Month.SEPTEMBER, 1)
-        val expectedMonth = YearMonth.of(date)
+        val expectedMonth: YearMonth = YearMonth.of(date)
 
         buildViewModel(MutableStateFlow(date))
         advanceUntilIdle()
@@ -122,7 +124,7 @@ class ReportViewModelTest {
     @Test
     fun `state says whether the shown month is the current one`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertTrue(vm.state.value.isCurrentMonth, "The month it opens on IS the current one")
@@ -149,7 +151,7 @@ class ReportViewModelTest {
         stubEmptyReport()
         val dates = MutableStateFlow(LocalDate(2026, Month.AUGUST, 31))
 
-        val vm = buildViewModel(dates)
+        val vm: ReportViewModel = buildViewModel(dates)
         advanceUntilIdle()
         assertTrue(vm.state.value.isCurrentMonth, "August IS the current month on 31 August")
 
@@ -189,7 +191,7 @@ class ReportViewModelTest {
         )
         val dates = MutableStateFlow(LocalDate(2026, Month.AUGUST, 31))
 
-        val vm = buildViewModel(dates)
+        val vm: ReportViewModel = buildViewModel(dates)
         advanceUntilIdle()
         assertEquals(
             listOf(true, false),
@@ -213,10 +215,10 @@ class ReportViewModelTest {
     @Test
     fun `PreviousMonth intent decrements month`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val original = vm.state.value.month
+        val original: YearMonth = vm.state.value.month
         vm.onIntent(ReportIntent.PreviousMonth)
         advanceUntilIdle()
 
@@ -226,10 +228,10 @@ class ReportViewModelTest {
     @Test
     fun `NextMonth intent increments month`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val original = vm.state.value.month
+        val original: YearMonth = vm.state.value.month
         vm.onIntent(ReportIntent.NextMonth)
         advanceUntilIdle()
 
@@ -239,7 +241,7 @@ class ReportViewModelTest {
     @Test
     fun `JumpToCurrent resets month to current`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ReportIntent.PreviousMonth)
@@ -254,7 +256,7 @@ class ReportViewModelTest {
     @Test
     fun `SelectMonth intent changes month to the selected value`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         val target = YearMonth(2025, Month.MARCH)
@@ -267,7 +269,7 @@ class ReportViewModelTest {
     @Test
     fun `SelectType changes selectedType in state`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ReportIntent.SelectType(TransactionType.Income))
@@ -279,7 +281,7 @@ class ReportViewModelTest {
     @Test
     fun `SelectTab changes selectedTab in state`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         vm.onIntent(ReportIntent.SelectTab(ReportTab.Trends))
@@ -295,10 +297,10 @@ class ReportViewModelTest {
             currentRatePercent = 20,
             deltaPointsVsPrior = -10,
         )
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val trends = vm.state.value.trends
+        val trends: TrendsUiData = vm.state.value.trends
         assertEquals("10 pts", trends.deltaText)
         assertEquals(false, trends.deltaIsPositive)
     }
@@ -310,10 +312,10 @@ class ReportViewModelTest {
             currentRatePercent = 40,
             deltaPointsVsPrior = 7,
         )
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val trends = vm.state.value.trends
+        val trends: TrendsUiData = vm.state.value.trends
         assertEquals("7 pts", trends.deltaText)
         assertEquals(true, trends.deltaIsPositive)
     }
@@ -345,10 +347,10 @@ class ReportViewModelTest {
         coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate()
         coEvery { getTopCategories(any(), any(), any(), any()) } returns emptyList()
 
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val state = vm.state.value
+        val state: ReportUiState = vm.state.value
         assertTrue(state.totalFormatted.contains("4"), "Expected non-zero total, got: ${state.totalFormatted}")
         assertEquals(1, state.shares.size)
         assertEquals("Comida", state.shares.first().name)
@@ -364,7 +366,7 @@ class ReportViewModelTest {
         coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate()
         coEvery { getTopCategories(any(), any(), any(), any()) } returns emptyList()
 
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         assertTrue(vm.state.value.isMonthEmpty)
@@ -557,10 +559,10 @@ class ReportViewModelTest {
         coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate()
         coEvery { getTopCategories(any(), any(), any(), any()) } returns emptyList()
 
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val state = vm.state.value
+        val state: ReportUiState = vm.state.value
         assertEquals(25, state.comparisonPercent)
         assertTrue(state.comparisonAmountFormatted != null)
         assertTrue(state.comparisonText != null)
@@ -569,16 +571,16 @@ class ReportViewModelTest {
     @Test
     fun `ShareReport intent emits ShareReport effect with non-blank text`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val effects = mutableListOf<ReportEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val effects: MutableList<ReportEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         vm.onIntent(ReportIntent.ShareReport)
         advanceUntilIdle()
 
-        val shareEffect = effects.filterIsInstance<ReportEffect.ShareReport>().firstOrNull()
+        val shareEffect: ReportEffect.ShareReport? = effects.filterIsInstance<ReportEffect.ShareReport>().firstOrNull()
         assertTrue(shareEffect != null, "Expected ShareReport effect but got: $effects")
         assertTrue(shareEffect.text.isNotBlank())
 
@@ -598,7 +600,7 @@ class ReportViewModelTest {
         coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate()
         coEvery { getTopCategories(any(), any(), any(), any()) } returns emptyList()
 
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         testDispatcher.scheduler.runCurrent()
 
         val secondMonth = YearMonth(2024, Month.JANUARY)
@@ -621,7 +623,7 @@ class ReportViewModelTest {
     @Test
     fun `second month change wins — state reflects latest month after both settle`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
         val jan2024 = YearMonth(2024, Month.JANUARY)
@@ -637,10 +639,10 @@ class ReportViewModelTest {
     @Test
     fun `use case is called again after cancellation of previous load`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
 
-        val invocationsBefore = mutableListOf<YearMonth>()
+        val invocationsBefore: MutableList<YearMonth> = mutableListOf()
         coEvery { getMonthlyAmountByCategory(any(), TransactionType.Income) } coAnswers {
             invocationsBefore.add(firstArg())
             emptyList()
@@ -666,9 +668,9 @@ class ReportViewModelTest {
         coEvery { getSavingsRate(any(), any()) } returns emptySavingsRate()
         coEvery { getTopCategories(any(), any(), any(), any()) } returns emptyList()
 
-        val vm = buildViewModel()
-        val effects = mutableListOf<ReportEffect>()
-        val job = launch { vm.effect.collect { effects.add(it) } }
+        val vm: ReportViewModel = buildViewModel()
+        val effects: MutableList<ReportEffect> = mutableListOf()
+        val job: Job = launch { vm.effect.collect { effects.add(it) } }
 
         advanceUntilIdle()
 
@@ -683,7 +685,7 @@ class ReportViewModelTest {
     @Test
     fun `OnMonthSheetRequested opens the month sheet and OnMonthSheetDismissed closes it`() = runTest(testDispatcher) {
         stubEmptyReport()
-        val vm = buildViewModel()
+        val vm: ReportViewModel = buildViewModel()
         advanceUntilIdle()
         assertFalse(vm.state.value.showMonthSheet)
 

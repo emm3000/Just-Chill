@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -18,7 +19,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.emm.justchill.core.ui.atoms.Eyebrow
 import com.emm.justchill.core.ui.atoms.Pill
+import com.emm.justchill.core.ui.theme.EmmColors
+import com.emm.justchill.core.ui.theme.EmmSpacing
 import com.emm.justchill.core.ui.theme.EmmTheme
+import com.emm.justchill.core.ui.theme.EmmType
 import com.emm.justchill.core.ui.theme.LocalEmmColors
 import com.emm.justchill.core.ui.theme.LocalEmmSpacing
 import com.emm.justchill.core.ui.theme.LocalEmmType
@@ -32,9 +36,9 @@ fun SavingsRateBlock(
     contextSentence: String,
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalEmmColors.current
-    val type = LocalEmmType.current
-    val spacing = LocalEmmSpacing.current
+    val colors: EmmColors = LocalEmmColors.current
+    val type: EmmType = LocalEmmType.current
+    val spacing: EmmSpacing = LocalEmmSpacing.current
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -48,7 +52,7 @@ fun SavingsRateBlock(
         ) {
             // A negative rate keeps `danger`: it is not a spend amount but a deficit period, a
             // broken state, not merely a negative one.
-            val rateColor = if (ratePercent < 0) colors.danger else colors.textPrimary
+            val rateColor: Color = if (ratePercent < 0) colors.danger else colors.textPrimary
             val rateAnnotated: AnnotatedString = buildAnnotatedString {
                 withStyle(SpanStyle(color = rateColor)) {
                     append("$ratePercent")
