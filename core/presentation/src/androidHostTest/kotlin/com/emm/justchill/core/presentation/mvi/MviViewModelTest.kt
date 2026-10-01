@@ -20,9 +20,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-// launchSafe and launchSafeIn are the one funnel every ViewModel routes its suspending work and
-// collectors through, so their exception policy is app-wide behaviour and is pinned here so a
-// future split cannot let the two drift.
 class MviViewModelTest {
 
     // Standard rather than Unconfined so the test drives the suspend/cancel ordering explicitly;
@@ -178,8 +175,6 @@ class MviViewModelTest {
         assertSame(failure, unknown.cause, "the original throwable must survive as the cause")
     }
 
-    // The channel behind effect is BUFFERED, so the collector only has to exist before the
-    // assertions, not before the emission.
     private fun TestScope.collectEffects(viewModel: FunnelViewModel): List<TestEffect> {
         val effects = mutableListOf<TestEffect>()
         backgroundScope.launch { viewModel.effect.collect { effects += it } }
@@ -205,7 +200,6 @@ private class FunnelViewModel : MviViewModel<TestState, TestIntent, TestEffect>(
 
     override fun onIntent(intent: TestIntent) = Unit
 
-    // launchSafe/launchSafeIn are protected; only a subclass can hand their Job to the test.
     fun runSafe(block: suspend () -> Unit): Job = launchSafe(onError = ::TestEffect, block = block)
 
     fun runSafeWithoutEffect(block: suspend () -> Unit): Job = launchSafe(onError = { null }, block = block)
