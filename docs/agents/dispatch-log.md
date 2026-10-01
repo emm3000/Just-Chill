@@ -14,7 +14,7 @@ Totals of rows already folded out of Recent.
 |---|---|---|---|---|---|---|---|---|
 | 1 | sonnet:low | 8 | 8 | 0 | 0 | 0 | - | - |
 | 2 | sonnet:medium | 47 | 22 | 12 | 10 | 3 | - | - |
-| 2 | sonnet:high | 9 | 3 | 4 | 1 | 1 | 0 | 0 |
+| 2 | sonnet:high | 10 | 3 | 4 | 2 | 1 | 0 | 0 |
 | 3 | opus:medium | 102 | 69 | 8 | 15 | 10 | 0 | 0 |
 | 3 | opus:high | 8 | 4 | 3 | 1 | 0 | 0 | 0 |
 | 4 | opus:high | 54 | 30 | 15 | 6 | 3 | 1 | 0 |
@@ -25,7 +25,6 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 
 | PR | Issue | Row | Model:effort | First review | Cause | Review | Nudges | Minutes |
 |---|---|---|---|---|---|---|---|---|
-| #596 | #580 | 2 | sonnet:high | FIX FIRST | judgment | ok | 0 | 17 |
 | #597 | #583 | 2 | opus:medium | FIX FIRST | judgment | ok | 0 | 23 |
 | #598 | #582 | 2 | opus:medium | MERGE | - | ok | 0 | 25 |
 | #599 | #584 | 3 | opus:high | FIX FIRST | judgment | ok | 0 | 11 |
@@ -45,9 +44,11 @@ Last 20 PRs, oldest first. Model:effort is what actually ran, which may differ f
 | #623 | #614 | 1 | sonnet:low | MERGE | - | ok | 0 | 8 |
 | #624 | #615 | 2 | opus:medium | MERGE | - | ok | 0 | 12 |
 | #625 | #613 | 2 | opus:medium | MERGE | - | ok | 0 | 399 |
+| #627 | #626 | 3 | opus:high | FIX FIRST | judgment | ok | 0 | 7 |
 
 ## Changes
 
+- 2026-09-30: row 3 held at opus:high on a third first-review FIX FIRST judgment in Recent (#627: a new precondition, the main checkout holding `.worktreeinclude`, shipped with no guard and no doc line). #618 and #619 merged clean in between, and Fable stays reserved for design. Every row-3 dispatch now also names it: a precondition the change introduces gets a guard in code and one line in the doc that drives it.
 - 2026-09-30: row 3 held at opus:high despite two first-review FIX FIRST judgment in Recent (#599 a false doc claim, #603 a size drift reported as intended): high is the table's top effort and Fable is reserved for design. The raise goes into the dispatch instead: every row-3 dispatch names both errors (check each doc claim with `rg`; any non-zero pixel diff against trunk is drift until the ticket names it).
 - 2026-09-30: row 2 sonnet:high -> opus:medium: two first-review FIX FIRST judgment in Recent (#569; #596, the report hero split on a plain space, visible in the peer's own shot). High is the table's top effort, so the raise moves the model. #595 counts as FIX FIRST judgment: the reviewer said MERGE and the orchestrator promoted its minor (an uncaught observed query froze the backup row).
 - 2026-09-29: row 3 opus:medium -> opus:high: two first-review FIX FIRST judgment in Recent (#519, #552). Row 4 not raised: of its two judgment verdicts, #520 came from an orchestrator relay, not the model.
