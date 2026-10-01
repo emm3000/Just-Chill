@@ -1,5 +1,7 @@
 package com.emm.justchill.feature.loan
 
+import com.emm.justchill.core.presentation.date.DateShortcut
+import com.emm.justchill.core.presentation.date.dateShortcutsOf
 import com.emm.justchill.core.presentation.format.relativeDayLabel
 import com.emm.justchill.core.presentation.mvi.UiState
 import kotlinx.datetime.LocalDate
@@ -20,4 +22,5 @@ data class AddEditLoanUiState(
 ) : UiState {
     val dateLabel: String get() = relativeDayLabel(pickerDate, today)
     val pickerDate: LocalDate get() = date ?: today
+    val dateShortcuts: List<DateShortcut> get() = dateShortcutsOf(today)
 }

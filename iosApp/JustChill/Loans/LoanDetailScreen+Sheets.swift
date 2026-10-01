@@ -89,7 +89,7 @@ extension LoanDetailScreen {
             DateSheet(
                 pickedDay: form.pickerDate,
                 today: form.today,
-                shortcuts: [],
+                shortcuts: form.dateShortcuts,
                 onSelect: { send(LoanDetailIntentPaymentFormIntentOnPaymentDateSelected(value: $0)) },
                 onDismiss: dismissSheet
             )

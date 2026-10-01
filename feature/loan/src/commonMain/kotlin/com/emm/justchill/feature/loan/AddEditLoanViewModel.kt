@@ -119,8 +119,6 @@ class AddEditLoanViewModel(
         if (currentState.isSaving) return@launchSafe
         updateState { copy(isSaving = true) }
         val form: AddEditLoanUiState = currentState
-        // The day is the user's pick or, untouched, TodayFlow's answer; the clock is here only
-        // for the hour, and only when this loan has no recorded one to preserve.
         val timeOfDay: LocalTime = clock.now().toLocalDateTime(zone).time
         val lentAt = LocalDateTime(form.date ?: todayFlow.today(), loadedLentAt?.time ?: timeOfDay)
         val principal: Money = centsToMoney(form.amountDigits)
