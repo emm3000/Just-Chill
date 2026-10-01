@@ -58,7 +58,7 @@ extension AddAccountScreen {
                 SheetTitleBar(title: "Nueva cuenta", onClose: onClose)
                 ScrollView {
                     VStack(alignment: .leading, spacing: EmmSpacing.s5) {
-                        section(eyebrow: "Nombre") { NameField(name: nameBinding) }
+                        section(eyebrow: "Nombre") { NameField(name: nameBinding, error: state.nameError) }
                         section(eyebrow: "Tipo") { typeGrid }
                     }
                     .padding(.horizontal, EmmSpacing.s4)
@@ -106,6 +106,7 @@ extension AddAccountScreen {
 
     struct NameField: View {
         @Binding var name: String
+        let error: String?
         @FocusState private var isFocused: Bool
 
         var body: some View {
@@ -120,7 +121,9 @@ extension AddAccountScreen {
                 .focused($isFocused)
                 .frame(minHeight: EmmSpacing.s12)
                 .accessibilityLabel("Nombre")
-                Hairline(isFocused: isFocused)
+                Hairline(isFocused: isFocused, isError: error != nil)
+                FieldError(message: error)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
