@@ -1,22 +1,16 @@
 package com.emm.justchill.feature.category
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,10 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.Dp
 import com.emm.justchill.core.presentation.category.AppIconCatalog
 import com.emm.justchill.core.presentation.category.CategoryIcon
+import com.emm.justchill.core.ui.atoms.SearchField
 import com.emm.justchill.core.ui.category.icon
 import com.emm.justchill.core.ui.theme.EmmColors
 import com.emm.justchill.core.ui.theme.EmmRadii
@@ -55,7 +49,7 @@ internal fun IconGrid(selected: CategoryIcon, onSelect: (CategoryIcon) -> Unit) 
     val icons: List<CategoryIcon> = AppIconCatalog.search(query)
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.s3)) {
-        IconSearchField(query = query, onQueryChange = { query = it })
+        SearchField(query = query, onQueryChange = { query = it }, placeholder = "Buscar")
         if (icons.isEmpty()) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -86,50 +80,6 @@ internal fun IconGrid(selected: CategoryIcon, onSelect: (CategoryIcon) -> Unit) 
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun IconSearchField(query: String, onQueryChange: (String) -> Unit) {
-    val colors: EmmColors = LocalEmmColors.current
-    val spacing: EmmSpacing = LocalEmmSpacing.current
-    val radii: EmmRadii = LocalEmmRadii.current
-    val type: EmmType = LocalEmmType.current
-    val shape: Shape = radii.rM
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surface1)
-            .border(spacing.hairline, colors.border, shape)
-            .padding(spacing.s3),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.s3),
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Search,
-            contentDescription = null,
-            tint = colors.textTertiary,
-            modifier = Modifier.size(spacing.s4),
-        )
-        Box(modifier = Modifier.weight(1f)) {
-            if (query.isEmpty()) {
-                Text(
-                    text = "Buscar",
-                    style = type.bodyM,
-                    color = colors.textTertiary,
-                )
-            }
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                singleLine = true,
-                cursorBrush = SolidColor(colors.borderFocus),
-                textStyle = type.bodyM.copy(color = colors.textPrimary),
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
 }
