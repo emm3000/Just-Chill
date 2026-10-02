@@ -83,6 +83,9 @@ internal fun BackupSection(
 @Composable
 private fun CloudBackupRows(state: ProfileUiState, onSignIn: () -> Unit, snapshotActions: SnapshotBackupActions) {
     ProfileGroup {
+        if (state.showsBackupDestinationDisclosure) {
+            BackupDestinationDisclosure(onAcknowledge = snapshotActions.onAcknowledgeDestination)
+        }
         if (state.session !is SessionUiState.SignedIn) {
             ProfileRow(
                 icon = Icons.Outlined.Shield,
@@ -104,9 +107,6 @@ private fun CloudBackupRows(state: ProfileUiState, onSignIn: () -> Unit, snapsho
         )
         VerifyBackupRow(state = state, onVerifyClick = snapshotActions.onVerify)
         LastBackupRow(row = state.backupRow)
-        if (state.showsBackupDestinationDisclosure) {
-            BackupDestinationDisclosure(onAcknowledge = snapshotActions.onAcknowledgeDestination)
-        }
     }
 }
 
