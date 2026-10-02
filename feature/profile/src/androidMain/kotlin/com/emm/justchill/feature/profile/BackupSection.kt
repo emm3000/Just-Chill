@@ -150,7 +150,7 @@ private fun BackupDestinationDisclosure(onAcknowledge: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = spacing.s6, end = spacing.s6, bottom = spacing.s4),
+            .padding(start = spacing.s6, end = spacing.s6, top = spacing.s2, bottom = spacing.s4),
         verticalArrangement = Arrangement.spacedBy(spacing.s3),
     ) {
         Text(
