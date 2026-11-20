@@ -37,7 +37,7 @@ class QualityGateConventionPlugin : Plugin<Project> {
                     "Invoked by CI."
 
             dependsOn(boundaries, composeFree, snapshots, lazyKeys)
-            dependsOn(target.tasks.matching(::gates))
+            dependsOn(target.provider { target.tasks.names.filter(::gates).map(target.tasks::named) })
 
             // Task-name matching never reaches an included build, so this suite has to be named or
             // it silently stops running. `parent == null` rather than `rootProject`: that is the
@@ -48,11 +48,11 @@ class QualityGateConventionPlugin : Plugin<Project> {
         }
     }
 
-    private fun gates(task: Task): Boolean =
-        task.name in COMPILE_GATE_TASKS ||
-            task.name in SCHEMA_GATE_TASKS ||
-            task.name == DetektConventionPlugin.TASK ||
-            task.name == ScreenshotConventionPlugin.VALIDATE_TASK
+    private fun gates(taskName: String): Boolean =
+        taskName in COMPILE_GATE_TASKS ||
+            taskName in SCHEMA_GATE_TASKS ||
+            taskName == DetektConventionPlugin.TASK ||
+            taskName == ScreenshotConventionPlugin.VALIDATE_TASK
 
     private fun Project.registerBoundaryCheck(): TaskProvider<CheckModuleBoundariesTask> =
         tasks.register<CheckModuleBoundariesTask>(BOUNDARY_TASK) {
